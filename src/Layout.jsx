@@ -1,0 +1,197 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from './utils';
+import { base44 } from '@/api/base44Client';
+import { cn } from '@/lib/utils';
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  PackageCheck,
+  AlertTriangle,
+  Hash,
+  CreditCard,
+  Upload,
+  FileText,
+  Activity,
+  CheckSquare,
+  UserCheck,
+  Users,
+  BarChart3,
+  PackageX,
+  Search,
+  Download,
+  HelpCircle,
+  Menu,
+  X,
+  LogOut,
+  ChevronRight
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+const navigation = [
+  { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
+  { name: 'Inventory', page: 'Inventory', icon: Package },
+  { name: 'Products', page: 'Products', icon: ShoppingCart },
+  { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
+  { name: 'Receive Items', page: 'ReceiveItems', icon: PackageCheck },
+  { name: 'Fix Receiving', page: 'FixReceiving', icon: AlertTriangle, roles: ['admin', 'manager'] },
+  { name: 'Serial Numbers', page: 'SerialNumbers', icon: Hash },
+  { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
+  { name: 'Complete Export', page: 'CompleteExport', icon: Upload },
+  { name: 'Invoices', page: 'Invoices', icon: FileText },
+  { name: 'Activity Log', page: 'ActivityLog', icon: Activity },
+  { name: 'Tasks', page: 'Tasks', icon: CheckSquare },
+  { name: 'User Approvals', page: 'UserApprovals', icon: UserCheck, roles: ['admin'] },
+  { name: 'Team Profile', page: 'TeamProfile', icon: Users },
+  { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
+  { name: 'Damaged Items', page: 'DamagedItems', icon: PackageX },
+  { name: 'Order Lookup', page: 'OrderLookup', icon: Search },
+  { name: 'Data Export', page: 'DataExport', icon: Download, roles: ['admin', 'manager'] },
+  { name: 'User Guide', page: 'UserGuide', icon: HelpCircle },
+];
+
+export default function Layout({ children, currentPageName }) {
+  const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const userRole = user?.role || 'user';
+  
+  const filteredNav = navigation.filter(item => {
+    if (!item.roles) return true;
+    return item.roles.includes(userRole);
+  });
+
+  const handleLogout = () => {
+    base44.auth.logout();
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+            className="text-slate-600"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <span className="font-semibold text-slate-900">FalconFlips</span>
+        </div>
+        {user && (
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs">
+              {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+            </AvatarFallback>
+          </Avatar>
+        )}
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 bg-black/50"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 transition-transform duration-300 lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="h-16 flex items-center justify-between px-5 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">FF</span>
+              </div>
+              <span className="font-semibold text-slate-900 tracking-tight">FalconFlips</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden text-slate-400"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Navigation */}
+          <ScrollArea className="flex-1 py-4">
+            <nav className="px-3 space-y-1">
+              {filteredNav.map((item) => {
+                const isActive = currentPageName === item.page;
+                return (
+                  <Link
+                    key={item.page}
+                    to={createPageUrl(item.page)}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      isActive
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    )}
+                  >
+                    <item.icon className={cn("h-4.5 w-4.5", isActive ? "text-emerald-600" : "text-slate-400")} />
+                    {item.name}
+                    {isActive && <ChevronRight className="h-4 w-4 ml-auto text-emerald-400" />}
+                  </Link>
+                );
+              })}
+            </nav>
+          </ScrollArea>
+
+          {/* User Section */}
+          {user && (
+            <div className="border-t border-slate-100 p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-emerald-100 text-emerald-700 text-sm">
+                    {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">
+                    {user.full_name || 'User'}
+                  </p>
+                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </Button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
+        <div className="p-4 lg:p-8">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
