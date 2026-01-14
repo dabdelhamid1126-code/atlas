@@ -43,13 +43,9 @@ const navigation = [
   { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp },
   { name: 'Invoices', page: 'Invoices', icon: FileText },
   { name: 'Activity Log', page: 'ActivityLog', icon: Activity },
-  { name: 'Tasks', page: 'Tasks', icon: CheckSquare },
-  { name: 'User Approvals', page: 'UserApprovals', icon: UserCheck, roles: ['admin'] },
-  { name: 'Team Profile', page: 'TeamProfile', icon: Users },
   { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
   { name: 'Damaged Items', page: 'DamagedItems', icon: PackageX },
   { name: 'Order Lookup', page: 'OrderLookup', icon: Search },
-  { name: 'Data Export', page: 'DataExport', icon: Download, roles: ['admin', 'manager'] },
   { name: 'User Guide', page: 'UserGuide', icon: HelpCircle },
 ];
 
