@@ -192,7 +192,7 @@ export default function ReceiveItems() {
                   )}
                 </div>
                 <Button 
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  className="w-full bg-black hover:bg-gray-800 text-white"
                   onClick={() => openReceiveDialog(order)}
                 >
                   <PackageCheck className="h-4 w-4 mr-2" /> Receive Items
@@ -265,7 +265,7 @@ export default function ReceiveItems() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setReceiveDialogOpen(false)}>Cancel</Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleReceive}>
+            <Button className="bg-black hover:bg-gray-800 text-white" onClick={handleReceive}>
               <Check className="h-4 w-4 mr-2" /> Confirm Receipt
             </Button>
           </DialogFooter>

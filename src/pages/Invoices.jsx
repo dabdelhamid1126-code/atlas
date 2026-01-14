@@ -193,7 +193,7 @@ export default function Invoices() {
 
   const columns = [
     { header: 'Invoice #', accessor: 'invoice_number', cell: (row) => (
-      <span className="font-mono text-sm font-medium text-emerald-600">{row.invoice_number}</span>
+      <span className="font-mono text-sm font-medium">{row.invoice_number}</span>
     )},
     { header: 'Buyer', accessor: 'buyer', cell: (row) => (
       <span className="font-medium">{row.buyer}</span>
