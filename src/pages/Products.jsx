@@ -34,13 +34,9 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    sku: '',
     upc: '',
-    category: 'other',
-    brand: '',
-    description: '',
-    base_cost: '',
-    msrp: ''
+    image: '',
+    value: ''
   });
 
   const { data: products = [], isLoading } = useQuery({
@@ -92,25 +88,17 @@ export default function Products() {
       setEditingProduct(product);
       setFormData({
         name: product.name || '',
-        sku: product.sku || '',
         upc: product.upc || '',
-        category: product.category || 'other',
-        brand: product.brand || '',
-        description: product.description || '',
-        base_cost: product.base_cost || '',
-        msrp: product.msrp || ''
+        image: product.image || '',
+        value: product.value || ''
       });
     } else {
       setEditingProduct(null);
       setFormData({
         name: '',
-        sku: '',
         upc: '',
-        category: 'other',
-        brand: '',
-        description: '',
-        base_cost: '',
-        msrp: ''
+        image: '',
+        value: ''
       });
     }
     setDialogOpen(true);
@@ -144,26 +132,23 @@ export default function Products() {
 
   const filteredProducts = products.filter(p =>
     p.name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(search.toLowerCase()) ||
-    p.brand?.toLowerCase().includes(search.toLowerCase())
+    p.upc?.toLowerCase().includes(search.toLowerCase())
   );
 
   const columns = [
-    { header: 'SKU', accessor: 'sku', cell: (row) => (
-      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{row.sku}</span>
-    )},
     { header: 'Name', accessor: 'name', cell: (row) => (
-      <span className="font-medium text-slate-900">{row.name}</span>
+      <div className="flex items-center gap-3">
+        {row.image && (
+          <img src={row.image} alt={row.name} className="h-10 w-10 object-cover rounded border" />
+        )}
+        <span className="font-medium text-slate-900">{row.name}</span>
+      </div>
     )},
-    { header: 'Brand', accessor: 'brand' },
-    { header: 'Category', accessor: 'category', cell: (row) => (
-      <StatusBadge status={row.category} />
+    { header: 'UPC', accessor: 'upc', cell: (row) => (
+      <span className="font-mono text-sm">{row.upc}</span>
     )},
-    { header: 'Base Cost', accessor: 'base_cost', cell: (row) => (
-      row.base_cost ? `$${row.base_cost.toFixed(2)}` : '-'
-    )},
-    { header: 'MSRP', accessor: 'msrp', cell: (row) => (
-      row.msrp ? `$${row.msrp.toFixed(2)}` : '-'
+    { header: 'Value', accessor: 'value', cell: (row) => (
+      row.value ? <span className="font-semibold">${row.value.toFixed(2)}</span> : '-'
     )},
     { header: 'Actions', cell: (row) => (
       <div className="flex items-center gap-2">
@@ -214,80 +199,38 @@ export default function Products() {
             <DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>SKU *</Label>
-                <Input
-                  value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Product Name *</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
             </div>
             <div className="space-y-2">
-              <Label>UPC (Barcode)</Label>
+              <Label>UPC *</Label>
               <Input
                 value={formData.upc}
                 onChange={(e) => setFormData({ ...formData, upc: e.target.value })}
-                placeholder="Universal Product Code"
+                required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Brand</Label>
-                <Input
-                  value={formData.brand}
-                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Category *</Label>
-                <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Base Cost ($)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.base_cost}
-                  onChange={(e) => setFormData({ ...formData, base_cost: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>MSRP ($)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.msrp}
-                  onChange={(e) => setFormData({ ...formData, msrp: e.target.value })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Image URL</Label>
+              <Input
+                type="url"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                placeholder="https://example.com/image.jpg"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
+              <Label>Value ($)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.value}
+                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
               />
             </div>
             <DialogFooter>
