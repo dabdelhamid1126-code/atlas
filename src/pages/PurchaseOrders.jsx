@@ -37,6 +37,7 @@ export default function PurchaseOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [formData, setFormData] = useState({
     order_number: '',
+    tracking_number: '',
     supplier: '',
     status: 'pending',
     order_date: '',
@@ -87,6 +88,7 @@ export default function PurchaseOrders() {
   const openDialog = () => {
     setFormData({
       order_number: `PO-${Date.now().toString().slice(-8)}`,
+      tracking_number: '',
       supplier: '',
       status: 'pending',
       order_date: format(new Date(), 'yyyy-MM-dd'),
@@ -122,6 +124,7 @@ export default function PurchaseOrders() {
       if (product) {
         newItems[index].product_name = product.name;
         newItems[index].sku = product.sku;
+        newItems[index].upc = product.upc;
         newItems[index].unit_cost = product.base_cost || 0;
       }
     }
@@ -235,10 +238,18 @@ export default function PurchaseOrders() {
             <DialogTitle>Create Purchase Order</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Order Number</Label>
+              <Input value={formData.order_number} disabled />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Order Number</Label>
-                <Input value={formData.order_number} disabled />
+                <Label>Tracking Number</Label>
+                <Input
+                  value={formData.tracking_number}
+                  onChange={(e) => setFormData({ ...formData, tracking_number: e.target.value })}
+                  placeholder="Tracking number"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Supplier *</Label>

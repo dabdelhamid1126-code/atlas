@@ -36,7 +36,7 @@ const navigation = [
   { name: 'Inventory', page: 'Inventory', icon: Package },
   { name: 'Products', page: 'Products', icon: ShoppingCart },
   { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
-  { name: 'Receive Items', page: 'ReceiveItems', icon: PackageCheck },
+  { name: 'Scan & Receive', page: 'ScanReceive', icon: PackageCheck },
   { name: 'Fix Receiving', page: 'FixReceiving', icon: AlertTriangle, roles: ['admin', 'manager'] },
   { name: 'Serial Numbers', page: 'SerialNumbers', icon: Hash },
   { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
@@ -89,7 +89,7 @@ export default function Layout({ children, currentPageName }) {
         </div>
         {user && (
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs">
+            <AvatarFallback className="bg-black text-white text-xs">
               {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
@@ -115,10 +115,10 @@ export default function Layout({ children, currentPageName }) {
           {/* Logo */}
           <div className="h-16 flex items-center justify-between px-5 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-black flex items-center justify-center">
                 <span className="text-white font-bold text-sm">FF</span>
               </div>
-              <span className="font-semibold text-slate-900 tracking-tight">FalconFlips</span>
+              <span className="font-bold text-black tracking-tight">FalconFlips</span>
             </div>
             <Button
               variant="ghost"
@@ -143,13 +143,13 @@ export default function Layout({ children, currentPageName }) {
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                       isActive
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        ? "bg-black text-white"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-black"
                     )}
                   >
-                    <item.icon className={cn("h-4.5 w-4.5", isActive ? "text-emerald-600" : "text-slate-400")} />
+                    <item.icon className={cn("h-4.5 w-4.5", isActive ? "text-white" : "text-slate-400")} />
                     {item.name}
-                    {isActive && <ChevronRight className="h-4 w-4 ml-auto text-emerald-400" />}
+                    {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
                   </Link>
                 );
               })}
@@ -161,7 +161,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="border-t border-slate-100 p-4">
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-emerald-100 text-emerald-700 text-sm">
+                  <AvatarFallback className="bg-black text-white text-sm">
                     {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>

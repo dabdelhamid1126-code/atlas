@@ -4,46 +4,46 @@ import { cn } from '@/lib/utils';
 
 const statusStyles = {
   // Inventory statuses
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  received: 'bg-blue-50 text-blue-700 border-blue-200',
-  in_stock: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  reserved: 'bg-purple-50 text-purple-700 border-purple-200',
-  exported: 'bg-slate-100 text-slate-600 border-slate-200',
-  damaged: 'bg-red-50 text-red-700 border-red-200',
+  pending: 'bg-gray-100 text-gray-700 border-gray-300',
+  received: 'bg-gray-200 text-gray-800 border-gray-400',
+  in_stock: 'bg-black text-white border-black',
+  reserved: 'bg-gray-600 text-white border-gray-600',
+  exported: 'bg-gray-300 text-gray-700 border-gray-400',
+  damaged: 'bg-gray-900 text-white border-gray-900',
   
   // Order statuses
-  ordered: 'bg-blue-50 text-blue-700 border-blue-200',
-  shipped: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  partially_received: 'bg-amber-50 text-amber-700 border-amber-200',
-  cancelled: 'bg-slate-100 text-slate-500 border-slate-200',
+  ordered: 'bg-gray-200 text-gray-800 border-gray-400',
+  shipped: 'bg-gray-400 text-white border-gray-400',
+  partially_received: 'bg-gray-100 text-gray-700 border-gray-300',
+  cancelled: 'bg-gray-200 text-gray-500 border-gray-300',
   
   // Export statuses
-  processing: 'bg-blue-50 text-blue-700 border-blue-200',
-  completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  processing: 'bg-gray-300 text-gray-800 border-gray-400',
+  completed: 'bg-black text-white border-black',
   
   // Invoice statuses
-  draft: 'bg-slate-100 text-slate-600 border-slate-200',
-  sent: 'bg-blue-50 text-blue-700 border-blue-200',
-  paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  overdue: 'bg-red-50 text-red-700 border-red-200',
+  draft: 'bg-gray-100 text-gray-600 border-gray-300',
+  sent: 'bg-gray-300 text-gray-800 border-gray-400',
+  paid: 'bg-black text-white border-black',
+  overdue: 'bg-gray-800 text-white border-gray-800',
   
   // Task statuses
-  in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
+  in_progress: 'bg-gray-300 text-gray-800 border-gray-400',
   
   // Gift card statuses
-  available: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  used: 'bg-slate-100 text-slate-500 border-slate-200',
-  invalid: 'bg-red-50 text-red-700 border-red-200',
+  available: 'bg-black text-white border-black',
+  used: 'bg-gray-200 text-gray-500 border-gray-300',
+  invalid: 'bg-gray-800 text-white border-gray-800',
   
   // Approval statuses
-  approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  rejected: 'bg-red-50 text-red-700 border-red-200',
+  approved: 'bg-black text-white border-black',
+  rejected: 'bg-gray-800 text-white border-gray-800',
   
   // Priority
-  low: 'bg-slate-100 text-slate-600 border-slate-200',
-  medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  high: 'bg-orange-50 text-orange-700 border-orange-200',
-  urgent: 'bg-red-50 text-red-700 border-red-200',
+  low: 'bg-gray-100 text-gray-600 border-gray-300',
+  medium: 'bg-gray-300 text-gray-800 border-gray-400',
+  high: 'bg-gray-600 text-white border-gray-600',
+  urgent: 'bg-black text-white border-black',
   
   // Damage types
   physical: 'bg-orange-50 text-orange-700 border-orange-200',

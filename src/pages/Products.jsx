@@ -35,6 +35,7 @@ export default function Products() {
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
+    upc: '',
     category: 'other',
     brand: '',
     description: '',
@@ -92,6 +93,7 @@ export default function Products() {
       setFormData({
         name: product.name || '',
         sku: product.sku || '',
+        upc: product.upc || '',
         category: product.category || 'other',
         brand: product.brand || '',
         description: product.description || '',
@@ -103,6 +105,7 @@ export default function Products() {
       setFormData({
         name: '',
         sku: '',
+        upc: '',
         category: 'other',
         brand: '',
         description: '',
@@ -181,7 +184,7 @@ export default function Products() {
         title="Products" 
         description="Master product catalog"
         actions={
-          <Button onClick={() => openDialog()} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
             <Plus className="h-4 w-4 mr-2" /> Add Product
           </Button>
         }
@@ -230,6 +233,15 @@ export default function Products() {
                 />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>UPC (Barcode)</Label>
+              <Input
+                value={formData.upc}
+                onChange={(e) => setFormData({ ...formData, upc: e.target.value })}
+                placeholder="Universal Product Code"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Brand</Label>
@@ -282,7 +294,7 @@ export default function Products() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
                 {editingProduct ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>

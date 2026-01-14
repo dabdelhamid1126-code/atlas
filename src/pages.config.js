@@ -17,6 +17,7 @@ import DamagedItems from './pages/DamagedItems';
 import OrderLookup from './pages/OrderLookup';
 import DataExport from './pages/DataExport';
 import UserGuide from './pages/UserGuide';
+import ScanReceive from './pages/ScanReceive';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "OrderLookup": OrderLookup,
     "DataExport": DataExport,
     "UserGuide": UserGuide,
+    "ScanReceive": ScanReceive,
 }
 
 export const pagesConfig = {
