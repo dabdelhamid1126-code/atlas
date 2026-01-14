@@ -125,8 +125,7 @@ export default function Products() {
     e.preventDefault();
     const data = {
       ...formData,
-      base_cost: formData.base_cost ? parseFloat(formData.base_cost) : null,
-      msrp: formData.msrp ? parseFloat(formData.msrp) : null
+      value: formData.value ? parseFloat(formData.value) : null
     };
 
     if (editingProduct) {
