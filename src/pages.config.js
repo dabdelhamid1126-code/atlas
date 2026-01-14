@@ -8,13 +8,9 @@ import SerialNumbers from './pages/SerialNumbers';
 import GiftCards from './pages/GiftCards';
 import Invoices from './pages/Invoices';
 import ActivityLog from './pages/ActivityLog';
-import Tasks from './pages/Tasks';
-import UserApprovals from './pages/UserApprovals';
-import TeamProfile from './pages/TeamProfile';
 import Analytics from './pages/Analytics';
 import DamagedItems from './pages/DamagedItems';
 import OrderLookup from './pages/OrderLookup';
-import DataExport from './pages/DataExport';
 import UserGuide from './pages/UserGuide';
 import ScanReceive from './pages/ScanReceive';
 import InventoryValue from './pages/InventoryValue';
@@ -32,13 +28,9 @@ export const PAGES = {
     "GiftCards": GiftCards,
     "Invoices": Invoices,
     "ActivityLog": ActivityLog,
-    "Tasks": Tasks,
-    "UserApprovals": UserApprovals,
-    "TeamProfile": TeamProfile,
     "Analytics": Analytics,
     "DamagedItems": DamagedItems,
     "OrderLookup": OrderLookup,
-    "DataExport": DataExport,
     "UserGuide": UserGuide,
     "ScanReceive": ScanReceive,
     "InventoryValue": InventoryValue,
