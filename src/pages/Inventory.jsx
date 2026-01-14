@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Filter, Eye } from 'lucide-react';
+import { Search, Filter, Eye, Plus, Minus } from 'lucide-react';
 import { format } from 'date-fns';
 
 const STATUSES = ['pending', 'received', 'in_stock', 'reserved', 'exported', 'damaged'];
@@ -32,6 +32,10 @@ export default function Inventory() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustmentType, setAdjustmentType] = useState('add');
+  const [adjustmentQty, setAdjustmentQty] = useState('');
+  const [adjustmentReason, setAdjustmentReason] = useState('');
 
   const { data: inventory = [], isLoading } = useQuery({
     queryKey: ['inventory'],
@@ -44,6 +48,51 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     }
   });
+
+  const logActivity = async (action, details) => {
+    const user = await base44.auth.me();
+    await base44.entities.ActivityLog.create({
+      action,
+      entity_type: 'inventory',
+      entity_id: selectedItem?.id,
+      details,
+      user_name: user.full_name,
+      user_email: user.email
+    });
+  };
+
+  const handleAdjustment = async () => {
+    if (!adjustmentQty || !adjustmentReason) return;
+
+    const qty = parseFloat(adjustmentQty);
+    const currentQty = selectedItem.quantity || 0;
+    const newQty = adjustmentType === 'add' ? currentQty + qty : currentQty - qty;
+
+    if (newQty < 0) {
+      alert('Quantity cannot be negative');
+      return;
+    }
+
+    await updateMutation.mutateAsync({
+      id: selectedItem.id,
+      data: { ...selectedItem, quantity: newQty }
+    });
+
+    await logActivity(
+      `Inventory ${adjustmentType === 'add' ? 'Increase' : 'Decrease'}`,
+      `${adjustmentType === 'add' ? 'Added' : 'Removed'} ${qty} units of ${selectedItem.product_name}. Reason: ${adjustmentReason}`
+    );
+
+    setAdjustOpen(false);
+    setAdjustmentQty('');
+    setAdjustmentReason('');
+  };
+
+  const openAdjustment = (item, type) => {
+    setSelectedItem(item);
+    setAdjustmentType(type);
+    setAdjustOpen(true);
+  };
 
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = 
@@ -79,9 +128,17 @@ export default function Inventory() {
       format(new Date(row.created_date), 'MMM d, yyyy')
     )},
     { header: '', cell: (row) => (
-      <Button variant="ghost" size="icon" onClick={() => viewDetails(row)}>
-        <Eye className="h-4 w-4" />
-      </Button>
+      <div className="flex gap-1">
+        <Button variant="ghost" size="icon" onClick={() => openAdjustment(row, 'add')} title="Add stock">
+          <Plus className="h-4 w-4 text-green-600" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => openAdjustment(row, 'subtract')} title="Remove stock">
+          <Minus className="h-4 w-4 text-red-600" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => viewDetails(row)}>
+          <Eye className="h-4 w-4" />
+        </Button>
+      </div>
     )}
   ];
 
@@ -187,6 +244,53 @@ export default function Inventory() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {adjustmentType === 'add' ? 'Add' : 'Remove'} Stock
+            </DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-slate-500">Product</Label>
+                <p className="font-medium">{selectedItem.product_name}</p>
+                <p className="text-sm text-slate-500">Current Quantity: {selectedItem.quantity}</p>
+              </div>
+              <div>
+                <Label>Quantity to {adjustmentType === 'add' ? 'Add' : 'Remove'}</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={adjustmentQty}
+                  onChange={(e) => setAdjustmentQty(e.target.value)}
+                  placeholder="Enter quantity"
+                />
+              </div>
+              <div>
+                <Label>Reason for Adjustment</Label>
+                <Input
+                  value={adjustmentReason}
+                  onChange={(e) => setAdjustmentReason(e.target.value)}
+                  placeholder="e.g., Physical count correction, damaged units, etc."
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdjustOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleAdjustment}
+              disabled={!adjustmentQty || !adjustmentReason}
+            >
+              Confirm {adjustmentType === 'add' ? 'Addition' : 'Removal'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

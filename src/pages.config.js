@@ -2,6 +2,7 @@ import ActivityLog from './pages/ActivityLog';
 import Analytics from './pages/Analytics';
 import DamagedItems from './pages/DamagedItems';
 import Dashboard from './pages/Dashboard';
+import DelayedOrders from './pages/DelayedOrders';
 import FixReceiving from './pages/FixReceiving';
 import GiftCards from './pages/GiftCards';
 import Inventory from './pages/Inventory';
@@ -14,7 +15,6 @@ import ReceiveItems from './pages/ReceiveItems';
 import ScanReceive from './pages/ScanReceive';
 import SerialNumbers from './pages/SerialNumbers';
 import UserGuide from './pages/UserGuide';
-import DelayedOrders from './pages/DelayedOrders';
 import __Layout from './Layout.jsx';
 
 
@@ -23,6 +23,7 @@ export const PAGES = {
     "Analytics": Analytics,
     "DamagedItems": DamagedItems,
     "Dashboard": Dashboard,
+    "DelayedOrders": DelayedOrders,
     "FixReceiving": FixReceiving,
     "GiftCards": GiftCards,
     "Inventory": Inventory,
@@ -35,7 +36,6 @@ export const PAGES = {
     "ScanReceive": ScanReceive,
     "SerialNumbers": SerialNumbers,
     "UserGuide": UserGuide,
-    "DelayedOrders": DelayedOrders,
 }
 
 export const pagesConfig = {
