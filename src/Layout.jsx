@@ -37,6 +37,7 @@ const navigation = [
   { name: 'Products', page: 'Products', icon: ShoppingCart },
   { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
   { name: 'Scan & Receive', page: 'ScanReceive', icon: PackageCheck },
+  { name: 'Delayed Orders', page: 'DelayedOrders', icon: AlertTriangle },
   { name: 'Fix Receiving', page: 'FixReceiving', icon: AlertTriangle, roles: ['admin', 'manager'] },
   { name: 'Serial Numbers', page: 'SerialNumbers', icon: Hash },
   { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },

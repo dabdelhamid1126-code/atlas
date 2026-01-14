@@ -14,6 +14,7 @@ import ReceiveItems from './pages/ReceiveItems';
 import ScanReceive from './pages/ScanReceive';
 import SerialNumbers from './pages/SerialNumbers';
 import UserGuide from './pages/UserGuide';
+import DelayedOrders from './pages/DelayedOrders';
 import __Layout from './Layout.jsx';
 
 
@@ -34,6 +35,7 @@ export const PAGES = {
     "ScanReceive": ScanReceive,
     "SerialNumbers": SerialNumbers,
     "UserGuide": UserGuide,
+    "DelayedOrders": DelayedOrders,
 }
 
 export const pagesConfig = {

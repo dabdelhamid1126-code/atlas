@@ -29,20 +29,6 @@ export default function ScanReceive() {
   const serialInputRef = useRef(null);
   const extraUPCRef = useRef(null);
 
-  const { data: delayedOrders = [] } = useQuery({
-    queryKey: ['delayedOrders'],
-    queryFn: async () => {
-      const orders = await base44.entities.PurchaseOrder.list();
-      const tenDaysAgo = new Date();
-      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
-      return orders.filter(o => 
-        ['ordered', 'shipped', 'partially_received'].includes(o.status) &&
-        o.order_date &&
-        new Date(o.order_date) < tenDaysAgo
-      );
-    }
-  });
-
   useEffect(() => {
     if (step === 'tracking') trackingInputRef.current?.focus();
     if (step === 'receiving' && currentItem) upcInputRef.current?.focus();
@@ -304,26 +290,6 @@ export default function ScanReceive() {
           title="Scan & Receive" 
           description="Scan tracking, UPC codes, and serial numbers"
         />
-
-        {/* Delayed Orders Alert */}
-        {delayedOrders.length > 0 && step === 'tracking' && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl animate-fade-in">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-bold text-orange-900">Delayed Orders ({delayedOrders.length})</h3>
-                <p className="text-sm text-orange-700 mb-2">Orders over 10 days old that are not complete:</p>
-                <div className="space-y-1">
-                  {delayedOrders.map(order => (
-                    <div key={order.id} className="text-sm font-mono text-orange-800">
-                      {order.order_number} - {order.retailer} ({order.status})
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Progress Steps */}
         <div className="mb-8">
