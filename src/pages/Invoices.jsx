@@ -2,39 +2,25 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '@/components/shared/PageHeader';
-import DataTable from '@/components/shared/DataTable';
-import StatusBadge from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus, Search, Eye, Pencil, Trash2, X, Filter } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Download, X, Check, FileText, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
 
 export default function Invoices() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [formData, setFormData] = useState({
     invoice_number: '',
@@ -56,11 +42,10 @@ export default function Invoices() {
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Invoice.create(data),
-    onSuccess: async () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success('Invoice created');
       setDialogOpen(false);
-      await logActivity('Created invoice', 'invoice', formData.invoice_number);
     }
   });
 
@@ -73,23 +58,11 @@ export default function Invoices() {
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Invoice.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast.success('Invoice deleted');
-    }
-  });
-
-  const logActivity = async (action, entityType, details) => {
-    const user = await base44.auth.me();
-    await base44.entities.ActivityLog.create({
-      action,
-      entity_type: entityType,
-      details,
-      user_name: user.full_name,
-      user_email: user.email
-    });
+  const togglePaidStatus = async (invoice) => {
+    const newStatus = invoice.status === 'paid' ? 'sent' : 'paid';
+    await base44.entities.Invoice.update(invoice.id, { status: newStatus });
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    toast.success(`Invoice marked as ${newStatus}`);
   };
 
   const openDialog = (invoice = null) => {
@@ -110,14 +83,14 @@ export default function Invoices() {
     } else {
       setEditingInvoice(null);
       setFormData({
-        invoice_number: `INV-${Date.now().toString().slice(-8)}`,
+        invoice_number: '',
         buyer: '',
         buyer_email: '',
         buyer_address: '',
         status: 'draft',
         invoice_date: format(new Date(), 'yyyy-MM-dd'),
         due_date: '',
-        items: [],
+        items: [{ description: '', quantity: 1, unit_price: 0, total: 0 }],
         tax: 0,
         notes: ''
       });
@@ -157,6 +130,10 @@ export default function Invoices() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.invoice_number.trim()) {
+      toast.error('Invoice number is required');
+      return;
+    }
     const { subtotal, total } = calculateTotals();
     const data = {
       ...formData,
@@ -171,114 +148,244 @@ export default function Invoices() {
     }
   };
 
-  const viewDetails = (invoice) => {
-    setSelectedInvoice(invoice);
-    setDetailsOpen(true);
-  };
-
-  const handleDelete = async (invoice) => {
-    if (confirm('Are you sure you want to delete this invoice?')) {
-      deleteMutation.mutate(invoice.id);
-      await logActivity('Deleted invoice', 'invoice', invoice.invoice_number);
-    }
-  };
-
-  const filteredInvoices = invoices.filter(inv => {
-    const matchesSearch = 
-      inv.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
-      inv.buyer?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const columns = [
-    { header: 'Invoice #', accessor: 'invoice_number', cell: (row) => (
-      <span className="font-mono text-sm font-medium">{row.invoice_number}</span>
-    )},
-    { header: 'Buyer', accessor: 'buyer', cell: (row) => (
-      <span className="font-medium">{row.buyer}</span>
-    )},
-    { header: 'Status', accessor: 'status', cell: (row) => (
-      <StatusBadge status={row.status} />
-    )},
-    { header: 'Total', accessor: 'total', cell: (row) => (
-      <span className="font-semibold">${row.total?.toFixed(2)}</span>
-    )},
-    { header: 'Date', accessor: 'invoice_date', cell: (row) => (
-      row.invoice_date ? format(new Date(row.invoice_date), 'MMM d, yyyy') : '-'
-    )},
-    { header: '', cell: (row) => (
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" onClick={() => viewDetails(row)}>
-          <Eye className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => openDialog(row)}>
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => handleDelete(row)}>
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </Button>
+  const downloadPDF = async (invoice) => {
+    const pdfContent = document.createElement('div');
+    pdfContent.style.width = '800px';
+    pdfContent.style.padding = '40px';
+    pdfContent.style.backgroundColor = 'white';
+    pdfContent.style.fontFamily = 'Arial, sans-serif';
+    
+    pdfContent.innerHTML = `
+      <div style="margin-bottom: 40px;">
+        <h1 style="font-size: 32px; font-weight: bold; margin: 0;">INVOICE</h1>
+        <p style="color: #666; margin: 5px 0;">#${invoice.invoice_number}</p>
       </div>
-    )}
-  ];
+      
+      <div style="margin-bottom: 30px;">
+        <p style="margin: 5px 0;"><strong>Bill To:</strong></p>
+        <p style="margin: 5px 0;">${invoice.buyer}</p>
+        ${invoice.buyer_email ? `<p style="margin: 5px 0;">${invoice.buyer_email}</p>` : ''}
+        ${invoice.buyer_address ? `<p style="margin: 5px 0;">${invoice.buyer_address}</p>` : ''}
+      </div>
+
+      <div style="margin-bottom: 30px;">
+        <p style="margin: 5px 0;"><strong>Date:</strong> ${invoice.invoice_date ? format(new Date(invoice.invoice_date), 'MMM dd, yyyy') : '-'}</p>
+        <p style="margin: 5px 0;"><strong>Due Date:</strong> ${invoice.due_date ? format(new Date(invoice.due_date), 'MMM dd, yyyy') : '-'}</p>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+        <thead>
+          <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+            <th style="padding: 12px; text-align: left;">Description</th>
+            <th style="padding: 12px; text-align: center;">Quantity</th>
+            <th style="padding: 12px; text-align: right;">Unit Price</th>
+            <th style="padding: 12px; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(invoice.items || []).map(item => `
+            <tr style="border-bottom: 1px solid #dee2e6;">
+              <td style="padding: 12px;">${item.description}</td>
+              <td style="padding: 12px; text-align: center;">${item.quantity}</td>
+              <td style="padding: 12px; text-align: right;">$${(item.unit_price || 0).toFixed(2)}</td>
+              <td style="padding: 12px; text-align: right;">$${(item.total || 0).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="text-align: right; margin-bottom: 30px;">
+        <p style="margin: 8px 0;"><strong>Subtotal:</strong> $${(invoice.subtotal || 0).toFixed(2)}</p>
+        <p style="margin: 8px 0;"><strong>Tax:</strong> $${(invoice.tax || 0).toFixed(2)}</p>
+        <p style="margin: 8px 0; font-size: 20px; font-weight: bold;"><strong>Total:</strong> $${(invoice.total || 0).toFixed(2)}</p>
+      </div>
+
+      ${invoice.notes ? `<div><p style="margin: 5px 0;"><strong>Notes:</strong></p><p style="margin: 5px 0; color: #666;">${invoice.notes}</p></div>` : ''}
+    `;
+    
+    document.body.appendChild(pdfContent);
+    const canvas = await html2canvas(pdfContent);
+    document.body.removeChild(pdfContent);
+    
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    pdf.save(`invoice-${invoice.invoice_number}.pdf`);
+    toast.success('Invoice downloaded');
+  };
+
+  const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+  const unpaidInvoices = invoices.filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled');
 
   return (
     <div>
       <PageHeader 
         title="Invoices" 
-        description="Financial documentation"
+        description="Manage and track invoices"
         actions={
-          <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
+          <Button onClick={() => openDialog()} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg">
             <Plus className="h-4 w-4 mr-2" /> New Invoice
           </Button>
         }
       />
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Search invoices..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="card-modern p-6">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 gradient-primary rounded-xl flex items-center justify-center">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-600">Total Invoices</p>
+              <p className="text-2xl font-bold">{invoices.length}</p>
+            </div>
+          </div>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            {STATUSES.map(s => (
-              <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        <div className="card-modern p-6">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 gradient-success rounded-xl flex items-center justify-center">
+              <Check className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-600">Paid</p>
+              <p className="text-2xl font-bold text-emerald-600">${paidInvoices.reduce((s, i) => s + (i.total || 0), 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card-modern p-6">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 gradient-warning rounded-xl flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-600">Unpaid</p>
+              <p className="text-2xl font-bold text-amber-600">${unpaidInvoices.reduce((s, i) => s + (i.total || 0), 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredInvoices}
-        loading={isLoading}
-        emptyMessage="No invoices found"
-      />
+      <Tabs defaultValue="unpaid" className="w-full">
+        <TabsList className="glass mb-6">
+          <TabsTrigger value="unpaid" className="data-[state=active]:bg-white">
+            Unpaid ({unpaidInvoices.length})
+          </TabsTrigger>
+          <TabsTrigger value="paid" className="data-[state=active]:bg-white">
+            Paid ({paidInvoices.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="unpaid" className="space-y-4">
+          {unpaidInvoices.map((inv) => (
+            <Card key={inv.id} className="card-modern p-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-mono text-lg font-bold text-slate-900">#{inv.invoice_number}</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      inv.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                      inv.status === 'overdue' ? 'bg-red-100 text-red-700' :
+                      'bg-slate-100 text-slate-700'
+                    }`}>
+                      {inv.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-slate-600 font-medium">{inv.buyer}</p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Due: {inv.due_date ? format(new Date(inv.due_date), 'MMM dd, yyyy') : 'No due date'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right mr-4">
+                    <p className="text-2xl font-bold text-slate-900">${(inv.total || 0).toFixed(2)}</p>
+                  </div>
+                  <Button onClick={() => togglePaidStatus(inv)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <Check className="h-4 w-4 mr-2" /> Mark Paid
+                  </Button>
+                  <Button onClick={() => downloadPDF(inv)} variant="outline" size="icon">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button onClick={() => openDialog(inv)} variant="outline">
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {unpaidInvoices.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+              <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No unpaid invoices</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="paid" className="space-y-4">
+          {paidInvoices.map((inv) => (
+            <Card key={inv.id} className="card-modern p-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-mono text-lg font-bold text-slate-900">#{inv.invoice_number}</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                      PAID
+                    </span>
+                  </div>
+                  <p className="text-slate-600 font-medium">{inv.buyer}</p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Paid on: {inv.invoice_date ? format(new Date(inv.invoice_date), 'MMM dd, yyyy') : '-'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right mr-4">
+                    <p className="text-2xl font-bold text-emerald-600">${(inv.total || 0).toFixed(2)}</p>
+                  </div>
+                  <Button onClick={() => togglePaidStatus(inv)} variant="outline">
+                    Mark Unpaid
+                  </Button>
+                  <Button onClick={() => downloadPDF(inv)} variant="outline" size="icon">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button onClick={() => openDialog(inv)} variant="outline">
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {paidInvoices.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+              <Check className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No paid invoices</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingInvoice ? 'Edit Invoice' : 'Create Invoice'}</DialogTitle>
+            <DialogTitle className="text-2xl">{editingInvoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Invoice Number</Label>
-                <Input value={formData.invoice_number} disabled />
+                <Label className="text-sm font-semibold">Invoice Number *</Label>
+                <Input 
+                  value={formData.invoice_number} 
+                  onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
+                  placeholder="INV-001"
+                  required
+                  className="font-mono"
+                />
               </div>
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label className="text-sm font-semibold">Status</Label>
                 <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -293,17 +400,38 @@ export default function Invoices() {
             </div>
 
             <div className="space-y-2">
-              <Label>Buyer *</Label>
+              <Label className="text-sm font-semibold">Buyer Name *</Label>
               <Input
                 value={formData.buyer}
                 onChange={(e) => setFormData({ ...formData, buyer: e.target.value })}
                 required
+                placeholder="Company or individual name"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Invoice Date</Label>
+                <Label className="text-sm font-semibold">Buyer Email</Label>
+                <Input
+                  type="email"
+                  value={formData.buyer_email}
+                  onChange={(e) => setFormData({ ...formData, buyer_email: e.target.value })}
+                  placeholder="buyer@example.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Buyer Address</Label>
+                <Input
+                  value={formData.buyer_address}
+                  onChange={(e) => setFormData({ ...formData, buyer_address: e.target.value })}
+                  placeholder="123 Main St, City, State"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Invoice Date</Label>
                 <Input
                   type="date"
                   value={formData.invoice_date}
@@ -311,7 +439,7 @@ export default function Invoices() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Due Date</Label>
+                <Label className="text-sm font-semibold">Due Date</Label>
                 <Input
                   type="date"
                   value={formData.due_date}
@@ -320,46 +448,47 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Line Items</Label>
+                <Label className="text-sm font-semibold">Line Items</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addItem}>
                   <Plus className="h-4 w-4 mr-1" /> Add Item
                 </Button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {formData.items.map((item, index) => (
-                  <div key={index} className="flex gap-2 items-end p-3 bg-slate-50 rounded-lg">
+                  <div key={index} className="flex gap-3 items-end p-4 bg-slate-50 rounded-xl border border-slate-200">
                     <div className="flex-1">
-                      <Label className="text-xs">Description</Label>
+                      <Label className="text-xs font-medium">Description</Label>
                       <Input
                         value={item.description}
                         onChange={(e) => updateItem(index, 'description', e.target.value)}
+                        placeholder="Item description"
                       />
                     </div>
-                    <div className="w-20">
-                      <Label className="text-xs">Qty</Label>
+                    <div className="w-24">
+                      <Label className="text-xs font-medium">Qty</Label>
                       <Input
                         type="number"
                         min="1"
                         value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
+                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
                       />
                     </div>
-                    <div className="w-28">
-                      <Label className="text-xs">Price</Label>
+                    <div className="w-32">
+                      <Label className="text-xs font-medium">Price</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={item.unit_price}
-                        onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value))}
+                        onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
                       />
                     </div>
-                    <div className="w-24 text-right">
-                      <Label className="text-xs">Total</Label>
-                      <p className="font-semibold py-2">${(item.total || 0).toFixed(2)}</p>
+                    <div className="w-32 text-right">
+                      <Label className="text-xs font-medium">Total</Label>
+                      <p className="font-semibold py-2 text-lg">${(item.total || 0).toFixed(2)}</p>
                     </div>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-red-500">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -367,81 +496,44 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>${calculateTotals().subtotal.toFixed(2)}</span>
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl space-y-3 border border-slate-200">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Subtotal</span>
+                <span className="font-semibold">${calculateTotals().subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Tax</span>
+                <span className="font-medium text-sm">Tax</span>
                 <Input
                   type="number"
                   step="0.01"
                   value={formData.tax}
                   onChange={(e) => setFormData({ ...formData, tax: parseFloat(e.target.value) || 0 })}
-                  className="w-28"
+                  className="w-32"
                 />
               </div>
-              <div className="flex justify-between font-bold text-lg pt-2 border-t">
+              <div className="flex justify-between font-bold text-xl pt-3 border-t-2 border-slate-300">
                 <span>Total</span>
-                <span>${calculateTotals().total.toFixed(2)}</span>
+                <span className="text-indigo-600">${calculateTotals().total.toFixed(2)}</span>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Notes</Label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={3}
+                placeholder="Payment terms, thank you message, etc."
+              />
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
-                {editingInvoice ? 'Update' : 'Create'}
+              <Button type="submit" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
+                {editingInvoice ? 'Update Invoice' : 'Create Invoice'}
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Details Dialog */}
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invoice Details</DialogTitle>
-          </DialogHeader>
-          {selectedInvoice && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-slate-500">Invoice Number</Label>
-                  <p className="font-mono font-medium">{selectedInvoice.invoice_number}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-500">Status</Label>
-                  <div className="mt-1"><StatusBadge status={selectedInvoice.status} /></div>
-                </div>
-                <div>
-                  <Label className="text-slate-500">Buyer</Label>
-                  <p className="font-medium">{selectedInvoice.buyer}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-500">Total</Label>
-                  <p className="font-bold text-lg">${selectedInvoice.total?.toFixed(2)}</p>
-                </div>
-              </div>
-              {selectedInvoice.items?.length > 0 && (
-                <div>
-                  <Label className="text-slate-500">Items</Label>
-                  <div className="mt-2 space-y-2">
-                    {selectedInvoice.items.map((item, i) => (
-                      <div key={i} className="flex justify-between p-2 bg-slate-50 rounded">
-                        <span className="text-sm">{item.description}</span>
-                        <span className="text-sm font-medium">${item.total?.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
