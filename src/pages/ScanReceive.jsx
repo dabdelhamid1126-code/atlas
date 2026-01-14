@@ -231,7 +231,7 @@ export default function ScanReceive() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="max-w-3xl mx-auto">
         <PageHeader 
           title="Scan & Receive" 
@@ -241,61 +241,63 @@ export default function ScanReceive() {
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 ${step === 'tracking' ? 'text-black' : 'text-gray-400'}`}>
-              <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center ${
-                step === 'tracking' ? 'border-black bg-black text-white' : 
-                ['upc', 'serial', 'complete'].includes(step) ? 'border-black bg-black text-white' : 'border-gray-300'
+            <div className={`flex items-center gap-2 ${step === 'tracking' ? 'text-indigo-600' : 'text-slate-400'}`}>
+              <div className={`h-10 w-10 rounded-xl border-2 flex items-center justify-center font-bold ${
+                step === 'tracking' ? 'border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg' : 
+                ['upc', 'serial', 'complete'].includes(step) ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 text-slate-400'
               }`}>
-                1
+                {['upc', 'serial', 'complete'].includes(step) ? <CheckCircle2 className="h-5 w-5" /> : '1'}
               </div>
-              <span className="text-sm font-medium">Tracking</span>
+              <span className="text-sm font-semibold">Tracking</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-gray-300" />
-            <div className={`flex items-center gap-2 ${step === 'upc' ? 'text-black' : 'text-gray-400'}`}>
-              <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center ${
-                step === 'upc' ? 'border-black bg-black text-white' : 
-                ['serial', 'complete'].includes(step) ? 'border-black bg-black text-white' : 'border-gray-300'
+            <ArrowRight className="h-5 w-5 text-slate-300" />
+            <div className={`flex items-center gap-2 ${step === 'upc' ? 'text-indigo-600' : 'text-slate-400'}`}>
+              <div className={`h-10 w-10 rounded-xl border-2 flex items-center justify-center font-bold ${
+                step === 'upc' ? 'border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg' : 
+                ['serial', 'complete'].includes(step) ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 text-slate-400'
               }`}>
-                2
+                {['serial', 'complete'].includes(step) ? <CheckCircle2 className="h-5 w-5" /> : '2'}
               </div>
-              <span className="text-sm font-medium">UPC Scan</span>
+              <span className="text-sm font-semibold">UPC Scan</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-gray-300" />
-            <div className={`flex items-center gap-2 ${['serial', 'complete'].includes(step) ? 'text-black' : 'text-gray-400'}`}>
-              <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center ${
-                ['serial', 'complete'].includes(step) ? 'border-black bg-black text-white' : 'border-gray-300'
+            <ArrowRight className="h-5 w-5 text-slate-300" />
+            <div className={`flex items-center gap-2 ${['serial', 'complete'].includes(step) ? 'text-indigo-600' : 'text-slate-400'}`}>
+              <div className={`h-10 w-10 rounded-xl border-2 flex items-center justify-center font-bold ${
+                ['serial', 'complete'].includes(step) ? 'border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg' : 'border-slate-300 text-slate-400'
               }`}>
-                3
+                {step === 'complete' ? <CheckCircle2 className="h-5 w-5" /> : '3'}
               </div>
-              <span className="text-sm font-medium">Complete</span>
+              <span className="text-sm font-semibold">Complete</span>
             </div>
           </div>
         </div>
 
         {/* Step 1: Tracking Number */}
         {step === 'tracking' && (
-          <Card className="border-2 border-black">
-            <CardHeader className="bg-black text-white">
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
+          <Card className="card-modern border-0 shadow-xl animate-slide-up">
+            <CardHeader className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-t-2xl">
+              <CardTitle className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
+                  <Package className="h-5 w-5" />
+                </div>
                 Scan Tracking Number
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={handleTrackingScan} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Tracking Number</Label>
+            <CardContent className="pt-8 pb-8">
+              <form onSubmit={handleTrackingScan} className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-slate-700">Tracking Number</Label>
                   <Input
                     ref={trackingInputRef}
                     value={trackingNumber}
                     onChange={(e) => setTrackingNumber(e.target.value)}
                     placeholder="Scan or enter tracking number"
-                    className="h-14 text-lg border-2 border-gray-300 focus:border-black"
+                    className="h-16 text-lg border-2 border-slate-200 focus:border-indigo-500 rounded-xl"
                     autoFocus
                   />
                 </div>
-                <Button type="submit" className="w-full h-12 bg-black hover:bg-gray-800 text-white">
-                  Continue
+                <Button type="submit" className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-base font-semibold shadow-lg rounded-xl">
+                  Continue <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
               </form>
             </CardContent>
@@ -305,31 +307,33 @@ export default function ScanReceive() {
         {/* Step 2: UPC Scanning */}
         {step === 'upc' && (
           <div className="space-y-6">
-            <Card className="border-2 border-black">
-              <CardHeader className="bg-black text-white">
-                <CardTitle className="flex items-center gap-2">
-                  <Barcode className="h-5 w-5" />
+            <Card className="card-modern border-0 shadow-xl animate-slide-up">
+              <CardHeader className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-t-2xl">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <Barcode className="h-5 w-5" />
+                  </div>
                   Scan UPC Codes
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium">Order: {purchaseOrder?.order_number}</p>
-                  <p className="text-sm text-gray-600">Retailer: {purchaseOrder?.retailer}</p>
+              <CardContent className="pt-8 pb-8">
+                <div className="mb-6 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200">
+                  <p className="text-sm font-semibold text-slate-900">Order: {purchaseOrder?.order_number}</p>
+                  <p className="text-sm text-slate-600">Retailer: {purchaseOrder?.retailer}</p>
                 </div>
-                <form onSubmit={handleUPCScan} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">UPC Code</Label>
+                <form onSubmit={handleUPCScan} className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-slate-700">UPC Code</Label>
                     <Input
                       ref={upcInputRef}
                       value={currentUPC}
                       onChange={(e) => setCurrentUPC(e.target.value)}
                       placeholder="Scan UPC barcode"
-                      className="h-14 text-lg border-2 border-gray-300 focus:border-black"
+                      className="h-16 text-lg border-2 border-slate-200 focus:border-indigo-500 rounded-xl"
                     />
                   </div>
-                  <Button type="submit" className="w-full h-12 bg-black hover:bg-gray-800 text-white">
-                    Scan Item
+                  <Button type="submit" className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-base font-semibold shadow-lg rounded-xl">
+                    Scan Item <Barcode className="h-5 w-5 ml-2" />
                   </Button>
                 </form>
               </CardContent>
@@ -337,25 +341,31 @@ export default function ScanReceive() {
 
             {/* Scanned Items */}
             {scannedItems.length > 0 && (
-              <Card className="border-2">
+              <Card className="card-modern border-0 shadow-xl animate-fade-in">
                 <CardHeader>
-                  <CardTitle className="text-base">Scanned Items ({scannedItems.length})</CardTitle>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    Scanned Items 
+                    <span className="text-sm font-normal px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                      {scannedItems.length}
+                    </span>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                  <div className="space-y-3 max-h-64 overflow-y-auto mb-6">
                     {scannedItems.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                      <div key={idx} className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
                         <div>
-                          <p className="font-medium">{item.product_name}</p>
-                          {item.serial && <p className="text-sm text-gray-600 font-mono">{item.serial}</p>}
+                          <p className="font-semibold text-slate-900">{item.product_name}</p>
+                          {item.serial && <p className="text-sm text-slate-600 font-mono mt-1">{item.serial}</p>}
                         </div>
-                        <CheckCircle2 className="h-5 w-5 text-black" />
+                        <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                          <CheckCircle2 className="h-5 w-5 text-white" />
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <Separator className="my-4" />
-                  <Button onClick={completeReceiving} className="w-full bg-black hover:bg-gray-800 text-white">
-                    Complete Receiving
+                  <Button onClick={completeReceiving} className="w-full h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-base font-semibold shadow-lg rounded-xl">
+                    Complete Receiving <CheckCircle2 className="h-5 w-5 ml-2" />
                   </Button>
                 </CardContent>
               </Card>
@@ -365,56 +375,57 @@ export default function ScanReceive() {
 
         {/* Step 3: Serial Number Scanning */}
         {step === 'serial' && (
-          <Card className="border-2 border-black">
-            <CardHeader className="bg-black text-white">
-              <CardTitle className="flex items-center gap-2">
-                <Hash className="h-5 w-5" />
+          <Card className="card-modern border-0 shadow-xl animate-slide-up">
+            <CardHeader className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-t-2xl">
+              <CardTitle className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
+                  <Hash className="h-5 w-5" />
+                </div>
                 Scan Serial Numbers
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium">Current Item</p>
-                <p className="text-sm text-gray-600">
+            <CardContent className="pt-8 pb-8">
+              <div className="mb-6 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200">
+                <p className="text-sm font-semibold text-slate-700">Current Item</p>
+                <p className="text-base font-bold text-slate-900">
                   {purchaseOrder?.items.find(i => i.upc === currentUPC)?.product_name}
                 </p>
               </div>
 
-              <form onSubmit={handleSerialScan} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Serial Number</Label>
+              <form onSubmit={handleSerialScan} className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-slate-700">Serial Number</Label>
                   <Input
                     ref={serialInputRef}
                     value={currentSerial}
                     onChange={(e) => setCurrentSerial(e.target.value)}
                     placeholder="Scan serial number"
-                    className="h-14 text-lg border-2 border-gray-300 focus:border-black"
+                    className="h-16 text-lg border-2 border-slate-200 focus:border-indigo-500 rounded-xl font-mono"
                   />
                 </div>
-                <Button type="submit" className="w-full h-12 bg-black hover:bg-gray-800 text-white">
-                  Add Serial
+                <Button type="submit" className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-base font-semibold shadow-lg rounded-xl">
+                  Add Serial <Hash className="h-5 w-5 ml-2" />
                 </Button>
               </form>
 
               {currentSerials.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Scanned Serials ({currentSerials.length})</p>
+                <div className="mt-6 space-y-3">
+                  <p className="text-sm font-semibold text-slate-700">Scanned Serials ({currentSerials.length})</p>
                   {currentSerials.map((serial, idx) => (
-                    <div key={idx} className="p-2 bg-gray-50 rounded font-mono text-sm">
+                    <div key={idx} className="p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 font-mono text-sm font-semibold text-slate-900">
                       {serial}
                     </div>
                   ))}
                 </div>
               )}
 
-              <Separator className="my-4" />
+              <Separator className="my-6" />
               <Button 
                 onClick={finishCurrentItem} 
-                variant="outline" 
-                className="w-full border-2 border-black hover:bg-gray-100"
+                className="w-full h-14 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white text-base font-semibold rounded-xl shadow-lg"
                 disabled={currentSerials.length === 0}
               >
-                Done with this item
+                Done with this item <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
             </CardContent>
           </Card>
@@ -422,15 +433,17 @@ export default function ScanReceive() {
 
         {/* Step 4: Complete */}
         {step === 'complete' && (
-          <Card className="border-2 border-black">
-            <CardContent className="pt-12 pb-12 text-center">
-              <CheckCircle2 className="h-16 w-16 mx-auto mb-4 text-black" />
-              <h2 className="text-2xl font-bold mb-2">Receiving Complete</h2>
-              <p className="text-gray-600 mb-6">
-                Successfully received {scannedItems.length} item(s) from order {purchaseOrder?.order_number}
+          <Card className="card-modern border-0 shadow-xl animate-slide-up">
+            <CardContent className="pt-16 pb-16 text-center">
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                <CheckCircle2 className="h-12 w-12 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Receiving Complete!</h2>
+              <p className="text-slate-600 mb-8 text-lg">
+                Successfully received <span className="font-bold text-slate-900">{scannedItems.length}</span> item(s) from order <span className="font-bold text-slate-900">{purchaseOrder?.order_number}</span>
               </p>
-              <Button onClick={reset} className="bg-black hover:bg-gray-800 text-white">
-                Receive Another Order
+              <Button onClick={reset} className="h-14 px-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-base font-semibold shadow-lg rounded-xl">
+                Receive Another Order <Package className="h-5 w-5 ml-2" />
               </Button>
             </CardContent>
           </Card>
