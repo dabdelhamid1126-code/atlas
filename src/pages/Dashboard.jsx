@@ -70,10 +70,10 @@ export default function Dashboard() {
   };
 
   const quickLinks = [
-    { name: 'Receive Items', page: 'ReceiveItems', icon: Package, color: 'bg-blue-500' },
-    { name: 'Complete Export', page: 'CompleteExport', icon: Upload, color: 'bg-emerald-500' },
-    { name: 'New Invoice', page: 'Invoices', icon: FileText, color: 'bg-purple-500' },
-    { name: 'View Tasks', page: 'Tasks', icon: CheckSquare, color: 'bg-amber-500' },
+    { name: 'Scan & Receive', page: 'ScanReceive', icon: Package, color: 'bg-black' },
+    { name: 'Complete Export', page: 'CompleteExport', icon: Upload, color: 'bg-gray-700' },
+    { name: 'New Invoice', page: 'Invoices', icon: FileText, color: 'bg-gray-600' },
+    { name: 'View Tasks', page: 'Tasks', icon: CheckSquare, color: 'bg-gray-500' },
   ];
 
   if (loading) {
@@ -140,7 +140,7 @@ export default function Dashboard() {
                 <div className={`h-10 w-10 rounded-lg ${link.color} flex items-center justify-center mb-3`}>
                   <link.icon className="h-5 w-5 text-white" />
                 </div>
-                <p className="text-sm font-medium text-slate-900 group-hover:text-emerald-600 transition-colors">
+                <p className="text-sm font-medium text-slate-900 group-hover:text-black transition-colors">
                   {link.name}
                 </p>
               </div>
@@ -156,7 +156,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
               <Link to={createPageUrl('ActivityLog')}>
-                <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700">
+                <Button variant="ghost" size="sm" className="text-black hover:text-gray-700">
                   View all <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </Link>
@@ -191,7 +191,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">Pending Tasks</CardTitle>
               <Link to={createPageUrl('Tasks')}>
-                <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700">
+                <Button variant="ghost" size="sm" className="text-black hover:text-gray-700">
                   View all <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </Link>
