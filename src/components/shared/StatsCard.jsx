@@ -1,16 +1,16 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export default function StatsCard({ title, value, icon: Icon, trend, trendUp, className }) {
+export default function StatsCard({ title, value, icon: Icon, trend, trendUp, className, gradient }) {
   return (
-    <div className={cn("bg-white rounded-xl border border-slate-200 p-5", className)}>
-      <div className="flex items-start justify-between">
+    <div className={cn("card-modern p-6 animate-slide-up", className)}>
+      <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+          <p className="text-sm font-medium text-slate-600">{title}</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">{value}</p>
           {trend && (
             <p className={cn(
-              "mt-1 text-xs font-medium",
+              "mt-2 text-sm font-semibold",
               trendUp ? "text-emerald-600" : "text-red-600"
             )}>
               {trendUp ? '↑' : '↓'} {trend}
@@ -18,8 +18,11 @@ export default function StatsCard({ title, value, icon: Icon, trend, trendUp, cl
           )}
         </div>
         {Icon && (
-          <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <Icon className="h-5 w-5 text-slate-600" />
+          <div className={cn(
+            "h-14 w-14 rounded-2xl flex items-center justify-center",
+            gradient || "gradient-primary"
+          )}>
+            <Icon className="h-7 w-7 text-white" />
           </div>
         )}
       </div>
