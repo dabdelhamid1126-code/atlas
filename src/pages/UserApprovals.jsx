@@ -188,7 +188,7 @@ export default function UserApprovals() {
                     </Button>
                     <Button
                       size="sm"
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                      className="flex-1 bg-black hover:bg-gray-800 text-white"
                       onClick={() => openApproveDialog(approval)}
                     >
                       <Check className="h-4 w-4 mr-1" /> Approve
@@ -268,7 +268,7 @@ export default function UserApprovals() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleApprove} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleApprove} className="bg-black hover:bg-gray-800 text-white">
               <Check className="h-4 w-4 mr-2" /> Approve User
             </Button>
           </DialogFooter>

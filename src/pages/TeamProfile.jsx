@@ -55,9 +55,9 @@ export default function TeamProfile() {
           <CardContent>
             <div className="flex items-start gap-6">
               <Avatar className="h-20 w-20">
-                <AvatarFallback className="bg-emerald-100 text-emerald-700 text-2xl">
-                  {currentUser.full_name?.charAt(0) || currentUser.email?.charAt(0) || 'U'}
-                </AvatarFallback>
+              <AvatarFallback className="bg-black text-white text-2xl">
+                {currentUser.full_name?.charAt(0) || currentUser.email?.charAt(0) || 'U'}
+              </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <h2 className="text-xl font-semibold">{currentUser.full_name || 'User'}</h2>

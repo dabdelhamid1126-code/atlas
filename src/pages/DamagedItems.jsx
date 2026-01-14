@@ -209,7 +209,7 @@ export default function DamagedItems() {
         title="Damaged Items" 
         description="Track and manage damaged inventory"
         actions={
-          <Button onClick={() => openDialog()} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
             <Plus className="h-4 w-4 mr-2" /> Report Damage
           </Button>
         }
@@ -378,7 +378,7 @@ export default function DamagedItems() {
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
                 {editingItem ? 'Update' : 'Report'}
               </Button>
             </DialogFooter>

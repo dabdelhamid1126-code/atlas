@@ -218,7 +218,7 @@ export default function DataExport() {
                 <Button 
                   onClick={handleExport}
                   disabled={selectedTypes.length === 0 || exporting}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  className="w-full bg-black hover:bg-gray-800 text-white"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   {exporting ? 'Exporting...' : `Export ${selectedTypes.length} File(s)`}

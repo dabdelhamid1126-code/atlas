@@ -201,7 +201,7 @@ export default function FixReceiving() {
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Save Changes</Button>
+                <Button type="submit" className="bg-black hover:bg-gray-800 text-white">Save Changes</Button>
               </DialogFooter>
             </form>
           )}

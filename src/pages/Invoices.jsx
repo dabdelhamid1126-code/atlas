@@ -228,7 +228,7 @@ export default function Invoices() {
         title="Invoices" 
         description="Financial documentation"
         actions={
-          <Button onClick={() => openDialog()} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
             <Plus className="h-4 w-4 mr-2" /> New Invoice
           </Button>
         }
@@ -390,7 +390,7 @@ export default function Invoices() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
                 {editingInvoice ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>

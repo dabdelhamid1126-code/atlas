@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Filter } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -239,9 +240,14 @@ export default function GiftCards() {
         title="Gift Cards" 
         description="Manage gift card inventory"
         actions={
-          <Button onClick={() => openDialog()} className="bg-emerald-600 hover:bg-emerald-700">
-            <Plus className="h-4 w-4 mr-2" /> Add Card
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setBulkDialogOpen(true)} variant="outline" className="border-2 border-black">
+              Bulk Add
+            </Button>
+            <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
+              <Plus className="h-4 w-4 mr-2" /> Add Card
+            </Button>
+          </div>
         }
       />
 
@@ -256,7 +262,7 @@ export default function GiftCards() {
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-sm text-slate-500">Available Value</p>
-          <p className="text-2xl font-semibold text-emerald-600">${totalValue.toLocaleString()}</p>
+          <p className="text-2xl font-semibold">${totalValue.toLocaleString()}</p>
         </div>
       </div>
 
@@ -383,7 +389,7 @@ export default function GiftCards() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
                 {editingCard ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
