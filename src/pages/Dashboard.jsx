@@ -92,10 +92,10 @@ export default function Dashboard() {
   };
 
   const quickLinks = [
-    { name: 'Scan & Receive', page: 'ScanReceive', icon: Package, color: 'gradient-primary' },
-    { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp, color: 'gradient-success' },
-    { name: 'New Invoice', page: 'Invoices', icon: FileText, color: 'gradient-warning' },
-    { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard, color: 'gradient-danger' },
+    { name: 'Scan & Receive', page: 'ScanReceive', icon: Package, gradient: 'from-blue-500 to-indigo-600' },
+    { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp, gradient: 'from-emerald-500 to-teal-600' },
+    { name: 'New Invoice', page: 'Invoices', icon: FileText, gradient: 'from-violet-500 to-purple-600' },
+    { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard, gradient: 'from-orange-500 to-red-600' },
   ];
 
   if (loading) {
@@ -212,13 +212,14 @@ export default function Dashboard() {
           {quickLinks.map((link, idx) => (
             <Link key={link.page} to={createPageUrl(link.page)}>
               <div 
-                className="card-modern p-5 hover:shadow-xl transition-all cursor-pointer group animate-slide-up"
+                className="card-modern p-6 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer group animate-slide-up overflow-hidden relative"
                 style={{animationDelay: `${idx * 0.1}s`}}
               >
-                <div className={`h-12 w-12 rounded-2xl ${link.color.replace('bg-', 'gradient-')} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
-                  <link.icon className="h-6 w-6 text-white" />
+                <div className={`absolute inset-0 bg-gradient-to-br ${link.gradient} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
+                <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl relative z-10`}>
+                  <link.icon className="h-7 w-7 text-white" />
                 </div>
-                <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                <p className="text-sm font-bold text-slate-900 relative z-10">
                   {link.name}
                 </p>
               </div>
