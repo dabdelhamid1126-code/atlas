@@ -71,7 +71,7 @@ export default function Dashboard() {
 
   const quickLinks = [
     { name: 'Scan & Receive', page: 'ScanReceive', icon: Package, color: 'bg-black' },
-    { name: 'Complete Export', page: 'CompleteExport', icon: Upload, color: 'bg-gray-700' },
+    { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp, color: 'bg-gray-700' },
     { name: 'New Invoice', page: 'Invoices', icon: FileText, color: 'bg-gray-600' },
     { name: 'View Tasks', page: 'Tasks', icon: CheckSquare, color: 'bg-gray-500' },
   ];

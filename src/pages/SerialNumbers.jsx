@@ -133,11 +133,14 @@ export default function SerialNumbers() {
     { header: 'Product', accessor: 'product_name', cell: (row) => (
       <span className="font-medium">{row.product_name}</span>
     )},
+    { header: 'Order #', accessor: 'order_number', cell: (row) => (
+      row.order_number ? <span className="text-sm font-mono">{row.order_number}</span> : '-'
+    )},
+    { header: 'Tracking', accessor: 'tracking_number', cell: (row) => (
+      row.tracking_number ? <span className="text-xs font-mono">{row.tracking_number}</span> : '-'
+    )},
     { header: 'Status', accessor: 'status', cell: (row) => (
       <StatusBadge status={row.status} />
-    )},
-    { header: 'Added', accessor: 'created_date', cell: (row) => (
-      format(new Date(row.created_date), 'MMM d, yyyy')
     )},
     { header: '', cell: (row) => (
       <Button variant="ghost" size="icon" onClick={() => openDialog(row)}>

@@ -38,7 +38,7 @@ export default function PurchaseOrders() {
   const [formData, setFormData] = useState({
     order_number: '',
     tracking_number: '',
-    supplier: '',
+    retailer: '',
     status: 'pending',
     order_date: '',
     expected_date: '',
@@ -87,9 +87,9 @@ export default function PurchaseOrders() {
 
   const openDialog = () => {
     setFormData({
-      order_number: `PO-${Date.now().toString().slice(-8)}`,
+      order_number: '',
       tracking_number: '',
-      supplier: '',
+      retailer: '',
       status: 'pending',
       order_date: format(new Date(), 'yyyy-MM-dd'),
       expected_date: '',
@@ -153,17 +153,17 @@ export default function PurchaseOrders() {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number?.toLowerCase().includes(search.toLowerCase()) ||
-      order.supplier?.toLowerCase().includes(search.toLowerCase());
+      order.retailer?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const columns = [
     { header: 'Order #', accessor: 'order_number', cell: (row) => (
-      <span className="font-mono text-sm font-medium text-emerald-600">{row.order_number}</span>
+      <span className="font-mono text-sm font-medium">{row.order_number}</span>
     )},
-    { header: 'Supplier', accessor: 'supplier', cell: (row) => (
-      <span className="font-medium">{row.supplier}</span>
+    { header: 'Retailer', accessor: 'retailer', cell: (row) => (
+      <span className="font-medium">{row.retailer}</span>
     )},
     { header: 'Status', accessor: 'status', cell: (row) => (
       <StatusBadge status={row.status} />
@@ -238,11 +238,16 @@ export default function PurchaseOrders() {
             <DialogTitle>Create Purchase Order</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Order Number</Label>
-              <Input value={formData.order_number} disabled />
-            </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Order Number *</Label>
+                <Input
+                  value={formData.order_number}
+                  onChange={(e) => setFormData({ ...formData, order_number: e.target.value })}
+                  placeholder="Enter order number"
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label>Tracking Number</Label>
                 <Input
@@ -251,14 +256,17 @@ export default function PurchaseOrders() {
                   placeholder="Tracking number"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Supplier *</Label>
-                <Input
-                  value={formData.supplier}
-                  onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                  required
-                />
-              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Retailer *</Label>
+              <Input
+                value={formData.retailer}
+                onChange={(e) => setFormData({ ...formData, retailer: e.target.value })}
+                placeholder="Retailer name"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Order Date</Label>
                 <Input
@@ -363,8 +371,8 @@ export default function PurchaseOrders() {
                   <p className="font-mono font-medium">{selectedOrder.order_number}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-500">Supplier</Label>
-                  <p className="font-medium">{selectedOrder.supplier}</p>
+                  <Label className="text-slate-500">Retailer</Label>
+                  <p className="font-medium">{selectedOrder.retailer}</p>
                 </div>
                 <div>
                   <Label className="text-slate-500">Status</Label>

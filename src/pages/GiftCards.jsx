@@ -36,6 +36,7 @@ export default function GiftCards() {
   const [showCode, setShowCode] = useState({});
   const [formData, setFormData] = useState({
     brand: '',
+    retailer: '',
     value: '',
     code: '',
     pin: '',
@@ -43,10 +44,15 @@ export default function GiftCards() {
     status: 'available',
     notes: ''
   });
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkInput, setBulkInput] = useState('');
 
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ['giftCards'],
-    queryFn: () => base44.entities.GiftCard.list('-created_date')
+    queryFn: async () => {
+      const data = await base44.entities.GiftCard.list('-created_date');
+      return data.sort((a, b) => (a.retailer || '').localeCompare(b.retailer || ''));
+    }
   });
 
   const createMutation = useMutation({
@@ -92,6 +98,7 @@ export default function GiftCards() {
       setEditingCard(card);
       setFormData({
         brand: card.brand || '',
+        retailer: card.retailer || '',
         value: card.value || '',
         code: card.code || '',
         pin: card.pin || '',
@@ -103,6 +110,7 @@ export default function GiftCards() {
       setEditingCard(null);
       setFormData({
         brand: '',
+        retailer: '',
         value: '',
         code: '',
         pin: '',
@@ -145,9 +153,39 @@ export default function GiftCards() {
     return code.slice(0, 4) + '****' + code.slice(-4);
   };
 
+  const handleBulkAdd = async () => {
+    try {
+      const lines = bulkInput.trim().split('\n').filter(l => l.trim());
+      const cards = lines.map(line => {
+        const parts = line.split(',').map(p => p.trim());
+        if (parts.length < 3) throw new Error('Invalid format');
+        return {
+          brand: parts[0],
+          retailer: parts[1],
+          value: parseFloat(parts[2]),
+          code: parts[3] || '',
+          pin: parts[4] || '',
+          purchase_cost: parts[5] ? parseFloat(parts[5]) : null,
+          status: 'available'
+        };
+      });
+      
+      await base44.entities.GiftCard.bulkCreate(cards);
+      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      toast.success(`Added ${cards.length} gift cards`);
+      setBulkDialogOpen(false);
+      setBulkInput('');
+      await logActivity('Bulk added gift cards', 'gift_card', `Added ${cards.length} cards`);
+    } catch (error) {
+      toast.error('Error parsing bulk input. Check format.');
+      console.error(error);
+    }
+  };
+
   const filteredCards = cards.filter(card => {
     const matchesSearch = 
       card.brand?.toLowerCase().includes(search.toLowerCase()) ||
+      card.retailer?.toLowerCase().includes(search.toLowerCase()) ||
       card.code?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || card.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -157,8 +195,11 @@ export default function GiftCards() {
     { header: 'Brand', accessor: 'brand', cell: (row) => (
       <span className="font-medium">{row.brand}</span>
     )},
+    { header: 'Retailer', accessor: 'retailer', cell: (row) => (
+      <span className="text-sm">{row.retailer || '-'}</span>
+    )},
     { header: 'Value', accessor: 'value', cell: (row) => (
-      <span className="font-semibold text-emerald-600">${row.value?.toFixed(2)}</span>
+      <span className="font-semibold">${row.value?.toFixed(2)}</span>
     )},
     { header: 'Code', accessor: 'code', cell: (row) => (
       <div className="flex items-center gap-2">
@@ -273,6 +314,16 @@ export default function GiftCards() {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label>Retailer</Label>
+                <Input
+                  value={formData.retailer}
+                  onChange={(e) => setFormData({ ...formData, retailer: e.target.value })}
+                  placeholder="Where purchased"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label>Value ($) *</Label>
                 <Input
                   type="number"
@@ -280,23 +331,6 @@ export default function GiftCards() {
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value })}
                   required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Card Code *</Label>
-              <Input
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>PIN</Label>
-                <Input
-                  value={formData.pin}
-                  onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -308,6 +342,22 @@ export default function GiftCards() {
                   onChange={(e) => setFormData({ ...formData, purchase_cost: e.target.value })}
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Card Code *</Label>
+              <Input
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>PIN</Label>
+              <Input
+                value={formData.pin}
+                onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
+                placeholder="Optional"
+              />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
@@ -338,6 +388,40 @@ export default function GiftCards() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Add Dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Add Gift Cards</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm font-medium mb-2">Format (one per line):</p>
+              <code className="text-xs">Brand, Retailer, Value, Code, PIN, PurchaseCost</code>
+              <p className="text-xs text-gray-600 mt-2">Example:</p>
+              <code className="text-xs block mt-1">Amazon, Target, 100, AMZN1234, 5678, 92</code>
+              <code className="text-xs block">Apple, Walmart, 50, APPL5678, , 46</code>
+            </div>
+            <div className="space-y-2">
+              <Label>Paste Gift Cards</Label>
+              <Textarea
+                value={bulkInput}
+                onChange={(e) => setBulkInput(e.target.value)}
+                rows={10}
+                placeholder="Paste cards here..."
+                className="font-mono text-xs"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleBulkAdd} className="bg-black hover:bg-gray-800 text-white">
+              Add Cards
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

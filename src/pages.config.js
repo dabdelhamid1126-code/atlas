@@ -6,7 +6,6 @@ import ReceiveItems from './pages/ReceiveItems';
 import FixReceiving from './pages/FixReceiving';
 import SerialNumbers from './pages/SerialNumbers';
 import GiftCards from './pages/GiftCards';
-import CompleteExport from './pages/CompleteExport';
 import Invoices from './pages/Invoices';
 import ActivityLog from './pages/ActivityLog';
 import Tasks from './pages/Tasks';
@@ -18,6 +17,7 @@ import OrderLookup from './pages/OrderLookup';
 import DataExport from './pages/DataExport';
 import UserGuide from './pages/UserGuide';
 import ScanReceive from './pages/ScanReceive';
+import InventoryValue from './pages/InventoryValue';
 import __Layout from './Layout.jsx';
 
 
@@ -30,7 +30,6 @@ export const PAGES = {
     "FixReceiving": FixReceiving,
     "SerialNumbers": SerialNumbers,
     "GiftCards": GiftCards,
-    "CompleteExport": CompleteExport,
     "Invoices": Invoices,
     "ActivityLog": ActivityLog,
     "Tasks": Tasks,
@@ -42,6 +41,7 @@ export const PAGES = {
     "DataExport": DataExport,
     "UserGuide": UserGuide,
     "ScanReceive": ScanReceive,
+    "InventoryValue": InventoryValue,
 }
 
 export const pagesConfig = {

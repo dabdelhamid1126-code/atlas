@@ -182,6 +182,9 @@ export default function ScanReceive() {
             serial,
             product_id: group.product_id,
             product_name: group.product_name,
+            purchase_order_id: purchaseOrder.id,
+            order_number: purchaseOrder.order_number,
+            tracking_number: purchaseOrder.tracking_number,
             status: 'in_stock'
           });
         }
@@ -312,7 +315,7 @@ export default function ScanReceive() {
               <CardContent className="pt-6">
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium">Order: {purchaseOrder?.order_number}</p>
-                  <p className="text-sm text-gray-600">Supplier: {purchaseOrder?.supplier}</p>
+                  <p className="text-sm text-gray-600">Retailer: {purchaseOrder?.retailer}</p>
                 </div>
                 <form onSubmit={handleUPCScan} className="space-y-4">
                   <div className="space-y-2">
