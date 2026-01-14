@@ -43,6 +43,7 @@ export default function GiftCards() {
     pin: '',
     purchase_cost: '',
     status: 'available',
+    used_order_number: '',
     notes: ''
   });
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
@@ -52,7 +53,7 @@ export default function GiftCards() {
     queryKey: ['giftCards'],
     queryFn: async () => {
       const data = await base44.entities.GiftCard.list('-created_date');
-      return data.sort((a, b) => (a.retailer || '').localeCompare(b.retailer || ''));
+      return data.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
     }
   });
 
@@ -105,6 +106,7 @@ export default function GiftCards() {
         pin: card.pin || '',
         purchase_cost: card.purchase_cost || '',
         status: card.status || 'available',
+        used_order_number: card.used_order_number || '',
         notes: card.notes || ''
       });
     } else {
@@ -117,10 +119,23 @@ export default function GiftCards() {
         pin: '',
         purchase_cost: '',
         status: 'available',
+        used_order_number: '',
         notes: ''
       });
     }
     setDialogOpen(true);
+  };
+
+  const markAsUsed = async (card) => {
+    const orderNumber = prompt('Enter order number where this card was used:');
+    if (orderNumber) {
+      await base44.entities.GiftCard.update(card.id, { 
+        status: 'used',
+        used_order_number: orderNumber
+      });
+      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      toast.success('Gift card marked as used');
+    }
   };
 
   const handleSubmit = (e) => {
@@ -220,6 +235,16 @@ export default function GiftCards() {
     )},
     { header: '', cell: (row) => (
       <div className="flex items-center gap-1">
+        {row.status === 'available' && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => markAsUsed(row)}
+            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+          >
+            Mark Used
+          </Button>
+        )}
         <Button variant="ghost" size="icon" onClick={() => openDialog(row)}>
           <Pencil className="h-4 w-4" />
         </Button>
@@ -380,6 +405,16 @@ export default function GiftCards() {
                 </SelectContent>
               </Select>
             </div>
+            {formData.status === 'used' && (
+              <div className="space-y-2">
+                <Label>Order Number Used</Label>
+                <Input
+                  value={formData.used_order_number}
+                  onChange={(e) => setFormData({ ...formData, used_order_number: e.target.value })}
+                  placeholder="Order number"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Notes</Label>
               <Input
