@@ -103,18 +103,18 @@ export default function Layout({ children, currentPageName }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 transition-transform duration-300 lg:translate-x-0",
+          "fixed top-0 left-0 z-50 h-full w-64 glass border-r border-white/20 transition-transform duration-300 lg:translate-x-0 shadow-xl",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center justify-between px-5 border-b border-slate-100">
+          <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-black flex items-center justify-center">
+              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">FF</span>
               </div>
-              <span className="font-bold text-black tracking-tight">FalconFlips</span>
+              <span className="font-bold text-slate-900 tracking-tight">FalconFlips</span>
             </div>
             <Button
               variant="ghost"
@@ -137,10 +137,10 @@ export default function Layout({ children, currentPageName }) {
                     to={createPageUrl(item.page)}
                     onClick={() => setSidebarOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                       isActive
-                        ? "bg-black text-white"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-black"
+                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200"
+                        : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                     )}
                   >
                     <item.icon className={cn("h-4.5 w-4.5", isActive ? "text-white" : "text-slate-400")} />
@@ -154,25 +154,25 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User Section */}
           {user && (
-            <div className="border-t border-slate-100 p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-black text-white text-sm">
+            <div className="border-t border-white/10 p-4">
+              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-white/50">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-sm font-semibold">
                     {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">
+                  <p className="text-sm font-semibold text-slate-900 truncate">
                     {user.full_name || 'User'}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                  <p className="text-xs text-slate-600 truncate">{user.email}</p>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50"
+                className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign out

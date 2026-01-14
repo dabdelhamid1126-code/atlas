@@ -92,10 +92,10 @@ export default function Dashboard() {
   };
 
   const quickLinks = [
-    { name: 'Scan & Receive', page: 'ScanReceive', icon: Package, color: 'bg-black' },
-    { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp, color: 'bg-gray-700' },
-    { name: 'New Invoice', page: 'Invoices', icon: FileText, color: 'bg-gray-600' },
-    { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard, color: 'bg-gray-500' },
+    { name: 'Scan & Receive', page: 'ScanReceive', icon: Package, color: 'gradient-primary' },
+    { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp, color: 'gradient-success' },
+    { name: 'New Invoice', page: 'Invoices', icon: FileText, color: 'gradient-warning' },
+    { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard, color: 'gradient-danger' },
   ];
 
   if (loading) {
@@ -120,7 +120,7 @@ export default function Dashboard() {
 
       {/* Price Entry Section */}
       {productsWithoutPrice.length > 0 && (
-        <Card className="mb-8 border-2 border-amber-200 bg-amber-50">
+        <Card className="mb-8 border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-amber-100 shadow-lg animate-slide-up">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-900">
               <DollarSign className="h-5 w-5" />
@@ -207,15 +207,18 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-900 mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-6">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickLinks.map((link) => (
+          {quickLinks.map((link, idx) => (
             <Link key={link.page} to={createPageUrl(link.page)}>
-              <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow cursor-pointer group">
-                <div className={`h-10 w-10 rounded-lg ${link.color} flex items-center justify-center mb-3`}>
-                  <link.icon className="h-5 w-5 text-white" />
+              <div 
+                className="card-modern p-5 hover:shadow-xl transition-all cursor-pointer group animate-slide-up"
+                style={{animationDelay: `${idx * 0.1}s`}}
+              >
+                <div className={`h-12 w-12 rounded-2xl ${link.color.replace('bg-', 'gradient-')} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+                  <link.icon className="h-6 w-6 text-white" />
                 </div>
-                <p className="text-sm font-medium text-slate-900 group-hover:text-black transition-colors">
+                <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
                   {link.name}
                 </p>
               </div>
