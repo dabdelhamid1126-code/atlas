@@ -22,7 +22,7 @@ export default function Invoices() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
-  const [productSearch, setProductSearch] = useState('');
+  const [productSearches, setProductSearches] = useState({});
   const [formData, setFormData] = useState({
     invoice_number: '',
     buyer: '',
@@ -540,10 +540,11 @@ export default function Invoices() {
               <div className="space-y-3">
                 {formData.items.map((item, index) => {
                   const availableStock = item.product_id ? getAvailableStock(item.product_id) : null;
+                  const currentSearch = productSearches[index] || '';
                   const filteredProducts = products.filter(p => 
-                    !productSearch || 
-                    p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
-                    p.sku?.toLowerCase().includes(productSearch.toLowerCase())
+                    !currentSearch || 
+                    p.name?.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                    p.upc?.toLowerCase().includes(currentSearch.toLowerCase())
                   );
                   return (
                     <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
@@ -553,8 +554,8 @@ export default function Invoices() {
                           <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
-                              value={productSearch}
-                              onChange={(e) => setProductSearch(e.target.value)}
+                              value={currentSearch}
+                              onChange={(e) => setProductSearches({...productSearches, [index]: e.target.value})}
                               placeholder="Search products..."
                               className="pl-9 mb-2"
                             />
@@ -563,7 +564,7 @@ export default function Invoices() {
                             value={item.product_id || ''} 
                             onValueChange={(v) => {
                               selectProduct(index, v);
-                              setProductSearch('');
+                              setProductSearches({...productSearches, [index]: ''});
                             }}
                           >
                             <SelectTrigger>
