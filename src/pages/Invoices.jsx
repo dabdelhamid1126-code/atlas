@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Download, X, Check, FileText, DollarSign } from 'lucide-react';
+import { Plus, Download, X, Check, FileText, DollarSign, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
@@ -22,6 +22,7 @@ export default function Invoices() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
+  const [productSearch, setProductSearch] = useState('');
   const [formData, setFormData] = useState({
     invoice_number: '',
     buyer: '',
@@ -539,24 +540,45 @@ export default function Invoices() {
               <div className="space-y-3">
                 {formData.items.map((item, index) => {
                   const availableStock = item.product_id ? getAvailableStock(item.product_id) : null;
+                  const filteredProducts = products.filter(p => 
+                    !productSearch || 
+                    p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+                    p.sku?.toLowerCase().includes(productSearch.toLowerCase())
+                  );
                   return (
                     <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                       <div className="flex gap-3 items-end">
                         <div className="flex-1">
                           <Label className="text-xs font-medium">Product</Label>
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input
+                              value={productSearch}
+                              onChange={(e) => setProductSearch(e.target.value)}
+                              placeholder="Search products..."
+                              className="pl-9 mb-2"
+                            />
+                          </div>
                           <Select 
                             value={item.product_id || ''} 
-                            onValueChange={(v) => selectProduct(index, v)}
+                            onValueChange={(v) => {
+                              selectProduct(index, v);
+                              setProductSearch('');
+                            }}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select a product" />
                             </SelectTrigger>
                             <SelectContent>
-                              {products.map(p => (
-                                <SelectItem key={p.id} value={p.id}>
-                                  {p.name} {p.sku ? `(${p.sku})` : ''}
-                                </SelectItem>
-                              ))}
+                              {filteredProducts.length === 0 ? (
+                                <div className="p-2 text-sm text-slate-500 text-center">No products found</div>
+                              ) : (
+                                filteredProducts.map(p => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.name} {p.sku ? `(${p.sku})` : ''}
+                                  </SelectItem>
+                                ))
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
