@@ -40,6 +40,16 @@ export default function Invoices() {
     queryFn: () => base44.entities.Invoice.list('-created_date')
   });
 
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => base44.entities.Product.list()
+  });
+
+  const { data: inventory = [] } = useQuery({
+    queryKey: ['inventory'],
+    queryFn: () => base44.entities.InventoryItem.list()
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Invoice.create(data),
     onSuccess: () => {
@@ -90,7 +100,7 @@ export default function Invoices() {
         status: 'draft',
         invoice_date: format(new Date(), 'yyyy-MM-dd'),
         due_date: '',
-        items: [{ description: '', quantity: 1, unit_price: 0, total: 0 }],
+        items: [{ product_id: '', description: '', quantity: 1, unit_price: 0, total: 0 }],
         tax: 0,
         notes: ''
       });
@@ -101,8 +111,30 @@ export default function Invoices() {
   const addItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { description: '', quantity: 1, unit_price: 0, total: 0 }]
+      items: [...formData.items, { product_id: '', description: '', quantity: 1, unit_price: 0, total: 0 }]
     });
+  };
+
+  const selectProduct = (index, productId) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      const newItems = [...formData.items];
+      newItems[index] = {
+        ...newItems[index],
+        product_id: productId,
+        description: product.name,
+        unit_price: product.price || 0,
+        total: (newItems[index].quantity || 1) * (product.price || 0)
+      };
+      setFormData({ ...formData, items: newItems });
+    }
+  };
+
+  const getAvailableStock = (productId) => {
+    if (!productId) return 0;
+    return inventory
+      .filter(inv => inv.product_id === productId && inv.status === 'in_stock')
+      .reduce((sum, inv) => sum + (inv.quantity || 0), 0);
   };
 
   const removeItem = (index) => {
@@ -128,12 +160,26 @@ export default function Invoices() {
     return { subtotal, total };
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.invoice_number.trim()) {
       toast.error('Invoice number is required');
       return;
     }
+
+    // Check stock availability if status is 'sent'
+    if (formData.status === 'sent' && !editingInvoice) {
+      for (const item of formData.items) {
+        if (item.product_id) {
+          const available = getAvailableStock(item.product_id);
+          if (available < item.quantity) {
+            toast.error(`Insufficient stock for ${item.description}. Available: ${available}`);
+            return;
+          }
+        }
+      }
+    }
+
     const { subtotal, total } = calculateTotals();
     const data = {
       ...formData,
@@ -142,10 +188,45 @@ export default function Invoices() {
     };
 
     if (editingInvoice) {
+      // If changing from non-sent to sent, deduct inventory
+      if (editingInvoice.status !== 'sent' && formData.status === 'sent') {
+        await deductInventory(formData.items);
+      }
       updateMutation.mutate({ id: editingInvoice.id, data });
     } else {
+      // Deduct inventory if creating as 'sent'
+      if (formData.status === 'sent') {
+        await deductInventory(formData.items);
+      }
       createMutation.mutate(data);
     }
+  };
+
+  const deductInventory = async (items) => {
+    for (const item of items) {
+      if (item.product_id) {
+        const productInventory = inventory.filter(
+          inv => inv.product_id === item.product_id && inv.status === 'in_stock'
+        ).sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+
+        let remaining = item.quantity;
+        for (const inv of productInventory) {
+          if (remaining <= 0) break;
+          
+          const deductAmount = Math.min(inv.quantity, remaining);
+          const newQuantity = inv.quantity - deductAmount;
+          
+          if (newQuantity > 0) {
+            await base44.entities.InventoryItem.update(inv.id, { quantity: newQuantity });
+          } else {
+            await base44.entities.InventoryItem.update(inv.id, { quantity: 0, status: 'exported' });
+          }
+          
+          remaining -= deductAmount;
+        }
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['inventory'] });
   };
 
   const downloadPDF = async (invoice) => {
@@ -456,43 +537,72 @@ export default function Invoices() {
                 </Button>
               </div>
               <div className="space-y-3">
-                {formData.items.map((item, index) => (
-                  <div key={index} className="flex gap-3 items-end p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div className="flex-1">
-                      <Label className="text-xs font-medium">Description</Label>
-                      <Input
-                        value={item.description}
-                        onChange={(e) => updateItem(index, 'description', e.target.value)}
-                        placeholder="Item description"
-                      />
+                {formData.items.map((item, index) => {
+                  const availableStock = item.product_id ? getAvailableStock(item.product_id) : null;
+                  return (
+                    <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                      <div className="flex gap-3 items-end">
+                        <div className="flex-1">
+                          <Label className="text-xs font-medium">Product</Label>
+                          <Select 
+                            value={item.product_id || ''} 
+                            onValueChange={(v) => selectProduct(index, v)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a product" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {products.map(p => (
+                                <SelectItem key={p.id} value={p.id}>
+                                  {p.name} {p.sku ? `(${p.sku})` : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="w-24">
+                          <Label className="text-xs font-medium">Qty</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                          />
+                        </div>
+                        <div className="w-32">
+                          <Label className="text-xs font-medium">Price</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.unit_price}
+                            onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                          />
+                        </div>
+                        <div className="w-32 text-right">
+                          <Label className="text-xs font-medium">Total</Label>
+                          <p className="font-semibold py-2 text-lg">${(item.total || 0).toFixed(2)}</p>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-red-500">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {availableStock !== null && (
+                        <div className="flex items-center gap-2">
+                          <div className={`px-2 py-1 rounded text-xs font-medium ${
+                            availableStock >= item.quantity 
+                              ? 'bg-emerald-100 text-emerald-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {availableStock} in stock
+                          </div>
+                          {availableStock < item.quantity && (
+                            <span className="text-xs text-red-600 font-medium">Insufficient stock!</span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div className="w-24">
-                      <Label className="text-xs font-medium">Qty</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="w-32">
-                      <Label className="text-xs font-medium">Price</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.unit_price}
-                        onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="w-32 text-right">
-                      <Label className="text-xs font-medium">Total</Label>
-                      <p className="font-semibold py-2 text-lg">${(item.total || 0).toFixed(2)}</p>
-                    </div>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-red-500">
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
