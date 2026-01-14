@@ -49,7 +49,6 @@ export default function InventoryValue() {
       inventoryByProduct[key] = {
         product_id: item.product_id,
         product_name: item.product_name,
-        sku: item.sku,
         quantity: 0
       };
     }
@@ -123,7 +122,6 @@ export default function InventoryValue() {
                 <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                   <div className="flex-1">
                     <p className="font-semibold text-slate-900">{item.product_name}</p>
-                    {item.sku && <p className="text-sm text-slate-500">SKU: {item.sku}</p>}
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-slate-900">{item.quantity}</p>

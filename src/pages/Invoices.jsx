@@ -575,7 +575,7 @@ export default function Invoices() {
                               ) : (
                                 filteredProducts.map(p => (
                                   <SelectItem key={p.id} value={p.id}>
-                                    {p.name} {p.sku ? `(${p.sku})` : ''}
+                                    {p.name}
                                   </SelectItem>
                                 ))
                               )}

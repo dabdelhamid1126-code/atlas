@@ -36,7 +36,7 @@ export default function Products() {
     name: '',
     upc: '',
     image: '',
-    value: ''
+    category: ''
   });
 
   const { data: products = [], isLoading } = useQuery({
@@ -90,7 +90,7 @@ export default function Products() {
         name: product.name || '',
         upc: product.upc || '',
         image: product.image || '',
-        value: product.value || ''
+        category: product.category || ''
       });
     } else {
       setEditingProduct(null);
@@ -98,7 +98,7 @@ export default function Products() {
         name: '',
         upc: '',
         image: '',
-        value: ''
+        category: ''
       });
     }
     setDialogOpen(true);
@@ -111,10 +111,7 @@ export default function Products() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const data = {
-      ...formData,
-      value: formData.value ? parseFloat(formData.value) : null
-    };
+    const data = { ...formData };
 
     if (editingProduct) {
       updateMutation.mutate({ id: editingProduct.id, data });
@@ -145,10 +142,10 @@ export default function Products() {
       </div>
     )},
     { header: 'UPC', accessor: 'upc', cell: (row) => (
-      <span className="font-mono text-sm">{row.upc}</span>
+      <span className="font-mono text-sm">{row.upc || '-'}</span>
     )},
-    { header: 'Value', accessor: 'value', cell: (row) => (
-      row.value ? <span className="font-semibold">${row.value.toFixed(2)}</span> : '-'
+    { header: 'Category', accessor: 'category', cell: (row) => (
+      row.category ? <span className="text-sm capitalize">{row.category}</span> : '-'
     )},
     { header: 'Actions', cell: (row) => (
       <div className="flex items-center gap-2">
@@ -208,12 +205,25 @@ export default function Products() {
               />
             </div>
             <div className="space-y-2">
-              <Label>UPC *</Label>
+              <Label>UPC</Label>
               <Input
                 value={formData.upc}
                 onChange={(e) => setFormData({ ...formData, upc: e.target.value })}
-                required
+                placeholder="Barcode number"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Image URL</Label>
@@ -222,15 +232,6 @@ export default function Products() {
                 value={formData.image}
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 placeholder="https://example.com/image.jpg"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Value ($)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
               />
             </div>
             <DialogFooter>
