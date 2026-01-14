@@ -13,6 +13,10 @@ import Tasks from './pages/Tasks';
 import UserApprovals from './pages/UserApprovals';
 import TeamProfile from './pages/TeamProfile';
 import Analytics from './pages/Analytics';
+import DamagedItems from './pages/DamagedItems';
+import OrderLookup from './pages/OrderLookup';
+import DataExport from './pages/DataExport';
+import UserGuide from './pages/UserGuide';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +36,10 @@ export const PAGES = {
     "UserApprovals": UserApprovals,
     "TeamProfile": TeamProfile,
     "Analytics": Analytics,
+    "DamagedItems": DamagedItems,
+    "OrderLookup": OrderLookup,
+    "DataExport": DataExport,
+    "UserGuide": UserGuide,
 }
 
 export const pagesConfig = {
