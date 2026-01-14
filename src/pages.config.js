@@ -8,6 +8,11 @@ import SerialNumbers from './pages/SerialNumbers';
 import GiftCards from './pages/GiftCards';
 import CompleteExport from './pages/CompleteExport';
 import Invoices from './pages/Invoices';
+import ActivityLog from './pages/ActivityLog';
+import Tasks from './pages/Tasks';
+import UserApprovals from './pages/UserApprovals';
+import TeamProfile from './pages/TeamProfile';
+import Analytics from './pages/Analytics';
 import __Layout from './Layout.jsx';
 
 
@@ -22,6 +27,11 @@ export const PAGES = {
     "GiftCards": GiftCards,
     "CompleteExport": CompleteExport,
     "Invoices": Invoices,
+    "ActivityLog": ActivityLog,
+    "Tasks": Tasks,
+    "UserApprovals": UserApprovals,
+    "TeamProfile": TeamProfile,
+    "Analytics": Analytics,
 }
 
 export const pagesConfig = {
