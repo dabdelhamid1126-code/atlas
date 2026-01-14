@@ -35,6 +35,8 @@ export default function Analytics() {
   const [period, setPeriod] = useState('30');
   const [data, setData] = useState({
     totalInventory: 0,
+    itemsOnWay: 0,
+    inventoryValue: 0,
     totalExports: 0,
     totalRevenue: 0,
     totalInvoices: 0,
@@ -50,11 +52,12 @@ export default function Analytics() {
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const [inventory, exports, invoices, products] = await Promise.all([
+      const [inventory, exports, invoices, products, purchaseOrders] = await Promise.all([
         base44.entities.InventoryItem.list(),
         base44.entities.Export.list('-created_date'),
         base44.entities.Invoice.list(),
-        base44.entities.Product.list()
+        base44.entities.Product.list(),
+        base44.entities.PurchaseOrder.list()
       ]);
 
       const daysAgo = parseInt(period);
@@ -63,11 +66,26 @@ export default function Analytics() {
       // Filter exports by period
       const recentExports = exports.filter(e => new Date(e.created_date) >= startDate);
 
+      // Calculate items on the way
+      const pendingOrders = purchaseOrders.filter(po => ['ordered', 'shipped', 'partially_received'].includes(po.status));
+      const itemsOnWay = pendingOrders.reduce((sum, po) => {
+        const ordered = po.items?.reduce((s, i) => s + (i.quantity_ordered || 0), 0) || 0;
+        const received = po.items?.reduce((s, i) => s + (i.quantity_received || 0), 0) || 0;
+        return sum + (ordered - received);
+      }, 0);
+
       // Calculate totals
       const totalInventory = inventory.reduce((sum, item) => sum + (item.quantity || 0), 0);
       const totalRevenue = recentExports.reduce((sum, e) => sum + (e.total_value || 0), 0);
       const paidInvoices = invoices.filter(i => i.status === 'paid');
       const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+      
+      // Calculate total inventory value
+      const inventoryValue = inventory.reduce((sum, item) => {
+        const product = products.find(p => p.id === item.product_id);
+        const price = product?.price || item.unit_cost || 0;
+        return sum + (price * (item.quantity || 0));
+      }, 0);
 
       // Exports by day
       const days = eachDayOfInterval({ start: startDate, end: new Date() });
@@ -108,6 +126,8 @@ export default function Analytics() {
 
       setData({
         totalInventory,
+        itemsOnWay,
+        inventoryValue,
         totalExports: recentExports.length,
         totalRevenue,
         totalInvoices: totalPaid,
@@ -159,27 +179,45 @@ export default function Analytics() {
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatsCard
-          title="Total Inventory"
-          value={data.totalInventory.toLocaleString()}
-          icon={Package}
-        />
-        <StatsCard
-          title="Exports"
-          value={data.totalExports}
-          icon={Upload}
-        />
-        <StatsCard
-          title="Export Value"
-          value={`$${data.totalRevenue.toLocaleString()}`}
-          icon={DollarSign}
-        />
-        <StatsCard
-          title="Paid Invoices"
-          value={`$${data.totalInvoices.toLocaleString()}`}
-          icon={FileText}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="card-modern p-6 animate-slide-up">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Inventory On Hand</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">{data.totalInventory.toLocaleString()}</p>
+              <p className="text-sm text-emerald-600 font-semibold mt-1">${(data.inventoryValue || 0).toLocaleString()}</p>
+            </div>
+            <div className="h-14 w-14 gradient-success rounded-2xl flex items-center justify-center">
+              <Package className="h-7 w-7 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="card-modern p-6 animate-slide-up" style={{animationDelay: '0.1s'}}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Items On The Way</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">{data.itemsOnWay.toLocaleString()}</p>
+              <p className="text-xs text-slate-500 mt-1">From pending orders</p>
+            </div>
+            <div className="h-14 w-14 gradient-primary rounded-2xl flex items-center justify-center">
+              <ShoppingCart className="h-7 w-7 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="card-modern p-6 animate-slide-up" style={{animationDelay: '0.2s'}}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Export Value</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">${data.totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-slate-500 mt-1">{data.totalExports} exports</p>
+            </div>
+            <div className="h-14 w-14 gradient-warning rounded-2xl flex items-center justify-center">
+              <TrendingUp className="h-7 w-7 text-white" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Charts */}
