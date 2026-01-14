@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Eye, Trash2, X } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -33,6 +33,7 @@ export default function PurchaseOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [formData, setFormData] = useState({
@@ -66,6 +67,16 @@ export default function PurchaseOrders() {
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.PurchaseOrder.update(id, data),
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      toast.success('Purchase order updated');
+      closeDialog();
+      await logActivity('Updated purchase order', 'purchase_order', formData.order_number);
+    }
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.PurchaseOrder.delete(id),
     onSuccess: () => {
@@ -85,28 +96,44 @@ export default function PurchaseOrders() {
     });
   };
 
-  const openDialog = () => {
-    setFormData({
-      order_number: '',
-      tracking_number: '',
-      retailer: '',
-      status: 'pending',
-      order_date: format(new Date(), 'yyyy-MM-dd'),
-      expected_date: '',
-      notes: '',
-      items: []
-    });
+  const openDialog = (order = null) => {
+    if (order) {
+      setEditingOrder(order);
+      setFormData({
+        order_number: order.order_number || '',
+        tracking_number: order.tracking_number || '',
+        retailer: order.retailer || '',
+        status: order.status || 'pending',
+        order_date: order.order_date || '',
+        expected_date: order.expected_date || '',
+        notes: order.notes || '',
+        items: order.items || []
+      });
+    } else {
+      setEditingOrder(null);
+      setFormData({
+        order_number: '',
+        tracking_number: '',
+        retailer: '',
+        status: 'pending',
+        order_date: format(new Date(), 'yyyy-MM-dd'),
+        expected_date: '',
+        notes: '',
+        items: []
+      });
+    }
     setDialogOpen(true);
   };
 
   const closeDialog = () => {
     setDialogOpen(false);
+    setEditingOrder(null);
   };
 
   const addItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { product_id: '', product_name: '', sku: '', quantity_ordered: 1, quantity_received: 0, unit_cost: 0 }]
+      items: [...formData.items, { product_id: '', product_name: '', upc: '', quantity_ordered: 1, quantity_received: 0, unit_cost: 0 }]
     });
   };
 
@@ -123,9 +150,7 @@ export default function PurchaseOrders() {
       const product = products.find(p => p.id === value);
       if (product) {
         newItems[index].product_name = product.name;
-        newItems[index].sku = product.sku;
         newItems[index].upc = product.upc;
-        newItems[index].unit_cost = product.base_cost || 0;
       }
     }
     
@@ -135,7 +160,11 @@ export default function PurchaseOrders() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const totalCost = formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
-    createMutation.mutate({ ...formData, total_cost: totalCost });
+    if (editingOrder) {
+      updateMutation.mutate({ id: editingOrder.id, data: { ...formData, total_cost: totalCost } });
+    } else {
+      createMutation.mutate({ ...formData, total_cost: totalCost });
+    }
   };
 
   const viewDetails = (order) => {
@@ -179,6 +208,9 @@ export default function PurchaseOrders() {
     )},
     { header: '', cell: (row) => (
       <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" onClick={() => openDialog(row)}>
+          <Pencil className="h-4 w-4" />
+        </Button>
         <Button variant="ghost" size="icon" onClick={() => viewDetails(row)}>
           <Eye className="h-4 w-4" />
         </Button>
@@ -235,7 +267,7 @@ export default function PurchaseOrders() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create Purchase Order</DialogTitle>
+            <DialogTitle>{editingOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -257,14 +289,29 @@ export default function PurchaseOrders() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Retailer *</Label>
-              <Input
-                value={formData.retailer}
-                onChange={(e) => setFormData({ ...formData, retailer: e.target.value })}
-                placeholder="Retailer name"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Retailer *</Label>
+                <Input
+                  value={formData.retailer}
+                  onChange={(e) => setFormData({ ...formData, retailer: e.target.value })}
+                  placeholder="Retailer name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map(s => (
+                      <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -306,7 +353,7 @@ export default function PurchaseOrders() {
                         </SelectTrigger>
                         <SelectContent>
                           {products.map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -351,7 +398,9 @@ export default function PurchaseOrders() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
-              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">Create Order</Button>
+              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
+                {editingOrder ? 'Update Order' : 'Create Order'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
