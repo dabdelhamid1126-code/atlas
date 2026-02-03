@@ -101,7 +101,22 @@ export default function PurchaseOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.PurchaseOrder.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      const updatedOrder = await base44.entities.PurchaseOrder.update(id, data);
+      
+      // Mark gift cards as used if gift cards were added
+      if (data.gift_card_ids && data.gift_card_ids.length > 0) {
+        for (const cardId of data.gift_card_ids) {
+          await base44.entities.GiftCard.update(cardId, {
+            status: 'used',
+            used_order_number: data.order_number
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      }
+      
+      return updatedOrder;
+    },
     onSuccess: async (updatedOrder) => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Purchase order updated');
