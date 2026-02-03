@@ -38,8 +38,6 @@ export default function Dashboard() {
     totalCashback: 0,
     totalPoints: 0,
     totalGiftCardSpend: 0,
-    giftCardCashback: 0,
-    giftCardPoints: 0,
     mostUsedCard: null
   });
 
@@ -79,13 +77,7 @@ export default function Dashboard() {
       const totalPoints = rewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
       const totalGiftCardSpend = allGiftCards.filter(gc => gc.purchase_cost).reduce((sum, gc) => sum + gc.purchase_cost, 0);
       
-      // Calculate rewards from gift card purchases
-      const giftCardRewards = rewards.filter(r => 
-        (r.source && r.source.includes('(Gift Card)')) || 
-        (r.notes && r.notes.toLowerCase().includes('gift card purchase'))
-      );
-      const giftCardCashback = giftCardRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
-      const giftCardPoints = giftCardRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
+
 
       // Find most used card
       const cardUsage = {};
@@ -102,8 +94,6 @@ export default function Dashboard() {
         totalCashback,
         totalPoints,
         totalGiftCardSpend,
-        giftCardCashback,
-        giftCardPoints,
         mostUsedCard
       });
     } catch (error) {
@@ -283,7 +273,7 @@ export default function Dashboard() {
         </div>
 
         {/* Gift Card Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 gap-4 mt-4">
           <Card className="card-modern overflow-hidden border-2 border-pink-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
@@ -293,32 +283,6 @@ export default function Dashboard() {
                 </div>
               </div>
               <p className="text-3xl font-bold text-pink-600">${financialStats.totalGiftCardSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-modern overflow-hidden border-2 border-emerald-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">GC Cashback Earned</p>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-white" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-emerald-600">${financialStats.giftCardCashback.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-              <p className="text-xs text-slate-500 mt-1">from gift card purchases</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-modern overflow-hidden border-2 border-violet-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">GC Points Earned</p>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-white" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-violet-600">{financialStats.giftCardPoints.toLocaleString()}</p>
-              <p className="text-xs text-slate-500 mt-1">points from gift card purchases</p>
             </CardContent>
           </Card>
         </div>
