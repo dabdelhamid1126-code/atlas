@@ -369,6 +369,18 @@ export default function Rewards() {
     { header: 'Type', accessor: 'reward_type', cell: (row) => (
       <span className="text-sm capitalize">{row.reward_type}</span>
     )},
+    { header: 'Total Earned', accessor: 'total_earned', cell: (row) => {
+      const cardRewards = rewards.filter(r => r.credit_card_id === row.id);
+      const cashback = cardRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
+      const points = cardRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
+      return (
+        <div className="text-sm">
+          {cashback > 0 && <div className="text-green-600 font-semibold">${cashback.toFixed(2)}</div>}
+          {points > 0 && <div className="text-violet-600 font-semibold">{points.toLocaleString()} pts</div>}
+          {cashback === 0 && points === 0 && <span className="text-slate-400">-</span>}
+        </div>
+      );
+    }},
     { header: 'Status', accessor: 'active', cell: (row) => (
       <StatusBadge status={row.active ? 'active' : 'inactive'} />
     )},
