@@ -70,6 +70,11 @@ export default function PurchaseOrders() {
     queryFn: () => base44.entities.GiftCard.list()
   });
 
+  const { data: rewards = [] } = useQuery({
+    queryKey: ['rewards'],
+    queryFn: () => base44.entities.Reward.list()
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const newOrder = await base44.entities.PurchaseOrder.create(data);
@@ -747,6 +752,24 @@ export default function PurchaseOrders() {
                   ))}
                 </div>
               </div>
+              {selectedOrder.credit_card_id && (() => {
+                const orderReward = rewards.find(r => r.purchase_order_id === selectedOrder.id);
+                if (orderReward) {
+                  return (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <Label className="text-slate-500">Reward Earned</Label>
+                      <p className="text-lg font-semibold text-green-700">
+                        {orderReward.currency === 'USD' 
+                          ? `$${orderReward.amount?.toFixed(2)} cashback` 
+                          : `${orderReward.amount} points`}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        From {orderReward.card_name} • {orderReward.status}
+                      </p>
+                    </div>
+                  );
+                }
+              })()}
             </div>
           )}
           <DialogFooter>
