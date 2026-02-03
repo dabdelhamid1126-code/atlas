@@ -115,7 +115,9 @@ export default function GiftCards() {
   };
 
   const createRewardForGiftCard = async (giftCard, creditCardId, purchaseAmount) => {
-    const card = creditCards.find(c => c.id === creditCardId);
+    // Fetch the credit card to ensure we have the latest data
+    const cards = await base44.entities.CreditCard.list();
+    const card = cards.find(c => c.id === creditCardId);
     if (!card) return;
 
     let rewardAmount = 0;
