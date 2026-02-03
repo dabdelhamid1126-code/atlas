@@ -121,13 +121,15 @@ export default function GiftCards() {
     let rewardType = 'cashback';
     let currency = 'USD';
 
-    // DoorDash counts as dining
+    // DoorDash counts as dining - use dining_points_rate if available
+    const pointsMultiplier = card.dining_points_rate || card.points_rate || 1;
+
     if (card.reward_type === 'cashback' && card.cashback_rate) {
       rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
       rewardType = 'cashback';
       currency = 'USD';
-    } else if (card.reward_type === 'points' && card.points_rate) {
-      rewardAmount = Math.round(purchaseAmount * card.points_rate);
+    } else if (card.reward_type === 'points' && pointsMultiplier) {
+      rewardAmount = Math.round(purchaseAmount * pointsMultiplier);
       rewardType = 'points';
       currency = 'points';
     } else if (card.reward_type === 'both') {
@@ -135,8 +137,8 @@ export default function GiftCards() {
         rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
         rewardType = 'cashback';
         currency = 'USD';
-      } else if (card.points_rate) {
-        rewardAmount = Math.round(purchaseAmount * card.points_rate);
+      } else if (pointsMultiplier) {
+        rewardAmount = Math.round(purchaseAmount * pointsMultiplier);
         rewardType = 'points';
         currency = 'points';
       }
