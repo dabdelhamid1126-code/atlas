@@ -61,10 +61,10 @@ import OrderLookup from './pages/OrderLookup';
 import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
+import Rewards from './pages/Rewards';
 import ScanReceive from './pages/ScanReceive';
 import SerialNumbers from './pages/SerialNumbers';
 import UserGuide from './pages/UserGuide';
-import Rewards from './pages/Rewards';
 import __Layout from './Layout.jsx';
 
 
@@ -83,10 +83,10 @@ export const PAGES = {
     "Products": Products,
     "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,
+    "Rewards": Rewards,
     "ScanReceive": ScanReceive,
     "SerialNumbers": SerialNumbers,
     "UserGuide": UserGuide,
-    "Rewards": Rewards,
 }
 
 export const pagesConfig = {

@@ -33,6 +33,12 @@ export default function Dashboard() {
   const [productsWithoutPrice, setProductsWithoutPrice] = useState([]);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const [priceInput, setPriceInput] = useState('');
+  const [financialStats, setFinancialStats] = useState({
+    totalSpent: 0,
+    totalCashback: 0,
+    totalPoints: 0,
+    mostUsedCard: null
+  });
 
   useEffect(() => {
     loadDashboardData();
@@ -40,13 +46,16 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [inventory, purchaseOrders, exports, giftCards, damaged, products] = await Promise.all([
+      const [inventory, purchaseOrders, exports, giftCards, damaged, products, allOrders, rewards, creditCards] = await Promise.all([
         base44.entities.InventoryItem.filter({ status: 'in_stock' }),
         base44.entities.PurchaseOrder.filter({ status: 'pending' }),
         base44.entities.Export.filter({ status: 'pending' }),
         base44.entities.GiftCard.filter({ status: 'available' }),
         base44.entities.DamagedItem.filter({ status: 'reported' }),
-        base44.entities.Product.list()
+        base44.entities.Product.list(),
+        base44.entities.PurchaseOrder.list(),
+        base44.entities.Reward.list(),
+        base44.entities.CreditCard.list()
       ]);
 
       setStats({
@@ -59,6 +68,28 @@ export default function Dashboard() {
 
       const withoutPrice = products.filter(p => !p.price && p.price !== 0);
       setProductsWithoutPrice(withoutPrice);
+
+      // Calculate financial stats
+      const totalSpent = allOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
+      const totalCashback = rewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
+      const totalPoints = rewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
+
+      // Find most used card
+      const cardUsage = {};
+      allOrders.forEach(order => {
+        if (order.credit_card_id) {
+          cardUsage[order.credit_card_id] = (cardUsage[order.credit_card_id] || 0) + 1;
+        }
+      });
+      const mostUsedCardId = Object.keys(cardUsage).reduce((a, b) => cardUsage[a] > cardUsage[b] ? a : b, null);
+      const mostUsedCard = mostUsedCardId ? creditCards.find(c => c.id === mostUsedCardId) : null;
+
+      setFinancialStats({
+        totalSpent,
+        totalCashback,
+        totalPoints,
+        mostUsedCard
+      });
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -176,33 +207,96 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Financial Overview */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Total Spent</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-slate-900">${financialStats.totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Total Cashback</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-emerald-600">${financialStats.totalCashback.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Total Points</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-violet-600">{financialStats.totalPoints.toLocaleString()}</p>
+              <p className="text-xs text-slate-500 mt-1">points</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Most Used Card</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-slate-900 truncate">
+                {financialStats.mostUsedCard?.card_name || 'N/A'}
+              </p>
+              {financialStats.mostUsedCard && (
+                <p className="text-xs text-slate-500 mt-1">{financialStats.mostUsedCard.issuer}</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <StatsCard
-          title="Inventory Items"
-          value={stats.inventory.toLocaleString()}
-          icon={Package}
-        />
-        <StatsCard
-          title="Pending Purchase Orders"
-          value={stats.pendingPO}
-          icon={ShoppingCart}
-        />
-        <StatsCard
-          title="Pending Exports"
-          value={stats.pendingExports}
-          icon={Upload}
-        />
-        <StatsCard
-          title="Available Gift Cards"
-          value={stats.giftCards}
-          icon={CreditCard}
-        />
-        <StatsCard
-          title="Damaged Items"
-          value={stats.damagedItems}
-          icon={AlertTriangle}
-        />
+      <div className="mb-8">
+        <h2 className="text-lg font-bold text-slate-900 mb-4">Operations Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatsCard
+            title="Inventory Items"
+            value={stats.inventory.toLocaleString()}
+            icon={Package}
+          />
+          <StatsCard
+            title="Pending Purchase Orders"
+            value={stats.pendingPO}
+            icon={ShoppingCart}
+          />
+          <StatsCard
+            title="Pending Exports"
+            value={stats.pendingExports}
+            icon={Upload}
+          />
+          <StatsCard
+            title="Available Gift Cards"
+            value={stats.giftCards}
+            icon={CreditCard}
+          />
+          <StatsCard
+            title="Damaged Items"
+            value={stats.damagedItems}
+            icon={AlertTriangle}
+          />
+        </div>
       </div>
 
       {/* Quick Actions */}
