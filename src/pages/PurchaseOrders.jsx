@@ -167,7 +167,7 @@ export default function PurchaseOrders() {
     const card = creditCards.find(c => c.id === order.credit_card_id);
     if (!card) return;
 
-    const amount = order.total_cost;
+    const amount = order.final_cost || order.total_cost;
     let rewardAmount = 0;
     let rewardType = 'cashback';
     let currency = 'USD';
@@ -216,7 +216,7 @@ export default function PurchaseOrders() {
     const card = creditCards.find(c => c.id === order.credit_card_id);
     if (!card) return;
 
-    const amount = order.total_cost;
+    const amount = order.final_cost || order.total_cost;
     let rewardAmount = 0;
     let rewardType = 'cashback';
     let currency = 'USD';
