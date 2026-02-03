@@ -311,6 +311,18 @@ export default function GiftCards() {
     { header: 'Value', accessor: 'value', cell: (row) => (
       <span className="font-semibold">${row.value?.toFixed(2)}</span>
     )},
+    { header: 'Cost', accessor: 'purchase_cost', cell: (row) => (
+      <span className="text-sm">{row.purchase_cost ? `$${row.purchase_cost.toFixed(2)}` : '-'}</span>
+    )},
+    { header: 'Profit', accessor: 'profit', cell: (row) => {
+      if (!row.purchase_cost) return <span className="text-sm text-slate-400">-</span>;
+      const profit = row.value - row.purchase_cost;
+      return (
+        <span className={`font-semibold ${profit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          ${profit.toFixed(2)}
+        </span>
+      );
+    }},
     { header: 'Code', accessor: 'code', cell: (row) => (
       <div className="flex items-center gap-2">
         <span className="font-mono text-sm">
@@ -361,6 +373,10 @@ export default function GiftCards() {
     .filter(c => c.status === 'available')
     .reduce((sum, c) => sum + (c.value || 0), 0);
 
+  const totalProfit = filteredCards
+    .filter(c => c.purchase_cost)
+    .reduce((sum, c) => sum + (c.value - c.purchase_cost), 0);
+
   return (
     <div>
       <PageHeader 
@@ -378,7 +394,7 @@ export default function GiftCards() {
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-sm text-slate-500">Total Cards</p>
           <p className="text-2xl font-semibold">{filteredCards.length}</p>
@@ -390,6 +406,10 @@ export default function GiftCards() {
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-sm text-slate-500">Available Value</p>
           <p className="text-2xl font-semibold">${totalValue.toLocaleString()}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <p className="text-sm text-slate-500">Total Profit</p>
+          <p className="text-2xl font-semibold text-green-600">${totalProfit.toFixed(2)}</p>
         </div>
       </div>
 
