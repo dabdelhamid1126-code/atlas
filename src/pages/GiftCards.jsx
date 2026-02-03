@@ -39,6 +39,7 @@ export default function GiftCards() {
   const [formData, setFormData] = useState({
     brand: '',
     retailer: '',
+    category: 'other',
     value: '',
     code: '',
     pin: '',
@@ -183,6 +184,7 @@ export default function GiftCards() {
       setFormData({
         brand: card.brand || '',
         retailer: card.retailer || '',
+        category: card.category || 'other',
         value: card.value || '',
         code: card.code || '',
         pin: card.pin || '',
@@ -197,6 +199,7 @@ export default function GiftCards() {
       setFormData({
         brand: '',
         retailer: '',
+        category: 'other',
         value: '',
         code: '',
         pin: '',
@@ -451,6 +454,23 @@ export default function GiftCards() {
                   placeholder="Where purchased"
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Category *</Label>
+              <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dining">Dining</SelectItem>
+                  <SelectItem value="travel">Travel</SelectItem>
+                  <SelectItem value="groceries">Groceries</SelectItem>
+                  <SelectItem value="gas">Gas</SelectItem>
+                  <SelectItem value="streaming">Streaming</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">Category determines reward points rate</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
