@@ -450,35 +450,42 @@ export default function GiftCards() {
 
       {/* Barcode Dialog */}
       <Dialog open={barcodeDialogOpen} onOpenChange={setBarcodeDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Gift Card Barcode</DialogTitle>
+            <DialogTitle>Gift Card Barcode - Scan Ready</DialogTitle>
           </DialogHeader>
           {selectedCard && (
-            <div className="space-y-4">
-              <div className="text-center space-y-2">
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium">{selectedCard.brand}</span> - ${selectedCard.value}
-                </p>
-                <div className="flex justify-center bg-white p-6 rounded-lg border">
+            <div className="space-y-6">
+              <div className="text-center space-y-4">
+                <div className="text-lg">
+                  <span className="font-bold">{selectedCard.brand}</span> - ${selectedCard.value}
+                </div>
+                <div className="flex justify-center bg-white p-8 rounded-lg border-2 border-slate-300">
                   <ReactBarcode 
                     value={selectedCard.code} 
                     format="CODE128"
                     displayValue={true}
-                    height={80}
-                    fontSize={14}
+                    height={120}
+                    width={3}
+                    fontSize={18}
+                    margin={10}
                   />
                 </div>
+                <div className="p-4 bg-slate-50 rounded">
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">Card Code</p>
+                  <p className="font-mono font-bold text-lg mt-1">{selectedCard.code}</p>
+                </div>
                 {selectedCard.pin && (
-                  <div className="mt-4 p-3 bg-slate-50 rounded">
-                    <p className="text-xs text-slate-500">PIN</p>
-                    <p className="font-mono font-semibold">{selectedCard.pin}</p>
+                  <div className="p-4 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide">PIN</p>
+                    <p className="font-mono font-bold text-lg mt-1">{selectedCard.pin}</p>
                   </div>
                 )}
               </div>
             </div>
           )}
           <DialogFooter>
+            <Button variant="outline" onClick={() => window.print()}>Print Barcode</Button>
             <Button onClick={() => setBarcodeDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
