@@ -79,6 +79,7 @@ export default function GiftCards() {
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
       toast.success('Gift card added');
       setDialogOpen(false);
       await logActivity('Added gift card', 'gift_card', `${formData.brand} $${formData.value}`);
@@ -155,9 +156,8 @@ export default function GiftCards() {
         currency: currency,
         date_earned: format(new Date(), 'yyyy-MM-dd'),
         status: 'earned',
-        notes: `Gift card purchase: ${giftCard.brand} $${giftCard.value} from DoorDash`
+        notes: `Gift card purchase: ${giftCard.brand} $${giftCard.value}`
       });
-      queryClient.invalidateQueries({ queryKey: ['rewards'] });
       toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
     }
   };
