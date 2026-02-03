@@ -21,10 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Filter } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Filter, Barcode } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import ReactBarcode from 'react-barcode';
 
 const BRANDS = ['Amazon', 'Apple', 'Google Play', 'Target', 'Walmart', 'Best Buy', 'eBay', 'Visa', 'Mastercard', 'Other'];
 
@@ -48,6 +49,8 @@ export default function GiftCards() {
   });
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkInput, setBulkInput] = useState('');
+  const [barcodeDialogOpen, setBarcodeDialogOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ['giftCards'],
@@ -169,6 +172,11 @@ export default function GiftCards() {
     return code.slice(0, 4) + '****' + code.slice(-4);
   };
 
+  const openBarcodeDialog = (card) => {
+    setSelectedCard(card);
+    setBarcodeDialogOpen(true);
+  };
+
   const handleBulkAdd = async () => {
     try {
       const lines = bulkInput.trim().split('\n').filter(l => l.trim());
@@ -235,6 +243,14 @@ export default function GiftCards() {
     )},
     { header: '', cell: (row) => (
       <div className="flex items-center gap-1">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => openBarcodeDialog(row)}
+          title="View Barcode"
+        >
+          <Barcode className="h-4 w-4" />
+        </Button>
         {row.status === 'available' && (
           <Button 
             variant="ghost" 
@@ -429,6 +445,42 @@ export default function GiftCards() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Barcode Dialog */}
+      <Dialog open={barcodeDialogOpen} onOpenChange={setBarcodeDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Gift Card Barcode</DialogTitle>
+          </DialogHeader>
+          {selectedCard && (
+            <div className="space-y-4">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-slate-600">
+                  <span className="font-medium">{selectedCard.brand}</span> - ${selectedCard.value}
+                </p>
+                <div className="flex justify-center bg-white p-6 rounded-lg border">
+                  <ReactBarcode 
+                    value={selectedCard.code} 
+                    format="CODE128"
+                    displayValue={true}
+                    height={80}
+                    fontSize={14}
+                  />
+                </div>
+                {selectedCard.pin && (
+                  <div className="mt-4 p-3 bg-slate-50 rounded">
+                    <p className="text-xs text-slate-500">PIN</p>
+                    <p className="font-mono font-semibold">{selectedCard.pin}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setBarcodeDialogOpen(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
