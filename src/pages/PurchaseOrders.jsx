@@ -41,6 +41,7 @@ export default function PurchaseOrders() {
     tracking_number: '',
     retailer: '',
     credit_card_id: '',
+    gift_card_ids: [],
     status: 'pending',
     order_date: '',
     expected_date: '',
@@ -63,8 +64,28 @@ export default function PurchaseOrders() {
     queryFn: () => base44.entities.CreditCard.list()
   });
 
+  const { data: giftCards = [] } = useQuery({
+    queryKey: ['giftCards'],
+    queryFn: () => base44.entities.GiftCard.list()
+  });
+
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.PurchaseOrder.create(data),
+    mutationFn: async (data) => {
+      const newOrder = await base44.entities.PurchaseOrder.create(data);
+      
+      // Mark gift cards as used
+      if (data.gift_card_ids && data.gift_card_ids.length > 0) {
+        for (const cardId of data.gift_card_ids) {
+          await base44.entities.GiftCard.update(cardId, {
+            status: 'used',
+            used_order_number: data.order_number
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      }
+      
+      return newOrder;
+    },
     onSuccess: async (newOrder) => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Purchase order created');
@@ -176,6 +197,7 @@ export default function PurchaseOrders() {
         tracking_number: order.tracking_number || '',
         retailer: order.retailer || '',
         credit_card_id: order.credit_card_id || '',
+        gift_card_ids: order.gift_card_ids || [],
         status: order.status || 'pending',
         order_date: order.order_date || '',
         expected_date: order.expected_date || '',
@@ -189,6 +211,7 @@ export default function PurchaseOrders() {
         tracking_number: '',
         retailer: '',
         credit_card_id: '',
+        gift_card_ids: [],
         status: 'pending',
         order_date: format(new Date(), 'yyyy-MM-dd'),
         expected_date: '',
@@ -236,9 +259,16 @@ export default function PurchaseOrders() {
     const totalCost = formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
     
     const card = creditCards.find(c => c.id === formData.credit_card_id);
+    const giftCardValue = formData.gift_card_ids.reduce((sum, id) => {
+      const gc = giftCards.find(g => g.id === id);
+      return sum + (gc?.value || 0);
+    }, 0);
+    
     const dataToSubmit = {
       ...formData,
       total_cost: totalCost,
+      gift_card_value: giftCardValue,
+      final_cost: totalCost - giftCardValue,
       card_name: card?.card_name || null
     };
     
@@ -283,7 +313,16 @@ export default function PurchaseOrders() {
       <span>{row.items?.length || 0} items</span>
     )},
     { header: 'Total', accessor: 'total_cost', cell: (row) => (
-      row.total_cost ? `$${row.total_cost.toFixed(2)}` : '-'
+      <div>
+        {row.gift_card_value > 0 ? (
+          <div className="text-xs">
+            <div className="line-through text-slate-400">${row.total_cost?.toFixed(2)}</div>
+            <div className="font-semibold text-green-700">${row.final_cost?.toFixed(2)}</div>
+          </div>
+        ) : (
+          <span>{row.total_cost ? `$${row.total_cost.toFixed(2)}` : '-'}</span>
+        )}
+      </div>
     )},
     { header: 'Order Date', accessor: 'order_date', cell: (row) => (
       row.order_date ? format(new Date(row.order_date), 'MMM d, yyyy') : '-'
@@ -413,6 +452,42 @@ export default function PurchaseOrders() {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div className="space-y-2">
+              <Label>Gift Cards (select multiple)</Label>
+              <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
+                {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).map(gc => (
+                  <label key={gc.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-2 rounded">
+                    <input
+                      type="checkbox"
+                      checked={formData.gift_card_ids.includes(gc.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, gift_card_ids: [...formData.gift_card_ids, gc.id] });
+                        } else {
+                          setFormData({ ...formData, gift_card_ids: formData.gift_card_ids.filter(id => id !== gc.id) });
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm flex-1">{gc.brand} - ${gc.value}</span>
+                    <span className="text-xs text-slate-500">{gc.code?.slice(0, 8)}...</span>
+                  </label>
+                ))}
+                {giftCards.filter(gc => gc.status === 'available').length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-2">No available gift cards</p>
+                )}
+              </div>
+              {formData.gift_card_ids.length > 0 && (
+                <div className="text-sm text-green-700 font-medium">
+                  Gift cards total: ${formData.gift_card_ids.reduce((sum, id) => {
+                    const gc = giftCards.find(g => g.id === id);
+                    return sum + (gc?.value || 0);
+                  }, 0).toFixed(2)}
+                </div>
+              )}
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Order Date</Label>
@@ -487,6 +562,38 @@ export default function PurchaseOrders() {
               </div>
             </div>
 
+            {formData.items.length > 0 && (
+              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span className="font-semibold">
+                    ${formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0).toFixed(2)}
+                  </span>
+                </div>
+                {formData.gift_card_ids.length > 0 && (
+                  <div className="flex justify-between text-sm text-green-700">
+                    <span>Gift Cards ({formData.gift_card_ids.length}):</span>
+                    <span className="font-semibold">
+                      -${formData.gift_card_ids.reduce((sum, id) => {
+                        const gc = giftCards.find(g => g.id === id);
+                        return sum + (gc?.value || 0);
+                      }, 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between text-base font-bold border-t pt-2">
+                  <span>Final Total:</span>
+                  <span>
+                    ${(formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0) - 
+                      formData.gift_card_ids.reduce((sum, id) => {
+                        const gc = giftCards.find(g => g.id === id);
+                        return sum + (gc?.value || 0);
+                      }, 0)).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea
@@ -529,7 +636,15 @@ export default function PurchaseOrders() {
                 </div>
                 <div>
                   <Label className="text-slate-500">Total</Label>
-                  <p className="font-semibold">${selectedOrder.total_cost?.toFixed(2) || '0.00'}</p>
+                  {selectedOrder.gift_card_value > 0 ? (
+                    <div>
+                      <p className="text-sm line-through text-slate-400">${selectedOrder.total_cost?.toFixed(2)}</p>
+                      <p className="font-semibold text-green-700">${selectedOrder.final_cost?.toFixed(2)}</p>
+                      <p className="text-xs text-slate-500">Gift cards: ${selectedOrder.gift_card_value?.toFixed(2)}</p>
+                    </div>
+                  ) : (
+                    <p className="font-semibold">${selectedOrder.total_cost?.toFixed(2) || '0.00'}</p>
+                  )}
                 </div>
               </div>
               <div>
