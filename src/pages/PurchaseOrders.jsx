@@ -379,7 +379,7 @@ export default function PurchaseOrders() {
         title="Purchase Orders" 
         description="Track purchases from retailers and suppliers"
         actions={
-          <Button onClick={openDialog} className="bg-black hover:bg-gray-800 text-white">
+          <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
             <Plus className="h-4 w-4 mr-2" /> New Order
           </Button>
         }
