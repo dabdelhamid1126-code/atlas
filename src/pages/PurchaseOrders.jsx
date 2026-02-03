@@ -42,6 +42,7 @@ export default function PurchaseOrders() {
     retailer: '',
     credit_card_id: '',
     gift_card_ids: [],
+    is_pickup: false,
     status: 'pending',
     order_date: '',
     expected_date: '',
@@ -213,6 +214,7 @@ export default function PurchaseOrders() {
         retailer: order.retailer || '',
         credit_card_id: order.credit_card_id || '',
         gift_card_ids: order.gift_card_ids || [],
+        is_pickup: order.is_pickup || false,
         status: order.status || 'pending',
         order_date: order.order_date || '',
         expected_date: order.expected_date || '',
@@ -227,6 +229,7 @@ export default function PurchaseOrders() {
         retailer: '',
         credit_card_id: '',
         gift_card_ids: [],
+        is_pickup: false,
         status: 'pending',
         order_date: format(new Date(), 'yyyy-MM-dd'),
         expected_date: '',
@@ -332,7 +335,10 @@ export default function PurchaseOrders() {
 
   const columns = [
     { header: 'Order #', accessor: 'order_number', cell: (row) => (
-      <span className="font-mono text-sm font-medium">{row.order_number}</span>
+      <div>
+        <span className="font-mono text-sm font-medium">{row.order_number}</span>
+        {row.is_pickup && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Pickup</span>}
+      </div>
     )},
     { header: 'Retailer', accessor: 'retailer', cell: (row) => (
       <span className="font-medium">{row.retailer}</span>
@@ -464,6 +470,17 @@ export default function PurchaseOrders() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.is_pickup}
+                  onChange={(e) => setFormData({ ...formData, is_pickup: e.target.checked })}
+                  className="rounded"
+                />
+                <span className="text-sm font-medium">Pickup Order</span>
+              </label>
             </div>
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
