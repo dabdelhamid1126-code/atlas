@@ -256,7 +256,14 @@ export default function PurchaseOrders() {
 
   const updateItem = (index, field, value) => {
     const newItems = [...formData.items];
-    newItems[index][field] = value;
+    
+    if (field === 'quantity_ordered') {
+      newItems[index][field] = value === '' ? '' : parseInt(value) || 0;
+    } else if (field === 'unit_cost') {
+      newItems[index][field] = value === '' ? '' : parseFloat(value) || 0;
+    } else {
+      newItems[index][field] = value;
+    }
     
     if (field === 'product_id') {
       const product = products.find(p => p.id === value);
@@ -271,7 +278,15 @@ export default function PurchaseOrders() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const totalCost = formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
+    
+    const cleanedItems = formData.items.map(item => ({
+      ...item,
+      quantity_ordered: parseInt(item.quantity_ordered) || 0,
+      quantity_received: parseInt(item.quantity_received) || 0,
+      unit_cost: parseFloat(item.unit_cost) || 0
+    }));
+    
+    const totalCost = cleanedItems.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
     
     const card = creditCards.find(c => c.id === formData.credit_card_id);
     const giftCardValue = formData.gift_card_ids.reduce((sum, id) => {
@@ -281,6 +296,7 @@ export default function PurchaseOrders() {
     
     const dataToSubmit = {
       ...formData,
+      items: cleanedItems,
       total_cost: totalCost,
       gift_card_value: giftCardValue,
       final_cost: totalCost - giftCardValue,
@@ -554,7 +570,7 @@ export default function PurchaseOrders() {
                         type="number"
                         min="1"
                         value={item.quantity_ordered}
-                        onChange={(e) => updateItem(index, 'quantity_ordered', parseInt(e.target.value))}
+                        onChange={(e) => updateItem(index, 'quantity_ordered', e.target.value)}
                       />
                     </div>
                     <div className="w-28">
@@ -563,7 +579,7 @@ export default function PurchaseOrders() {
                         type="number"
                         step="0.01"
                         value={item.unit_cost}
-                        onChange={(e) => updateItem(index, 'unit_cost', parseFloat(e.target.value))}
+                        onChange={(e) => updateItem(index, 'unit_cost', e.target.value)}
                       />
                     </div>
                     <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
