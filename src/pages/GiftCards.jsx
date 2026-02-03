@@ -43,6 +43,7 @@ export default function GiftCards() {
     code: '',
     pin: '',
     purchase_cost: '',
+    credit_card_id: '',
     status: 'available',
     used_order_number: '',
     notes: ''
@@ -60,8 +61,22 @@ export default function GiftCards() {
     }
   });
 
+  const { data: creditCards = [] } = useQuery({
+    queryKey: ['creditCards'],
+    queryFn: () => base44.entities.CreditCard.list()
+  });
+
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.GiftCard.create(data),
+    mutationFn: async (data) => {
+      const newCard = await base44.entities.GiftCard.create(data);
+      
+      // Auto-create reward if card is selected
+      if (data.credit_card_id && data.purchase_cost) {
+        await createRewardForGiftCard(newCard, data.credit_card_id, data.purchase_cost);
+      }
+      
+      return newCard;
+    },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['giftCards'] });
       toast.success('Gift card added');
@@ -98,6 +113,53 @@ export default function GiftCards() {
     });
   };
 
+  const createRewardForGiftCard = async (giftCard, creditCardId, purchaseAmount) => {
+    const card = creditCards.find(c => c.id === creditCardId);
+    if (!card) return;
+
+    let rewardAmount = 0;
+    let rewardType = 'cashback';
+    let currency = 'USD';
+
+    // DoorDash counts as dining
+    if (card.reward_type === 'cashback' && card.cashback_rate) {
+      rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
+      rewardType = 'cashback';
+      currency = 'USD';
+    } else if (card.reward_type === 'points' && card.points_rate) {
+      rewardAmount = Math.round(purchaseAmount * card.points_rate);
+      rewardType = 'points';
+      currency = 'points';
+    } else if (card.reward_type === 'both') {
+      if (card.cashback_rate) {
+        rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
+        rewardType = 'cashback';
+        currency = 'USD';
+      } else if (card.points_rate) {
+        rewardAmount = Math.round(purchaseAmount * card.points_rate);
+        rewardType = 'points';
+        currency = 'points';
+      }
+    }
+
+    if (rewardAmount > 0) {
+      await base44.entities.Reward.create({
+        credit_card_id: creditCardId,
+        card_name: card.card_name,
+        source: `${card.card_name} (Gift Card)`,
+        type: rewardType,
+        purchase_amount: purchaseAmount,
+        amount: parseFloat(rewardAmount),
+        currency: currency,
+        date_earned: format(new Date(), 'yyyy-MM-dd'),
+        status: 'earned',
+        notes: `Gift card purchase: ${giftCard.brand} $${giftCard.value} from DoorDash`
+      });
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
+    }
+  };
+
   const openDialog = (card = null) => {
     if (card) {
       setEditingCard(card);
@@ -108,6 +170,7 @@ export default function GiftCards() {
         code: card.code || '',
         pin: card.pin || '',
         purchase_cost: card.purchase_cost || '',
+        credit_card_id: card.credit_card_id || '',
         status: card.status || 'available',
         used_order_number: card.used_order_number || '',
         notes: card.notes || ''
@@ -121,6 +184,7 @@ export default function GiftCards() {
         code: '',
         pin: '',
         purchase_cost: '',
+        credit_card_id: '',
         status: 'available',
         used_order_number: '',
         notes: ''
@@ -143,10 +207,12 @@ export default function GiftCards() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const card = creditCards.find(c => c.id === formData.credit_card_id);
     const data = {
       ...formData,
       value: parseFloat(formData.value),
-      purchase_cost: formData.purchase_cost ? parseFloat(formData.purchase_cost) : null
+      purchase_cost: formData.purchase_cost ? parseFloat(formData.purchase_cost) : null,
+      card_name: card?.card_name || null
     };
 
     if (editingCard) {
@@ -389,6 +455,25 @@ export default function GiftCards() {
                   onChange={(e) => setFormData({ ...formData, purchase_cost: e.target.value })}
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Credit Card Used</Label>
+              <Select value={formData.credit_card_id} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select card (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>No card</SelectItem>
+                  {creditCards.filter(c => c.active).map(card => (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
+                      {card.reward_type === 'points' && `${card.points_rate}x pts`}
+                      {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">Track points earned from buying this gift card</p>
             </div>
             <div className="space-y-2">
               <Label>Card Code *</Label>
