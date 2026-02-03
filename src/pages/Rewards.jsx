@@ -366,6 +366,21 @@ export default function Rewards() {
     { header: 'Points Rate', accessor: 'points_rate', cell: (row) => (
       <span className="text-sm">{row.points_rate ? `${row.points_rate}x` : '-'}</span>
     )},
+    { header: 'Bonus Categories', accessor: 'bonus_categories', cell: (row) => {
+      const bonuses = [];
+      if (row.dining_points_rate) bonuses.push(`Dining ${row.dining_points_rate}x`);
+      if (row.travel_points_rate) bonuses.push(`Travel ${row.travel_points_rate}x`);
+      if (row.groceries_points_rate) bonuses.push(`Groceries ${row.groceries_points_rate}x`);
+      if (row.gas_points_rate) bonuses.push(`Gas ${row.gas_points_rate}x`);
+      if (row.streaming_points_rate) bonuses.push(`Streaming ${row.streaming_points_rate}x`);
+      return (
+        <div className="text-xs space-y-0.5">
+          {bonuses.length > 0 ? bonuses.map((b, i) => (
+            <div key={i} className="text-violet-600">{b}</div>
+          )) : <span className="text-slate-400">-</span>}
+        </div>
+      );
+    }},
     { header: 'Type', accessor: 'reward_type', cell: (row) => (
       <span className="text-sm capitalize">{row.reward_type}</span>
     )},
