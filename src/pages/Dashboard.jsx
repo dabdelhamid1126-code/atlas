@@ -37,6 +37,7 @@ export default function Dashboard() {
     totalSpent: 0,
     totalCashback: 0,
     totalPoints: 0,
+    totalGiftCardSpend: 0,
     mostUsedCard: null
   });
 
@@ -46,7 +47,7 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [inventory, purchaseOrders, exports, giftCards, damaged, products, allOrders, rewards, creditCards] = await Promise.all([
+      const [inventory, purchaseOrders, exports, giftCards, damaged, products, allOrders, rewards, creditCards, allGiftCards] = await Promise.all([
         base44.entities.InventoryItem.filter({ status: 'in_stock' }),
         base44.entities.PurchaseOrder.filter({ status: 'pending' }),
         base44.entities.Export.filter({ status: 'pending' }),
@@ -55,7 +56,8 @@ export default function Dashboard() {
         base44.entities.Product.list(),
         base44.entities.PurchaseOrder.list(),
         base44.entities.Reward.list(),
-        base44.entities.CreditCard.list()
+        base44.entities.CreditCard.list(),
+        base44.entities.GiftCard.list()
       ]);
 
       setStats({
@@ -73,6 +75,7 @@ export default function Dashboard() {
       const totalSpent = allOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
       const totalCashback = rewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
       const totalPoints = rewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
+      const totalGiftCardSpend = allGiftCards.filter(gc => gc.purchase_cost).reduce((sum, gc) => sum + gc.purchase_cost, 0);
 
       // Find most used card
       const cardUsage = {};
@@ -88,6 +91,7 @@ export default function Dashboard() {
         totalSpent,
         totalCashback,
         totalPoints,
+        totalGiftCardSpend,
         mostUsedCard
       });
     } catch (error) {
@@ -210,7 +214,7 @@ export default function Dashboard() {
       {/* Financial Overview */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
@@ -245,6 +249,18 @@ export default function Dashboard() {
               </div>
               <p className="text-3xl font-bold text-violet-600">{financialStats.totalPoints.toLocaleString()}</p>
               <p className="text-xs text-slate-500 mt-1">points</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Gift Card Spend</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-pink-600">${financialStats.totalGiftCardSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </CardContent>
           </Card>
 
