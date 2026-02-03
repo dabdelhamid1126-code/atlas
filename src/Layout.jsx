@@ -41,6 +41,7 @@ const navigation = [
   { name: 'Fix Receiving', page: 'FixReceiving', icon: AlertTriangle, roles: ['admin', 'manager'] },
   { name: 'Serial Numbers', page: 'SerialNumbers', icon: Hash },
   { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
+  { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
   { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp },
   { name: 'Invoices', page: 'Invoices', icon: FileText },
   { name: 'Activity Log', page: 'ActivityLog', icon: Activity },
