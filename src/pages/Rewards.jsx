@@ -21,10 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Pencil, Trash2, TrendingUp, DollarSign, Award } from 'lucide-react';
+import { Plus, Search, Filter, Pencil, Trash2, TrendingUp, DollarSign, Award, CreditCard } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Rewards() {
   const queryClient = useQueryClient();
@@ -32,8 +33,12 @@ export default function Rewards() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [editingReward, setEditingReward] = useState(null);
+  const [editingCard, setEditingCard] = useState(null);
   const [formData, setFormData] = useState({
+    credit_card_id: '',
+    purchase_amount: '',
     source: '',
     type: 'cashback',
     amount: '',
@@ -44,18 +49,27 @@ export default function Rewards() {
     status: 'pending',
     notes: ''
   });
+  const [cardFormData, setCardFormData] = useState({
+    card_name: '',
+    issuer: '',
+    cashback_rate: '',
+    points_rate: '',
+    reward_type: 'cashback',
+    notes: '',
+    active: true
+  });
 
   const { data: rewards = [], isLoading } = useQuery({
     queryKey: ['rewards'],
     queryFn: () => base44.entities.Reward.list('-date_earned')
   });
 
-  const { data: purchaseOrders = [] } = useQuery({
-    queryKey: ['purchaseOrders'],
-    queryFn: () => base44.entities.PurchaseOrder.list()
+  const { data: creditCards = [] } = useQuery({
+    queryKey: ['creditCards'],
+    queryFn: () => base44.entities.CreditCard.list()
   });
 
-  const createMutation = useMutation({
+  const createRewardMutation = useMutation({
     mutationFn: (data) => base44.entities.Reward.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rewards'] });
@@ -64,7 +78,7 @@ export default function Rewards() {
     }
   });
 
-  const updateMutation = useMutation({
+  const updateRewardMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Reward.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rewards'] });
@@ -73,7 +87,7 @@ export default function Rewards() {
     }
   });
 
-  const deleteMutation = useMutation({
+  const deleteRewardMutation = useMutation({
     mutationFn: (id) => base44.entities.Reward.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rewards'] });
@@ -81,10 +95,38 @@ export default function Rewards() {
     }
   });
 
+  const createCardMutation = useMutation({
+    mutationFn: (data) => base44.entities.CreditCard.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['creditCards'] });
+      toast.success('Credit card added');
+      setCardDialogOpen(false);
+    }
+  });
+
+  const updateCardMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.CreditCard.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['creditCards'] });
+      toast.success('Credit card updated');
+      setCardDialogOpen(false);
+    }
+  });
+
+  const deleteCardMutation = useMutation({
+    mutationFn: (id) => base44.entities.CreditCard.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['creditCards'] });
+      toast.success('Credit card deleted');
+    }
+  });
+
   const openDialog = (reward = null) => {
     if (reward) {
       setEditingReward(reward);
       setFormData({
+        credit_card_id: reward.credit_card_id || '',
+        purchase_amount: reward.purchase_amount || '',
         source: reward.source || '',
         type: reward.type || 'cashback',
         amount: reward.amount || '',
@@ -98,6 +140,8 @@ export default function Rewards() {
     } else {
       setEditingReward(null);
       setFormData({
+        credit_card_id: '',
+        purchase_amount: '',
         source: '',
         type: 'cashback',
         amount: '',
@@ -112,24 +156,131 @@ export default function Rewards() {
     setDialogOpen(true);
   };
 
+  const openCardDialog = (card = null) => {
+    if (card) {
+      setEditingCard(card);
+      setCardFormData({
+        card_name: card.card_name || '',
+        issuer: card.issuer || '',
+        cashback_rate: card.cashback_rate || '',
+        points_rate: card.points_rate || '',
+        reward_type: card.reward_type || 'cashback',
+        notes: card.notes || '',
+        active: card.active !== false
+      });
+    } else {
+      setEditingCard(null);
+      setCardFormData({
+        card_name: '',
+        issuer: '',
+        cashback_rate: '',
+        points_rate: '',
+        reward_type: 'cashback',
+        notes: '',
+        active: true
+      });
+    }
+    setCardDialogOpen(true);
+  };
+
+  const calculateReward = (cardId, purchaseAmount) => {
+    const card = creditCards.find(c => c.id === cardId);
+    if (!card || !purchaseAmount) return { amount: 0, type: 'cashback', currency: 'USD' };
+
+    const amount = parseFloat(purchaseAmount);
+    if (card.reward_type === 'cashback' && card.cashback_rate) {
+      return {
+        amount: (amount * card.cashback_rate / 100).toFixed(2),
+        type: 'cashback',
+        currency: 'USD'
+      };
+    } else if (card.reward_type === 'points' && card.points_rate) {
+      return {
+        amount: Math.round(amount * card.points_rate),
+        type: 'points',
+        currency: 'points'
+      };
+    } else if (card.reward_type === 'both') {
+      const cashback = card.cashback_rate ? (amount * card.cashback_rate / 100).toFixed(2) : 0;
+      const points = card.points_rate ? Math.round(amount * card.points_rate) : 0;
+      return {
+        amount: cashback || points,
+        type: cashback > 0 ? 'cashback' : 'points',
+        currency: cashback > 0 ? 'USD' : 'points'
+      };
+    }
+    return { amount: 0, type: 'cashback', currency: 'USD' };
+  };
+
+  const handleCardChange = (cardId) => {
+    const card = creditCards.find(c => c.id === cardId);
+    if (card) {
+      const calculated = calculateReward(cardId, formData.purchase_amount);
+      setFormData({
+        ...formData,
+        credit_card_id: cardId,
+        card_name: card.card_name,
+        source: card.card_name,
+        type: calculated.type,
+        amount: calculated.amount,
+        currency: calculated.currency
+      });
+    } else {
+      setFormData({ ...formData, credit_card_id: cardId });
+    }
+  };
+
+  const handlePurchaseAmountChange = (amount) => {
+    const calculated = calculateReward(formData.credit_card_id, amount);
+    setFormData({
+      ...formData,
+      purchase_amount: amount,
+      amount: calculated.amount,
+      type: calculated.type,
+      currency: calculated.currency
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const data = {
       ...formData,
       amount: parseFloat(formData.amount),
+      purchase_amount: formData.purchase_amount ? parseFloat(formData.purchase_amount) : null,
       date_redeemed: formData.date_redeemed || null
     };
 
     if (editingReward) {
-      updateMutation.mutate({ id: editingReward.id, data });
+      updateRewardMutation.mutate({ id: editingReward.id, data });
     } else {
-      createMutation.mutate(data);
+      createRewardMutation.mutate(data);
+    }
+  };
+
+  const handleCardSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      ...cardFormData,
+      cashback_rate: cardFormData.cashback_rate ? parseFloat(cardFormData.cashback_rate) : null,
+      points_rate: cardFormData.points_rate ? parseFloat(cardFormData.points_rate) : null
+    };
+
+    if (editingCard) {
+      updateCardMutation.mutate({ id: editingCard.id, data });
+    } else {
+      createCardMutation.mutate(data);
     }
   };
 
   const handleDelete = (reward) => {
     if (confirm('Are you sure you want to delete this reward?')) {
-      deleteMutation.mutate(reward.id);
+      deleteRewardMutation.mutate(reward.id);
+    }
+  };
+
+  const handleDeleteCard = (card) => {
+    if (confirm('Are you sure you want to delete this credit card?')) {
+      deleteCardMutation.mutate(card.id);
     }
   };
 
@@ -151,7 +302,7 @@ export default function Rewards() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const columns = [
+  const rewardColumns = [
     { header: 'Source', accessor: 'source', cell: (row) => (
       <span className="font-medium">{row.source}</span>
     )},
@@ -163,7 +314,10 @@ export default function Rewards() {
         <span className="text-sm capitalize">{row.type.replace('_', ' ')}</span>
       </div>
     )},
-    { header: 'Amount', accessor: 'amount', cell: (row) => (
+    { header: 'Purchase', accessor: 'purchase_amount', cell: (row) => (
+      <span className="text-sm">{row.purchase_amount ? `$${row.purchase_amount.toFixed(2)}` : '-'}</span>
+    )},
+    { header: 'Reward', accessor: 'amount', cell: (row) => (
       <span className="font-semibold">
         {row.currency === 'USD' ? `$${row.amount?.toFixed(2)}` : `${row.amount} pts`}
       </span>
@@ -199,6 +353,37 @@ export default function Rewards() {
     )}
   ];
 
+  const cardColumns = [
+    { header: 'Card Name', accessor: 'card_name', cell: (row) => (
+      <span className="font-medium">{row.card_name}</span>
+    )},
+    { header: 'Issuer', accessor: 'issuer', cell: (row) => (
+      <span className="text-sm">{row.issuer || '-'}</span>
+    )},
+    { header: 'Cashback Rate', accessor: 'cashback_rate', cell: (row) => (
+      <span className="text-sm">{row.cashback_rate ? `${row.cashback_rate}%` : '-'}</span>
+    )},
+    { header: 'Points Rate', accessor: 'points_rate', cell: (row) => (
+      <span className="text-sm">{row.points_rate ? `${row.points_rate}x` : '-'}</span>
+    )},
+    { header: 'Type', accessor: 'reward_type', cell: (row) => (
+      <span className="text-sm capitalize">{row.reward_type}</span>
+    )},
+    { header: 'Status', accessor: 'active', cell: (row) => (
+      <StatusBadge status={row.active ? 'active' : 'inactive'} />
+    )},
+    { header: '', cell: (row) => (
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" onClick={() => openCardDialog(row)}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => handleDeleteCard(row)}>
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+      </div>
+    )}
+  ];
+
   const totalEarned = filteredRewards
     .filter(r => r.status === 'earned' && r.currency === 'USD')
     .reduce((sum, r) => sum + (r.amount || 0), 0);
@@ -216,133 +401,208 @@ export default function Rewards() {
       <PageHeader 
         title="Rewards & Cashback" 
         description="Track points, cashback, and loyalty rewards"
-        actions={
-          <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
-            <Plus className="h-4 w-4 mr-2" /> Add Reward
-          </Button>
-        }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            <p className="text-sm text-green-700 font-medium">Cashback Earned</p>
-          </div>
-          <p className="text-2xl font-bold text-green-900">${totalEarned.toFixed(2)}</p>
-        </div>
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Award className="h-5 w-5 text-blue-600" />
-            <p className="text-sm text-blue-700 font-medium">Points Available</p>
-          </div>
-          <p className="text-2xl font-bold text-blue-900">{totalPoints.toLocaleString()}</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-5 w-5 text-purple-600" />
-            <p className="text-sm text-purple-700 font-medium">Total Redeemed</p>
-          </div>
-          <p className="text-2xl font-bold text-purple-900">${totalRedeemed.toFixed(2)}</p>
-        </div>
-      </div>
+      <Tabs defaultValue="rewards" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="rewards">Rewards</TabsTrigger>
+          <TabsTrigger value="cards">Credit Cards</TabsTrigger>
+        </TabsList>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Search rewards..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+        <TabsContent value="rewards" className="space-y-6">
+          <div className="flex justify-end">
+            <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
+              <Plus className="h-4 w-4 mr-2" /> Add Reward
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <p className="text-sm text-green-700 font-medium">Cashback Earned</p>
+              </div>
+              <p className="text-2xl font-bold text-green-900">${totalEarned.toFixed(2)}</p>
+            </div>
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Award className="h-5 w-5 text-blue-600" />
+                <p className="text-sm text-blue-700 font-medium">Points Available</p>
+              </div>
+              <p className="text-2xl font-bold text-blue-900">{totalPoints.toLocaleString()}</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+                <p className="text-sm text-purple-700 font-medium">Total Redeemed</p>
+              </div>
+              <p className="text-2xl font-bold text-purple-900">${totalRedeemed.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search rewards..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-40">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="cashback">Cashback</SelectItem>
+                <SelectItem value="points">Points</SelectItem>
+                <SelectItem value="loyalty_rewards">Loyalty</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="earned">Earned</SelectItem>
+                <SelectItem value="redeemed">Redeemed</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DataTable
+            columns={rewardColumns}
+            data={filteredRewards}
+            loading={isLoading}
+            emptyMessage="No rewards found"
           />
-        </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-40">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="cashback">Cashback</SelectItem>
-            <SelectItem value="points">Points</SelectItem>
-            <SelectItem value="loyalty_rewards">Loyalty</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="earned">Earned</SelectItem>
-            <SelectItem value="redeemed">Redeemed</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        </TabsContent>
 
-      <DataTable
-        columns={columns}
-        data={filteredRewards}
-        loading={isLoading}
-        emptyMessage="No rewards found"
-      />
+        <TabsContent value="cards" className="space-y-6">
+          <div className="flex justify-end">
+            <Button onClick={() => openCardDialog()} className="bg-black hover:bg-gray-800 text-white">
+              <Plus className="h-4 w-4 mr-2" /> Add Credit Card
+            </Button>
+          </div>
 
+          <DataTable
+            columns={cardColumns}
+            data={creditCards}
+            loading={false}
+            emptyMessage="No credit cards found"
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Reward Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingReward ? 'Edit Reward' : 'Add Reward'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Source (Credit Card or Retailer) *</Label>
-              <Input
-                value={formData.source}
-                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                placeholder="e.g., Chase Sapphire, Amazon Rewards"
-                required
-              />
+              <Label>Credit Card</Label>
+              <Select value={formData.credit_card_id} onValueChange={handleCardChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a card (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {creditCards.filter(c => c.active).map(card => (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}% cashback`}
+                      {card.reward_type === 'points' && `${card.points_rate}x points`}
+                      {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {formData.credit_card_id && (
               <div className="space-y-2">
-                <Label>Type *</Label>
-                <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cashback">Cashback</SelectItem>
-                    <SelectItem value="points">Points</SelectItem>
-                    <SelectItem value="loyalty_rewards">Loyalty Rewards</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Purchase Amount ($) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.purchase_amount}
+                  onChange={(e) => handlePurchaseAmountChange(e.target.value)}
+                  placeholder="Enter purchase amount"
+                  required
+                />
               </div>
+            )}
+
+            {!formData.credit_card_id && (
               <div className="space-y-2">
-                <Label>Currency *</Label>
-                <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="points">Points</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Source (Credit Card or Retailer) *</Label>
+                <Input
+                  value={formData.source}
+                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                  placeholder="e.g., Chase Sapphire, Amazon Rewards"
+                  required
+                />
               </div>
+            )}
+
+            <div className="p-4 bg-slate-50 rounded-lg">
+              <p className="text-sm font-medium mb-2">Calculated Reward:</p>
+              <p className="text-2xl font-bold">
+                {formData.currency === 'USD' 
+                  ? `$${parseFloat(formData.amount || 0).toFixed(2)}` 
+                  : `${formData.amount || 0} points`}
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label>Amount *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                placeholder={formData.currency === 'USD' ? '0.00' : '0'}
-                required
-              />
-            </div>
+
+            {!formData.credit_card_id && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type *</Label>
+                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cashback">Cashback</SelectItem>
+                        <SelectItem value="points">Points</SelectItem>
+                        <SelectItem value="loyalty_rewards">Loyalty Rewards</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Currency *</Label>
+                    <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="points">Points</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Amount *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder={formData.currency === 'USD' ? '0.00' : '0'}
+                    required
+                  />
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label>Order Number</Label>
               <Input
@@ -351,6 +611,7 @@ export default function Rewards() {
                 placeholder="Optional reference"
               />
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date Earned *</Label>
@@ -376,6 +637,7 @@ export default function Rewards() {
                 </Select>
               </div>
             </div>
+
             {formData.status === 'redeemed' && (
               <div className="space-y-2">
                 <Label>Date Redeemed</Label>
@@ -386,19 +648,101 @@ export default function Rewards() {
                 />
               </div>
             )}
+
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Additional details..."
-                rows={3}
+                rows={2}
               />
             </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
                 {editingReward ? 'Update' : 'Add'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credit Card Dialog */}
+      <Dialog open={cardDialogOpen} onOpenChange={setCardDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCard ? 'Edit Credit Card' : 'Add Credit Card'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCardSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Card Name *</Label>
+              <Input
+                value={cardFormData.card_name}
+                onChange={(e) => setCardFormData({ ...cardFormData, card_name: e.target.value })}
+                placeholder="e.g., Chase Sapphire Preferred"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Issuer</Label>
+              <Input
+                value={cardFormData.issuer}
+                onChange={(e) => setCardFormData({ ...cardFormData, issuer: e.target.value })}
+                placeholder="e.g., Chase, Amex"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Reward Type *</Label>
+              <Select value={cardFormData.reward_type} onValueChange={(v) => setCardFormData({ ...cardFormData, reward_type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cashback">Cashback Only</SelectItem>
+                  <SelectItem value="points">Points Only</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(cardFormData.reward_type === 'cashback' || cardFormData.reward_type === 'both') && (
+              <div className="space-y-2">
+                <Label>Cashback Rate (%)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={cardFormData.cashback_rate}
+                  onChange={(e) => setCardFormData({ ...cardFormData, cashback_rate: e.target.value })}
+                  placeholder="e.g., 2.5 for 2.5%"
+                />
+              </div>
+            )}
+            {(cardFormData.reward_type === 'points' || cardFormData.reward_type === 'both') && (
+              <div className="space-y-2">
+                <Label>Points Rate (per $1)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={cardFormData.points_rate}
+                  onChange={(e) => setCardFormData({ ...cardFormData, points_rate: e.target.value })}
+                  placeholder="e.g., 2 for 2x points"
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea
+                value={cardFormData.notes}
+                onChange={(e) => setCardFormData({ ...cardFormData, notes: e.target.value })}
+                placeholder="Card benefits, categories, etc."
+                rows={2}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCardDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
+                {editingCard ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
           </form>
