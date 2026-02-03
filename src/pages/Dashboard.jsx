@@ -80,7 +80,7 @@ export default function Dashboard() {
       const totalGiftCardSpend = allGiftCards.filter(gc => gc.purchase_cost).reduce((sum, gc) => sum + gc.purchase_cost, 0);
       
       // Calculate rewards from gift card purchases
-      const giftCardRewards = rewards.filter(r => r.notes && r.notes.includes('Gift card purchase'));
+      const giftCardRewards = rewards.filter(r => r.notes && r.notes.toLowerCase().includes('gift card purchase'));
       const giftCardCashback = giftCardRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
       const giftCardPoints = giftCardRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
 
