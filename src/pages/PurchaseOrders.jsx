@@ -335,16 +335,16 @@ export default function PurchaseOrders() {
 
   const columns = [
     { header: 'Order #', accessor: 'order_number', cell: (row) => (
-      <div>
-        <span className="font-mono text-sm font-medium">{row.order_number}</span>
-        {row.is_pickup && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Pickup</span>}
-      </div>
+      <span className="font-mono text-sm font-medium">{row.order_number}</span>
     )},
     { header: 'Retailer', accessor: 'retailer', cell: (row) => (
       <span className="font-medium">{row.retailer}</span>
     )},
     { header: 'Status', accessor: 'status', cell: (row) => (
-      <StatusBadge status={row.status} />
+      <div className="flex items-center gap-2">
+        <StatusBadge status={row.status} />
+        {row.is_pickup && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Pickup</span>}
+      </div>
     )},
     { header: 'Items', accessor: 'items', cell: (row) => (
       <span>{row.items?.length || 0} items</span>
