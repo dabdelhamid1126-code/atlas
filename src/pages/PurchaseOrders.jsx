@@ -91,8 +91,8 @@ export default function PurchaseOrders() {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Purchase order created');
       
-      // Auto-create reward if card is selected and order is received
-      if (newOrder.credit_card_id && newOrder.status === 'received' && newOrder.total_cost) {
+      // Auto-create reward if card is selected
+      if (newOrder.credit_card_id && newOrder.total_cost) {
         await createRewardForOrder(newOrder);
       }
       
@@ -122,12 +122,14 @@ export default function PurchaseOrders() {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Purchase order updated');
       
-      // Auto-create reward if order just became received and has a card
-      if (updatedOrder.credit_card_id && updatedOrder.status === 'received' && updatedOrder.total_cost) {
+      // Update or create reward if card is selected
+      if (updatedOrder.credit_card_id && updatedOrder.total_cost) {
         const existingReward = await base44.entities.Reward.filter({ 
           purchase_order_id: updatedOrder.id 
         });
-        if (!existingReward || existingReward.length === 0) {
+        if (existingReward && existingReward.length > 0) {
+          await updateRewardForOrder(updatedOrder, existingReward[0]);
+        } else {
           await createRewardForOrder(updatedOrder);
         }
       }
@@ -197,11 +199,50 @@ export default function PurchaseOrders() {
         purchase_order_id: order.id,
         order_number: order.order_number,
         date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
-        status: 'earned',
+        status: order.status === 'received' ? 'earned' : 'pending',
         notes: `Auto-generated from order ${order.order_number}`
       });
       queryClient.invalidateQueries({ queryKey: ['rewards'] });
-      toast.success(`Reward added: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
+      toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
+    }
+  };
+
+  const updateRewardForOrder = async (order, existingReward) => {
+    const card = creditCards.find(c => c.id === order.credit_card_id);
+    if (!card) return;
+
+    const amount = order.total_cost;
+    let rewardAmount = 0;
+    let rewardType = 'cashback';
+    let currency = 'USD';
+
+    if (card.reward_type === 'cashback' && card.cashback_rate) {
+      rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+      rewardType = 'cashback';
+      currency = 'USD';
+    } else if (card.reward_type === 'points' && card.points_rate) {
+      rewardAmount = Math.round(amount * card.points_rate);
+      rewardType = 'points';
+      currency = 'points';
+    } else if (card.reward_type === 'both') {
+      if (card.cashback_rate) {
+        rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+        rewardType = 'cashback';
+        currency = 'USD';
+      } else if (card.points_rate) {
+        rewardAmount = Math.round(amount * card.points_rate);
+        rewardType = 'points';
+        currency = 'points';
+      }
+    }
+
+    if (rewardAmount > 0) {
+      await base44.entities.Reward.update(existingReward.id, {
+        purchase_amount: amount,
+        amount: parseFloat(rewardAmount),
+        status: order.status === 'received' ? 'earned' : 'pending'
+      });
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
     }
   };
 
