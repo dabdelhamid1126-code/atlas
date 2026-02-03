@@ -124,11 +124,21 @@ export default function GiftCards() {
     let rewardType = 'cashback';
     let currency = 'USD';
 
-    // Check if retailer is DoorDash (dining category)
-    const isDining = giftCard.retailer?.toLowerCase().includes('doordash');
-    const pointsMultiplier = isDining && card.dining_points_rate 
-      ? card.dining_points_rate 
-      : (card.points_rate || 1);
+    // Get points multiplier based on gift card category
+    let pointsMultiplier = card.points_rate || 1;
+    const category = giftCard.category || 'other';
+    
+    if (category === 'dining' && card.dining_points_rate) {
+      pointsMultiplier = card.dining_points_rate;
+    } else if (category === 'travel' && card.travel_points_rate) {
+      pointsMultiplier = card.travel_points_rate;
+    } else if (category === 'groceries' && card.groceries_points_rate) {
+      pointsMultiplier = card.groceries_points_rate;
+    } else if (category === 'gas' && card.gas_points_rate) {
+      pointsMultiplier = card.gas_points_rate;
+    } else if (category === 'streaming' && card.streaming_points_rate) {
+      pointsMultiplier = card.streaming_points_rate;
+    }
 
     if (card.reward_type === 'cashback' && card.cashback_rate) {
       rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
