@@ -40,6 +40,7 @@ export default function PurchaseOrders() {
     order_number: '',
     tracking_number: '',
     retailer: '',
+    credit_card_id: '',
     status: 'pending',
     order_date: '',
     expected_date: '',
@@ -57,11 +58,22 @@ export default function PurchaseOrders() {
     queryFn: () => base44.entities.Product.list()
   });
 
+  const { data: creditCards = [] } = useQuery({
+    queryKey: ['creditCards'],
+    queryFn: () => base44.entities.CreditCard.list()
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.PurchaseOrder.create(data),
-    onSuccess: async () => {
+    onSuccess: async (newOrder) => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Purchase order created');
+      
+      // Auto-create reward if card is selected and order is received
+      if (newOrder.credit_card_id && newOrder.status === 'received' && newOrder.total_cost) {
+        await createRewardForOrder(newOrder);
+      }
+      
       closeDialog();
       await logActivity('Created purchase order', 'purchase_order', formData.order_number);
     }
@@ -69,9 +81,20 @@ export default function PurchaseOrders() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.PurchaseOrder.update(id, data),
-    onSuccess: async () => {
+    onSuccess: async (updatedOrder) => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Purchase order updated');
+      
+      // Auto-create reward if order just became received and has a card
+      if (updatedOrder.credit_card_id && updatedOrder.status === 'received' && updatedOrder.total_cost) {
+        const existingReward = await base44.entities.Reward.filter({ 
+          purchase_order_id: updatedOrder.id 
+        });
+        if (!existingReward || existingReward.length === 0) {
+          await createRewardForOrder(updatedOrder);
+        }
+      }
+      
       closeDialog();
       await logActivity('Updated purchase order', 'purchase_order', formData.order_number);
     }
@@ -96,6 +119,55 @@ export default function PurchaseOrders() {
     });
   };
 
+  const createRewardForOrder = async (order) => {
+    const card = creditCards.find(c => c.id === order.credit_card_id);
+    if (!card) return;
+
+    const amount = order.total_cost;
+    let rewardAmount = 0;
+    let rewardType = 'cashback';
+    let currency = 'USD';
+
+    if (card.reward_type === 'cashback' && card.cashback_rate) {
+      rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+      rewardType = 'cashback';
+      currency = 'USD';
+    } else if (card.reward_type === 'points' && card.points_rate) {
+      rewardAmount = Math.round(amount * card.points_rate);
+      rewardType = 'points';
+      currency = 'points';
+    } else if (card.reward_type === 'both') {
+      if (card.cashback_rate) {
+        rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+        rewardType = 'cashback';
+        currency = 'USD';
+      } else if (card.points_rate) {
+        rewardAmount = Math.round(amount * card.points_rate);
+        rewardType = 'points';
+        currency = 'points';
+      }
+    }
+
+    if (rewardAmount > 0) {
+      await base44.entities.Reward.create({
+        credit_card_id: order.credit_card_id,
+        card_name: card.card_name,
+        source: card.card_name,
+        type: rewardType,
+        purchase_amount: amount,
+        amount: parseFloat(rewardAmount),
+        currency: currency,
+        purchase_order_id: order.id,
+        order_number: order.order_number,
+        date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
+        status: 'earned',
+        notes: `Auto-generated from order ${order.order_number}`
+      });
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      toast.success(`Reward added: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
+    }
+  };
+
   const openDialog = (order = null) => {
     if (order) {
       setEditingOrder(order);
@@ -103,6 +175,7 @@ export default function PurchaseOrders() {
         order_number: order.order_number || '',
         tracking_number: order.tracking_number || '',
         retailer: order.retailer || '',
+        credit_card_id: order.credit_card_id || '',
         status: order.status || 'pending',
         order_date: order.order_date || '',
         expected_date: order.expected_date || '',
@@ -115,6 +188,7 @@ export default function PurchaseOrders() {
         order_number: '',
         tracking_number: '',
         retailer: '',
+        credit_card_id: '',
         status: 'pending',
         order_date: format(new Date(), 'yyyy-MM-dd'),
         expected_date: '',
@@ -160,10 +234,18 @@ export default function PurchaseOrders() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const totalCost = formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
+    
+    const card = creditCards.find(c => c.id === formData.credit_card_id);
+    const dataToSubmit = {
+      ...formData,
+      total_cost: totalCost,
+      card_name: card?.card_name || null
+    };
+    
     if (editingOrder) {
-      updateMutation.mutate({ id: editingOrder.id, data: { ...formData, total_cost: totalCost } });
+      updateMutation.mutate({ id: editingOrder.id, data: dataToSubmit });
     } else {
-      createMutation.mutate({ ...formData, total_cost: totalCost });
+      createMutation.mutate(dataToSubmit);
     }
   };
 
@@ -312,6 +394,24 @@ export default function PurchaseOrders() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Credit Card (for rewards tracking)</Label>
+              <Select value={formData.credit_card_id} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select card (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>No card</SelectItem>
+                  {creditCards.filter(c => c.active).map(card => (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
+                      {card.reward_type === 'points' && `${card.points_rate}x pts`}
+                      {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
