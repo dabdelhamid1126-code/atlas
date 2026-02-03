@@ -40,6 +40,7 @@ export default function PurchaseOrders() {
     order_number: '',
     tracking_number: '',
     retailer: '',
+    category: 'other',
     credit_card_id: '',
     gift_card_ids: [],
     is_pickup: false,
@@ -172,12 +173,28 @@ export default function PurchaseOrders() {
     let rewardType = 'cashback';
     let currency = 'USD';
 
+    // Get points multiplier based on order category
+    let pointsMultiplier = card.points_rate || 1;
+    const category = order.category || 'other';
+    
+    if (category === 'dining' && card.dining_points_rate) {
+      pointsMultiplier = card.dining_points_rate;
+    } else if (category === 'travel' && card.travel_points_rate) {
+      pointsMultiplier = card.travel_points_rate;
+    } else if (category === 'groceries' && card.groceries_points_rate) {
+      pointsMultiplier = card.groceries_points_rate;
+    } else if (category === 'gas' && card.gas_points_rate) {
+      pointsMultiplier = card.gas_points_rate;
+    } else if (category === 'streaming' && card.streaming_points_rate) {
+      pointsMultiplier = card.streaming_points_rate;
+    }
+
     if (card.reward_type === 'cashback' && card.cashback_rate) {
       rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
       rewardType = 'cashback';
       currency = 'USD';
-    } else if (card.reward_type === 'points' && card.points_rate) {
-      rewardAmount = Math.round(amount * card.points_rate);
+    } else if (card.reward_type === 'points' && pointsMultiplier) {
+      rewardAmount = Math.round(amount * pointsMultiplier);
       rewardType = 'points';
       currency = 'points';
     } else if (card.reward_type === 'both') {
@@ -185,8 +202,8 @@ export default function PurchaseOrders() {
         rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
         rewardType = 'cashback';
         currency = 'USD';
-      } else if (card.points_rate) {
-        rewardAmount = Math.round(amount * card.points_rate);
+      } else if (pointsMultiplier) {
+        rewardAmount = Math.round(amount * pointsMultiplier);
         rewardType = 'points';
         currency = 'points';
       }
@@ -221,12 +238,28 @@ export default function PurchaseOrders() {
     let rewardType = 'cashback';
     let currency = 'USD';
 
+    // Get points multiplier based on order category
+    let pointsMultiplier = card.points_rate || 1;
+    const category = order.category || 'other';
+    
+    if (category === 'dining' && card.dining_points_rate) {
+      pointsMultiplier = card.dining_points_rate;
+    } else if (category === 'travel' && card.travel_points_rate) {
+      pointsMultiplier = card.travel_points_rate;
+    } else if (category === 'groceries' && card.groceries_points_rate) {
+      pointsMultiplier = card.groceries_points_rate;
+    } else if (category === 'gas' && card.gas_points_rate) {
+      pointsMultiplier = card.gas_points_rate;
+    } else if (category === 'streaming' && card.streaming_points_rate) {
+      pointsMultiplier = card.streaming_points_rate;
+    }
+
     if (card.reward_type === 'cashback' && card.cashback_rate) {
       rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
       rewardType = 'cashback';
       currency = 'USD';
-    } else if (card.reward_type === 'points' && card.points_rate) {
-      rewardAmount = Math.round(amount * card.points_rate);
+    } else if (card.reward_type === 'points' && pointsMultiplier) {
+      rewardAmount = Math.round(amount * pointsMultiplier);
       rewardType = 'points';
       currency = 'points';
     } else if (card.reward_type === 'both') {
@@ -234,8 +267,8 @@ export default function PurchaseOrders() {
         rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
         rewardType = 'cashback';
         currency = 'USD';
-      } else if (card.points_rate) {
-        rewardAmount = Math.round(amount * card.points_rate);
+      } else if (pointsMultiplier) {
+        rewardAmount = Math.round(amount * pointsMultiplier);
         rewardType = 'points';
         currency = 'points';
       }
@@ -258,6 +291,7 @@ export default function PurchaseOrders() {
         order_number: order.order_number || '',
         tracking_number: order.tracking_number || '',
         retailer: order.retailer || '',
+        category: order.category || 'other',
         credit_card_id: order.credit_card_id || '',
         gift_card_ids: order.gift_card_ids || [],
         is_pickup: order.is_pickup || false,
@@ -273,6 +307,7 @@ export default function PurchaseOrders() {
         order_number: '',
         tracking_number: '',
         retailer: '',
+        category: 'other',
         credit_card_id: '',
         gift_card_ids: [],
         is_pickup: false,
@@ -516,6 +551,23 @@ export default function PurchaseOrders() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Category *</Label>
+              <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dining">Dining</SelectItem>
+                  <SelectItem value="travel">Travel</SelectItem>
+                  <SelectItem value="groceries">Groceries</SelectItem>
+                  <SelectItem value="gas">Gas</SelectItem>
+                  <SelectItem value="streaming">Streaming</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">Category determines reward points rate</p>
             </div>
             <div className="space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
