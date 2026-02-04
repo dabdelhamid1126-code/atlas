@@ -21,10 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Pencil, Trash2, TrendingUp, DollarSign, Award, CreditCard } from 'lucide-react';
+import { Plus, Search, Filter, Pencil, Trash2, TrendingUp, DollarSign, Award, CreditCard, Package } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Rewards() {
@@ -32,6 +32,8 @@ export default function Rewards() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [salesSearch, setSalesSearch] = useState('');
+  const [monthFilter, setMonthFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [editingReward, setEditingReward] = useState(null);
@@ -67,6 +69,11 @@ export default function Rewards() {
   const { data: creditCards = [] } = useQuery({
     queryKey: ['creditCards'],
     queryFn: () => base44.entities.CreditCard.list()
+  });
+
+  const { data: exports = [], isLoading: exportsLoading } = useQuery({
+    queryKey: ['exports'],
+    queryFn: () => base44.entities.Export.list('-export_date')
   });
 
   const createRewardMutation = useMutation({
@@ -423,6 +430,58 @@ export default function Rewards() {
     .filter(r => r.status === 'earned' && r.currency === 'points')
     .reduce((sum, r) => sum + (r.amount || 0), 0);
 
+  // Filter exports by month and search
+  const filteredExports = exports.filter(exp => {
+    const matchesSearch = 
+      exp.export_number?.toLowerCase().includes(salesSearch.toLowerCase()) ||
+      exp.buyer?.toLowerCase().includes(salesSearch.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    if (monthFilter === 'all') return true;
+    
+    if (!exp.export_date) return false;
+    
+    const exportDate = new Date(exp.export_date);
+    const [year, month] = monthFilter.split('-');
+    const filterStart = startOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+    const filterEnd = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+    
+    return exportDate >= filterStart && exportDate <= filterEnd;
+  });
+
+  // Get unique months from exports for filter
+  const availableMonths = [...new Set(
+    exports
+      .filter(e => e.export_date)
+      .map(e => format(new Date(e.export_date), 'yyyy-MM'))
+  )].sort().reverse();
+
+  // Calculate sales stats
+  const totalSales = filteredExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
+  const completedSales = filteredExports.filter(e => e.status === 'completed').reduce((sum, exp) => sum + (exp.total_value || 0), 0);
+
+  const salesColumns = [
+    { header: 'Export #', accessor: 'export_number', cell: (row) => (
+      <span className="font-medium">{row.export_number}</span>
+    )},
+    { header: 'Buyer', accessor: 'buyer', cell: (row) => (
+      <span className="text-sm">{row.buyer}</span>
+    )},
+    { header: 'Date', accessor: 'export_date', cell: (row) => (
+      row.export_date ? format(new Date(row.export_date), 'MMM d, yyyy') : '-'
+    )},
+    { header: 'Items', accessor: 'items', cell: (row) => (
+      <span className="text-sm">{row.items?.length || 0} items</span>
+    )},
+    { header: 'Total Value', accessor: 'total_value', cell: (row) => (
+      <span className="font-semibold text-green-600">${(row.total_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+    )},
+    { header: 'Status', accessor: 'status', cell: (row) => (
+      <StatusBadge status={row.status} />
+    )},
+  ];
+
   return (
     <div>
       <PageHeader 
@@ -434,6 +493,7 @@ export default function Rewards() {
         <TabsList>
           <TabsTrigger value="rewards">Rewards</TabsTrigger>
           <TabsTrigger value="cards">Credit Cards</TabsTrigger>
+          <TabsTrigger value="sales">Sales</TabsTrigger>
         </TabsList>
 
         <TabsContent value="rewards" className="space-y-6">
@@ -523,6 +583,58 @@ export default function Rewards() {
             data={creditCards}
             loading={false}
             emptyMessage="No credit cards found"
+          />
+        </TabsContent>
+
+        <TabsContent value="sales" className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Package className="h-5 w-5 text-emerald-600" />
+                <p className="text-sm text-emerald-700 font-medium">Total Sales</p>
+              </div>
+              <p className="text-2xl font-bold text-emerald-900">${totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <p className="text-sm text-green-700 font-medium">Completed Sales</p>
+              </div>
+              <p className="text-2xl font-bold text-green-900">${completedSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search sales..."
+                value={salesSearch}
+                onChange={(e) => setSalesSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger className="w-48">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Months</SelectItem>
+                {availableMonths.map(month => (
+                  <SelectItem key={month} value={month}>
+                    {format(new Date(month + '-01'), 'MMMM yyyy')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DataTable
+            columns={salesColumns}
+            data={filteredExports}
+            loading={exportsLoading}
+            emptyMessage="No sales found"
           />
         </TabsContent>
       </Tabs>
