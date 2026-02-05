@@ -49,8 +49,9 @@ export default function PurchaseOrders() {
     expected_date: '',
     notes: '',
     items: [],
-    bonus_rewards_amount: '',
-    bonus_rewards_notes: ''
+    extra_cashback_percent: '',
+    bonus_amount: '',
+    bonus_notes: ''
   });
 
   const { data: orders = [], isLoading } = useQuery({
@@ -264,21 +265,40 @@ export default function PurchaseOrders() {
       toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
     }
     
-    // Create bonus reward if specified
-    if (order.bonus_rewards_amount && parseFloat(order.bonus_rewards_amount) > 0) {
+    // Create extra cashback reward if specified
+    if (order.extra_cashback_percent && parseFloat(order.extra_cashback_percent) > 0) {
+      const extraCashback = (amount * parseFloat(order.extra_cashback_percent) / 100).toFixed(2);
+      await base44.entities.Reward.create({
+        credit_card_id: order.credit_card_id,
+        card_name: card.card_name,
+        source: card.card_name,
+        type: 'cashback',
+        purchase_amount: amount,
+        amount: parseFloat(extraCashback),
+        currency: 'USD',
+        purchase_order_id: order.id,
+        order_number: order.order_number,
+        date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
+        status: order.status === 'received' ? 'earned' : 'pending',
+        notes: `Extra ${order.extra_cashback_percent}% cashback - ${order.bonus_notes || 'Promo/delivery day bonus'}`
+      });
+    }
+    
+    // Create flat bonus reward if specified
+    if (order.bonus_amount && parseFloat(order.bonus_amount) > 0) {
       await base44.entities.Reward.create({
         credit_card_id: order.credit_card_id,
         card_name: card.card_name,
         source: card.card_name,
         type: currency === 'USD' ? 'cashback' : 'points',
         purchase_amount: amount,
-        amount: parseFloat(order.bonus_rewards_amount),
+        amount: parseFloat(order.bonus_amount),
         currency: currency,
         purchase_order_id: order.id,
         order_number: order.order_number,
         date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
         status: order.status === 'received' ? 'earned' : 'pending',
-        notes: order.bonus_rewards_notes || 'Bonus reward (delivery day, promo, etc.)'
+        notes: `Bonus reward - ${order.bonus_notes || 'Prime Young Adult, promo, etc.'}`
       });
     }
   };
@@ -354,8 +374,9 @@ export default function PurchaseOrders() {
         expected_date: order.expected_date || '',
         notes: order.notes || '',
         items: order.items || [],
-        bonus_rewards_amount: order.bonus_rewards_amount || '',
-        bonus_rewards_notes: order.bonus_rewards_notes || ''
+        extra_cashback_percent: order.extra_cashback_percent || '',
+        bonus_amount: order.bonus_amount || '',
+        bonus_notes: order.bonus_notes || ''
       });
     } else {
       setEditingOrder(null);
@@ -372,8 +393,9 @@ export default function PurchaseOrders() {
         expected_date: '',
         notes: '',
         items: [],
-        bonus_rewards_amount: '',
-        bonus_rewards_notes: ''
+        extra_cashback_percent: '',
+        bonus_amount: '',
+        bonus_notes: ''
       });
     }
     setDialogOpen(true);
@@ -669,26 +691,39 @@ export default function PurchaseOrders() {
             </div>
             
             {formData.credit_card_id && (
-              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="space-y-2">
-                  <Label>Bonus Rewards Amount</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.bonus_rewards_amount}
-                    onChange={(e) => setFormData({ ...formData, bonus_rewards_amount: e.target.value })}
-                    placeholder="e.g., 5.00 or 500"
-                  />
-                  <p className="text-xs text-slate-600">Extra cashback/points from promos</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Bonus Notes</Label>
-                  <Input
-                    value={formData.bonus_rewards_notes}
-                    onChange={(e) => setFormData({ ...formData, bonus_rewards_notes: e.target.value })}
-                    placeholder="e.g., Prime Young Adult"
-                  />
-                  <p className="text-xs text-slate-600">Amazon delivery day, promos, etc.</p>
+              <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Extra Cashback %</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.extra_cashback_percent}
+                      onChange={(e) => setFormData({ ...formData, extra_cashback_percent: e.target.value })}
+                      placeholder="e.g., 2.5"
+                    />
+                    <p className="text-xs text-slate-600">Delivery day, Prime promos</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Flat Bonus Amount</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.bonus_amount}
+                      onChange={(e) => setFormData({ ...formData, bonus_amount: e.target.value })}
+                      placeholder="e.g., 10.00"
+                    />
+                    <p className="text-xs text-slate-600">Prime Young Adult, etc.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Bonus Notes</Label>
+                    <Input
+                      value={formData.bonus_notes}
+                      onChange={(e) => setFormData({ ...formData, bonus_notes: e.target.value })}
+                      placeholder="Description"
+                    />
+                    <p className="text-xs text-slate-600">What's the bonus for?</p>
+                  </div>
                 </div>
               </div>
             )}
