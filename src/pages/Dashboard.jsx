@@ -42,6 +42,7 @@ export default function Dashboard() {
     totalGiftCardSpend: 0,
     mostUsedCard: null,
     monthlyProfit: 0,
+    monthlySpent: 0,
     roi: 0,
     profitTrend: [],
     mostUsedCardSpend: 0,
@@ -163,6 +164,7 @@ export default function Dashboard() {
         totalGiftCardSpend,
         mostUsedCard,
         monthlyProfit,
+        monthlySpent,
         roi,
         profitTrend,
         mostUsedCardSpend,
@@ -288,7 +290,7 @@ export default function Dashboard() {
       {/* Financial Overview */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
@@ -298,6 +300,19 @@ export default function Dashboard() {
                 </div>
               </div>
               <p className="text-3xl font-bold text-slate-900">${financialStats.totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Monthly Spent</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-slate-900">${financialStats.monthlySpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+              <p className="text-xs text-slate-500 mt-1">This month</p>
             </CardContent>
           </Card>
 
@@ -406,6 +421,14 @@ export default function Dashboard() {
                 <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500">Total Spend (All Time)</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  ${financialStats.totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
