@@ -216,7 +216,7 @@ export default function Dashboard() {
       {/* Financial Overview */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
@@ -257,26 +257,6 @@ export default function Dashboard() {
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">Most Used Card</p>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                  <CreditCard className="h-5 w-5 text-white" />
-                </div>
-              </div>
-              <p className="text-xl font-bold text-slate-900 truncate">
-                {financialStats.mostUsedCard?.card_name || 'N/A'}
-              </p>
-              {financialStats.mostUsedCard && (
-                <p className="text-xs text-slate-500 mt-1">{financialStats.mostUsedCard.issuer}</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Gift Card Stats */}
-        <div className="grid grid-cols-1 gap-4 mt-4">
-          <Card className="card-modern overflow-hidden border-2 border-pink-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-slate-500">Gift Card Spend</p>
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
                   <CreditCard className="h-5 w-5 text-white" />
@@ -289,9 +269,9 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="mb-8">
+      <div>
         <h2 className="text-lg font-bold text-slate-900 mb-4">Operations Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatsCard
             title="Inventory Items"
             value={stats.inventory.toLocaleString()}
@@ -317,29 +297,6 @@ export default function Dashboard() {
             value={stats.damagedItems}
             icon={AlertTriangle}
           />
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-lg font-bold text-slate-900 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickLinks.map((link, idx) => (
-            <Link key={link.page} to={createPageUrl(link.page)}>
-              <div 
-                className="card-modern p-6 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer group animate-slide-up overflow-hidden relative"
-                style={{animationDelay: `${idx * 0.1}s`}}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${link.gradient} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
-                <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl relative z-10`}>
-                  <link.icon className="h-7 w-7 text-white" />
-                </div>
-                <p className="text-sm font-bold text-slate-900 relative z-10">
-                  {link.name}
-                </p>
-              </div>
-            </Link>
-          ))}
         </div>
       </div>
     </div>
