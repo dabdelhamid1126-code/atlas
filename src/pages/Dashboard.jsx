@@ -421,14 +421,6 @@ export default function Dashboard() {
                 <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500">Total Spend (All Time)</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  ${financialStats.totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
