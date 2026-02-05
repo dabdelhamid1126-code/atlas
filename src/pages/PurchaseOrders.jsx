@@ -695,7 +695,7 @@ export default function PurchaseOrders() {
               </Select>
             </div>
             
-            {formData.credit_card_id && (() => {
+            {formData.credit_card_id && formData.retailer?.toLowerCase().includes('amazon') && (() => {
               const orderTotal = formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
               const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
                 const gc = giftCards.find(g => g.id === id);
