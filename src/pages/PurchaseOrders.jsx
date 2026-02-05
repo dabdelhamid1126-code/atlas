@@ -770,14 +770,39 @@ export default function PurchaseOrders() {
                 </div>
                 
                 {formData.original_price && formData.price_after_discount && (
-                  <div className="bg-white rounded-lg p-3 border border-slate-200">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-600">You saved:</span>
-                      <span className="font-semibold text-green-600">
-                        ${(parseFloat(formData.original_price) - parseFloat(formData.price_after_discount)).toFixed(2)}
-                        {formData.original_price && ` (${((1 - parseFloat(formData.price_after_discount) / parseFloat(formData.original_price)) * 100).toFixed(0)}% off)`}
-                      </span>
+                  <div className="space-y-2">
+                    <div className="bg-white rounded-lg p-3 border border-slate-200">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-600">You saved:</span>
+                        <span className="font-semibold text-green-600">
+                          ${(parseFloat(formData.original_price) - parseFloat(formData.price_after_discount)).toFixed(2)}
+                          {formData.original_price && ` (${((1 - parseFloat(formData.price_after_discount) / parseFloat(formData.original_price)) * 100).toFixed(0)}% off)`}
+                        </span>
+                      </div>
                     </div>
+                    
+                    {(() => {
+                      const priceAfterDiscount = parseFloat(formData.price_after_discount) || 0;
+                      const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
+                        const gc = giftCards.find(g => g.id === id);
+                        return sum + (gc?.value || 0);
+                      }, 0);
+                      const finalTotal = priceAfterDiscount - giftCardTotal;
+                      
+                      return (
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-4 text-white shadow-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold">Final Total:</span>
+                            <span className="text-2xl font-bold">${finalTotal.toFixed(2)}</span>
+                          </div>
+                          {giftCardTotal > 0 && (
+                            <div className="text-sm mt-2 text-green-100">
+                              After ${giftCardTotal.toFixed(2)} in gift cards
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
