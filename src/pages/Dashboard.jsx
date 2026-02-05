@@ -85,7 +85,55 @@ export default function Dashboard() {
       const totalPoints = rewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
       const totalGiftCardSpend = allGiftCards.filter(gc => gc.purchase_cost).reduce((sum, gc) => sum + gc.purchase_cost, 0);
       
-
+      // Calculate revenue from exports
+      const totalRevenue = allExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
+      
+      // Calculate this month's profit
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      
+      const monthlyOrders = allOrders.filter(o => {
+        const orderDate = o.order_date ? parseISO(o.order_date) : null;
+        return orderDate && orderDate >= monthStart && orderDate <= monthEnd;
+      });
+      const monthlyExports = allExports.filter(e => {
+        const exportDate = e.export_date ? parseISO(e.export_date) : null;
+        return exportDate && exportDate >= monthStart && exportDate <= monthEnd;
+      });
+      
+      const monthlySpent = monthlyOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
+      const monthlyRevenue = monthlyExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
+      const monthlyProfit = monthlyRevenue - monthlySpent;
+      
+      // Calculate ROI
+      const roi = totalSpent > 0 ? ((totalRevenue - totalSpent) / totalSpent) * 100 : 0;
+      
+      // Calculate profit trend for last 6 months
+      const profitTrend = [];
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const mStart = startOfMonth(monthDate);
+        const mEnd = endOfMonth(monthDate);
+        
+        const mOrders = allOrders.filter(o => {
+          const orderDate = o.order_date ? parseISO(o.order_date) : null;
+          return orderDate && orderDate >= mStart && orderDate <= mEnd;
+        });
+        const mExports = allExports.filter(e => {
+          const exportDate = e.export_date ? parseISO(e.export_date) : null;
+          return exportDate && exportDate >= mStart && exportDate <= mEnd;
+        });
+        
+        const mSpent = mOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
+        const mRevenue = mExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
+        const mProfit = mRevenue - mSpent;
+        
+        profitTrend.push({
+          month: format(monthDate, 'MMM yyyy'),
+          profit: mProfit
+        });
+      }
 
       // Find most used card
       const cardUsage = {};
@@ -96,13 +144,29 @@ export default function Dashboard() {
       });
       const mostUsedCardId = Object.keys(cardUsage).reduce((a, b) => cardUsage[a] > cardUsage[b] ? a : b, null);
       const mostUsedCard = mostUsedCardId ? creditCards.find(c => c.id === mostUsedCardId) : null;
+      
+      // Calculate spending and rewards for most used card
+      const mostUsedCardSpend = mostUsedCardId 
+        ? allOrders.filter(o => o.credit_card_id === mostUsedCardId).reduce((sum, o) => sum + (o.final_cost || o.total_cost || 0), 0)
+        : 0;
+      const mostUsedCardRewards = mostUsedCardId
+        ? {
+            cashback: rewards.filter(r => r.credit_card_id === mostUsedCardId && r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0),
+            points: rewards.filter(r => r.credit_card_id === mostUsedCardId && r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0)
+          }
+        : { cashback: 0, points: 0 };
 
       setFinancialStats({
         totalSpent,
         totalCashback,
         totalPoints,
         totalGiftCardSpend,
-        mostUsedCard
+        mostUsedCard,
+        monthlyProfit,
+        roi,
+        profitTrend,
+        mostUsedCardSpend,
+        mostUsedCardRewards
       });
     } catch (error) {
       console.error('Error loading dashboard:', error);
