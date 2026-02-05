@@ -265,40 +265,40 @@ export default function PurchaseOrders() {
       toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
     }
     
-    // Create extra cashback reward if specified
+    // Create extra points reward if specified (e.g., 5% back on Amazon)
     if (order.extra_cashback_percent && parseFloat(order.extra_cashback_percent) > 0) {
-      const extraCashback = (amount * parseFloat(order.extra_cashback_percent) / 100).toFixed(2);
+      const extraPoints = Math.round(amount * parseFloat(order.extra_cashback_percent) / 100);
       await base44.entities.Reward.create({
         credit_card_id: order.credit_card_id,
         card_name: card.card_name,
         source: card.card_name,
-        type: 'cashback',
+        type: 'points',
         purchase_amount: amount,
-        amount: parseFloat(extraCashback),
-        currency: 'USD',
+        amount: extraPoints,
+        currency: 'points',
         purchase_order_id: order.id,
         order_number: order.order_number,
         date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
         status: order.status === 'received' ? 'earned' : 'pending',
-        notes: `Extra ${order.extra_cashback_percent}% cashback - ${order.bonus_notes || 'Promo/delivery day bonus'}`
+        notes: `${order.extra_cashback_percent}% back - ${order.bonus_notes || '5% Amazon, delivery day, etc.'}`
       });
     }
     
-    // Create flat bonus reward if specified
+    // Create bonus on purchases (points) or Prime Young Adult (cashback)
     if (order.bonus_amount && parseFloat(order.bonus_amount) > 0) {
       await base44.entities.Reward.create({
         credit_card_id: order.credit_card_id,
         card_name: card.card_name,
         source: card.card_name,
-        type: currency === 'USD' ? 'cashback' : 'points',
+        type: order.bonus_notes?.toLowerCase().includes('prime young adult') ? 'cashback' : 'points',
         purchase_amount: amount,
         amount: parseFloat(order.bonus_amount),
-        currency: currency,
+        currency: order.bonus_notes?.toLowerCase().includes('prime young adult') ? 'USD' : 'points',
         purchase_order_id: order.id,
         order_number: order.order_number,
         date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
         status: order.status === 'received' ? 'earned' : 'pending',
-        notes: `Bonus reward - ${order.bonus_notes || 'Prime Young Adult, promo, etc.'}`
+        notes: `Bonus - ${order.bonus_notes || 'Bonus on purchases'}`
       });
     }
   };
@@ -698,34 +698,34 @@ export default function PurchaseOrders() {
               }, 0);
               const finalTotal = orderTotal - giftCardTotal;
               
-              const extraCashback = formData.extra_cashback_percent ? (finalTotal * parseFloat(formData.extra_cashback_percent) / 100) : 0;
+              const extraPoints = formData.extra_cashback_percent ? Math.round(finalTotal * parseFloat(formData.extra_cashback_percent) / 100) : 0;
               const flatBonus = formData.bonus_amount ? parseFloat(formData.bonus_amount) : 0;
-              const totalBonusRewards = extraCashback + flatBonus;
+              const isPrimeYoungAdult = formData.bonus_notes?.toLowerCase().includes('prime young adult');
               
               return (
                 <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label>Extra Cashback %</Label>
+                      <Label>Extra Points %</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.extra_cashback_percent}
                         onChange={(e) => setFormData({ ...formData, extra_cashback_percent: e.target.value })}
-                        placeholder="e.g., 2.5"
+                        placeholder="e.g., 5"
                       />
-                      <p className="text-xs text-slate-600">Delivery day, Prime promos</p>
+                      <p className="text-xs text-slate-600">5% back on Amazon, etc.</p>
                     </div>
                     <div className="space-y-2">
-                      <Label>Flat Bonus Amount</Label>
+                      <Label>Bonus Amount</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.bonus_amount}
                         onChange={(e) => setFormData({ ...formData, bonus_amount: e.target.value })}
-                        placeholder="e.g., 10.00"
+                        placeholder="e.g., 29.99"
                       />
-                      <p className="text-xs text-slate-600">Prime Young Adult, etc.</p>
+                      <p className="text-xs text-slate-600">Bonus pts or Prime YA $</p>
                     </div>
                     <div className="space-y-2">
                       <Label>Bonus Notes</Label>
@@ -737,22 +737,19 @@ export default function PurchaseOrders() {
                       <p className="text-xs text-slate-600">What's the bonus for?</p>
                     </div>
                   </div>
-                  {totalBonusRewards > 0 && (
+                  {(extraPoints > 0 || flatBonus > 0) && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-slate-700">Total Bonus Rewards:</span>
-                        <span className="text-lg font-bold text-green-700">
-                          ${totalBonusRewards.toFixed(2)}
-                        </span>
-                      </div>
-                      {extraCashback > 0 && (
-                        <p className="text-xs text-slate-600 mt-1">
-                          Extra cashback: ${extraCashback.toFixed(2)}
+                      <div className="text-sm font-medium text-slate-700 mb-2">Bonus Rewards Summary:</div>
+                      {extraPoints > 0 && (
+                        <p className="text-sm text-slate-700">
+                          • Extra points: <span className="font-semibold">{extraPoints} pts</span>
                         </p>
                       )}
                       {flatBonus > 0 && (
-                        <p className="text-xs text-slate-600">
-                          Flat bonus: ${flatBonus.toFixed(2)}
+                        <p className="text-sm text-slate-700">
+                          • Bonus: <span className="font-semibold">
+                            {isPrimeYoungAdult ? `$${flatBonus.toFixed(2)}` : `${flatBonus} pts`}
+                          </span>
                         </p>
                       )}
                     </div>
