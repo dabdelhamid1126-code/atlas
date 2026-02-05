@@ -48,7 +48,9 @@ export default function PurchaseOrders() {
     order_date: '',
     expected_date: '',
     notes: '',
-    items: []
+    items: [],
+    bonus_rewards_amount: '',
+    bonus_rewards_notes: ''
   });
 
   const { data: orders = [], isLoading } = useQuery({
@@ -261,6 +263,24 @@ export default function PurchaseOrders() {
       queryClient.invalidateQueries({ queryKey: ['rewards'] });
       toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
     }
+    
+    // Create bonus reward if specified
+    if (order.bonus_rewards_amount && parseFloat(order.bonus_rewards_amount) > 0) {
+      await base44.entities.Reward.create({
+        credit_card_id: order.credit_card_id,
+        card_name: card.card_name,
+        source: card.card_name,
+        type: currency === 'USD' ? 'cashback' : 'points',
+        purchase_amount: amount,
+        amount: parseFloat(order.bonus_rewards_amount),
+        currency: currency,
+        purchase_order_id: order.id,
+        order_number: order.order_number,
+        date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
+        status: order.status === 'received' ? 'earned' : 'pending',
+        notes: order.bonus_rewards_notes || 'Bonus reward (delivery day, promo, etc.)'
+      });
+    }
   };
 
   const updateRewardForOrder = async (order, existingReward) => {
@@ -333,7 +353,9 @@ export default function PurchaseOrders() {
         order_date: order.order_date || '',
         expected_date: order.expected_date || '',
         notes: order.notes || '',
-        items: order.items || []
+        items: order.items || [],
+        bonus_rewards_amount: order.bonus_rewards_amount || '',
+        bonus_rewards_notes: order.bonus_rewards_notes || ''
       });
     } else {
       setEditingOrder(null);
@@ -349,7 +371,9 @@ export default function PurchaseOrders() {
         order_date: format(new Date(), 'yyyy-MM-dd'),
         expected_date: '',
         notes: '',
-        items: []
+        items: [],
+        bonus_rewards_amount: '',
+        bonus_rewards_notes: ''
       });
     }
     setDialogOpen(true);
@@ -643,6 +667,31 @@ export default function PurchaseOrders() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {formData.credit_card_id && (
+              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="space-y-2">
+                  <Label>Bonus Rewards Amount</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.bonus_rewards_amount}
+                    onChange={(e) => setFormData({ ...formData, bonus_rewards_amount: e.target.value })}
+                    placeholder="e.g., 5.00 or 500"
+                  />
+                  <p className="text-xs text-slate-600">Extra cashback/points from promos</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Bonus Notes</Label>
+                  <Input
+                    value={formData.bonus_rewards_notes}
+                    onChange={(e) => setFormData({ ...formData, bonus_rewards_notes: e.target.value })}
+                    placeholder="e.g., Prime Young Adult"
+                  />
+                  <p className="text-xs text-slate-600">Amazon delivery day, promos, etc.</p>
+                </div>
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label>Gift Cards (select multiple)</Label>
