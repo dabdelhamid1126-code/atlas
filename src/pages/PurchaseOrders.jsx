@@ -574,7 +574,18 @@ export default function PurchaseOrders() {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                <Select value={formData.status} onValueChange={(v) => {
+                  // Auto-fill quantity_received when marking as received
+                  if (v === 'received') {
+                    const updatedItems = formData.items.map(item => ({
+                      ...item,
+                      quantity_received: item.quantity_ordered
+                    }));
+                    setFormData({ ...formData, status: v, items: updatedItems });
+                  } else {
+                    setFormData({ ...formData, status: v });
+                  }
+                }}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
