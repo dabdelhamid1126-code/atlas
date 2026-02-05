@@ -51,7 +51,8 @@ export default function PurchaseOrders() {
     items: [],
     extra_cashback_percent: '',
     bonus_amount: '',
-    bonus_notes: ''
+    bonus_notes: '',
+    rewards_on_original_price: false
   });
 
   const { data: orders = [], isLoading } = useQuery({
@@ -267,20 +268,22 @@ export default function PurchaseOrders() {
     
     // Create extra points reward if specified (e.g., 5% back on Amazon)
     if (order.extra_cashback_percent && parseFloat(order.extra_cashback_percent) > 0) {
-      const extraPoints = Math.round(amount * parseFloat(order.extra_cashback_percent) / 100);
+      // Calculate on original price if specified, otherwise on final charged amount
+      const rewardBaseAmount = order.rewards_on_original_price ? order.total_cost : amount;
+      const extraPoints = Math.round(rewardBaseAmount * parseFloat(order.extra_cashback_percent) / 100);
       await base44.entities.Reward.create({
         credit_card_id: order.credit_card_id,
         card_name: card.card_name,
         source: card.card_name,
         type: 'points',
-        purchase_amount: amount,
+        purchase_amount: rewardBaseAmount,
         amount: extraPoints,
         currency: 'points',
         purchase_order_id: order.id,
         order_number: order.order_number,
         date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
         status: order.status === 'received' ? 'earned' : 'pending',
-        notes: `${order.extra_cashback_percent}% back - ${order.bonus_notes || '5% Amazon, delivery day, etc.'}`
+        notes: `${order.extra_cashback_percent}% back on ${order.rewards_on_original_price ? 'original' : 'final'} price - ${order.bonus_notes || '5% Amazon, delivery day, etc.'}`
       });
     }
     
@@ -376,7 +379,8 @@ export default function PurchaseOrders() {
         items: order.items || [],
         extra_cashback_percent: order.extra_cashback_percent || '',
         bonus_amount: order.bonus_amount || '',
-        bonus_notes: order.bonus_notes || ''
+        bonus_notes: order.bonus_notes || '',
+        rewards_on_original_price: order.rewards_on_original_price || false
       });
     } else {
       setEditingOrder(null);
@@ -395,7 +399,8 @@ export default function PurchaseOrders() {
         items: [],
         extra_cashback_percent: '',
         bonus_amount: '',
-        bonus_notes: ''
+        bonus_notes: '',
+        rewards_on_original_price: false
       });
     }
     setDialogOpen(true);
@@ -698,12 +703,27 @@ export default function PurchaseOrders() {
               }, 0);
               const finalTotal = orderTotal - giftCardTotal;
               
-              const extraPoints = formData.extra_cashback_percent ? Math.round(finalTotal * parseFloat(formData.extra_cashback_percent) / 100) : 0;
+              // Calculate rewards on original or final price based on checkbox
+              const rewardBaseAmount = formData.rewards_on_original_price ? orderTotal : finalTotal;
+              const extraPoints = formData.extra_cashback_percent ? Math.round(rewardBaseAmount * parseFloat(formData.extra_cashback_percent) / 100) : 0;
               const flatBonus = formData.bonus_amount ? parseFloat(formData.bonus_amount) : 0;
               const isPrimeYoungAdult = formData.bonus_notes?.toLowerCase().includes('prime young adult');
               
               return (
-                <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="space-y-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-900">Bonus Rewards</h3>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.rewards_on_original_price}
+                        onChange={(e) => setFormData({ ...formData, rewards_on_original_price: e.target.checked })}
+                        className="rounded"
+                      />
+                      <span className="text-slate-700">Calculate % on original price</span>
+                    </label>
+                  </div>
+                  
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Extra Points %</Label>
@@ -714,7 +734,11 @@ export default function PurchaseOrders() {
                         onChange={(e) => setFormData({ ...formData, extra_cashback_percent: e.target.value })}
                         placeholder="e.g., 5"
                       />
-                      <p className="text-xs text-slate-600">5% back on Amazon, etc.</p>
+                      <p className="text-xs text-slate-600">
+                        {formData.rewards_on_original_price 
+                          ? `On original $${orderTotal.toFixed(2)}`
+                          : `On final $${finalTotal.toFixed(2)}`}
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label>Bonus Amount</Label>
@@ -734,24 +758,32 @@ export default function PurchaseOrders() {
                         onChange={(e) => setFormData({ ...formData, bonus_notes: e.target.value })}
                         placeholder="Description"
                       />
-                      <p className="text-xs text-slate-600">What's the bonus for?</p>
+                      <p className="text-xs text-slate-600">Include "Prime Young Adult" for cashback</p>
                     </div>
                   </div>
+                  
                   {(extraPoints > 0 || flatBonus > 0) && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <div className="text-sm font-medium text-slate-700 mb-2">Bonus Rewards Summary:</div>
+                    <div className="bg-white border border-green-300 rounded-lg p-3 shadow-sm">
+                      <div className="text-sm font-semibold text-slate-900 mb-2">💰 Total Bonus Rewards:</div>
                       {extraPoints > 0 && (
                         <p className="text-sm text-slate-700">
-                          • Extra points: <span className="font-semibold">{extraPoints} pts</span>
+                          • {formData.extra_cashback_percent}% on ${rewardBaseAmount.toFixed(2)}: <span className="font-semibold text-green-700">{extraPoints} pts</span>
                         </p>
                       )}
                       {flatBonus > 0 && (
                         <p className="text-sm text-slate-700">
-                          • Bonus: <span className="font-semibold">
-                            {isPrimeYoungAdult ? `$${flatBonus.toFixed(2)}` : `${flatBonus} pts`}
+                          • Bonus reward: <span className="font-semibold text-green-700">
+                            {isPrimeYoungAdult ? `$${flatBonus.toFixed(2)} cashback` : `${flatBonus} pts`}
                           </span>
                         </p>
                       )}
+                      <div className="mt-2 pt-2 border-t border-slate-200">
+                        <span className="text-sm font-semibold text-slate-900">Grand Total: </span>
+                        <span className="font-bold text-green-700">
+                          {extraPoints + (isPrimeYoungAdult ? 0 : flatBonus)} pts
+                          {isPrimeYoungAdult && flatBonus > 0 && ` + $${flatBonus.toFixed(2)}`}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
