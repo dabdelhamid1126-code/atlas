@@ -216,12 +216,10 @@ export default function GiftCards() {
   const markAsUsed = async (card) => {
     const orderNumber = prompt('Enter order number where this card was used:');
     if (orderNumber) {
-      await base44.entities.GiftCard.update(card.id, { 
-        status: 'used',
-        used_order_number: orderNumber
-      });
+      await base44.entities.GiftCard.delete(card.id);
+      await logActivity('Gift card used and removed', 'gift_card', `${card.brand} $${card.value} used in order ${orderNumber}`);
       queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      toast.success('Gift card marked as used');
+      toast.success('Gift card removed from inventory');
     }
   };
 
