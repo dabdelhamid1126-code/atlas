@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 
@@ -45,9 +46,13 @@ export default function Dashboard() {
     monthlySpent: 0,
     roi: 0,
     profitTrend: [],
+    cashbackTrend: [],
+    pointsTrend: [],
+    spentTrend: [],
     mostUsedCardSpend: 0,
     mostUsedCardRewards: { cashback: 0, points: 0 }
   });
+  const [selectedMetric, setSelectedMetric] = useState('profit');
 
   useEffect(() => {
     loadDashboardData();
@@ -110,8 +115,12 @@ export default function Dashboard() {
       // Calculate ROI
       const roi = totalSpent > 0 ? ((totalRevenue - totalSpent) / totalSpent) * 100 : 0;
       
-      // Calculate profit trend for last 6 months
+      // Calculate trends for last 6 months
       const profitTrend = [];
+      const cashbackTrend = [];
+      const pointsTrend = [];
+      const spentTrend = [];
+      
       for (let i = 5; i >= 0; i--) {
         const monthDate = subMonths(now, i);
         const mStart = startOfMonth(monthDate);
@@ -125,15 +134,22 @@ export default function Dashboard() {
           const exportDate = e.export_date ? parseISO(e.export_date) : null;
           return exportDate && exportDate >= mStart && exportDate <= mEnd;
         });
+        const mRewards = rewards.filter(r => {
+          const rewardDate = r.date_earned ? parseISO(r.date_earned) : null;
+          return rewardDate && rewardDate >= mStart && rewardDate <= mEnd;
+        });
         
         const mSpent = mOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
         const mRevenue = mExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
         const mProfit = mRevenue - mSpent;
+        const mCashback = mRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
+        const mPoints = mRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
         
-        profitTrend.push({
-          month: format(monthDate, 'MMM yyyy'),
-          profit: mProfit
-        });
+        const monthLabel = format(monthDate, 'MMM yyyy');
+        profitTrend.push({ month: monthLabel, value: mProfit });
+        cashbackTrend.push({ month: monthLabel, value: mCashback });
+        pointsTrend.push({ month: monthLabel, value: mPoints });
+        spentTrend.push({ month: monthLabel, value: mSpent });
       }
 
       // Find most used card
@@ -167,6 +183,9 @@ export default function Dashboard() {
         monthlySpent,
         roi,
         profitTrend,
+        cashbackTrend,
+        pointsTrend,
+        spentTrend,
         mostUsedCardSpend,
         mostUsedCardRewards
       });
@@ -391,22 +410,63 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Profit Trend Chart */}
+        {/* Trend Chart with Metric Switcher */}
         <Card className="card-modern mt-4">
           <CardHeader>
-            <CardTitle>Profit Trend (Last 6 Months)</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                {selectedMetric === 'profit' && 'Profit Trend (Last 6 Months)'}
+                {selectedMetric === 'cashback' && 'Cashback Trend (Last 6 Months)'}
+                {selectedMetric === 'points' && 'Points Trend (Last 6 Months)'}
+                {selectedMetric === 'spent' && 'Spending Trend (Last 6 Months)'}
+              </CardTitle>
+              <Tabs value={selectedMetric} onValueChange={setSelectedMetric}>
+                <TabsList>
+                  <TabsTrigger value="profit">Profit</TabsTrigger>
+                  <TabsTrigger value="cashback">Cashback</TabsTrigger>
+                  <TabsTrigger value="points">Points</TabsTrigger>
+                  <TabsTrigger value="spent">Spent</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={financialStats.profitTrend}>
+              <LineChart data={
+                selectedMetric === 'profit' ? financialStats.profitTrend :
+                selectedMetric === 'cashback' ? financialStats.cashbackTrend :
+                selectedMetric === 'points' ? financialStats.pointsTrend :
+                financialStats.spentTrend
+              }>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="month" stroke="#64748b" style={{ fontSize: '12px' }} />
                 <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                  formatter={(value) => `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
+                  formatter={(value) => 
+                    selectedMetric === 'points' 
+                      ? value.toLocaleString()
+                      : `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                  }
                 />
-                <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 5 }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke={
+                    selectedMetric === 'profit' ? '#10b981' :
+                    selectedMetric === 'cashback' ? '#14b8a6' :
+                    selectedMetric === 'points' ? '#8b5cf6' :
+                    '#64748b'
+                  }
+                  strokeWidth={3} 
+                  dot={{ 
+                    fill: selectedMetric === 'profit' ? '#10b981' :
+                          selectedMetric === 'cashback' ? '#14b8a6' :
+                          selectedMetric === 'points' ? '#8b5cf6' :
+                          '#64748b', 
+                    r: 5 
+                  }} 
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
