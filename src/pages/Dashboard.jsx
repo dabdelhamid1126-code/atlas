@@ -20,6 +20,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,12 @@ export default function Dashboard() {
     totalCashback: 0,
     totalPoints: 0,
     totalGiftCardSpend: 0,
-    mostUsedCard: null
+    mostUsedCard: null,
+    monthlyProfit: 0,
+    roi: 0,
+    profitTrend: [],
+    mostUsedCardSpend: 0,
+    mostUsedCardRewards: { cashback: 0, points: 0 }
   });
 
   useEffect(() => {
@@ -47,7 +54,7 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [inventory, purchaseOrders, exports, giftCards, damaged, products, allOrders, rewards, creditCards, allGiftCards] = await Promise.all([
+      const [inventory, purchaseOrders, exports, giftCards, damaged, products, allOrders, rewards, creditCards, allGiftCards, allExports] = await Promise.all([
         base44.entities.InventoryItem.filter({ status: 'in_stock' }),
         base44.entities.PurchaseOrder.filter({ status: 'pending' }),
         base44.entities.Export.filter({ status: 'pending' }),
@@ -57,7 +64,8 @@ export default function Dashboard() {
         base44.entities.PurchaseOrder.list(),
         base44.entities.Reward.list(),
         base44.entities.CreditCard.list(),
-        base44.entities.GiftCard.list()
+        base44.entities.GiftCard.list(),
+        base44.entities.Export.list()
       ]);
 
       setStats({
@@ -216,7 +224,7 @@ export default function Dashboard() {
       {/* Financial Overview */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
@@ -232,9 +240,41 @@ export default function Dashboard() {
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">Total Cashback</p>
+                <p className="text-sm font-medium text-slate-500">Monthly Profit</p>
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                   <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className={`text-3xl font-bold ${financialStats.monthlyProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                ${financialStats.monthlyProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">This month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">ROI</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className={`text-3xl font-bold ${financialStats.roi >= 0 ? 'text-violet-600' : 'text-red-600'}`}>
+                {financialStats.roi.toFixed(1)}%
+              </p>
+              <p className="text-xs text-slate-500 mt-1">Return on investment</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Total Cashback</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-white" />
                 </div>
               </div>
               <p className="text-3xl font-bold text-emerald-600">${financialStats.totalCashback.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
@@ -265,7 +305,79 @@ export default function Dashboard() {
               <p className="text-3xl font-bold text-pink-600">${financialStats.totalGiftCardSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </CardContent>
           </Card>
+
+          <Card className="card-modern overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-slate-500">Most Used Card</p>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-lg font-bold text-slate-900 truncate">
+                {financialStats.mostUsedCard?.card_name || 'N/A'}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Spent: ${financialStats.mostUsedCardSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+              </p>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Profit Trend Chart */}
+        <Card className="card-modern mt-4">
+          <CardHeader>
+            <CardTitle>Profit Trend (Last 6 Months)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={financialStats.profitTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" stroke="#64748b" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                  formatter={(value) => `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
+                />
+                <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Most Used Card Rewards */}
+        {financialStats.mostUsedCard && (
+          <Card className="card-modern mt-4 border-2 border-orange-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-orange-600" />
+                {financialStats.mostUsedCard.card_name} Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">Total Spent</p>
+                  <p className="text-2xl font-bold text-slate-900">
+                    ${financialStats.mostUsedCardSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">Cashback Earned</p>
+                  <p className="text-2xl font-bold text-emerald-600">
+                    ${financialStats.mostUsedCardRewards.cashback.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">Points Earned</p>
+                  <p className="text-2xl font-bold text-violet-600">
+                    {financialStats.mostUsedCardRewards.points.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Stats Grid */}
