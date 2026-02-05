@@ -126,6 +126,40 @@ export default function PurchaseOrders() {
     },
     onSuccess: async (updatedOrder) => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      
+      // Create inventory items if order is received or partially received
+      if ((updatedOrder.status === 'received' || updatedOrder.status === 'partially_received') && updatedOrder.items?.length > 0) {
+        for (const item of updatedOrder.items) {
+          if (item.quantity_received > 0) {
+            // Check if inventory item already exists
+            const existingInventory = await base44.entities.InventoryItem.filter({
+              purchase_order_id: updatedOrder.id,
+              product_id: item.product_id
+            });
+            
+            if (existingInventory && existingInventory.length > 0) {
+              // Update existing inventory
+              await base44.entities.InventoryItem.update(existingInventory[0].id, {
+                quantity: item.quantity_received,
+                unit_cost: item.unit_cost
+              });
+            } else {
+              // Create new inventory item
+              await base44.entities.InventoryItem.create({
+                product_id: item.product_id,
+                product_name: item.product_name,
+                quantity: item.quantity_received,
+                status: 'in_stock',
+                purchase_order_id: updatedOrder.id,
+                unit_cost: item.unit_cost
+              });
+            }
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ['inventory'] });
+        toast.success('Inventory items created');
+      }
+      
       toast.success('Purchase order updated');
       
       // Update or create reward if card is selected
@@ -341,7 +375,7 @@ export default function PurchaseOrders() {
   const updateItem = (index, field, value) => {
     const newItems = [...formData.items];
     
-    if (field === 'quantity_ordered') {
+    if (field === 'quantity_ordered' || field === 'quantity_received') {
       newItems[index][field] = value === '' ? '' : parseInt(value) || 0;
     } else if (field === 'unit_cost') {
       newItems[index][field] = value === '' ? '' : parseFloat(value) || 0;
@@ -680,12 +714,21 @@ export default function PurchaseOrders() {
                       </Select>
                     </div>
                     <div className="w-24">
-                      <Label className="text-xs">Qty</Label>
+                      <Label className="text-xs">Qty Ordered</Label>
                       <Input
                         type="number"
                         min="1"
                         value={item.quantity_ordered}
                         onChange={(e) => updateItem(index, 'quantity_ordered', e.target.value)}
+                      />
+                    </div>
+                    <div className="w-24">
+                      <Label className="text-xs">Qty Received</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={item.quantity_received || 0}
+                        onChange={(e) => updateItem(index, 'quantity_received', e.target.value)}
                       />
                     </div>
                     <div className="w-28">
