@@ -65,6 +65,7 @@ import Rewards from './pages/Rewards';
 import ScanReceive from './pages/ScanReceive';
 import SerialNumbers from './pages/SerialNumbers';
 import UserGuide from './pages/UserGuide';
+import Exports from './pages/Exports';
 import __Layout from './Layout.jsx';
 
 
@@ -87,6 +88,7 @@ export const PAGES = {
     "ScanReceive": ScanReceive,
     "SerialNumbers": SerialNumbers,
     "UserGuide": UserGuide,
+    "Exports": Exports,
 }
 
 export const pagesConfig = {
