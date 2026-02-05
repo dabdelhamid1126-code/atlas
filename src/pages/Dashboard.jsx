@@ -290,19 +290,7 @@ export default function Dashboard() {
       {/* Financial Overview */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <Card className="card-modern overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">Total Spent</p>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-white" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-slate-900">${financialStats.totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            </CardContent>
-          </Card>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
@@ -461,6 +449,18 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div>
+        <Card className="card-modern overflow-hidden mb-4">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-slate-500">Total Spent</p>
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-white" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-slate-900">${financialStats.totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+          </CardContent>
+        </Card>
+
         <h2 className="text-lg font-bold text-slate-900 mb-4">Operations Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatsCard
