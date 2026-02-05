@@ -690,43 +690,76 @@ export default function PurchaseOrders() {
               </Select>
             </div>
             
-            {formData.credit_card_id && (
-              <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Extra Cashback %</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formData.extra_cashback_percent}
-                      onChange={(e) => setFormData({ ...formData, extra_cashback_percent: e.target.value })}
-                      placeholder="e.g., 2.5"
-                    />
-                    <p className="text-xs text-slate-600">Delivery day, Prime promos</p>
+            {formData.credit_card_id && (() => {
+              const orderTotal = formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
+              const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
+                const gc = giftCards.find(g => g.id === id);
+                return sum + (gc?.value || 0);
+              }, 0);
+              const finalTotal = orderTotal - giftCardTotal;
+              
+              const extraCashback = formData.extra_cashback_percent ? (finalTotal * parseFloat(formData.extra_cashback_percent) / 100) : 0;
+              const flatBonus = formData.bonus_amount ? parseFloat(formData.bonus_amount) : 0;
+              const totalBonusRewards = extraCashback + flatBonus;
+              
+              return (
+                <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Extra Cashback %</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.extra_cashback_percent}
+                        onChange={(e) => setFormData({ ...formData, extra_cashback_percent: e.target.value })}
+                        placeholder="e.g., 2.5"
+                      />
+                      <p className="text-xs text-slate-600">Delivery day, Prime promos</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Flat Bonus Amount</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.bonus_amount}
+                        onChange={(e) => setFormData({ ...formData, bonus_amount: e.target.value })}
+                        placeholder="e.g., 10.00"
+                      />
+                      <p className="text-xs text-slate-600">Prime Young Adult, etc.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Bonus Notes</Label>
+                      <Input
+                        value={formData.bonus_notes}
+                        onChange={(e) => setFormData({ ...formData, bonus_notes: e.target.value })}
+                        placeholder="Description"
+                      />
+                      <p className="text-xs text-slate-600">What's the bonus for?</p>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Flat Bonus Amount</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formData.bonus_amount}
-                      onChange={(e) => setFormData({ ...formData, bonus_amount: e.target.value })}
-                      placeholder="e.g., 10.00"
-                    />
-                    <p className="text-xs text-slate-600">Prime Young Adult, etc.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Bonus Notes</Label>
-                    <Input
-                      value={formData.bonus_notes}
-                      onChange={(e) => setFormData({ ...formData, bonus_notes: e.target.value })}
-                      placeholder="Description"
-                    />
-                    <p className="text-xs text-slate-600">What's the bonus for?</p>
-                  </div>
+                  {totalBonusRewards > 0 && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-slate-700">Total Bonus Rewards:</span>
+                        <span className="text-lg font-bold text-green-700">
+                          ${totalBonusRewards.toFixed(2)}
+                        </span>
+                      </div>
+                      {extraCashback > 0 && (
+                        <p className="text-xs text-slate-600 mt-1">
+                          Extra cashback: ${extraCashback.toFixed(2)}
+                        </p>
+                      )}
+                      {flatBonus > 0 && (
+                        <p className="text-xs text-slate-600">
+                          Flat bonus: ${flatBonus.toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
             
             <div className="space-y-2">
               <Label>Gift Cards (select multiple)</Label>
