@@ -49,6 +49,9 @@ export default function PurchaseOrders() {
     expected_date: '',
     notes: '',
     items: [],
+    original_price: '',
+    discount_amount: '',
+    price_after_discount: '',
     extra_cashback_percent: '',
     bonus_amount: '',
     bonus_notes: '',
@@ -268,15 +271,17 @@ export default function PurchaseOrders() {
     
     // Create extra points reward if specified (e.g., 5% back on Amazon)
     if (order.extra_cashback_percent && parseFloat(order.extra_cashback_percent) > 0) {
-      // Calculate on original price if specified, otherwise on final charged amount
-      const rewardBaseAmount = order.rewards_on_original_price ? order.total_cost : amount;
-      const extraPoints = Math.round(rewardBaseAmount * parseFloat(order.extra_cashback_percent) / 100);
+      // Calculate on original price if specified, otherwise on price after discount or final charged amount
+      const baseAmount = order.rewards_on_original_price 
+        ? (order.original_price || order.total_cost) 
+        : (order.price_after_discount || amount);
+      const extraPoints = Math.round(baseAmount * parseFloat(order.extra_cashback_percent) / 100);
       await base44.entities.Reward.create({
         credit_card_id: order.credit_card_id,
         card_name: card.card_name,
         source: card.card_name,
         type: 'points',
-        purchase_amount: rewardBaseAmount,
+        purchase_amount: baseAmount,
         amount: extraPoints,
         currency: 'points',
         purchase_order_id: order.id,
@@ -377,6 +382,9 @@ export default function PurchaseOrders() {
         expected_date: order.expected_date || '',
         notes: order.notes || '',
         items: order.items || [],
+        original_price: order.original_price || '',
+        discount_amount: order.discount_amount || '',
+        price_after_discount: order.price_after_discount || '',
         extra_cashback_percent: order.extra_cashback_percent || '',
         bonus_amount: order.bonus_amount || '',
         bonus_notes: order.bonus_notes || '',
@@ -397,6 +405,9 @@ export default function PurchaseOrders() {
         expected_date: '',
         notes: '',
         items: [],
+        original_price: '',
+        discount_amount: '',
+        price_after_discount: '',
         extra_cashback_percent: '',
         bonus_amount: '',
         bonus_notes: '',
@@ -466,10 +477,13 @@ export default function PurchaseOrders() {
     const dataToSubmit = {
       ...formData,
       items: cleanedItems,
-      total_cost: totalCost,
+      total_cost: parseFloat(formData.original_price) || totalCost,
       gift_card_value: giftCardValue,
-      final_cost: totalCost - giftCardValue,
-      card_name: card?.card_name || null
+      final_cost: (parseFloat(formData.price_after_discount) || totalCost) - giftCardValue,
+      card_name: card?.card_name || null,
+      original_price: parseFloat(formData.original_price) || null,
+      discount_amount: parseFloat(formData.discount_amount) || null,
+      price_after_discount: parseFloat(formData.price_after_discount) || null
     };
     
     if (editingOrder) {
@@ -695,16 +709,91 @@ export default function PurchaseOrders() {
               </Select>
             </div>
             
+            {formData.retailer?.toLowerCase().includes('amazon') && (
+              <div className="space-y-4 p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                  🛒 Amazon Order Pricing
+                </h3>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Original Price</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.original_price}
+                      onChange={(e) => {
+                        const original = parseFloat(e.target.value) || 0;
+                        const discount = parseFloat(formData.discount_amount) || 0;
+                        setFormData({ 
+                          ...formData, 
+                          original_price: e.target.value,
+                          price_after_discount: (original - discount).toFixed(2)
+                        });
+                      }}
+                      placeholder="59.99"
+                    />
+                    <p className="text-xs text-slate-600">Before any discounts</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Discount Amount</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.discount_amount}
+                      onChange={(e) => {
+                        const original = parseFloat(formData.original_price) || 0;
+                        const discount = parseFloat(e.target.value) || 0;
+                        setFormData({ 
+                          ...formData, 
+                          discount_amount: e.target.value,
+                          price_after_discount: (original - discount).toFixed(2)
+                        });
+                      }}
+                      placeholder="30.00"
+                    />
+                    <p className="text-xs text-slate-600">Promos, coupons</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Price After Discount</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.price_after_discount}
+                      onChange={(e) => setFormData({ ...formData, price_after_discount: e.target.value })}
+                      placeholder="29.99"
+                    />
+                    <p className="text-xs text-slate-600">What you actually paid</p>
+                  </div>
+                </div>
+                
+                {formData.original_price && formData.price_after_discount && (
+                  <div className="bg-white rounded-lg p-3 border border-slate-200">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-600">You saved:</span>
+                      <span className="font-semibold text-green-600">
+                        ${(parseFloat(formData.original_price) - parseFloat(formData.price_after_discount)).toFixed(2)}
+                        {formData.original_price && ` (${((1 - parseFloat(formData.price_after_discount) / parseFloat(formData.original_price)) * 100).toFixed(0)}% off)`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {formData.credit_card_id && formData.retailer?.toLowerCase().includes('amazon') && (() => {
-              const orderTotal = formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
+              const orderTotal = parseFloat(formData.original_price) || formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
               const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
                 const gc = giftCards.find(g => g.id === id);
                 return sum + (gc?.value || 0);
               }, 0);
-              const finalTotal = orderTotal - giftCardTotal;
+              const priceAfterDiscount = parseFloat(formData.price_after_discount) || 0;
+              const finalTotal = priceAfterDiscount - giftCardTotal;
               
               // Calculate rewards on original or final price based on checkbox
-              const rewardBaseAmount = formData.rewards_on_original_price ? orderTotal : finalTotal;
+              const rewardBaseAmount = formData.rewards_on_original_price ? orderTotal : (priceAfterDiscount || finalTotal);
               const extraPoints = formData.extra_cashback_percent ? Math.round(rewardBaseAmount * parseFloat(formData.extra_cashback_percent) / 100) : 0;
               const flatBonus = formData.bonus_amount ? parseFloat(formData.bonus_amount) : 0;
               const isPrimeYoungAdult = formData.bonus_notes?.toLowerCase().includes('prime young adult');
@@ -712,7 +801,7 @@ export default function PurchaseOrders() {
               return (
                 <div className="space-y-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-900">Bonus Rewards</h3>
+                    <h3 className="font-semibold text-slate-900">💳 Bonus Rewards</h3>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
                         type="checkbox"
@@ -737,7 +826,7 @@ export default function PurchaseOrders() {
                       <p className="text-xs text-slate-600">
                         {formData.rewards_on_original_price 
                           ? `On original $${orderTotal.toFixed(2)}`
-                          : `On final $${finalTotal.toFixed(2)}`}
+                          : `On charged $${(priceAfterDiscount || finalTotal).toFixed(2)}`}
                       </p>
                     </div>
                     <div className="space-y-2">
