@@ -71,7 +71,13 @@ export default function PurchaseOrders() {
 
   const { data: creditCards = [] } = useQuery({
     queryKey: ['creditCards'],
-    queryFn: () => base44.entities.CreditCard.list()
+    queryFn: async () => {
+      const cards = await base44.entities.CreditCard.list();
+      return cards.sort((a, b) => {
+        if (a.issuer !== b.issuer) return (a.issuer || '').localeCompare(b.issuer || '');
+        return (a.card_name || '').localeCompare(b.card_name || '');
+      });
+    }
   });
 
   const { data: giftCards = [] } = useQuery({
@@ -513,7 +519,8 @@ export default function PurchaseOrders() {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number?.toLowerCase().includes(search.toLowerCase()) ||
-      order.retailer?.toLowerCase().includes(search.toLowerCase());
+      order.retailer?.toLowerCase().includes(search.toLowerCase()) ||
+      order.items?.some(item => item.product_name?.toLowerCase().includes(search.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
