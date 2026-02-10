@@ -56,7 +56,13 @@ export default function Rewards() {
     issuer: '',
     cashback_rate: '',
     points_rate: '',
+    dining_points_rate: '',
+    travel_points_rate: '',
+    groceries_points_rate: '',
+    gas_points_rate: '',
+    streaming_points_rate: '',
     reward_type: 'cashback',
+    benefits: '',
     notes: '',
     active: true
   });
@@ -174,7 +180,13 @@ export default function Rewards() {
         issuer: card.issuer || '',
         cashback_rate: card.cashback_rate || '',
         points_rate: card.points_rate || '',
+        dining_points_rate: card.dining_points_rate || '',
+        travel_points_rate: card.travel_points_rate || '',
+        groceries_points_rate: card.groceries_points_rate || '',
+        gas_points_rate: card.gas_points_rate || '',
+        streaming_points_rate: card.streaming_points_rate || '',
         reward_type: card.reward_type || 'cashback',
+        benefits: card.benefits || '',
         notes: card.notes || '',
         active: card.active !== false
       });
@@ -185,7 +197,13 @@ export default function Rewards() {
         issuer: '',
         cashback_rate: '',
         points_rate: '',
+        dining_points_rate: '',
+        travel_points_rate: '',
+        groceries_points_rate: '',
+        gas_points_rate: '',
+        streaming_points_rate: '',
         reward_type: 'cashback',
+        benefits: '',
         notes: '',
         active: true
       });
@@ -272,7 +290,12 @@ export default function Rewards() {
     const data = {
       ...cardFormData,
       cashback_rate: cardFormData.cashback_rate ? parseFloat(cardFormData.cashback_rate) : null,
-      points_rate: cardFormData.points_rate ? parseFloat(cardFormData.points_rate) : null
+      points_rate: cardFormData.points_rate ? parseFloat(cardFormData.points_rate) : null,
+      dining_points_rate: cardFormData.dining_points_rate ? parseFloat(cardFormData.dining_points_rate) : null,
+      travel_points_rate: cardFormData.travel_points_rate ? parseFloat(cardFormData.travel_points_rate) : null,
+      groceries_points_rate: cardFormData.groceries_points_rate ? parseFloat(cardFormData.groceries_points_rate) : null,
+      gas_points_rate: cardFormData.gas_points_rate ? parseFloat(cardFormData.gas_points_rate) : null,
+      streaming_points_rate: cardFormData.streaming_points_rate ? parseFloat(cardFormData.streaming_points_rate) : null
     };
 
     if (editingCard) {
@@ -864,23 +887,89 @@ export default function Rewards() {
               </div>
             )}
             {(cardFormData.reward_type === 'points' || cardFormData.reward_type === 'both') && (
-              <div className="space-y-2">
-                <Label>Points Rate (per $1)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={cardFormData.points_rate}
-                  onChange={(e) => setCardFormData({ ...cardFormData, points_rate: e.target.value })}
-                  placeholder="e.g., 2 for 2x points"
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label>Base Points Rate (per $1)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={cardFormData.points_rate}
+                    onChange={(e) => setCardFormData({ ...cardFormData, points_rate: e.target.value })}
+                    placeholder="e.g., 1 for 1x points"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-semibold">Bonus Category Rates</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Dining (x pts)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cardFormData.dining_points_rate}
+                        onChange={(e) => setCardFormData({ ...cardFormData, dining_points_rate: e.target.value })}
+                        placeholder="e.g., 3"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Travel (x pts)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cardFormData.travel_points_rate}
+                        onChange={(e) => setCardFormData({ ...cardFormData, travel_points_rate: e.target.value })}
+                        placeholder="e.g., 3"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Groceries (x pts)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cardFormData.groceries_points_rate}
+                        onChange={(e) => setCardFormData({ ...cardFormData, groceries_points_rate: e.target.value })}
+                        placeholder="e.g., 2"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Gas (x pts)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cardFormData.gas_points_rate}
+                        onChange={(e) => setCardFormData({ ...cardFormData, gas_points_rate: e.target.value })}
+                        placeholder="e.g., 3"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Streaming (x pts)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cardFormData.streaming_points_rate}
+                        onChange={(e) => setCardFormData({ ...cardFormData, streaming_points_rate: e.target.value })}
+                        placeholder="e.g., 2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
+            <div className="space-y-2">
+              <Label>Benefits & Perks</Label>
+              <Textarea
+                value={cardFormData.benefits}
+                onChange={(e) => setCardFormData({ ...cardFormData, benefits: e.target.value })}
+                placeholder="e.g., Airport lounge access, travel insurance, purchase protection"
+                rows={2}
+              />
+            </div>
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea
                 value={cardFormData.notes}
                 onChange={(e) => setCardFormData({ ...cardFormData, notes: e.target.value })}
-                placeholder="Card benefits, categories, etc."
+                placeholder="Additional notes..."
                 rows={2}
               />
             </div>

@@ -798,7 +798,7 @@ export default function PurchaseOrders() {
                   <SelectValue placeholder="Select card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {creditCards.filter(c => c.active).map(card => (
+                  {creditCards.filter(c => c.active && (issuerFilter === 'all' || c.issuer === issuerFilter)).map(card => (
                     <SelectItem key={card.id} value={card.id}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
                       {card.reward_type === 'points' && `${card.points_rate}x pts`}
@@ -963,7 +963,7 @@ export default function PurchaseOrders() {
                         onChange={(e) => setFormData({ ...formData, bonus_amount: e.target.value })}
                         placeholder="e.g., 29.99"
                       />
-                      <p className="text-xs text-slate-600">Bonus pts or Prime YA $</p>
+                      <p className="text-xs text-slate-600">Leave empty for Prime YA (auto 5%)</p>
                     </div>
                     <div className="space-y-2">
                       <Label>Bonus Notes</Label>
@@ -984,18 +984,25 @@ export default function PurchaseOrders() {
                           • {formData.extra_cashback_percent}% on ${rewardBaseAmount.toFixed(2)}: <span className="font-semibold text-green-700">{extraPoints} pts</span>
                         </p>
                       )}
-                      {flatBonus > 0 && (
+                      {isPrimeYoungAdult && (
+                        <p className="text-sm text-slate-700">
+                          • Prime Young Adult 5% cashback: <span className="font-semibold text-green-700">
+                            ${((priceAfterDiscount || finalTotal) * 0.05).toFixed(2)}
+                          </span>
+                        </p>
+                      )}
+                      {flatBonus > 0 && !isPrimeYoungAdult && (
                         <p className="text-sm text-slate-700">
                           • Bonus reward: <span className="font-semibold text-green-700">
-                            {isPrimeYoungAdult ? `$${flatBonus.toFixed(2)} cashback` : `${flatBonus} pts`}
+                            {flatBonus} pts
                           </span>
                         </p>
                       )}
                       <div className="mt-2 pt-2 border-t border-slate-200">
                         <span className="text-sm font-semibold text-slate-900">Grand Total: </span>
                         <span className="font-bold text-green-700">
-                          {extraPoints + (isPrimeYoungAdult ? 0 : flatBonus)} pts
-                          {isPrimeYoungAdult && flatBonus > 0 && ` + $${flatBonus.toFixed(2)}`}
+                          {extraPoints + (!isPrimeYoungAdult ? flatBonus : 0)} pts
+                          {isPrimeYoungAdult && ` + $${((priceAfterDiscount || finalTotal) * 0.05).toFixed(2)} cashback`}
                         </span>
                       </div>
                     </div>
