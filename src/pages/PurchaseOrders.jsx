@@ -33,6 +33,7 @@ export default function PurchaseOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [issuerFilter, setIssuerFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('new-to-old');
   const [productSearches, setProductSearches] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -182,14 +183,15 @@ export default function PurchaseOrders() {
       
       // Update or create reward if card is selected
       if (updatedOrder.credit_card_id && updatedOrder.total_cost) {
-        const existingReward = await base44.entities.Reward.filter({ 
+        // Delete all existing rewards for this order to avoid duplicates
+        const existingRewards = await base44.entities.Reward.filter({ 
           purchase_order_id: updatedOrder.id 
         });
-        if (existingReward && existingReward.length > 0) {
-          await updateRewardForOrder(updatedOrder, existingReward[0]);
-        } else {
-          await createRewardForOrder(updatedOrder);
+        for (const reward of existingRewards) {
+          await base44.entities.Reward.delete(reward.id);
         }
+        // Create fresh rewards
+        await createRewardForOrder(updatedOrder);
       }
       
       closeDialog();
@@ -590,7 +592,27 @@ export default function PurchaseOrders() {
       order.retailer?.toLowerCase().includes(search.toLowerCase()) ||
       order.items?.some(item => item.product_name?.toLowerCase().includes(search.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    let matchesDate = true;
+    if (dateFilter !== 'all' && order.order_date) {
+      const orderDate = new Date(order.order_date);
+      const today = new Date();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      if (dateFilter === 'today') {
+        matchesDate = orderDate >= startOfToday;
+      } else if (dateFilter === 'week') {
+        const weekAgo = new Date(startOfToday);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        matchesDate = orderDate >= weekAgo;
+      } else if (dateFilter === 'month') {
+        const monthAgo = new Date(startOfToday);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        matchesDate = orderDate >= monthAgo;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const columns = [
@@ -682,6 +704,17 @@ export default function PurchaseOrders() {
             {[...new Set(creditCards.map(c => c.issuer).filter(Boolean))].sort().map(issuer => (
               <SelectItem key={issuer} value={issuer}>{issuer}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Filter by date" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="week">Last 7 Days</SelectItem>
+            <SelectItem value="month">Last 30 Days</SelectItem>
           </SelectContent>
         </Select>
         <Select value={sortOrder} onValueChange={setSortOrder}>
