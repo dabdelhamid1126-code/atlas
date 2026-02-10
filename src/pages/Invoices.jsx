@@ -306,7 +306,8 @@ export default function Invoices() {
 
   const calculateInvoiceProfit = (invoice) => {
     let totalCost = 0;
-    (invoice.items || []).forEach(item => {
+    const itemsWithProfit = (invoice.items || []).map(item => {
+      let itemCost = 0;
       if (item.product_id) {
         // Find the most recent purchase order for this product
         const productOrders = purchaseOrders
@@ -316,17 +317,29 @@ export default function Invoices() {
         if (productOrders.length > 0) {
           const orderItem = productOrders[0].items.find(i => i.product_id === item.product_id);
           if (orderItem) {
-            totalCost += (orderItem.unit_cost || 0) * item.quantity;
+            itemCost = (orderItem.unit_cost || 0) * item.quantity;
           }
         }
       }
+      
+      totalCost += itemCost;
+      const itemRevenue = item.total || 0;
+      const itemProfit = itemRevenue - itemCost;
+      const itemProfitMargin = itemRevenue > 0 ? (itemProfit / itemRevenue) * 100 : 0;
+      
+      return {
+        ...item,
+        cost: itemCost,
+        profit: itemProfit,
+        profitMargin: itemProfitMargin
+      };
     });
     
     const revenue = invoice.total || 0;
     const profit = revenue - totalCost;
     const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
     
-    return { totalCost, profit, profitMargin };
+    return { totalCost, profit, profitMargin, itemsWithProfit };
   };
 
   const paidInvoices = invoices.filter(inv => inv.status === 'paid');
@@ -784,17 +797,34 @@ export default function Invoices() {
                       <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">Qty</th>
                       <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Unit Price</th>
                       <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Total</th>
+                      {viewInvoice.status === 'paid' && (
+                        <>
+                          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Cost</th>
+                          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Profit</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {(viewInvoice.items || []).map((item, i) => (
-                      <tr key={i}>
-                        <td className="px-4 py-3 text-slate-900">{item.description}</td>
-                        <td className="px-4 py-3 text-center text-slate-700">{item.quantity}</td>
-                        <td className="px-4 py-3 text-right text-slate-700">${(item.unit_price || 0).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-medium text-slate-900">${(item.total || 0).toFixed(2)}</td>
-                      </tr>
-                    ))}
+                    {(() => {
+                      const { itemsWithProfit } = calculateInvoiceProfit(viewInvoice);
+                      return itemsWithProfit.map((item, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3 text-slate-900">{item.description}</td>
+                          <td className="px-4 py-3 text-center text-slate-700">{item.quantity}</td>
+                          <td className="px-4 py-3 text-right text-slate-700">${(item.unit_price || 0).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-medium text-slate-900">${(item.total || 0).toFixed(2)}</td>
+                          {viewInvoice.status === 'paid' && (
+                            <>
+                              <td className="px-4 py-3 text-right text-slate-600">${item.cost.toFixed(2)}</td>
+                              <td className={`px-4 py-3 text-right font-semibold ${item.profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                ${item.profit.toFixed(2)} ({item.profitMargin.toFixed(1)}%)
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ));
+                    })()}
                   </tbody>
                 </table>
               </div>
