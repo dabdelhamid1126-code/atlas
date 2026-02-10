@@ -43,7 +43,6 @@ export default function PurchaseOrders() {
     retailer: '',
     category: 'other',
     credit_card_id: '',
-    card_name: '',
     gift_card_ids: [],
     is_pickup: false,
     status: 'pending',
@@ -376,8 +375,7 @@ export default function PurchaseOrders() {
         tracking_number: order.tracking_number || '',
         retailer: order.retailer || '',
         category: order.category || 'other',
-        credit_card_id: order.credit_card_id || '',
-        card_name: order.card_name || '',
+        credit_card_id: order.card_name || '',
         gift_card_ids: order.gift_card_ids || [],
         is_pickup: order.is_pickup || false,
         status: order.status || 'pending',
@@ -401,7 +399,6 @@ export default function PurchaseOrders() {
         retailer: '',
         category: 'other',
         credit_card_id: '',
-        card_name: '',
         gift_card_ids: [],
         is_pickup: false,
         status: 'pending',
@@ -452,6 +449,7 @@ export default function PurchaseOrders() {
     if (field === 'product_id') {
       const product = products.find(p => p.id === value);
       if (product) {
+        newItems[index].product_id = value;
         newItems[index].product_name = product.name;
         newItems[index].upc = product.upc;
       }
@@ -709,17 +707,15 @@ export default function PurchaseOrders() {
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
               <Select value={formData.credit_card_id || undefined} onValueChange={(v) => {
-                const card = creditCards.find(c => c.id === v);
-                setFormData({ ...formData, credit_card_id: v, card_name: card?.card_name || '' });
+                const card = creditCards.find(c => c.card_name === v);
+                setFormData({ ...formData, credit_card_id: v });
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select card (optional)">
-                    {formData.card_name || "Select card (optional)"}
-                  </SelectValue>
+                  <SelectValue placeholder="Select card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
                   {creditCards.filter(c => c.active).map(card => (
-                    <SelectItem key={card.id} value={card.id}>
+                    <SelectItem key={card.id} value={card.card_name}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
                       {card.reward_type === 'points' && `${card.points_rate}x pts`}
                       {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
@@ -991,17 +987,18 @@ export default function PurchaseOrders() {
                     <div className="flex-1">
                       <Label className="text-xs">Product</Label>
                       <Select
-                        value={item.product_id}
-                        onValueChange={(v) => updateItem(index, 'product_id', v)}
+                        value={item.product_name}
+                        onValueChange={(v) => {
+                          const product = products.find(p => p.name === v);
+                          updateItem(index, 'product_id', product?.id || '');
+                        }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select product">
-                            {item.product_name || "Select product"}
-                          </SelectValue>
+                          <SelectValue placeholder="Select product" />
                         </SelectTrigger>
                         <SelectContent>
                           {products.map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                            <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
