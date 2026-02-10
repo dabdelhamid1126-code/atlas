@@ -66,9 +66,15 @@ export default function Rewards() {
     queryFn: () => base44.entities.Reward.list('-date_earned')
   });
 
-  const { data: creditCards = [] } = useQuery({
+  const { data: creditCards = [], isLoading: cardsLoading } = useQuery({
     queryKey: ['creditCards'],
-    queryFn: () => base44.entities.CreditCard.list()
+    queryFn: async () => {
+      const cards = await base44.entities.CreditCard.list();
+      return cards.sort((a, b) => {
+        if (a.issuer !== b.issuer) return (a.issuer || '').localeCompare(b.issuer || '');
+        return (a.card_name || '').localeCompare(b.card_name || '');
+      });
+    }
   });
 
 

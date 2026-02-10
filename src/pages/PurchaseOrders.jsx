@@ -276,6 +276,30 @@ export default function PurchaseOrders() {
       toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
     }
     
+    // Add bonus for category-specific rates if applicable
+    if (card.reward_type === 'points' || card.reward_type === 'both') {
+      const baseRate = card.points_rate || 1;
+      if (pointsMultiplier > baseRate) {
+        const bonusPoints = Math.round(amount * (pointsMultiplier - baseRate));
+        if (bonusPoints > 0) {
+          await base44.entities.Reward.create({
+            credit_card_id: order.credit_card_id,
+            card_name: card.card_name,
+            source: card.card_name,
+            type: 'points',
+            purchase_amount: amount,
+            amount: bonusPoints,
+            currency: 'points',
+            purchase_order_id: order.id,
+            order_number: order.order_number,
+            date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
+            status: order.status === 'received' ? 'earned' : 'pending',
+            notes: `Bonus ${category} category: ${pointsMultiplier}x total (${bonusPoints} bonus points)`
+          });
+        }
+      }
+    }
+    
     // Create extra points reward if specified (e.g., 5% back on Amazon)
     if (order.extra_cashback_percent && parseFloat(order.extra_cashback_percent) > 0) {
       // Calculate on original price if specified, otherwise on price after discount or final charged amount
