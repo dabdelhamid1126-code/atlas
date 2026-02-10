@@ -387,7 +387,9 @@ export default function Rewards() {
         <div className="text-xs space-y-0.5">
           {bonuses.length > 0 ? bonuses.map((b, i) => (
             <div key={i} className="text-violet-600">{b}</div>
-          )) : <span className="text-slate-400">-</span>}
+          )) : row.benefits ? (
+            <div className="text-blue-600">{row.benefits.substring(0, 50)}{row.benefits.length > 50 ? '...' : ''}</div>
+          ) : <span className="text-slate-400">-</span>}
         </div>
       );
     }},

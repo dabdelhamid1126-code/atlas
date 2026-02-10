@@ -32,7 +32,9 @@ export default function PurchaseOrders() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [issuerFilter, setIssuerFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('new-to-old');
+  const [productSearches, setProductSearches] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -324,16 +326,35 @@ export default function PurchaseOrders() {
       });
     }
     
-    // Create bonus on purchases (points) or Prime Young Adult (cashback)
-    if (order.bonus_amount && parseFloat(order.bonus_amount) > 0) {
+    // Create Prime Young Adult cashback (5% of final amount)
+    if (order.bonus_notes?.toLowerCase().includes('prime young adult')) {
+      const primeYACashback = amount * 0.05;
       await base44.entities.Reward.create({
         credit_card_id: order.credit_card_id,
         card_name: card.card_name,
         source: card.card_name,
-        type: order.bonus_notes?.toLowerCase().includes('prime young adult') ? 'cashback' : 'points',
+        type: 'cashback',
+        purchase_amount: amount,
+        amount: primeYACashback,
+        currency: 'USD',
+        purchase_order_id: order.id,
+        order_number: order.order_number,
+        date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
+        status: order.status === 'received' ? 'earned' : 'pending',
+        notes: `Prime Young Adult 5% cashback`
+      });
+    }
+    
+    // Create other bonus rewards (points)
+    if (order.bonus_amount && parseFloat(order.bonus_amount) > 0 && !order.bonus_notes?.toLowerCase().includes('prime young adult')) {
+      await base44.entities.Reward.create({
+        credit_card_id: order.credit_card_id,
+        card_name: card.card_name,
+        source: card.card_name,
+        type: 'points',
         purchase_amount: amount,
         amount: parseFloat(order.bonus_amount),
-        currency: order.bonus_notes?.toLowerCase().includes('prime young adult') ? 'USD' : 'points',
+        currency: 'points',
         purchase_order_id: order.id,
         order_number: order.order_number,
         date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
@@ -492,6 +513,15 @@ export default function PurchaseOrders() {
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    // Check for duplicate order number
+    if (!editingOrder) {
+      const duplicate = orders.find(o => o.order_number === formData.order_number);
+      if (duplicate) {
+        toast.error(`Order number ${formData.order_number} already exists!`);
+        return;
+      }
+    }
+    
     const cleanedItems = formData.items.map(item => ({
       ...item,
       quantity_ordered: parseInt(item.quantity_ordered) || 0,
@@ -507,13 +537,24 @@ export default function PurchaseOrders() {
       return sum + (gc?.value || 0);
     }, 0);
     
+    // Fix Amazon pricing calculation
+    let finalTotal;
+    let finalCost;
+    if (formData.original_price && formData.price_after_discount) {
+      finalTotal = parseFloat(formData.price_after_discount);
+      finalCost = finalTotal - giftCardValue;
+    } else {
+      finalTotal = totalCost;
+      finalCost = totalCost - giftCardValue;
+    }
+    
     const dataToSubmit = {
       ...formData,
       credit_card_id: formData.credit_card_id || null,
       items: cleanedItems,
       total_cost: parseFloat(formData.original_price) || totalCost,
       gift_card_value: giftCardValue,
-      final_cost: (parseFloat(formData.price_after_discount) || totalCost) - giftCardValue,
+      final_cost: finalCost,
       card_name: card?.card_name || null,
       original_price: parseFloat(formData.original_price) || null,
       discount_amount: parseFloat(formData.discount_amount) || null,
@@ -563,9 +604,10 @@ export default function PurchaseOrders() {
         {row.is_pickup && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Pickup</span>}
       </div>
     )},
-    { header: 'Items', accessor: 'items', cell: (row) => (
-      <span>{row.items?.length || 0} items</span>
-    )},
+    { header: 'Items', accessor: 'items', cell: (row) => {
+      const totalQty = row.items?.reduce((sum, item) => sum + (item.quantity_ordered || 0), 0) || 0;
+      return <span>{totalQty} ({row.items?.length || 0} types)</span>;
+    }},
     { header: 'Total', accessor: 'total_cost', cell: (row) => (
       <div>
         {row.gift_card_value > 0 ? (
@@ -626,6 +668,17 @@ export default function PurchaseOrders() {
             <SelectItem value="all">All Status</SelectItem>
             {STATUSES.map(s => (
               <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={issuerFilter} onValueChange={setIssuerFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by issuer" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Issuers</SelectItem>
+            {[...new Set(creditCards.map(c => c.issuer).filter(Boolean))].sort().map(issuer => (
+              <SelectItem key={issuer} value={issuer}>{issuer}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -1013,22 +1066,39 @@ export default function PurchaseOrders() {
                 </Button>
               </div>
               <div className="space-y-3">
-                {formData.items.map((item, index) => (
+                {formData.items.map((item, index) => {
+                  const searchValue = productSearches[index] || '';
+                  const filteredProducts = products.filter(p => 
+                    !searchValue || 
+                    p.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+                    p.upc?.includes(searchValue)
+                  );
+                  return (
                   <div key={index} className="flex gap-2 items-end p-3 bg-slate-50 rounded-lg">
                     <div className="flex-1">
                       <Label className="text-xs">Product</Label>
+                      <div className="relative mb-2">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          value={searchValue}
+                          onChange={(e) => setProductSearches({...productSearches, [index]: e.target.value})}
+                          placeholder="Search products..."
+                          className="pl-9"
+                        />
+                      </div>
                       <Select
                         value={item.product_name}
                         onValueChange={(v) => {
                           const product = products.find(p => p.name === v);
                           updateItem(index, 'product_id', product?.id || '');
+                          setProductSearches({...productSearches, [index]: ''});
                         }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select product" />
                         </SelectTrigger>
                         <SelectContent>
-                          {products.map(p => (
+                          {filteredProducts.map(p => (
                             <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
                           ))}
                         </SelectContent>
@@ -1065,7 +1135,8 @@ export default function PurchaseOrders() {
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                ))}
+                );
+                })}
                 {formData.items.length === 0 && (
                   <p className="text-sm text-slate-500 text-center py-4">No items added</p>
                 )}
