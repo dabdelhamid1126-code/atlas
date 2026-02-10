@@ -476,6 +476,7 @@ export default function PurchaseOrders() {
     
     const dataToSubmit = {
       ...formData,
+      credit_card_id: formData.credit_card_id || null,
       items: cleanedItems,
       total_cost: parseFloat(formData.original_price) || totalCost,
       gift_card_value: giftCardValue,
