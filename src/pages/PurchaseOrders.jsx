@@ -114,6 +114,24 @@ export default function PurchaseOrders() {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Purchase order created');
       
+      // Create inventory items if order is received or partially received
+      if ((newOrder.status === 'received' || newOrder.status === 'partially_received') && newOrder.items?.length > 0) {
+        for (const item of newOrder.items) {
+          const qtyReceived = parseInt(item.quantity_received) || 0;
+          if (qtyReceived > 0 && item.product_id) {
+            await base44.entities.InventoryItem.create({
+              product_id: item.product_id,
+              product_name: item.product_name,
+              quantity: qtyReceived,
+              status: 'in_stock',
+              purchase_order_id: newOrder.id,
+              unit_cost: parseFloat(item.unit_cost) || 0
+            });
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      }
+      
       // Auto-create reward if card is selected
       if (newOrder.credit_card_id && newOrder.total_cost) {
         await createRewardForOrder(newOrder);
@@ -148,22 +166,22 @@ export default function PurchaseOrders() {
       if ((updatedOrder.status === 'received' || updatedOrder.status === 'partially_received') && updatedOrder.items?.length > 0) {
         for (const item of updatedOrder.items) {
           const qtyReceived = parseInt(item.quantity_received) || 0;
-          if (qtyReceived > 0) {
-            // Check if inventory item already exists
+          if (qtyReceived > 0 && item.product_id) {
+            // Check if inventory item already exists for THIS purchase order
             const existingInventory = await base44.entities.InventoryItem.filter({
               purchase_order_id: updatedOrder.id,
               product_id: item.product_id
             });
             
             if (existingInventory && existingInventory.length > 0) {
-              // Update existing inventory
+              // Update existing inventory for this PO
               await base44.entities.InventoryItem.update(existingInventory[0].id, {
                 quantity: qtyReceived,
                 unit_cost: parseFloat(item.unit_cost) || 0,
                 status: 'in_stock'
               });
             } else {
-              // Create new inventory item
+              // Create new inventory item for this PO
               await base44.entities.InventoryItem.create({
                 product_id: item.product_id,
                 product_name: item.product_name,
