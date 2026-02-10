@@ -338,8 +338,10 @@ export default function Invoices() {
   const calculateInvoiceProfit = (invoice) => {
     let totalCost = 0;
     const itemsWithProfit = (invoice.items || []).map(item => {
-      let itemCost = 0;
-      if (item.product_id) {
+      // Use stored unit_cost if available, otherwise lookup from purchase orders
+      let unitCost = item.unit_cost || 0;
+      
+      if (!unitCost && item.product_id) {
         // Find the most recent purchase order for this product
         const productOrders = purchaseOrders
           .filter(po => po.items?.some(i => i.product_id === item.product_id))
@@ -348,11 +350,12 @@ export default function Invoices() {
         if (productOrders.length > 0) {
           const orderItem = productOrders[0].items.find(i => i.product_id === item.product_id);
           if (orderItem) {
-            itemCost = (orderItem.unit_cost || 0) * item.quantity;
+            unitCost = orderItem.unit_cost || 0;
           }
         }
       }
       
+      const itemCost = unitCost * item.quantity;
       totalCost += itemCost;
       const itemRevenue = item.total || 0;
       const itemProfit = itemRevenue - itemCost;
