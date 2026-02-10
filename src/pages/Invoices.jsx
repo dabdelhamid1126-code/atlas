@@ -118,7 +118,7 @@ export default function Invoices() {
   const addItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { product_id: '', description: '', quantity: 1, unit_price: 0, total: 0 }]
+      items: [...formData.items, { product_id: '', description: '', quantity: 1, unit_price: 0, unit_cost: 0, total: 0 }]
     });
   };
 

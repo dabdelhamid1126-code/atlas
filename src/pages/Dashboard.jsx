@@ -274,63 +274,7 @@ export default function Dashboard() {
         description="Overview of your operations"
       />
 
-      {/* Price Entry Section */}
-      {productsWithoutPrice.length > 0 && (
-        <Card className="mb-8 border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-amber-100 shadow-lg animate-slide-up">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-900">
-              <DollarSign className="h-5 w-5" />
-              Set Product Prices ({currentProductIndex + 1} of {productsWithoutPrice.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 border border-amber-200">
-                <div className="flex items-start gap-4">
-                  {productsWithoutPrice[currentProductIndex]?.image && (
-                    <img 
-                      src={productsWithoutPrice[currentProductIndex].image} 
-                      alt={productsWithoutPrice[currentProductIndex].name}
-                      className="h-20 w-20 object-contain rounded-md border border-slate-200"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900">
-                      {productsWithoutPrice[currentProductIndex]?.name}
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-1">
-                      SKU: {productsWithoutPrice[currentProductIndex]?.sku}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      UPC: {productsWithoutPrice[currentProductIndex]?.upc}
-                    </p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Enter price"
-                    value={priceInput}
-                    onChange={(e) => setPriceInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSetPrice()}
-                    className="text-lg"
-                  />
-                </div>
-                <Button onClick={handleSetPrice} disabled={!priceInput} className="px-6">
-                  Set Price
-                </Button>
-                <Button onClick={handleSkip} variant="outline">
-                  Skip
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Financial Overview */}
       <div className="mb-8">
