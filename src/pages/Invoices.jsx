@@ -649,9 +649,10 @@ export default function Invoices() {
                             />
                           </div>
                           <Select 
-                            value={item.product_id || ''} 
+                            value={item.description || ''} 
                             onValueChange={(v) => {
-                              selectProduct(index, v);
+                              const product = products.find(p => p.name === v);
+                              if (product) selectProduct(index, product.id);
                               setProductSearches({...productSearches, [index]: ''});
                             }}
                           >
@@ -663,7 +664,7 @@ export default function Invoices() {
                                 <div className="p-2 text-sm text-slate-500 text-center">No products found</div>
                               ) : (
                                 filteredProducts.map(p => (
-                                  <SelectItem key={p.id} value={p.id}>
+                                  <SelectItem key={p.id} value={p.name}>
                                     {p.name}
                                   </SelectItem>
                                 ))
