@@ -155,10 +155,16 @@ export default function Invoices() {
         }
       }
       
-      updateItem(index, 'product_id', productId);
-      updateItem(index, 'description', product.name);
-      updateItem(index, 'unit_price', product.price || 0);
-      updateItem(index, 'unit_cost', unitCost);
+      const newItems = [...formData.items];
+      newItems[index] = {
+        ...newItems[index],
+        product_id: productId,
+        description: product.name,
+        unit_price: product.price || 0,
+        unit_cost: unitCost,
+        total: (newItems[index].quantity || 1) * (product.price || 0)
+      };
+      setFormData({ ...formData, items: newItems });
     }
   };
 
@@ -178,7 +184,7 @@ export default function Invoices() {
 
   const updateItem = (index, field, value) => {
     const newItems = [...formData.items];
-    newItems[index][field] = value;
+    newItems[index] = { ...newItems[index], [field]: value };
     if (field === 'quantity' || field === 'unit_price') {
       newItems[index].total = (newItems[index].quantity || 0) * (newItems[index].unit_price || 0);
     }
