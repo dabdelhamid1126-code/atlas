@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'received', 'cancelled'];
 
@@ -546,7 +546,7 @@ export default function PurchaseOrders() {
       </div>
     )},
     { header: 'Order Date', accessor: 'order_date', cell: (row) => (
-      row.order_date ? format(new Date(row.order_date), 'MMM d, yyyy') : '-'
+      row.order_date ? format(parseISO(row.order_date), 'MMM d, yyyy') : '-'
     )},
     { header: '', cell: (row) => (
       <div className="flex items-center gap-1">
