@@ -538,13 +538,13 @@ export default function PurchaseOrders() {
     }, 0);
     
     // Fix Amazon pricing calculation
-    let finalTotal;
+    let actualTotal;
     let finalCost;
-    if (formData.original_price && formData.price_after_discount) {
-      finalTotal = parseFloat(formData.price_after_discount);
-      finalCost = finalTotal - giftCardValue;
+    if (formData.price_after_discount) {
+      actualTotal = parseFloat(formData.price_after_discount);
+      finalCost = actualTotal - giftCardValue;
     } else {
-      finalTotal = totalCost;
+      actualTotal = totalCost;
       finalCost = totalCost - giftCardValue;
     }
     
@@ -552,7 +552,7 @@ export default function PurchaseOrders() {
       ...formData,
       credit_card_id: formData.credit_card_id || null,
       items: cleanedItems,
-      total_cost: parseFloat(formData.original_price) || totalCost,
+      total_cost: actualTotal,
       gift_card_value: giftCardValue,
       final_cost: finalCost,
       card_name: card?.card_name || null,
@@ -1224,7 +1224,15 @@ export default function PurchaseOrders() {
                 </div>
                 <div>
                   <Label className="text-slate-500">Total</Label>
-                  {selectedOrder.gift_card_value > 0 ? (
+                  {selectedOrder.original_price && selectedOrder.price_after_discount ? (
+                    <div>
+                      <p className="text-sm line-through text-slate-400">${selectedOrder.original_price?.toFixed(2)}</p>
+                      <p className="font-semibold">${selectedOrder.price_after_discount?.toFixed(2)}</p>
+                      {selectedOrder.discount_amount > 0 && (
+                        <p className="text-xs text-green-600">Saved: ${selectedOrder.discount_amount?.toFixed(2)}</p>
+                      )}
+                    </div>
+                  ) : selectedOrder.gift_card_value > 0 ? (
                     <div>
                       <p className="text-sm line-through text-slate-400">${selectedOrder.total_cost?.toFixed(2)}</p>
                       <p className="font-semibold text-green-700">${selectedOrder.final_cost?.toFixed(2)}</p>
