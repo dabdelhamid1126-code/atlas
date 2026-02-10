@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Download, X, Check, FileText, DollarSign, Search, Eye, Upload } from 'lucide-react';
+import { Plus, Download, X, Check, FileText, DollarSign, Search, Eye, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
@@ -78,11 +78,25 @@ export default function Invoices() {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.Invoice.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice deleted');
+    }
+  });
+
   const togglePaidStatus = async (invoice) => {
     const newStatus = invoice.status === 'paid' ? 'sent' : 'paid';
     await base44.entities.Invoice.update(invoice.id, { status: newStatus });
     queryClient.invalidateQueries({ queryKey: ['invoices'] });
     toast.success(`Invoice marked as ${newStatus}`);
+  };
+
+  const handleDelete = (invoice) => {
+    if (confirm(`Are you sure you want to delete invoice #${invoice.invoice_number}?`)) {
+      deleteMutation.mutate(invoice.id);
+    }
   };
 
   const openDialog = (invoice = null) => {
@@ -580,6 +594,9 @@ export default function Invoices() {
                   <Button onClick={() => openDialog(inv)} variant="outline">
                     Edit
                   </Button>
+                  <Button onClick={() => handleDelete(inv)} variant="outline" size="icon" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -633,6 +650,9 @@ export default function Invoices() {
                   </Button>
                   <Button onClick={() => openDialog(inv)} variant="outline">
                     Edit
+                  </Button>
+                  <Button onClick={() => handleDelete(inv)} variant="outline" size="icon" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
