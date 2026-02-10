@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Download, X, Check, FileText, DollarSign, Search, Eye } from 'lucide-react';
+import { Plus, Download, X, Check, FileText, DollarSign, Search, Eye, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
@@ -24,6 +24,9 @@ export default function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [productSearches, setProductSearches] = useState({});
   const [viewInvoice, setViewInvoice] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
   const [formData, setFormData] = useState({
     invoice_number: '',
     buyer: '',
@@ -356,6 +359,109 @@ export default function Invoices() {
     return { totalCost, profit, profitMargin, itemsWithProfit };
   };
 
+  const handleImport = async () => {
+    if (!importFile) {
+      toast.error('Please select a file');
+      return;
+    }
+
+    setImporting(true);
+    try {
+      // Upload file first
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: importFile });
+
+      // Extract data from file
+      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: {
+          type: 'object',
+          properties: {
+            invoices: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  invoice_number: { type: 'string' },
+                  buyer: { type: 'string' },
+                  buyer_email: { type: 'string' },
+                  buyer_address: { type: 'string' },
+                  invoice_date: { type: 'string' },
+                  due_date: { type: 'string' },
+                  status: { type: 'string' },
+                  items: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        description: { type: 'string' },
+                        quantity: { type: 'number' },
+                        unit_price: { type: 'number' }
+                      }
+                    }
+                  },
+                  tax: { type: 'number' },
+                  notes: { type: 'string' }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (result.status === 'error') {
+        toast.error(result.details || 'Failed to extract data from file');
+        setImporting(false);
+        return;
+      }
+
+      const invoicesToCreate = result.output?.invoices || [];
+      
+      if (invoicesToCreate.length === 0) {
+        toast.error('No invoices found in file');
+        setImporting(false);
+        return;
+      }
+
+      // Create invoices
+      for (const inv of invoicesToCreate) {
+        const items = (inv.items || []).map(item => ({
+          description: item.description,
+          quantity: item.quantity || 1,
+          unit_price: item.unit_price || 0,
+          total: (item.quantity || 1) * (item.unit_price || 0)
+        }));
+
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+        const total = subtotal + (inv.tax || 0);
+
+        await base44.entities.Invoice.create({
+          invoice_number: inv.invoice_number,
+          buyer: inv.buyer,
+          buyer_email: inv.buyer_email || '',
+          buyer_address: inv.buyer_address || '',
+          invoice_date: inv.invoice_date || format(new Date(), 'yyyy-MM-dd'),
+          due_date: inv.due_date || '',
+          status: inv.status || 'draft',
+          items,
+          subtotal,
+          tax: inv.tax || 0,
+          total,
+          notes: inv.notes || ''
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success(`Successfully imported ${invoicesToCreate.length} invoice(s)`);
+      setImportOpen(false);
+      setImportFile(null);
+    } catch (error) {
+      toast.error('Failed to import invoices');
+      console.error(error);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const paidInvoices = invoices.filter(inv => inv.status === 'paid');
   const unpaidInvoices = invoices.filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled');
 
@@ -367,9 +473,14 @@ export default function Invoices() {
         title="Invoices" 
         description="Manage and track invoices"
         actions={
-          <Button onClick={() => openDialog()} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg">
-            <Plus className="h-4 w-4 mr-2" /> New Invoice
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={() => setImportOpen(true)} variant="outline" className="border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+              <Upload className="h-4 w-4 mr-2" /> Import
+            </Button>
+            <Button onClick={() => openDialog()} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg">
+              <Plus className="h-4 w-4 mr-2" /> New Invoice
+            </Button>
+          </div>
         }
       />
 
@@ -768,6 +879,47 @@ export default function Invoices() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Invoices</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-slate-700">
+              <p className="font-semibold mb-2">Supported formats: CSV, Excel, JSON, PDF</p>
+              <p className="text-xs text-slate-600 mb-2">Your file should include:</p>
+              <ul className="text-xs text-slate-600 space-y-1 ml-4 list-disc">
+                <li>invoice_number (required)</li>
+                <li>buyer (required)</li>
+                <li>buyer_email, buyer_address (optional)</li>
+                <li>invoice_date, due_date (optional)</li>
+                <li>status (draft, sent, paid, overdue, cancelled)</li>
+                <li>items array with: description, quantity, unit_price</li>
+                <li>tax, notes (optional)</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Select File</Label>
+              <Input
+                type="file"
+                accept=".csv,.xlsx,.xls,.json,.pdf"
+                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)} disabled={importing}>
+              Cancel
+            </Button>
+            <Button onClick={handleImport} disabled={!importFile || importing}>
+              {importing ? 'Importing...' : 'Import'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
