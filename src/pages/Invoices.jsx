@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Download, X, Check, FileText, DollarSign, Search } from 'lucide-react';
+import { Plus, Download, X, Check, FileText, DollarSign, Search, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
@@ -23,6 +23,7 @@ export default function Invoices() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [productSearches, setProductSearches] = useState({});
+  const [viewInvoice, setViewInvoice] = useState(null);
   const [formData, setFormData] = useState({
     invoice_number: '',
     buyer: '',
@@ -49,6 +50,11 @@ export default function Invoices() {
   const { data: inventory = [] } = useQuery({
     queryKey: ['inventory'],
     queryFn: () => base44.entities.InventoryItem.list()
+  });
+
+  const { data: purchaseOrders = [] } = useQuery({
+    queryKey: ['purchaseOrders'],
+    queryFn: () => base44.entities.PurchaseOrder.list()
   });
 
   const createMutation = useMutation({
@@ -298,8 +304,35 @@ export default function Invoices() {
     toast.success('Invoice downloaded');
   };
 
+  const calculateInvoiceProfit = (invoice) => {
+    let totalCost = 0;
+    (invoice.items || []).forEach(item => {
+      if (item.product_id) {
+        // Find the most recent purchase order for this product
+        const productOrders = purchaseOrders
+          .filter(po => po.items?.some(i => i.product_id === item.product_id))
+          .sort((a, b) => new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date));
+        
+        if (productOrders.length > 0) {
+          const orderItem = productOrders[0].items.find(i => i.product_id === item.product_id);
+          if (orderItem) {
+            totalCost += (orderItem.unit_cost || 0) * item.quantity;
+          }
+        }
+      }
+    });
+    
+    const revenue = invoice.total || 0;
+    const profit = revenue - totalCost;
+    const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
+    
+    return { totalCost, profit, profitMargin };
+  };
+
   const paidInvoices = invoices.filter(inv => inv.status === 'paid');
   const unpaidInvoices = invoices.filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled');
+
+  const totalProfit = paidInvoices.reduce((sum, inv) => sum + calculateInvoiceProfit(inv).profit, 0);
 
   return (
     <div>
@@ -313,7 +346,7 @@ export default function Invoices() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="card-modern p-6">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 gradient-primary rounded-xl flex items-center justify-center">
@@ -346,6 +379,18 @@ export default function Invoices() {
             <div>
               <p className="text-sm text-slate-600">Unpaid</p>
               <p className="text-2xl font-bold text-amber-600">${unpaidInvoices.reduce((s, i) => s + (i.total || 0), 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card-modern p-6">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-600">Total Profit</p>
+              <p className="text-2xl font-bold text-emerald-600">${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
           </div>
         </div>
@@ -385,6 +430,9 @@ export default function Invoices() {
                   <div className="text-right mr-4">
                     <p className="text-2xl font-bold text-slate-900">${(inv.total || 0).toFixed(2)}</p>
                   </div>
+                  <Button onClick={() => setViewInvoice(inv)} variant="outline" size="icon" title="View Invoice">
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   <Button onClick={() => togglePaidStatus(inv)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Check className="h-4 w-4 mr-2" /> Mark Paid
                   </Button>
@@ -425,7 +473,20 @@ export default function Invoices() {
                 <div className="flex items-center gap-3">
                   <div className="text-right mr-4">
                     <p className="text-2xl font-bold text-emerald-600">${(inv.total || 0).toFixed(2)}</p>
+                    {(() => {
+                      const { profit, profitMargin } = calculateInvoiceProfit(inv);
+                      return (
+                        <p className="text-sm text-slate-600">
+                          Profit: <span className={profit >= 0 ? 'text-emerald-600 font-semibold' : 'text-red-600 font-semibold'}>
+                            ${profit.toFixed(2)}
+                          </span> ({profitMargin.toFixed(1)}%)
+                        </p>
+                      );
+                    })()}
                   </div>
+                  <Button onClick={() => setViewInvoice(inv)} variant="outline" size="icon" title="View Invoice">
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   <Button onClick={() => togglePaidStatus(inv)} variant="outline">
                     Mark Unpaid
                   </Button>
@@ -667,6 +728,120 @@ export default function Invoices() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Invoice Dialog */}
+      <Dialog open={!!viewInvoice} onOpenChange={() => setViewInvoice(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center justify-between">
+              <span>Invoice #{viewInvoice?.invoice_number}</span>
+              <Button onClick={() => downloadPDF(viewInvoice)} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" /> Download PDF
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          {viewInvoice && (
+            <div className="space-y-6 p-6 bg-white">
+              <div className="flex justify-between items-start pb-6 border-b">
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-900 mb-2">INVOICE</h1>
+                  <p className="text-slate-600">#{viewInvoice.invoice_number}</p>
+                </div>
+                <div className={`px-4 py-2 rounded-lg font-semibold ${
+                  viewInvoice.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                  viewInvoice.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                  viewInvoice.status === 'overdue' ? 'bg-red-100 text-red-700' :
+                  'bg-slate-100 text-slate-700'
+                }`}>
+                  {viewInvoice.status.toUpperCase()}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm font-semibold text-slate-500 mb-2">BILL TO:</p>
+                  <p className="font-semibold text-slate-900">{viewInvoice.buyer}</p>
+                  {viewInvoice.buyer_email && <p className="text-slate-600">{viewInvoice.buyer_email}</p>}
+                  {viewInvoice.buyer_address && <p className="text-slate-600">{viewInvoice.buyer_address}</p>}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-slate-600">
+                    <span className="font-semibold">Invoice Date:</span> {viewInvoice.invoice_date ? format(new Date(viewInvoice.invoice_date), 'MMM dd, yyyy') : '-'}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    <span className="font-semibold">Due Date:</span> {viewInvoice.due_date ? format(new Date(viewInvoice.due_date), 'MMM dd, yyyy') : '-'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Description</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">Qty</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Unit Price</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {(viewInvoice.items || []).map((item, i) => (
+                      <tr key={i}>
+                        <td className="px-4 py-3 text-slate-900">{item.description}</td>
+                        <td className="px-4 py-3 text-center text-slate-700">{item.quantity}</td>
+                        <td className="px-4 py-3 text-right text-slate-700">${(item.unit_price || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right font-medium text-slate-900">${(item.total || 0).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-end">
+                <div className="w-64 space-y-2">
+                  <div className="flex justify-between text-slate-700">
+                    <span>Subtotal:</span>
+                    <span className="font-medium">${(viewInvoice.subtotal || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-700">
+                    <span>Tax:</span>
+                    <span className="font-medium">${(viewInvoice.tax || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xl font-bold text-slate-900 pt-2 border-t-2">
+                    <span>Total:</span>
+                    <span>${(viewInvoice.total || 0).toFixed(2)}</span>
+                  </div>
+                  {viewInvoice.status === 'paid' && (() => {
+                    const { totalCost, profit, profitMargin } = calculateInvoiceProfit(viewInvoice);
+                    return (
+                      <>
+                        <div className="flex justify-between text-sm text-slate-600 pt-2 border-t">
+                          <span>Cost:</span>
+                          <span className="font-medium">${totalCost.toFixed(2)}</span>
+                        </div>
+                        <div className={`flex justify-between text-lg font-bold pt-1 ${profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          <span>Profit:</span>
+                          <span>${profit.toFixed(2)} ({profitMargin.toFixed(1)}%)</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {viewInvoice.notes && (
+                <div className="pt-4 border-t">
+                  <p className="text-sm font-semibold text-slate-700 mb-1">Notes:</p>
+                  <p className="text-slate-600">{viewInvoice.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setViewInvoice(null)} variant="outline">Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
