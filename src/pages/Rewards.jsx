@@ -71,10 +71,7 @@ export default function Rewards() {
     queryFn: () => base44.entities.CreditCard.list()
   });
 
-  const { data: exports = [], isLoading: exportsLoading } = useQuery({
-    queryKey: ['exports'],
-    queryFn: () => base44.entities.Export.list('-export_date')
-  });
+
 
   const createRewardMutation = useMutation({
     mutationFn: (data) => base44.entities.Reward.create(data),
@@ -430,55 +427,59 @@ export default function Rewards() {
     .filter(r => r.status === 'earned' && r.currency === 'points')
     .reduce((sum, r) => sum + (r.amount || 0), 0);
 
-  // Filter exports by month and search
-  const filteredExports = exports.filter(exp => {
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['invoices'],
+    queryFn: () => base44.entities.Invoice.list('-invoice_date')
+  });
+
+  // Filter paid invoices for sales data
+  const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+  
+  const filteredSales = paidInvoices.filter(inv => {
     const matchesSearch = 
-      exp.export_number?.toLowerCase().includes(salesSearch.toLowerCase()) ||
-      exp.buyer?.toLowerCase().includes(salesSearch.toLowerCase());
+      inv.invoice_number?.toLowerCase().includes(salesSearch.toLowerCase()) ||
+      inv.buyer?.toLowerCase().includes(salesSearch.toLowerCase());
     
     if (!matchesSearch) return false;
     
     if (monthFilter === 'all') return true;
     
-    if (!exp.export_date) return false;
+    if (!inv.invoice_date) return false;
     
-    const exportDate = new Date(exp.export_date);
+    const invoiceDate = new Date(inv.invoice_date);
     const [year, month] = monthFilter.split('-');
     const filterStart = startOfMonth(new Date(parseInt(year), parseInt(month) - 1));
     const filterEnd = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
     
-    return exportDate >= filterStart && exportDate <= filterEnd;
+    return invoiceDate >= filterStart && invoiceDate <= filterEnd;
   });
 
-  // Get unique months from exports for filter
+  // Get unique months from invoices for filter
   const availableMonths = [...new Set(
-    exports
-      .filter(e => e.export_date)
-      .map(e => format(new Date(e.export_date), 'yyyy-MM'))
+    paidInvoices
+      .filter(inv => inv.invoice_date)
+      .map(inv => format(new Date(inv.invoice_date), 'yyyy-MM'))
   )].sort().reverse();
 
   // Calculate sales stats
-  const totalSales = filteredExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
-  const completedSales = filteredExports.filter(e => e.status === 'completed').reduce((sum, exp) => sum + (exp.total_value || 0), 0);
+  const totalSales = filteredSales.reduce((sum, inv) => sum + (inv.total || 0), 0);
+  const completedSales = filteredSales.reduce((sum, inv) => sum + (inv.total || 0), 0);
 
   const salesColumns = [
-    { header: 'Export #', accessor: 'export_number', cell: (row) => (
-      <span className="font-medium">{row.export_number}</span>
+    { header: 'Invoice #', accessor: 'invoice_number', cell: (row) => (
+      <span className="font-medium">#{row.invoice_number}</span>
     )},
     { header: 'Buyer', accessor: 'buyer', cell: (row) => (
       <span className="text-sm">{row.buyer}</span>
     )},
-    { header: 'Date', accessor: 'export_date', cell: (row) => (
-      row.export_date ? format(new Date(row.export_date), 'MMM d, yyyy') : '-'
+    { header: 'Date', accessor: 'invoice_date', cell: (row) => (
+      row.invoice_date ? format(new Date(row.invoice_date), 'MMM d, yyyy') : '-'
     )},
     { header: 'Items', accessor: 'items', cell: (row) => (
       <span className="text-sm">{row.items?.length || 0} items</span>
     )},
-    { header: 'Total Value', accessor: 'total_value', cell: (row) => (
-      <span className="font-semibold text-green-600">${(row.total_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-    )},
-    { header: 'Status', accessor: 'status', cell: (row) => (
-      <StatusBadge status={row.status} />
+    { header: 'Total Value', accessor: 'total', cell: (row) => (
+      <span className="font-semibold text-green-600">${(row.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
     )},
   ];
 
@@ -503,7 +504,7 @@ export default function Rewards() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-5 w-5 text-green-600" />
@@ -517,13 +518,6 @@ export default function Rewards() {
                 <p className="text-sm text-blue-700 font-medium">Points Available</p>
               </div>
               <p className="text-2xl font-bold text-blue-900">{totalPoints.toLocaleString()}</p>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
-                <p className="text-sm text-purple-700 font-medium">Total Redeemed</p>
-              </div>
-              <p className="text-2xl font-bold text-purple-900">${totalRedeemed.toFixed(2)}</p>
             </div>
           </div>
 
@@ -587,6 +581,10 @@ export default function Rewards() {
         </TabsContent>
 
         <TabsContent value="sales" className="space-y-6">
+          <p className="text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            Sales data is automatically imported from your paid invoices for tax tracking purposes.
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -632,9 +630,9 @@ export default function Rewards() {
 
           <DataTable
             columns={salesColumns}
-            data={filteredExports}
-            loading={exportsLoading}
-            emptyMessage="No sales found"
+            data={filteredSales}
+            loading={isLoading}
+            emptyMessage="No sales found - sales are automatically imported from paid invoices"
           />
         </TabsContent>
       </Tabs>

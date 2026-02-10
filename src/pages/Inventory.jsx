@@ -120,7 +120,6 @@ export default function Inventory() {
     { header: 'Status', accessor: 'status', cell: (row) => (
       <StatusBadge status={row.status} />
     )},
-    { header: 'Location', accessor: 'location', cell: (row) => row.location || '-' },
     { header: 'Unit Cost', accessor: 'unit_cost', cell: (row) => (
       row.unit_cost ? `$${row.unit_cost.toFixed(2)}` : '-'
     )},
@@ -224,10 +223,6 @@ export default function Inventory() {
                 <div>
                   <Label className="text-slate-500">Status</Label>
                   <div className="mt-1"><StatusBadge status={selectedItem.status} /></div>
-                </div>
-                <div>
-                  <Label className="text-slate-500">Location</Label>
-                  <p>{selectedItem.location || '-'}</p>
                 </div>
                 <div>
                   <Label className="text-slate-500">Unit Cost</Label>
