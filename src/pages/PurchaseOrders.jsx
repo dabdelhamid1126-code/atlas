@@ -32,6 +32,7 @@ export default function PurchaseOrders() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('new-to-old');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -59,8 +60,8 @@ export default function PurchaseOrders() {
   });
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['purchaseOrders'],
-    queryFn: () => base44.entities.PurchaseOrder.list('-created_date')
+    queryKey: ['purchaseOrders', sortOrder],
+    queryFn: () => base44.entities.PurchaseOrder.list(sortOrder === 'new-to-old' ? '-created_date' : 'created_date')
   });
 
   const { data: products = [] } = useQuery({
@@ -593,6 +594,15 @@ export default function PurchaseOrders() {
             {STATUSES.map(s => (
               <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortOrder} onValueChange={setSortOrder}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="new-to-old">Newest First</SelectItem>
+            <SelectItem value="old-to-new">Oldest First</SelectItem>
           </SelectContent>
         </Select>
       </div>
