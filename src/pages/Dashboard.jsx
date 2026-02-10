@@ -60,7 +60,7 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [inventory, purchaseOrders, exports, giftCards, damaged, products, allOrders, rewards, creditCards, allGiftCards, allExports] = await Promise.all([
+      const [inventory, purchaseOrders, exports, giftCards, damaged, products, allOrders, rewards, creditCards, allGiftCards, allExports, allInvoices] = await Promise.all([
         base44.entities.InventoryItem.filter({ status: 'in_stock' }),
         base44.entities.PurchaseOrder.filter({ status: 'pending' }),
         base44.entities.Export.filter({ status: 'pending' }),
@@ -71,7 +71,8 @@ export default function Dashboard() {
         base44.entities.Reward.list(),
         base44.entities.CreditCard.list(),
         base44.entities.GiftCard.list(),
-        base44.entities.Export.list()
+        base44.entities.Export.list(),
+        base44.entities.Invoice.list()
       ]);
 
       setStats({
@@ -85,14 +86,37 @@ export default function Dashboard() {
       const withoutPrice = products.filter(p => !p.price && p.price !== 0);
       setProductsWithoutPrice(withoutPrice);
 
+      // Helper function to calculate invoice cost
+      const calculateInvoiceCost = (invoice) => {
+        let totalCost = 0;
+        (invoice.items || []).forEach(item => {
+          if (item.product_id) {
+            const productOrders = allOrders
+              .filter(po => po.items?.some(i => i.product_id === item.product_id))
+              .sort((a, b) => new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date));
+            
+            if (productOrders.length > 0) {
+              const orderItem = productOrders[0].items.find(i => i.product_id === item.product_id);
+              if (orderItem) {
+                totalCost += (orderItem.unit_cost || 0) * item.quantity;
+              }
+            }
+          }
+        });
+        return totalCost;
+      };
+
       // Calculate financial stats
       const totalSpent = allOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
       const totalCashback = rewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
       const totalPoints = rewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
       const totalGiftCardSpend = allGiftCards.filter(gc => gc.purchase_cost).reduce((sum, gc) => sum + gc.purchase_cost, 0);
       
-      // Calculate revenue from exports
-      const totalRevenue = allExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
+      // Calculate revenue from paid invoices
+      const paidInvoices = allInvoices.filter(inv => inv.status === 'paid');
+      const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+      const totalInvoiceCost = paidInvoices.reduce((sum, inv) => sum + calculateInvoiceCost(inv), 0);
+      const totalProfit = totalRevenue - totalInvoiceCost;
       
       // Calculate this month's profit
       const now = new Date();
@@ -103,17 +127,18 @@ export default function Dashboard() {
         const orderDate = o.order_date ? parseISO(o.order_date) : null;
         return orderDate && orderDate >= monthStart && orderDate <= monthEnd;
       });
-      const monthlyExports = allExports.filter(e => {
-        const exportDate = e.export_date ? parseISO(e.export_date) : null;
-        return exportDate && exportDate >= monthStart && exportDate <= monthEnd;
+      const monthlyInvoices = paidInvoices.filter(inv => {
+        const invoiceDate = inv.invoice_date ? parseISO(inv.invoice_date) : null;
+        return invoiceDate && invoiceDate >= monthStart && invoiceDate <= monthEnd;
       });
       
       const monthlySpent = monthlyOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
-      const monthlyRevenue = monthlyExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
-      const monthlyProfit = monthlyRevenue - monthlySpent;
+      const monthlyRevenue = monthlyInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+      const monthlyInvoiceCost = monthlyInvoices.reduce((sum, inv) => sum + calculateInvoiceCost(inv), 0);
+      const monthlyProfit = monthlyRevenue - monthlyInvoiceCost;
       
       // Calculate ROI
-      const roi = totalSpent > 0 ? ((totalRevenue - totalSpent) / totalSpent) * 100 : 0;
+      const roi = totalInvoiceCost > 0 ? (totalProfit / totalInvoiceCost) * 100 : 0;
       
       // Calculate trends for last 6 months
       const profitTrend = [];
@@ -130,9 +155,9 @@ export default function Dashboard() {
           const orderDate = o.order_date ? parseISO(o.order_date) : null;
           return orderDate && orderDate >= mStart && orderDate <= mEnd;
         });
-        const mExports = allExports.filter(e => {
-          const exportDate = e.export_date ? parseISO(e.export_date) : null;
-          return exportDate && exportDate >= mStart && exportDate <= mEnd;
+        const mInvoices = paidInvoices.filter(inv => {
+          const invoiceDate = inv.invoice_date ? parseISO(inv.invoice_date) : null;
+          return invoiceDate && invoiceDate >= mStart && invoiceDate <= mEnd;
         });
         const mRewards = rewards.filter(r => {
           const rewardDate = r.date_earned ? parseISO(r.date_earned) : null;
@@ -140,8 +165,9 @@ export default function Dashboard() {
         });
         
         const mSpent = mOrders.reduce((sum, order) => sum + (order.final_cost || order.total_cost || 0), 0);
-        const mRevenue = mExports.reduce((sum, exp) => sum + (exp.total_value || 0), 0);
-        const mProfit = mRevenue - mSpent;
+        const mRevenue = mInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+        const mInvoiceCost = mInvoices.reduce((sum, inv) => sum + calculateInvoiceCost(inv), 0);
+        const mProfit = mRevenue - mInvoiceCost;
         const mCashback = mRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
         const mPoints = mRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
         
