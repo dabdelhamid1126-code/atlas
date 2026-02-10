@@ -88,8 +88,28 @@ export default function Invoices() {
 
   const togglePaidStatus = async (invoice) => {
     const newStatus = invoice.status === 'paid' ? 'sent' : 'paid';
+    
+    // If marking as paid from non-sold status, deduct inventory
+    if (newStatus === 'paid' && !['sent', 'paid'].includes(invoice.status)) {
+      const canDeduct = invoice.items.every(item => {
+        if (item.product_id) {
+          const available = getAvailableStock(item.product_id);
+          return available >= item.quantity;
+        }
+        return true;
+      });
+      
+      if (!canDeduct) {
+        toast.error('Insufficient stock to mark as paid');
+        return;
+      }
+      
+      await deductInventory(invoice.items);
+    }
+    
     await base44.entities.Invoice.update(invoice.id, { status: newStatus });
     queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    queryClient.invalidateQueries({ queryKey: ['inventory'] });
     toast.success(`Invoice marked as ${newStatus}`);
   };
 
@@ -213,8 +233,11 @@ export default function Invoices() {
       return;
     }
 
-    // Check stock availability if status is 'sent'
-    if (formData.status === 'sent' && !editingInvoice) {
+    // Check stock availability if status is 'sent' or 'paid'
+    const isSoldStatus = ['sent', 'paid'].includes(formData.status);
+    const wasNotSold = editingInvoice && !['sent', 'paid'].includes(editingInvoice.status);
+    
+    if (isSoldStatus && (!editingInvoice || wasNotSold)) {
       for (const item of formData.items) {
         if (item.product_id) {
           const available = getAvailableStock(item.product_id);
@@ -234,14 +257,17 @@ export default function Invoices() {
     };
 
     if (editingInvoice) {
-      // If changing from non-sent to sent, deduct inventory
-      if (editingInvoice.status !== 'sent' && data.status === 'sent') {
+      // If changing from draft/cancelled to sent/paid, deduct inventory
+      const wasNotSold = !['sent', 'paid'].includes(editingInvoice.status);
+      const isNowSold = ['sent', 'paid'].includes(data.status);
+      
+      if (wasNotSold && isNowSold) {
         await deductInventory(data.items);
       }
       await updateMutation.mutateAsync({ id: editingInvoice.id, data });
     } else {
-      // Deduct inventory if creating as 'sent'
-      if (formData.status === 'sent') {
+      // Deduct inventory if creating as 'sent' or 'paid'
+      if (['sent', 'paid'].includes(formData.status)) {
         await deductInventory(formData.items);
       }
       createMutation.mutate(data);
