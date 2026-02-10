@@ -125,12 +125,26 @@ export default function Invoices() {
   const selectProduct = (index, productId) => {
     const product = products.find(p => p.id === productId);
     if (product) {
+      // Find the most recent purchase order cost for this product
+      const productOrders = purchaseOrders
+        .filter(po => po.items?.some(i => i.product_id === productId))
+        .sort((a, b) => new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date));
+      
+      let unitCost = 0;
+      if (productOrders.length > 0) {
+        const orderItem = productOrders[0].items.find(i => i.product_id === productId);
+        if (orderItem) {
+          unitCost = orderItem.unit_cost || 0;
+        }
+      }
+      
       const newItems = [...formData.items];
       newItems[index] = {
         ...newItems[index],
         product_id: productId,
         description: product.name,
         unit_price: product.price || 0,
+        unit_cost: unitCost,
         total: (newItems[index].quantity || 1) * (product.price || 0)
       };
       setFormData({ ...formData, items: newItems });
@@ -656,6 +670,11 @@ export default function Invoices() {
                               )}
                             </SelectContent>
                           </Select>
+                          {item.unit_cost !== undefined && item.unit_cost > 0 && (
+                            <p className="text-xs text-slate-600 mt-1">
+                              Cost: ${item.unit_cost.toFixed(2)} • Margin: {item.unit_price > 0 ? ((1 - item.unit_cost / item.unit_price) * 100).toFixed(1) : 0}%
+                            </p>
+                          )}
                         </div>
                         <div className="w-24">
                           <Label className="text-xs font-medium">Qty</Label>
@@ -683,20 +702,27 @@ export default function Invoices() {
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      {availableStock !== null && (
-                        <div className="flex items-center gap-2">
-                          <div className={`px-2 py-1 rounded text-xs font-medium ${
-                            availableStock >= item.quantity 
-                              ? 'bg-emerald-100 text-emerald-700' 
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {availableStock} in stock
+                      <div className="flex items-center gap-2">
+                        {availableStock !== null && (
+                          <>
+                            <div className={`px-2 py-1 rounded text-xs font-medium ${
+                              availableStock >= item.quantity 
+                                ? 'bg-emerald-100 text-emerald-700' 
+                                : 'bg-red-100 text-red-700'
+                            }`}>
+                              {availableStock} in stock
+                            </div>
+                            {availableStock < item.quantity && (
+                              <span className="text-xs text-red-600 font-medium">Insufficient stock!</span>
+                            )}
+                          </>
+                        )}
+                        {item.unit_cost !== undefined && item.unit_cost > 0 && item.total > 0 && (
+                          <div className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                            Profit: ${((item.total || 0) - (item.unit_cost * item.quantity)).toFixed(2)}
                           </div>
-                          {availableStock < item.quantity && (
-                            <span className="text-xs text-red-600 font-medium">Insufficient stock!</span>
-                          )}
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })}
