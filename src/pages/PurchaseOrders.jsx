@@ -375,7 +375,7 @@ export default function PurchaseOrders() {
         tracking_number: order.tracking_number || '',
         retailer: order.retailer || '',
         category: order.category || 'other',
-        credit_card_id: order.card_name || '',
+        credit_card_id: order.credit_card_id || '',
         gift_card_ids: order.gift_card_ids || [],
         is_pickup: order.is_pickup || false,
         status: order.status || 'pending',
@@ -707,7 +707,6 @@ export default function PurchaseOrders() {
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
               <Select value={formData.credit_card_id || undefined} onValueChange={(v) => {
-                const card = creditCards.find(c => c.card_name === v);
                 setFormData({ ...formData, credit_card_id: v });
               }}>
                 <SelectTrigger>
@@ -715,7 +714,7 @@ export default function PurchaseOrders() {
                 </SelectTrigger>
                 <SelectContent>
                   {creditCards.filter(c => c.active).map(card => (
-                    <SelectItem key={card.id} value={card.card_name}>
+                    <SelectItem key={card.id} value={card.id}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
                       {card.reward_type === 'points' && `${card.points_rate}x pts`}
                       {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
