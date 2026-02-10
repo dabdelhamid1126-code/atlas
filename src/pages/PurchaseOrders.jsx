@@ -692,12 +692,11 @@ export default function PurchaseOrders() {
             </div>
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
-              <Select value={formData.credit_card_id} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
+              <Select value={formData.credit_card_id || undefined} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>No card</SelectItem>
                   {creditCards.filter(c => c.active).map(card => (
                     <SelectItem key={card.id} value={card.id}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
