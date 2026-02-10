@@ -221,10 +221,10 @@ export default function Invoices() {
 
     if (editingInvoice) {
       // If changing from non-sent to sent, deduct inventory
-      if (editingInvoice.status !== 'sent' && formData.status === 'sent') {
-        await deductInventory(formData.items);
+      if (editingInvoice.status !== 'sent' && data.status === 'sent') {
+        await deductInventory(data.items);
       }
-      updateMutation.mutate({ id: editingInvoice.id, data });
+      await updateMutation.mutateAsync({ id: editingInvoice.id, data });
     } else {
       // Deduct inventory if creating as 'sent'
       if (formData.status === 'sent') {
