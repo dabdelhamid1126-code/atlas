@@ -484,7 +484,9 @@ export default function PurchaseOrders() {
       card_name: card?.card_name || null,
       original_price: parseFloat(formData.original_price) || null,
       discount_amount: parseFloat(formData.discount_amount) || null,
-      price_after_discount: parseFloat(formData.price_after_discount) || null
+      price_after_discount: parseFloat(formData.price_after_discount) || null,
+      extra_cashback_percent: formData.extra_cashback_percent ? parseFloat(formData.extra_cashback_percent) : null,
+      bonus_amount: formData.bonus_amount ? parseFloat(formData.bonus_amount) : null
     };
     
     if (editingOrder) {
