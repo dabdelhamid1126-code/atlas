@@ -142,16 +142,24 @@ export default function Invoices() {
   const selectProduct = (index, productId) => {
     const product = products.find(p => p.id === productId);
     if (product) {
-      // Find the most recent purchase order cost for this product
-      const productOrders = purchaseOrders
-        .filter(po => po.items?.some(i => i.product_id === productId))
-        .sort((a, b) => new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date));
+      // Calculate weighted average cost from all purchase orders
+      const productOrders = purchaseOrders.filter(po => po.items?.some(i => i.product_id === productId));
       
       let unitCost = 0;
       if (productOrders.length > 0) {
-        const orderItem = productOrders[0].items.find(i => i.product_id === productId);
-        if (orderItem) {
-          unitCost = orderItem.unit_cost || 0;
+        let totalCost = 0;
+        let totalQuantity = 0;
+        
+        productOrders.forEach(po => {
+          const orderItem = po.items.find(i => i.product_id === productId);
+          if (orderItem && orderItem.unit_cost && orderItem.quantity_ordered) {
+            totalCost += orderItem.unit_cost * orderItem.quantity_ordered;
+            totalQuantity += orderItem.quantity_ordered;
+          }
+        });
+        
+        if (totalQuantity > 0) {
+          unitCost = totalCost / totalQuantity;
         }
       }
       
@@ -338,19 +346,27 @@ export default function Invoices() {
   const calculateInvoiceProfit = (invoice) => {
     let totalCost = 0;
     const itemsWithProfit = (invoice.items || []).map(item => {
-      // Use stored unit_cost if available, otherwise lookup from purchase orders
+      // Use stored unit_cost if available, otherwise calculate weighted average from purchase orders
       let unitCost = item.unit_cost || 0;
       
       if (!unitCost && item.product_id) {
-        // Find the most recent purchase order for this product
-        const productOrders = purchaseOrders
-          .filter(po => po.items?.some(i => i.product_id === item.product_id))
-          .sort((a, b) => new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date));
+        // Calculate weighted average cost from all purchase orders
+        const productOrders = purchaseOrders.filter(po => po.items?.some(i => i.product_id === item.product_id));
         
         if (productOrders.length > 0) {
-          const orderItem = productOrders[0].items.find(i => i.product_id === item.product_id);
-          if (orderItem) {
-            unitCost = orderItem.unit_cost || 0;
+          let totalOrderCost = 0;
+          let totalQuantity = 0;
+          
+          productOrders.forEach(po => {
+            const orderItem = po.items.find(i => i.product_id === item.product_id);
+            if (orderItem && orderItem.unit_cost && orderItem.quantity_ordered) {
+              totalOrderCost += orderItem.unit_cost * orderItem.quantity_ordered;
+              totalQuantity += orderItem.quantity_ordered;
+            }
+          });
+          
+          if (totalQuantity > 0) {
+            unitCost = totalOrderCost / totalQuantity;
           }
         }
       }
