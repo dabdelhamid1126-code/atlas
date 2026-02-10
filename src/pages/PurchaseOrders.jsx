@@ -242,20 +242,20 @@ export default function PurchaseOrders() {
       pointsMultiplier = card.streaming_points_rate;
     }
 
-    if (card.reward_type === 'cashback' && card.cashback_rate) {
+    if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
       rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
       rewardType = 'cashback';
       currency = 'USD';
-    } else if (card.reward_type === 'points' && pointsMultiplier) {
+    } else if (card.reward_type === 'points' && pointsMultiplier > 0) {
       rewardAmount = Math.round(amount * pointsMultiplier);
       rewardType = 'points';
       currency = 'points';
     } else if (card.reward_type === 'both') {
-      if (card.cashback_rate) {
+      if (card.cashback_rate > 0) {
         rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
         rewardType = 'cashback';
         currency = 'USD';
-      } else if (pointsMultiplier) {
+      } else if (pointsMultiplier > 0) {
         rewardAmount = Math.round(amount * pointsMultiplier);
         rewardType = 'points';
         currency = 'points';
@@ -391,20 +391,20 @@ export default function PurchaseOrders() {
       pointsMultiplier = card.streaming_points_rate;
     }
 
-    if (card.reward_type === 'cashback' && card.cashback_rate) {
+    if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
       rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
       rewardType = 'cashback';
       currency = 'USD';
-    } else if (card.reward_type === 'points' && pointsMultiplier) {
+    } else if (card.reward_type === 'points' && pointsMultiplier > 0) {
       rewardAmount = Math.round(amount * pointsMultiplier);
       rewardType = 'points';
       currency = 'points';
     } else if (card.reward_type === 'both') {
-      if (card.cashback_rate) {
+      if (card.cashback_rate > 0) {
         rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
         rewardType = 'cashback';
         currency = 'USD';
-      } else if (pointsMultiplier) {
+      } else if (pointsMultiplier > 0) {
         rewardAmount = Math.round(amount * pointsMultiplier);
         rewardType = 'points';
         currency = 'points';
