@@ -146,7 +146,8 @@ export default function PurchaseOrders() {
       // Create inventory items if order is received or partially received
       if ((updatedOrder.status === 'received' || updatedOrder.status === 'partially_received') && updatedOrder.items?.length > 0) {
         for (const item of updatedOrder.items) {
-          if (item.quantity_received > 0) {
+          const qtyReceived = parseInt(item.quantity_received) || 0;
+          if (qtyReceived > 0) {
             // Check if inventory item already exists
             const existingInventory = await base44.entities.InventoryItem.filter({
               purchase_order_id: updatedOrder.id,
@@ -156,24 +157,25 @@ export default function PurchaseOrders() {
             if (existingInventory && existingInventory.length > 0) {
               // Update existing inventory
               await base44.entities.InventoryItem.update(existingInventory[0].id, {
-                quantity: item.quantity_received,
-                unit_cost: item.unit_cost
+                quantity: qtyReceived,
+                unit_cost: parseFloat(item.unit_cost) || 0,
+                status: 'in_stock'
               });
             } else {
               // Create new inventory item
               await base44.entities.InventoryItem.create({
                 product_id: item.product_id,
                 product_name: item.product_name,
-                quantity: item.quantity_received,
+                quantity: qtyReceived,
                 status: 'in_stock',
                 purchase_order_id: updatedOrder.id,
-                unit_cost: item.unit_cost
+                unit_cost: parseFloat(item.unit_cost) || 0
               });
             }
           }
         }
         queryClient.invalidateQueries({ queryKey: ['inventory'] });
-        toast.success('Inventory items created');
+        toast.success('Inventory updated');
       }
       
       toast.success('Purchase order updated');
