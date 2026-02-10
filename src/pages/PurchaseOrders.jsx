@@ -222,8 +222,9 @@ export default function PurchaseOrders() {
     let currency = 'USD';
 
     // Get points multiplier based on order category
-    let pointsMultiplier = card.points_rate || 1;
     const category = order.category || 'other';
+    let pointsMultiplier = card.points_rate || 1;
+    let cashbackBonus = 0;
     
     if (category === 'dining' && card.dining_points_rate) {
       pointsMultiplier = card.dining_points_rate;
@@ -352,8 +353,8 @@ export default function PurchaseOrders() {
     let currency = 'USD';
 
     // Get points multiplier based on order category
-    let pointsMultiplier = card.points_rate || 1;
     const category = order.category || 'other';
+    let pointsMultiplier = card.points_rate || 1;
     
     if (category === 'dining' && card.dining_points_rate) {
       pointsMultiplier = card.dining_points_rate;
