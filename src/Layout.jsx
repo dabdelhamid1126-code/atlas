@@ -37,7 +37,6 @@ const navigation = [
   { name: 'Invoices', page: 'Invoices', icon: FileText },
   { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
   { name: 'Order Lookup', page: 'OrderLookup', icon: Search },
-  { name: 'User Guide', page: 'UserGuide', icon: HelpCircle },
 ];
 
 export default function Layout({ children, currentPageName }) {

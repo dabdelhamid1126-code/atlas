@@ -43,6 +43,7 @@ export default function PurchaseOrders() {
     retailer: '',
     category: 'other',
     credit_card_id: '',
+    card_name: '',
     gift_card_ids: [],
     is_pickup: false,
     status: 'pending',
@@ -376,6 +377,7 @@ export default function PurchaseOrders() {
         retailer: order.retailer || '',
         category: order.category || 'other',
         credit_card_id: order.credit_card_id || '',
+        card_name: order.card_name || '',
         gift_card_ids: order.gift_card_ids || [],
         is_pickup: order.is_pickup || false,
         status: order.status || 'pending',
@@ -399,6 +401,7 @@ export default function PurchaseOrders() {
         retailer: '',
         category: 'other',
         credit_card_id: '',
+        card_name: '',
         gift_card_ids: [],
         is_pickup: false,
         status: 'pending',
@@ -705,9 +708,14 @@ export default function PurchaseOrders() {
             </div>
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
-              <Select value={formData.credit_card_id || undefined} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
+              <Select value={formData.credit_card_id || undefined} onValueChange={(v) => {
+                const card = creditCards.find(c => c.id === v);
+                setFormData({ ...formData, credit_card_id: v, card_name: card?.card_name || '' });
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select card (optional)" />
+                  <SelectValue placeholder="Select card (optional)">
+                    {formData.card_name || "Select card (optional)"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {creditCards.filter(c => c.active).map(card => (
@@ -987,7 +995,9 @@ export default function PurchaseOrders() {
                         onValueChange={(v) => updateItem(index, 'product_id', v)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select product" />
+                          <SelectValue placeholder="Select product">
+                            {item.product_name || "Select product"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {products.map(p => (
