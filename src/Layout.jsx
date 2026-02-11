@@ -30,6 +30,7 @@ const navigation = [
   { name: 'Inventory', page: 'Inventory', icon: Package },
   { name: 'Products', page: 'Products', icon: ShoppingCart },
   { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
+  { name: 'Import from Email', page: 'EmailImport', icon: Menu },
   { name: 'Serial Numbers', page: 'SerialNumbers', icon: Hash },
   { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
   { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
