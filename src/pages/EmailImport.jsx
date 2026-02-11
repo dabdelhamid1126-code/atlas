@@ -63,26 +63,69 @@ export default function EmailImport() {
       // Upload the PDF
       const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
 
-      // Fetch the PDF content
-      const response = await fetch(file_url);
-      const text = await response.text();
-
-      // Parse the email
-      const parseResponse = await base44.functions.parseOrderEmail({
-        emailSubject: pdfFile.name,
-        emailBody: text,
-        emailHtml: text
+      // Extract order data from PDF using LLM
+      const extractedData = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract order information from this Best Buy or Amazon order confirmation. Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, and list of items with names and prices. Return the exact order number as shown in the document.`,
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            retailer: { type: "string" },
+            order_number: { type: "string" },
+            total_cost: { type: "number" },
+            order_date: { type: "string" },
+            tracking_number: { type: "string" },
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  product_name: { type: "string" },
+                  unit_cost: { type: "number" },
+                  quantity: { type: "number" }
+                }
+              }
+            }
+          }
+        }
       });
 
-      setResult(parseResponse);
+      // Check if order already exists
+      const existing = await base44.entities.PurchaseOrder.filter({ 
+        order_number: extractedData.order_number 
+      });
       
-      if (parseResponse.success) {
-        toast.success('Order imported successfully!');
-        queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-        setPdfFile(null);
-      } else {
-        toast.error(parseResponse.message || 'Failed to parse PDF');
+      if (existing.length > 0) {
+        setResult({ success: false, message: 'Order already exists', order_number: extractedData.order_number });
+        toast.error('Order already exists');
+        return;
       }
+
+      // Create purchase order
+      const orderData = {
+        order_number: extractedData.order_number,
+        retailer: extractedData.retailer,
+        total_cost: extractedData.total_cost,
+        final_cost: extractedData.total_cost,
+        order_date: extractedData.order_date,
+        tracking_number: extractedData.tracking_number || '',
+        status: 'ordered',
+        items: extractedData.items?.map(item => ({
+          product_name: item.product_name,
+          quantity_ordered: item.quantity || 1,
+          quantity_received: 0,
+          unit_cost: item.unit_cost
+        })) || [],
+        notes: 'Auto-imported from PDF'
+      };
+
+      const created = await base44.entities.PurchaseOrder.create(orderData);
+      
+      setResult({ success: true, message: 'Order imported successfully', order: created });
+      toast.success('Order imported successfully!');
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      setPdfFile(null);
+
     } catch (error) {
       toast.error('Error processing PDF: ' + error.message);
       setResult({ success: false, message: error.message });
