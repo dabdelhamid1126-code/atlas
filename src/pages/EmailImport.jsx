@@ -5,11 +5,14 @@ import PageHeader from '../components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Upload, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Mail, Upload, CheckCircle, XCircle, Loader2, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function EmailImport() {
   const [emailContent, setEmailContent] = useState('');
+  const [pdfFile, setPdfFile] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const queryClient = useQueryClient();
@@ -41,6 +44,47 @@ export default function EmailImport() {
       }
     } catch (error) {
       toast.error('Error parsing email: ' + error.message);
+      setResult({ success: false, message: error.message });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handlePdfUpload = async () => {
+    if (!pdfFile) {
+      toast.error('Please select a PDF file');
+      return;
+    }
+
+    setProcessing(true);
+    setResult(null);
+
+    try {
+      // Upload the PDF
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
+
+      // Fetch the PDF content
+      const response = await fetch(file_url);
+      const text = await response.text();
+
+      // Parse the email
+      const parseResponse = await base44.functions.parseOrderEmail({
+        emailSubject: pdfFile.name,
+        emailBody: text,
+        emailHtml: text
+      });
+
+      setResult(parseResponse);
+      
+      if (parseResponse.success) {
+        toast.success('Order imported successfully!');
+        queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+        setPdfFile(null);
+      } else {
+        toast.error(parseResponse.message || 'Failed to parse PDF');
+      }
+    } catch (error) {
+      toast.error('Error processing PDF: ' + error.message);
       setResult({ success: false, message: error.message });
     } finally {
       setProcessing(false);
@@ -112,38 +156,92 @@ export default function EmailImport() {
         {/* Import Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Paste Email Content</CardTitle>
+            <CardTitle>Import Method</CardTitle>
             <CardDescription>
-              Copy and paste the entire order confirmation email below
+              Choose to paste email text or upload a PDF
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              placeholder="Paste your Best Buy or Amazon order confirmation email here..."
-              value={emailContent}
-              onChange={(e) => setEmailContent(e.target.value)}
-              rows={12}
-              className="font-mono text-xs"
-            />
-            
-            <Button
-              onClick={handleParse}
-              disabled={processing || !emailContent.trim()}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-              size="lg"
-            >
-              {processing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing Email...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import Order
-                </>
-              )}
-            </Button>
+          <CardContent>
+            <Tabs defaultValue="paste" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="paste">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Paste Email
+                </TabsTrigger>
+                <TabsTrigger value="pdf">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Upload PDF
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="paste" className="space-y-4">
+                <Textarea
+                  placeholder="Paste your Best Buy or Amazon order confirmation email here..."
+                  value={emailContent}
+                  onChange={(e) => setEmailContent(e.target.value)}
+                  rows={12}
+                  className="font-mono text-xs"
+                />
+                
+                <Button
+                  onClick={handleParse}
+                  disabled={processing || !emailContent.trim()}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  size="lg"
+                >
+                  {processing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import Order
+                    </>
+                  )}
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="pdf" className="space-y-4">
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
+                  <FileText className="h-12 w-12 mx-auto text-slate-400 mb-4" />
+                  <p className="text-sm text-slate-600 mb-4">
+                    Upload your order confirmation PDF
+                  </p>
+                  <Input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                    className="max-w-xs mx-auto"
+                  />
+                  {pdfFile && (
+                    <p className="text-sm text-slate-700 mt-3 font-medium">
+                      Selected: {pdfFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handlePdfUpload}
+                  disabled={processing || !pdfFile}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  size="lg"
+                >
+                  {processing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import from PDF
+                    </>
+                  )}
+                </Button>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
