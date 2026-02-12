@@ -1338,17 +1338,51 @@ export default function PurchaseOrders() {
               {/* Live Tracking Status */}
               {selectedOrder.tracking_number && (
                 <div className="pb-4 border-b">
-                  <Label className="text-slate-500 text-sm mb-2 block">Tracking Status</Label>
+                  <Label className="text-slate-500 text-sm mb-2 block">Live Tracking Status</Label>
                   {loadingTracking ? (
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Loading tracking info...
                     </div>
                   ) : trackingInfo ? (
-                    <div className="space-y-2">
-                      <p className="text-sm text-slate-600">
-                        {trackingInfo.status || 'Checking status...'}
-                      </p>
+                    <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1">Carrier</p>
+                          <p className="font-semibold text-slate-900">{trackingInfo.carrier || 'Unknown'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1">Status</p>
+                          <p className="font-semibold text-slate-900">{trackingInfo.status || 'Checking...'}</p>
+                        </div>
+                      </div>
+                      {trackingInfo.location && (
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1">Current Location</p>
+                          <p className="text-sm text-slate-700">{trackingInfo.location}</p>
+                        </div>
+                      )}
+                      {trackingInfo.delivered_date && (
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1">Delivered Date</p>
+                          <p className="text-sm text-green-700 font-medium">{trackingInfo.delivered_date}</p>
+                        </div>
+                      )}
+                      {trackingInfo.estimated_delivery && !trackingInfo.delivered_date && (
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1">Estimated Delivery</p>
+                          <p className="text-sm text-slate-700">{trackingInfo.estimated_delivery}</p>
+                        </div>
+                      )}
+                      {trackingInfo.latest_update && (
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1">Latest Update</p>
+                          <p className="text-sm text-slate-700">{trackingInfo.latest_update}</p>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-slate-200">
+                        <p className="text-xs text-slate-500">Tracking #: {selectedOrder.tracking_number}</p>
+                      </div>
                     </div>
                   ) : (
                     <p className="text-sm text-slate-500">Loading tracking info...</p>

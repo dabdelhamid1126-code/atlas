@@ -65,7 +65,7 @@ export default function EmailImport() {
 
       // Extract order data from PDF using LLM
       const extractedData = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
+        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, serial numbers (IMEI, S/N, etc.), prices, and quantities. Return the exact order number as shown in the document.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -83,6 +83,7 @@ export default function EmailImport() {
                 properties: {
                   product_name: { type: "string" },
                   sku: { type: "string" },
+                  serial_number: { type: "string" },
                   unit_cost: { type: "number" },
                   quantity: { type: "number" }
                 }
@@ -148,9 +149,33 @@ export default function EmailImport() {
 
       const created = await base44.entities.PurchaseOrder.create(orderData);
       
+      // Create serial numbers if available
+      for (const item of extractedData.items || []) {
+        if (item.serial_number && item.serial_number.trim()) {
+          const matchedProduct = allProducts.find(p => 
+            p.name?.toLowerCase().includes(item.product_name?.toLowerCase()) ||
+            item.product_name?.toLowerCase().includes(p.name?.toLowerCase()) ||
+            (item.sku && p.upc === item.sku)
+          );
+
+          if (matchedProduct) {
+            await base44.entities.SerialNumber.create({
+              serial: item.serial_number,
+              product_id: matchedProduct.id,
+              product_name: matchedProduct.name,
+              purchase_order_id: created.id,
+              order_number: created.order_number,
+              tracking_number: created.tracking_number || '',
+              status: 'in_stock'
+            });
+          }
+        }
+      }
+      
       setResult({ success: true, message: 'Order imported successfully', order: created });
       toast.success('Order imported successfully!');
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['serialNumbers'] });
       setPdfFile(null);
 
     } catch (error) {
