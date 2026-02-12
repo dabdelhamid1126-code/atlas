@@ -448,11 +448,11 @@ export default function EmailImport() {
                   <div className="space-y-2">
                     <Label className="text-sm text-slate-600">Match to your product:</Label>
                     <Select
-                      value={match.selectedProduct?.id || ''}
+                      value={match.selectedProduct?.name || ''}
                       onValueChange={(value) => {
                         const newMatches = [...productMatches];
                         const allProducts = match.suggestions.map(s => s.product);
-                        newMatches[index].selectedProduct = allProducts.find(p => p.id === value) || null;
+                        newMatches[index].selectedProduct = allProducts.find(p => p.name === value) || null;
                         setProductMatches(newMatches);
                       }}
                     >
@@ -463,7 +463,7 @@ export default function EmailImport() {
                         {match.suggestions
                           .sort((a, b) => a.product.name.localeCompare(b.product.name))
                           .map((suggestion) => (
-                            <SelectItem key={suggestion.product.id} value={suggestion.product.id}>
+                            <SelectItem key={suggestion.product.id} value={suggestion.product.name}>
                               {suggestion.product.name} {suggestion.score > 90 ? '✓' : ''}
                               {suggestion.product.upc && ` (${suggestion.product.upc})`}
                             </SelectItem>
