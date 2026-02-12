@@ -619,11 +619,12 @@ export default function PurchaseOrders() {
       setLoadingTracking(true);
       try {
         const tracking = await base44.integrations.Core.InvokeLLM({
-          prompt: `Get the current shipping status for tracking number ${order.tracking_number}. Return the current status, location, estimated delivery date, and latest update.`,
+          prompt: `Get the current shipping status for tracking number ${order.tracking_number} by checking the shipping carrier's official website (UPS, FedEx, USPS, etc.). Include the carrier name, current status, location, estimated delivery date, and latest update.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
             properties: {
+              carrier: { type: "string" },
               status: { type: "string" },
               location: { type: "string" },
               estimated_delivery: { type: "string" },
@@ -827,12 +828,22 @@ export default function PurchaseOrders() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Retailer *</Label>
-                <Input
-                  value={formData.retailer}
-                  onChange={(e) => setFormData({ ...formData, retailer: e.target.value })}
-                  placeholder="Retailer name"
-                  required
-                />
+                <Select value={formData.retailer} onValueChange={(v) => setFormData({ ...formData, retailer: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select retailer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Amazon">Amazon</SelectItem>
+                    <SelectItem value="Bestbuy">Bestbuy</SelectItem>
+                    <SelectItem value="Walmart">Walmart</SelectItem>
+                    <SelectItem value="Target">Target</SelectItem>
+                    <SelectItem value="Costco">Costco</SelectItem>
+                    <SelectItem value="Sam's Club">Sam's Club</SelectItem>
+                    <SelectItem value="eBay">eBay</SelectItem>
+                    <SelectItem value="Apple">Apple</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -1353,6 +1364,12 @@ export default function PurchaseOrders() {
                     </div>
                   ) : trackingInfo ? (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                      {trackingInfo.carrier && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-700">Carrier:</span>
+                          <span className="text-sm font-semibold text-blue-700">{trackingInfo.carrier}</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-700">Status:</span>
                         <span className="text-sm font-semibold text-blue-700">{trackingInfo.status}</span>
@@ -1384,30 +1401,46 @@ export default function PurchaseOrders() {
                 </div>
               )}
               <div>
-                <Label className="text-slate-500">Items ({selectedOrder.items?.length || 0})</Label>
-                <div className="mt-2 space-y-2">
+                <Label className="text-slate-500 mb-2 block">Items ({selectedOrder.items?.length || 0})</Label>
+                <div className="space-y-2">
                   {selectedOrder.items?.map((item, i) => (
-                    <div key={i} className="flex justify-between p-2 bg-slate-50 rounded">
-                      <span className="text-sm">{item.product_name}</span>
-                      <span className="text-sm font-medium">{item.quantity_ordered} x ${item.unit_cost}</span>
+                    <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-700">{item.product_name}</span>
+                      <span className="text-sm font-semibold">{item.quantity_ordered} x ${item.unit_cost?.toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
               </div>
+              
               {selectedOrder.credit_card_id && (() => {
-                const orderReward = rewards.find(r => r.purchase_order_id === selectedOrder.id);
-                if (orderReward) {
+                const orderRewards = rewards.filter(r => r.purchase_order_id === selectedOrder.id);
+                if (orderRewards.length > 0) {
                   return (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <Label className="text-slate-500">Reward Earned</Label>
-                      <p className="text-lg font-semibold text-green-700">
-                        {orderReward.currency === 'USD' 
-                          ? `$${orderReward.amount?.toFixed(2)} cashback` 
-                          : `${orderReward.amount} points`}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        From {orderReward.card_name} • {orderReward.status}
-                      </p>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <Label className="text-slate-500 mb-2 block">Reward Earned</Label>
+                      <div className="space-y-2">
+                        {orderRewards.map((reward, idx) => (
+                          <div key={idx} className="flex justify-between items-center">
+                            <span className="text-sm text-slate-700">
+                              {reward.currency === 'USD' ? '$' : ''}{reward.amount?.toFixed(2)}{reward.currency === 'points' ? ' pts' : ' cashback'}
+                            </span>
+                            <span className="text-xs text-slate-500">{reward.notes || reward.card_name}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-green-200">
+                        <p className="text-lg font-bold text-green-700">
+                          {orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && 
+                            `$${orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0).toFixed(2)} cashback`}
+                          {orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && 
+                           orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && ' • '}
+                          {orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && 
+                            `${Math.round(orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0))} pts`}
+                        </p>
+                        <p className="text-xs text-slate-600 mt-1">
+                          From {selectedOrder.card_name} • {orderRewards[0].status}
+                        </p>
+                      </div>
                     </div>
                   );
                 }
