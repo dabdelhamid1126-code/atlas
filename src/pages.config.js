@@ -58,6 +58,7 @@ import FixReceiving from './pages/FixReceiving';
 import GiftCards from './pages/GiftCards';
 import Inventory from './pages/Inventory';
 import InventoryValue from './pages/InventoryValue';
+import Invoices from './pages/Invoices';
 import OrderLookup from './pages/OrderLookup';
 import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
@@ -66,7 +67,6 @@ import Rewards from './pages/Rewards';
 import ScanReceive from './pages/ScanReceive';
 import SerialNumbers from './pages/SerialNumbers';
 import UserGuide from './pages/UserGuide';
-import Invoices from './pages/Invoices';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +82,7 @@ export const PAGES = {
     "GiftCards": GiftCards,
     "Inventory": Inventory,
     "InventoryValue": InventoryValue,
+    "Invoices": Invoices,
     "OrderLookup": OrderLookup,
     "Products": Products,
     "PurchaseOrders": PurchaseOrders,
@@ -90,7 +91,6 @@ export const PAGES = {
     "ScanReceive": ScanReceive,
     "SerialNumbers": SerialNumbers,
     "UserGuide": UserGuide,
-    "Invoices": Invoices,
 }
 
 export const pagesConfig = {

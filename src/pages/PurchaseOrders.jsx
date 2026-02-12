@@ -262,25 +262,31 @@ export default function PurchaseOrders() {
     let rewardType = 'cashback';
     let currency = 'USD';
 
-    // Get points multiplier based on order category
+    // Get category-specific rates
     const category = order.category || 'other';
     let pointsMultiplier = card.points_rate || 1;
-    let cashbackBonus = 0;
+    let cashbackRate = card.cashback_rate || 0;
     
-    if (category === 'dining' && card.dining_points_rate) {
-      pointsMultiplier = card.dining_points_rate;
-    } else if (category === 'travel' && card.travel_points_rate) {
-      pointsMultiplier = card.travel_points_rate;
-    } else if (category === 'groceries' && card.groceries_points_rate) {
-      pointsMultiplier = card.groceries_points_rate;
-    } else if (category === 'gas' && card.gas_points_rate) {
-      pointsMultiplier = card.gas_points_rate;
-    } else if (category === 'streaming' && card.streaming_points_rate) {
-      pointsMultiplier = card.streaming_points_rate;
+    // Check for category-specific bonuses
+    if (category === 'dining') {
+      if (card.dining_points_rate) pointsMultiplier = card.dining_points_rate;
+      if (card.dining_cashback_rate) cashbackRate = card.dining_cashback_rate;
+    } else if (category === 'travel') {
+      if (card.travel_points_rate) pointsMultiplier = card.travel_points_rate;
+      if (card.travel_cashback_rate) cashbackRate = card.travel_cashback_rate;
+    } else if (category === 'groceries') {
+      if (card.groceries_points_rate) pointsMultiplier = card.groceries_points_rate;
+      if (card.groceries_cashback_rate) cashbackRate = card.groceries_cashback_rate;
+    } else if (category === 'gas') {
+      if (card.gas_points_rate) pointsMultiplier = card.gas_points_rate;
+      if (card.gas_cashback_rate) cashbackRate = card.gas_cashback_rate;
+    } else if (category === 'streaming') {
+      if (card.streaming_points_rate) pointsMultiplier = card.streaming_points_rate;
+      if (card.streaming_cashback_rate) cashbackRate = card.streaming_cashback_rate;
     }
 
-    if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
-      rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+    if (card.reward_type === 'cashback' && cashbackRate > 0) {
+      rewardAmount = (amount * cashbackRate / 100).toFixed(2);
       rewardType = 'cashback';
       currency = 'USD';
     } else if (card.reward_type === 'points' && pointsMultiplier > 0) {
@@ -288,8 +294,8 @@ export default function PurchaseOrders() {
       rewardType = 'points';
       currency = 'points';
     } else if (card.reward_type === 'both') {
-      if (card.cashback_rate > 0) {
-        rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+      if (cashbackRate > 0) {
+        rewardAmount = (amount * cashbackRate / 100).toFixed(2);
         rewardType = 'cashback';
         currency = 'USD';
       } else if (pointsMultiplier > 0) {
@@ -337,6 +343,30 @@ export default function PurchaseOrders() {
             date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
             status: order.status === 'received' ? 'earned' : 'pending',
             notes: `Bonus ${category} category: ${pointsMultiplier}x total (${bonusPoints} bonus points)`
+          });
+        }
+      }
+    }
+    
+    // Add bonus for category-specific cashback rates if applicable
+    if (card.reward_type === 'cashback' || card.reward_type === 'both') {
+      const baseCashback = card.cashback_rate || 0;
+      if (cashbackRate > baseCashback) {
+        const bonusCashback = (amount * (cashbackRate - baseCashback) / 100).toFixed(2);
+        if (parseFloat(bonusCashback) > 0) {
+          await base44.entities.Reward.create({
+            credit_card_id: order.credit_card_id,
+            card_name: card.card_name,
+            source: card.card_name,
+            type: 'cashback',
+            purchase_amount: amount,
+            amount: parseFloat(bonusCashback),
+            currency: 'USD',
+            purchase_order_id: order.id,
+            order_number: order.order_number,
+            date_earned: order.order_date || format(new Date(), 'yyyy-MM-dd'),
+            status: order.status === 'received' ? 'earned' : 'pending',
+            notes: `Bonus ${category} category: ${cashbackRate}% total ($${bonusCashback} bonus cashback)`
           });
         }
       }
