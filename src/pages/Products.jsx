@@ -249,7 +249,25 @@ export default function Products() {
               <Label>UPC</Label>
               <Input
                 value={formData.upc}
-                onChange={(e) => setFormData({ ...formData, upc: e.target.value })}
+                onChange={(e) => {
+                  const upc = e.target.value;
+                  setFormData({ ...formData, upc });
+                  
+                  // Auto-fill name if UPC matches existing product
+                  if (upc && !editingProduct) {
+                    const matchingProduct = products.find(p => p.upc === upc);
+                    if (matchingProduct) {
+                      setFormData({ 
+                        ...formData, 
+                        upc,
+                        name: matchingProduct.name,
+                        category: matchingProduct.category || '',
+                        image: matchingProduct.image || ''
+                      });
+                      toast.success(`Found: ${matchingProduct.name}`);
+                    }
+                  }
+                }}
                 placeholder="Barcode number"
               />
             </div>
