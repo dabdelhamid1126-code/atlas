@@ -34,7 +34,7 @@ export default function PurchaseOrders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [issuerFilter, setIssuerFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  const [sortOrder, setSortOrder] = useState('new-to-old');
+  const [sortOrder, setSortOrder] = useState('order-date-new');
   const [productSearches, setProductSearches] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
@@ -66,7 +66,22 @@ export default function PurchaseOrders() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['purchaseOrders', sortOrder],
-    queryFn: () => base44.entities.PurchaseOrder.list(sortOrder === 'new-to-old' ? '-created_date' : 'created_date')
+    queryFn: async () => {
+      let data = await base44.entities.PurchaseOrder.list();
+      
+      // Sort based on selected option
+      if (sortOrder === 'order-date-new') {
+        data.sort((a, b) => new Date(b.order_date || 0) - new Date(a.order_date || 0));
+      } else if (sortOrder === 'order-date-old') {
+        data.sort((a, b) => new Date(a.order_date || 0) - new Date(b.order_date || 0));
+      } else if (sortOrder === 'total-high') {
+        data.sort((a, b) => (b.final_cost || b.total_cost || 0) - (a.final_cost || a.total_cost || 0));
+      } else if (sortOrder === 'total-low') {
+        data.sort((a, b) => (a.final_cost || a.total_cost || 0) - (b.final_cost || b.total_cost || 0));
+      }
+      
+      return data;
+    }
   });
 
   const { data: products = [] } = useQuery({
@@ -764,12 +779,14 @@ export default function PurchaseOrders() {
           </SelectContent>
         </Select>
         <Select value={sortOrder} onValueChange={setSortOrder}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="new-to-old">Newest First</SelectItem>
-            <SelectItem value="old-to-new">Oldest First</SelectItem>
+            <SelectItem value="order-date-new">Order Date: New to Old</SelectItem>
+            <SelectItem value="order-date-old">Order Date: Old to New</SelectItem>
+            <SelectItem value="total-high">Total: High to Low</SelectItem>
+            <SelectItem value="total-low">Total: Low to High</SelectItem>
           </SelectContent>
         </Select>
       </div>
