@@ -62,47 +62,19 @@ export default function Invoices() {
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Invoice.create(data),
-    onSuccess: async (createdInvoice, data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success('Invoice created');
       setDialogOpen(false);
-      
-      // Send email if created with 'sent' status
-      if (data.status === 'sent' && data.buyer_email) {
-        try {
-          const result = await base44.functions.sendInvoiceEmail({ invoiceId: createdInvoice.id });
-          if (result.success) {
-            toast.success('Invoice email sent to buyer');
-          } else {
-            toast.error(result.message || 'Failed to send invoice email');
-          }
-        } catch (error) {
-          console.error('Email error:', error);
-        }
-      }
     }
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Invoice.update(id, data),
-    onSuccess: async (updatedInvoice, { id, data }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success('Invoice updated');
       setDialogOpen(false);
-      
-      // Send email if status changed to 'sent'
-      if (data.status === 'sent' && data.buyer_email) {
-        try {
-          const result = await base44.functions.sendInvoiceEmail({ invoiceId: id });
-          if (result.success) {
-            toast.success('Invoice email sent to buyer');
-          } else {
-            toast.error(result.message || 'Failed to send invoice email');
-          }
-        } catch (error) {
-          console.error('Email error:', error);
-        }
-      }
     }
   });
 
