@@ -626,7 +626,7 @@ export default function PurchaseOrders() {
       setLoadingTracking(true);
       try {
         const tracking = await base44.integrations.Core.InvokeLLM({
-          prompt: `Tracking number: ${order.tracking_number}. First identify the carrier using these patterns: FedEx (12-15 digits, starts with 96/7/8), UPS (18 chars, starts with 1Z), USPS (20-22 digits starts with 94/92/93, OR 13 chars starts/ends with letters). Then visit the carrier's official tracking page (fedex.com/track for FedEx, ups.com/track for UPS, usps.com/track for USPS) and get the EXACT tracking information. Today is ${format(new Date(), 'MMMM d, yyyy')}. Return: carrier name, current status, location, delivered date if delivered, estimated delivery if in transit, and latest tracking event.`,
+          prompt: `Tracking number: ${order.tracking_number}. First identify the carrier using these patterns: FedEx (12-15 digits, starts with 96/7/8), UPS (18 chars, starts with 1Z), USPS (20-22 digits starts with 94/92/93, OR 13 chars starts/ends with letters like EA...US). Then visit the carrier's official tracking page (fedex.com for FedEx, ups.com for UPS, usps.com for USPS) and get the EXACT current tracking information. CRITICAL: Return the actual delivery status - if the package was delivered, status MUST be 'Delivered' or 'Delivered, Left at Door' etc. If still in transit, say 'In Transit'. Today is ${format(new Date(), 'MMMM d, yyyy')}. Return: exact carrier name, EXACT current delivery status from the carrier site, current location, actual delivered date if delivered, estimated delivery if still in transit, and latest tracking event.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
@@ -643,7 +643,7 @@ export default function PurchaseOrders() {
         setTrackingInfo(tracking);
         
         // Auto-update order status if delivered
-        if (tracking.status?.toLowerCase().includes('delivered') && order.status !== 'received') {
+        if ((tracking.status?.toLowerCase().includes('delivered') || tracking.delivered_date) && order.status !== 'received') {
           await updateMutation.mutateAsync({
             id: order.id,
             data: { ...order, status: 'received' }
@@ -1336,115 +1336,55 @@ export default function PurchaseOrders() {
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6 pb-4 border-b">
                 <div>
-                  <Label className="text-slate-500">Order Number</Label>
-                  <p className="font-mono font-medium">{selectedOrder.order_number}</p>
+                  <Label className="text-slate-500 text-sm">Order Number</Label>
+                  <p className="font-semibold text-lg">{selectedOrder.order_number}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-500">Retailer</Label>
-                  <p className="font-medium capitalize">{selectedOrder.retailer}</p>
+                  <Label className="text-slate-500 text-sm">Retailer</Label>
+                  <p className="font-semibold text-lg capitalize">{selectedOrder.retailer}</p>
                 </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-6 pb-4 border-b">
                 <div>
-                  <Label className="text-slate-500">Status</Label>
+                  <Label className="text-slate-500 text-sm">Status</Label>
                   <div className="mt-1"><StatusBadge status={selectedOrder.status} /></div>
                 </div>
                 <div>
-                  <Label className="text-slate-500">Total</Label>
-                  {selectedOrder.original_price && selectedOrder.price_after_discount ? (
-                    <div>
-                      <p className="text-sm line-through text-slate-400">${selectedOrder.original_price?.toFixed(2)}</p>
-                      <p className="font-semibold text-green-700">${selectedOrder.final_cost?.toFixed(2)}</p>
-                      {selectedOrder.gift_card_value > 0 && (
-                        <p className="text-xs text-slate-500">Gift cards: ${selectedOrder.gift_card_value?.toFixed(2)}</p>
-                      )}
-                    </div>
-                  ) : selectedOrder.gift_card_value > 0 ? (
-                    <div>
-                      <p className="text-sm line-through text-slate-400">${selectedOrder.total_cost?.toFixed(2)}</p>
-                      <p className="font-semibold text-green-700">${selectedOrder.final_cost?.toFixed(2)}</p>
-                      <p className="text-xs text-slate-500">Gift cards: ${selectedOrder.gift_card_value?.toFixed(2)}</p>
-                    </div>
-                  ) : (
-                    <p className="font-semibold">${selectedOrder.total_cost?.toFixed(2) || '0.00'}</p>
-                  )}
+                  <Label className="text-slate-500 text-sm">Total</Label>
+                  <p className="font-semibold text-lg">${selectedOrder.final_cost?.toFixed(2) || selectedOrder.total_cost?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
               
               {/* Live Tracking Status */}
               {selectedOrder.tracking_number && (
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-slate-500">Tracking Status</Label>
-                    {!loadingTracking && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => viewDetails(selectedOrder)}
-                        className="h-7 text-xs"
-                      >
-                        Refresh
-                      </Button>
-                    )}
-                  </div>
+                <div className="pb-4 border-b">
+                  <Label className="text-slate-500 text-sm mb-2 block">Tracking Status</Label>
                   {loadingTracking ? (
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Loading tracking info...
                     </div>
                   ) : trackingInfo ? (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-                      {trackingInfo.carrier && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-slate-700">Carrier:</span>
-                          <span className="text-sm font-semibold text-blue-700">{trackingInfo.carrier}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-700">Status:</span>
-                        <span className={`text-sm font-semibold ${trackingInfo.status?.toLowerCase().includes('delivered') ? 'text-green-700' : 'text-blue-700'}`}>
-                          {trackingInfo.status}
-                        </span>
-                      </div>
-                      {trackingInfo.delivered_date && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-slate-700">Delivered:</span>
-                          <span className="text-sm text-green-700 font-semibold">{trackingInfo.delivered_date}</span>
-                        </div>
-                      )}
-                      {trackingInfo.location && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-slate-700">Location:</span>
-                          <span className="text-sm text-slate-600">{trackingInfo.location}</span>
-                        </div>
-                      )}
-                      {!trackingInfo.delivered_date && trackingInfo.estimated_delivery && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-slate-700">Estimated Delivery:</span>
-                          <span className="text-sm text-slate-600">{trackingInfo.estimated_delivery}</span>
-                        </div>
-                      )}
-                      {trackingInfo.latest_update && (
-                        <div className="pt-2 border-t border-blue-200">
-                          <span className="text-xs text-slate-500">{trackingInfo.latest_update}</span>
-                        </div>
-                      )}
-                      <div className="text-xs text-slate-500 pt-2 border-t border-blue-200">
-                        Tracking #: {selectedOrder.tracking_number}
-                      </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-slate-600">
+                        {trackingInfo.status || 'Checking status...'}
+                      </p>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">Tracking # {selectedOrder.tracking_number}</p>
+                    <p className="text-sm text-slate-500">Loading tracking info...</p>
                   )}
                 </div>
               )}
-              <div>
-                <Label className="text-slate-500 mb-2 block">Items ({selectedOrder.items?.length || 0})</Label>
+              <div className="pb-4">
+                <Label className="text-slate-500 text-sm mb-2 block">Items ({selectedOrder.items?.length || 0})</Label>
                 <div className="space-y-2">
                   {selectedOrder.items?.map((item, i) => (
-                    <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-700">{item.product_name}</span>
-                      <span className="text-sm font-semibold">{item.quantity_ordered} x ${item.unit_cost?.toFixed(2)}</span>
+                    <div key={i} className="flex justify-between items-start">
+                      <span className="text-sm text-slate-900">{item.product_name}</span>
+                      <span className="text-sm text-slate-900">{item.quantity_ordered} x ${item.unit_cost?.toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -1453,31 +1393,36 @@ export default function PurchaseOrders() {
               {selectedOrder.credit_card_id && (() => {
                 const orderRewards = rewards.filter(r => r.purchase_order_id === selectedOrder.id);
                 if (orderRewards.length > 0) {
+                  const totalCashback = orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
+                  const totalPoints = orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
+                  
                   return (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <Label className="text-slate-500 mb-2 block">Reward Earned</Label>
-                      <div className="space-y-2">
-                        {orderRewards.map((reward, idx) => (
-                          <div key={idx} className="flex justify-between items-center">
-                            <span className="text-sm text-slate-700">
-                              {reward.currency === 'USD' ? '$' : ''}{reward.amount?.toFixed(2)}{reward.currency === 'points' ? ' pts' : ' cashback'}
-                            </span>
-                            <span className="text-xs text-slate-500">{reward.notes || reward.card_name}</span>
+                      <Label className="text-slate-500 text-sm mb-3 block">Reward Earned</Label>
+                      {orderRewards.map((reward, idx) => (
+                        <div key={idx} className="mb-3 last:mb-0">
+                          <p className="text-sm text-slate-700 mb-1">
+                            {reward.currency === 'USD' ? '$' : ''}{reward.amount?.toFixed(2)}{reward.currency === 'points' ? '' : ''} {reward.currency === 'USD' ? 'cashback' : 'cashback'}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {reward.notes?.includes('Auto-generated') ? `Auto-generated from order ${selectedOrder.order_number}` : reward.notes}
+                          </p>
+                        </div>
+                      ))}
+                      
+                      <div className="mt-4 pt-4 border-t border-green-200 space-y-2">
+                        {totalCashback > 0 && (
+                          <div>
+                            <p className="text-2xl font-semibold text-green-600">${totalCashback.toFixed(2)} cashback</p>
+                            <p className="text-xs text-slate-600">From {selectedOrder.card_name} ({orderRewards.find(r => r.currency === 'USD')?.credit_card_id?.slice(-4) || ''}) • {orderRewards[0].status}</p>
                           </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-green-200">
-                        <p className="text-lg font-bold text-green-700">
-                          {orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && 
-                            `$${orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0).toFixed(2)} cashback`}
-                          {orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && 
-                           orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && ' • '}
-                          {orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0) > 0 && 
-                            `${Math.round(orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0))} pts`}
-                        </p>
-                        <p className="text-xs text-slate-600 mt-1">
-                          From {selectedOrder.card_name} • {orderRewards[0].status}
-                        </p>
+                        )}
+                        {totalPoints > 0 && (
+                          <div>
+                            <p className="text-2xl font-semibold text-green-600">{Math.round(totalPoints)} cashback</p>
+                            <p className="text-xs text-slate-600">From {selectedOrder.card_name} ({orderRewards.find(r => r.currency === 'points')?.credit_card_id?.slice(-4) || ''}) • pending</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
