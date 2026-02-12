@@ -30,6 +30,8 @@ const CATEGORIES = ['phones', 'tablets', 'laptops', 'gaming', 'accessories', 'we
 export default function Products() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('name-asc');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({
@@ -40,8 +42,23 @@ export default function Products() {
   });
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list('-created_date')
+    queryKey: ['products', sortOrder],
+    queryFn: async () => {
+      let data = await base44.entities.Product.list();
+      
+      // Sort based on selected option
+      if (sortOrder === 'name-asc') {
+        data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      } else if (sortOrder === 'name-desc') {
+        data.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+      } else if (sortOrder === 'category-asc') {
+        data.sort((a, b) => (a.category || 'zzz').localeCompare(b.category || 'zzz'));
+      } else if (sortOrder === 'category-desc') {
+        data.sort((a, b) => (b.category || 'zzz').localeCompare(a.category || 'zzz'));
+      }
+      
+      return data;
+    }
   });
 
   const createMutation = useMutation({
@@ -127,10 +144,12 @@ export default function Products() {
     }
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.upc?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.upc?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   const columns = [
     { header: 'Name', accessor: 'name', cell: (row) => (
@@ -171,8 +190,8 @@ export default function Products() {
         }
       />
 
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search products..."
@@ -181,6 +200,28 @@ export default function Products() {
             className="pl-10"
           />
         </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {CATEGORIES.map(cat => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortOrder} onValueChange={setSortOrder}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name-asc">Name: A to Z</SelectItem>
+            <SelectItem value="name-desc">Name: Z to A</SelectItem>
+            <SelectItem value="category-asc">Category: A to Z</SelectItem>
+            <SelectItem value="category-desc">Category: Z to A</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <DataTable
