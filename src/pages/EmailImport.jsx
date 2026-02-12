@@ -132,7 +132,7 @@ export default function EmailImport() {
       const matches = [];
       
       for (const item of extractedData.items || []) {
-        // Find top 3 suggestions for each item
+        // Find top 5 suggestions for each item with better fuzzy matching
         const suggestions = allProducts
           .map(p => {
             let score = 0;
@@ -145,24 +145,49 @@ export default function EmailImport() {
             else if (prodName === itemName) score = 95;
             // Contains match
             else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
-            // Word overlap
+            // Partial word matching and fuzzy logic
             else {
-              const itemWords = itemName.split(' ');
-              const prodWords = prodName.split(' ');
-              const overlap = itemWords.filter(w => prodWords.includes(w)).length;
-              score = (overlap / Math.max(itemWords.length, prodWords.length)) * 70;
+              const itemWords = itemName.split(/\s+/).filter(w => w.length > 2);
+              const prodWords = prodName.split(/\s+/).filter(w => w.length > 2);
+              
+              // Count matching words
+              const matchingWords = itemWords.filter(iw => 
+                prodWords.some(pw => 
+                  pw.includes(iw) || iw.includes(pw) || 
+                  // Levenshtein-like: check if words are similar
+                  Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3)))
+                )
+              ).length;
+              
+              // Score based on matching words ratio
+              if (matchingWords > 0) {
+                score = (matchingWords / Math.max(itemWords.length, prodWords.length)) * 75;
+              }
+              
+              // Bonus for similar length names
+              if (Math.abs(itemName.length - prodName.length) < 5) {
+                score += 5;
+              }
+              
+              // Check for common product identifiers (GB, inch, etc.)
+              const itemNumbers = itemName.match(/\d+/g) || [];
+              const prodNumbers = prodName.match(/\d+/g) || [];
+              const matchingNumbers = itemNumbers.filter(num => prodNumbers.includes(num)).length;
+              if (matchingNumbers > 0) {
+                score += matchingNumbers * 10;
+              }
             }
             
             return { product: p, score };
           })
-          .filter(m => m.score > 30)
+          .filter(m => m.score > 20) // Lower threshold to show more options
           .sort((a, b) => {
             // First sort by score
             if (b.score !== a.score) return b.score - a.score;
             // Then alphabetically by name
             return a.product.name.localeCompare(b.product.name);
           })
-          .slice(0, 5);
+          .slice(0, 8); // Show top 8 matches
         
         matches.push({
           invoiceName: item.product_name,
