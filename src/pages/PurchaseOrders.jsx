@@ -587,8 +587,15 @@ export default function PurchaseOrders() {
       finalCost = totalCost - giftCardValue;
     }
     
+    // Auto-update status based on tracking number
+    let autoStatus = formData.status;
+    if (formData.tracking_number && !editingOrder && (formData.status === 'pending' || formData.status === 'ordered')) {
+      autoStatus = 'shipped';
+    }
+    
     const dataToSubmit = {
       ...formData,
+      status: autoStatus,
       credit_card_id: formData.credit_card_id || null,
       items: cleanedItems,
       total_cost: actualTotal,
@@ -634,6 +641,16 @@ export default function PurchaseOrders() {
           }
         });
         setTrackingInfo(tracking);
+        
+        // Auto-update order status if delivered
+        if (tracking.status?.toLowerCase().includes('delivered') && order.status !== 'received') {
+          await updateMutation.mutateAsync({
+            id: order.id,
+            data: { ...order, status: 'received' }
+          });
+          setSelectedOrder({ ...order, status: 'received' });
+          toast.success('Order status updated to received');
+        }
       } catch (error) {
         console.error('Failed to fetch tracking:', error);
       } finally {
