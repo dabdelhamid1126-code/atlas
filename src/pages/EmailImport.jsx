@@ -367,6 +367,162 @@ export default function EmailImport() {
           </Card>
         )}
       </div>
+
+      {/* Product Matching Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Confirm Product Matches</DialogTitle>
+            <p className="text-sm text-slate-600">
+              Review and confirm the product matches before importing order {extractedData?.order_number}
+            </p>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-slate-600">Retailer:</span>
+                  <span className="ml-2 font-semibold">{extractedData?.retailer}</span>
+                </div>
+                <div>
+                  <span className="text-slate-600">Total:</span>
+                  <span className="ml-2 font-semibold">${extractedData?.total_cost?.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-slate-600">Order Date:</span>
+                  <span className="ml-2 font-semibold">{extractedData?.order_date}</span>
+                </div>
+                <div>
+                  <span className="text-slate-600">Credit Card:</span>
+                  <span className="ml-2 font-semibold">{extractedData?.matchedCard?.card_name || 'None matched'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Products ({productMatches.length})</Label>
+              {productMatches.map((match, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-slate-900">From Invoice: {match.invoiceName}</p>
+                      {match.sku && <p className="text-xs text-slate-500">SKU: {match.sku}</p>}
+                      {match.serial_number && <p className="text-xs text-green-700">Serial: {match.serial_number}</p>}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-slate-600">Qty: {match.quantity}</p>
+                      <p className="text-sm font-semibold">${match.unit_cost?.toFixed(2)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm text-slate-600">Match to your product:</Label>
+                    <Select
+                      value={match.selectedProduct?.id || ''}
+                      onValueChange={(value) => {
+                        const newMatches = [...productMatches];
+                        const allProducts = match.suggestions.map(s => s.product);
+                        newMatches[index].selectedProduct = allProducts.find(p => p.id === value) || null;
+                        setProductMatches(newMatches);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {match.suggestions.map((suggestion) => (
+                          <SelectItem key={suggestion.product.id} value={suggestion.product.id}>
+                            {suggestion.product.name} {suggestion.score > 80 ? '✓' : ''}
+                            {suggestion.product.upc && ` (${suggestion.product.upc})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {match.suggestions.length === 0 && (
+                      <p className="text-xs text-amber-600">⚠️ No matching products found - please add this product first</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setConfirmDialogOpen(false);
+              setExtractedData(null);
+              setProductMatches([]);
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={async () => {
+                setProcessing(true);
+                try {
+                  // Prepare order items
+                  const orderItems = productMatches.map(match => ({
+                    product_id: match.selectedProduct?.id || '',
+                    product_name: match.selectedProduct?.name || match.invoiceName,
+                    upc: match.selectedProduct?.upc || match.sku || '',
+                    quantity_ordered: match.quantity,
+                    quantity_received: 0,
+                    unit_cost: match.unit_cost
+                  }));
+                  
+                  const orderData = {
+                    order_number: extractedData.order_number,
+                    retailer: extractedData.retailer || 'Unknown',
+                    tracking_number: extractedData.tracking_number || '',
+                    credit_card_id: extractedData.matchedCard?.id || null,
+                    card_name: extractedData.matchedCard?.card_name || null,
+                    status: extractedData.tracking_number ? 'shipped' : 'ordered',
+                    order_date: extractedData.order_date || format(new Date(), 'yyyy-MM-dd'),
+                    items: orderItems,
+                    total_cost: extractedData.total_cost || 0,
+                    final_cost: extractedData.total_cost || 0,
+                    notes: 'Imported from PDF'
+                  };
+                  
+                  const created = await base44.entities.PurchaseOrder.create(orderData);
+                  
+                  // Create serial numbers if available
+                  for (const match of productMatches) {
+                    if (match.serial_number && match.serial_number.trim() && match.selectedProduct) {
+                      await base44.entities.SerialNumber.create({
+                        serial: match.serial_number,
+                        product_id: match.selectedProduct.id,
+                        product_name: match.selectedProduct.name,
+                        purchase_order_id: created.id,
+                        order_number: created.order_number,
+                        tracking_number: created.tracking_number || '',
+                        status: 'in_stock'
+                      });
+                    }
+                  }
+                  
+                  setResult({ success: true, message: 'Order imported successfully', order: created });
+                  toast.success('Order imported successfully!');
+                  queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+                  queryClient.invalidateQueries({ queryKey: ['serialNumbers'] });
+                  setConfirmDialogOpen(false);
+                  setExtractedData(null);
+                  setProductMatches([]);
+                } catch (error) {
+                  console.error('Import error:', error);
+                  setResult({ success: false, message: error.message || 'Failed to import order' });
+                } finally {
+                  setProcessing(false);
+                }
+              }}
+              disabled={processing || productMatches.some(m => !m.selectedProduct)}
+              className="bg-black hover:bg-gray-800 text-white"
+            >
+              {processing ? 'Importing...' : 'Confirm & Import'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
