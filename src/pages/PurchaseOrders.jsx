@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Pencil, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 
@@ -40,6 +40,8 @@ export default function PurchaseOrders() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [trackingInfo, setTrackingInfo] = useState(null);
+  const [loadingTracking, setLoadingTracking] = useState(false);
   const [formData, setFormData] = useState({
     order_number: '',
     tracking_number: '',
@@ -592,9 +594,35 @@ export default function PurchaseOrders() {
     }
   };
 
-  const viewDetails = (order) => {
+  const viewDetails = async (order) => {
     setSelectedOrder(order);
     setDetailsOpen(true);
+    setTrackingInfo(null);
+    
+    // Fetch live tracking if tracking number exists
+    if (order.tracking_number) {
+      setLoadingTracking(true);
+      try {
+        const tracking = await base44.integrations.Core.InvokeLLM({
+          prompt: `Get the current shipping status for tracking number ${order.tracking_number}. Return the current status, location, estimated delivery date, and latest update.`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              status: { type: "string" },
+              location: { type: "string" },
+              estimated_delivery: { type: "string" },
+              latest_update: { type: "string" }
+            }
+          }
+        });
+        setTrackingInfo(tracking);
+      } catch (error) {
+        console.error('Failed to fetch tracking:', error);
+      } finally {
+        setLoadingTracking(false);
+      }
+    }
   };
 
   const handleDelete = async (order) => {
@@ -638,7 +666,7 @@ export default function PurchaseOrders() {
       <span className="font-mono text-sm font-medium">{row.order_number}</span>
     )},
     { header: 'Retailer', accessor: 'retailer', cell: (row) => (
-      <span className="font-medium">{row.retailer}</span>
+      <span className="font-medium capitalize">{row.retailer}</span>
     )},
     { header: 'Status', accessor: 'status', cell: (row) => (
       <div className="flex items-center gap-2">
@@ -1269,7 +1297,7 @@ export default function PurchaseOrders() {
                 </div>
                 <div>
                   <Label className="text-slate-500">Retailer</Label>
-                  <p className="font-medium">{selectedOrder.retailer}</p>
+                  <p className="font-medium capitalize">{selectedOrder.retailer}</p>
                 </div>
                 <div>
                   <Label className="text-slate-500">Status</Label>
@@ -1280,9 +1308,9 @@ export default function PurchaseOrders() {
                   {selectedOrder.original_price && selectedOrder.price_after_discount ? (
                     <div>
                       <p className="text-sm line-through text-slate-400">${selectedOrder.original_price?.toFixed(2)}</p>
-                      <p className="font-semibold">${selectedOrder.price_after_discount?.toFixed(2)}</p>
-                      {selectedOrder.discount_amount > 0 && (
-                        <p className="text-xs text-green-600">Saved: ${selectedOrder.discount_amount?.toFixed(2)}</p>
+                      <p className="font-semibold text-green-700">${selectedOrder.final_cost?.toFixed(2)}</p>
+                      {selectedOrder.gift_card_value > 0 && (
+                        <p className="text-xs text-slate-500">Gift cards: ${selectedOrder.gift_card_value?.toFixed(2)}</p>
                       )}
                     </div>
                   ) : selectedOrder.gift_card_value > 0 ? (
@@ -1296,6 +1324,48 @@ export default function PurchaseOrders() {
                   )}
                 </div>
               </div>
+              
+              {/* Live Tracking Status */}
+              {selectedOrder.tracking_number && (
+                <div className="border-t pt-4">
+                  <Label className="text-slate-500 mb-2 block">Tracking Status</Label>
+                  {loadingTracking ? (
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading tracking info...
+                    </div>
+                  ) : trackingInfo ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-slate-700">Status:</span>
+                        <span className="text-sm font-semibold text-blue-700">{trackingInfo.status}</span>
+                      </div>
+                      {trackingInfo.location && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-700">Location:</span>
+                          <span className="text-sm text-slate-600">{trackingInfo.location}</span>
+                        </div>
+                      )}
+                      {trackingInfo.estimated_delivery && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-700">Estimated Delivery:</span>
+                          <span className="text-sm text-slate-600">{trackingInfo.estimated_delivery}</span>
+                        </div>
+                      )}
+                      {trackingInfo.latest_update && (
+                        <div className="pt-2 border-t border-blue-200">
+                          <span className="text-xs text-slate-500">{trackingInfo.latest_update}</span>
+                        </div>
+                      )}
+                      <div className="text-xs text-slate-500 pt-2 border-t border-blue-200">
+                        Tracking #: {selectedOrder.tracking_number}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500">Tracking # {selectedOrder.tracking_number}</p>
+                  )}
+                </div>
+              )}
               <div>
                 <Label className="text-slate-500">Items ({selectedOrder.items?.length || 0})</Label>
                 <div className="mt-2 space-y-2">

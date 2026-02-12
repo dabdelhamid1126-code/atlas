@@ -52,12 +52,12 @@ import Analytics from './pages/Analytics';
 import DamagedItems from './pages/DamagedItems';
 import Dashboard from './pages/Dashboard';
 import DelayedOrders from './pages/DelayedOrders';
+import EmailImport from './pages/EmailImport';
 import Exports from './pages/Exports';
 import FixReceiving from './pages/FixReceiving';
 import GiftCards from './pages/GiftCards';
 import Inventory from './pages/Inventory';
 import InventoryValue from './pages/InventoryValue';
-import Invoices from './pages/Invoices';
 import OrderLookup from './pages/OrderLookup';
 import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
@@ -66,7 +66,7 @@ import Rewards from './pages/Rewards';
 import ScanReceive from './pages/ScanReceive';
 import SerialNumbers from './pages/SerialNumbers';
 import UserGuide from './pages/UserGuide';
-import EmailImport from './pages/EmailImport';
+import Invoices from './pages/Invoices';
 import __Layout from './Layout.jsx';
 
 
@@ -76,12 +76,12 @@ export const PAGES = {
     "DamagedItems": DamagedItems,
     "Dashboard": Dashboard,
     "DelayedOrders": DelayedOrders,
+    "EmailImport": EmailImport,
     "Exports": Exports,
     "FixReceiving": FixReceiving,
     "GiftCards": GiftCards,
     "Inventory": Inventory,
     "InventoryValue": InventoryValue,
-    "Invoices": Invoices,
     "OrderLookup": OrderLookup,
     "Products": Products,
     "PurchaseOrders": PurchaseOrders,
@@ -90,7 +90,7 @@ export const PAGES = {
     "ScanReceive": ScanReceive,
     "SerialNumbers": SerialNumbers,
     "UserGuide": UserGuide,
-    "EmailImport": EmailImport,
+    "Invoices": Invoices,
 }
 
 export const pagesConfig = {
