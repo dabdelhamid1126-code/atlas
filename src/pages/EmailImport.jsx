@@ -65,7 +65,7 @@ export default function EmailImport() {
 
       // Extract order data from PDF using LLM
       const extractedData = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this Best Buy or Amazon order confirmation. Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, and list of items with names and prices. Return the exact order number as shown in the document.`,
+        prompt: `Extract order information from this Best Buy or Amazon order confirmation. Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -75,12 +75,14 @@ export default function EmailImport() {
             total_cost: { type: "number" },
             order_date: { type: "string" },
             tracking_number: { type: "string" },
+            card_last_4: { type: "string" },
             items: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   product_name: { type: "string" },
+                  sku: { type: "string" },
                   unit_cost: { type: "number" },
                   quantity: { type: "number" }
                 }
@@ -101,7 +103,19 @@ export default function EmailImport() {
         return;
       }
 
-      // Create purchase order
+      // Get all products and credit cards to match
+      const allProducts = await base44.entities.Product.list();
+      const allCards = await base44.entities.CreditCard.list();
+
+      // Match credit card by last 4 digits
+      let matchedCard = null;
+      if (extractedData.card_last_4) {
+        matchedCard = allCards.find(card => 
+          card.card_name?.includes(extractedData.card_last_4)
+        );
+      }
+
+      // Create purchase order with matched data
       const orderData = {
         order_number: extractedData.order_number,
         retailer: extractedData.retailer,
@@ -109,13 +123,26 @@ export default function EmailImport() {
         final_cost: extractedData.total_cost,
         order_date: extractedData.order_date,
         tracking_number: extractedData.tracking_number || '',
-        status: 'ordered',
-        items: extractedData.items?.map(item => ({
-          product_name: item.product_name,
-          quantity_ordered: item.quantity || 1,
-          quantity_received: 0,
-          unit_cost: item.unit_cost
-        })) || [],
+        credit_card_id: matchedCard?.id || null,
+        card_name: matchedCard?.card_name || null,
+        status: extractedData.tracking_number ? 'shipped' : 'ordered',
+        items: extractedData.items?.map(item => {
+          // Try to match product by name or SKU
+          const matchedProduct = allProducts.find(p => 
+            p.name?.toLowerCase().includes(item.product_name?.toLowerCase()) ||
+            item.product_name?.toLowerCase().includes(p.name?.toLowerCase()) ||
+            (item.sku && p.upc === item.sku)
+          );
+
+          return {
+            product_id: matchedProduct?.id || '',
+            product_name: matchedProduct?.name || item.product_name,
+            upc: item.sku || matchedProduct?.upc || '',
+            quantity_ordered: item.quantity || 1,
+            quantity_received: 0,
+            unit_cost: item.unit_cost
+          };
+        }) || [],
         notes: 'Auto-imported from PDF'
       };
 
