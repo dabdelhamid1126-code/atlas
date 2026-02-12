@@ -78,7 +78,7 @@ export default function EmailImport() {
 
       // Extract order data from PDF using LLM
       const extractedData = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, serial numbers (IMEI, S/N, etc.), prices, and quantities. Return the exact order number as shown in the document.`,
+        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -96,7 +96,6 @@ export default function EmailImport() {
                 properties: {
                   product_name: { type: "string" },
                   sku: { type: "string" },
-                  serial_number: { type: "string" },
                   unit_cost: { type: "number" },
                   quantity: { type: "number" }
                 }
@@ -163,7 +162,6 @@ export default function EmailImport() {
         matches.push({
           invoiceName: item.product_name,
           sku: item.sku,
-          serial_number: item.serial_number,
           quantity: item.quantity || 1,
           unit_cost: item.unit_cost || 0,
           suggestions,
@@ -244,7 +242,7 @@ export default function EmailImport() {
               <p className="text-sm text-blue-900">
                 <strong>Supported retailers:</strong> All retailers (Amazon, Best Buy, Walmart, Target, etc.)
                 <br />
-                <strong>Extracted data:</strong> Order number, total, items, tracking number, order date, credit card (last 4), SKU/UPC codes
+                <strong>Extracted data:</strong> Order number, total, items, tracking number, order date, credit card (last 4), SKU codes
               </p>
             </div>
           </CardContent>
@@ -410,7 +408,6 @@ export default function EmailImport() {
                     <div>
                       <p className="font-medium text-slate-900">From Invoice: {match.invoiceName}</p>
                       {match.sku && <p className="text-xs text-slate-500">SKU: {match.sku}</p>}
-                      {match.serial_number && <p className="text-xs text-green-700">Serial: {match.serial_number}</p>}
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-600">Qty: {match.quantity}</p>
@@ -488,25 +485,9 @@ export default function EmailImport() {
                   
                   const created = await base44.entities.PurchaseOrder.create(orderData);
                   
-                  // Create serial numbers if available
-                  for (const match of productMatches) {
-                    if (match.serial_number && match.serial_number.trim() && match.selectedProduct) {
-                      await base44.entities.SerialNumber.create({
-                        serial: match.serial_number,
-                        product_id: match.selectedProduct.id,
-                        product_name: match.selectedProduct.name,
-                        purchase_order_id: created.id,
-                        order_number: created.order_number,
-                        tracking_number: created.tracking_number || '',
-                        status: 'in_stock'
-                      });
-                    }
-                  }
-                  
                   setResult({ success: true, message: 'Order imported successfully', order: created });
                   toast.success('Order imported successfully!');
                   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-                  queryClient.invalidateQueries({ queryKey: ['serialNumbers'] });
                   setConfirmDialogOpen(false);
                   setExtractedData(null);
                   setProductMatches([]);
