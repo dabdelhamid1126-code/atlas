@@ -65,7 +65,7 @@ export default function EmailImport() {
 
       // Extract order data from PDF using LLM
       const extractedData = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this Best Buy or Amazon order confirmation. Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
+        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -165,7 +165,7 @@ export default function EmailImport() {
     <div>
       <PageHeader
         title="Import Orders from Email"
-        description="Paste Best Buy or Amazon order confirmation emails to automatically create purchase orders"
+        description="Paste order confirmation emails from any retailer to automatically create purchase orders"
       />
 
       <div className="grid gap-6 max-w-4xl">
@@ -188,7 +188,7 @@ export default function EmailImport() {
                 </div>
                 <div>
                   <p className="font-medium text-slate-900">Open your order confirmation email</p>
-                  <p className="text-sm text-slate-600">From Best Buy or Amazon in your inbox</p>
+                  <p className="text-sm text-slate-600">From any retailer in your inbox</p>
                 </div>
               </div>
               
@@ -215,9 +215,9 @@ export default function EmailImport() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
               <p className="text-sm text-blue-900">
-                <strong>Supported retailers:</strong> Amazon, Best Buy
+                <strong>Supported retailers:</strong> All retailers (Amazon, Best Buy, Walmart, Target, etc.)
                 <br />
-                <strong>Extracted data:</strong> Order number, total, items, tracking number, order date
+                <strong>Extracted data:</strong> Order number, total, items, tracking number, order date, credit card (last 4), SKU/UPC codes
               </p>
             </div>
           </CardContent>
@@ -246,7 +246,7 @@ export default function EmailImport() {
 
               <TabsContent value="paste" className="space-y-4">
                 <Textarea
-                  placeholder="Paste your Best Buy or Amazon order confirmation email here..."
+                  placeholder="Paste your order confirmation email here..."
                   value={emailContent}
                   onChange={(e) => setEmailContent(e.target.value)}
                   rows={12}
