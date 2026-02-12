@@ -626,7 +626,7 @@ export default function PurchaseOrders() {
       setLoadingTracking(true);
       try {
         const tracking = await base44.integrations.Core.InvokeLLM({
-          prompt: `Look up tracking number ${order.tracking_number}. First, identify which carrier this tracking number belongs to (UPS, FedEx, USPS, DHL, etc.) by checking the tracking number format. Then visit that carrier's official website and get the EXACT current tracking status. Today's date is ${format(new Date(), 'MMMM d, yyyy')}. Return: the correct carrier name, current delivery status (delivered/in transit/out for delivery), current location, actual delivery date if delivered, estimated delivery if not delivered, and the most recent tracking update with timestamp.`,
+          prompt: `Visit 17track.net and search for tracking number ${order.tracking_number}. Get the EXACT tracking information from 17track.net which automatically detects the carrier. Today's date is ${format(new Date(), 'MMMM d, yyyy')}. Return: the carrier name shown by 17track, current delivery status (delivered/in transit/out for delivery), current location, actual delivery date if delivered, estimated delivery if not delivered, and the most recent tracking event with timestamp.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
