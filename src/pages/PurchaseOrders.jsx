@@ -433,60 +433,7 @@ export default function PurchaseOrders() {
     }
   };
 
-  const updateRewardForOrder = async (order, existingReward) => {
-    const card = creditCards.find(c => c.id === order.credit_card_id);
-    if (!card) return;
 
-    const amount = order.final_cost || order.total_cost;
-    let rewardAmount = 0;
-    let rewardType = 'cashback';
-    let currency = 'USD';
-
-    // Get points multiplier based on order category
-    const category = order.category || 'other';
-    let pointsMultiplier = card.points_rate || 1;
-    
-    if (category === 'dining' && card.dining_points_rate) {
-      pointsMultiplier = card.dining_points_rate;
-    } else if (category === 'travel' && card.travel_points_rate) {
-      pointsMultiplier = card.travel_points_rate;
-    } else if (category === 'groceries' && card.groceries_points_rate) {
-      pointsMultiplier = card.groceries_points_rate;
-    } else if (category === 'gas' && card.gas_points_rate) {
-      pointsMultiplier = card.gas_points_rate;
-    } else if (category === 'streaming' && card.streaming_points_rate) {
-      pointsMultiplier = card.streaming_points_rate;
-    }
-
-    if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
-      rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
-      rewardType = 'cashback';
-      currency = 'USD';
-    } else if (card.reward_type === 'points' && pointsMultiplier > 0) {
-      rewardAmount = Math.round(amount * pointsMultiplier);
-      rewardType = 'points';
-      currency = 'points';
-    } else if (card.reward_type === 'both') {
-      if (card.cashback_rate > 0) {
-        rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
-        rewardType = 'cashback';
-        currency = 'USD';
-      } else if (pointsMultiplier > 0) {
-        rewardAmount = Math.round(amount * pointsMultiplier);
-        rewardType = 'points';
-        currency = 'points';
-      }
-    }
-
-    if (rewardAmount > 0) {
-      await base44.entities.Reward.update(existingReward.id, {
-        purchase_amount: amount,
-        amount: parseFloat(rewardAmount),
-        status: order.status === 'received' ? 'earned' : 'pending'
-      });
-      queryClient.invalidateQueries({ queryKey: ['rewards'] });
-    }
-  };
 
   const openDialog = (order = null) => {
     if (order) {
