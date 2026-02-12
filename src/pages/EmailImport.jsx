@@ -15,6 +15,9 @@ export default function EmailImport() {
   const [pdfFile, setPdfFile] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [extractedData, setExtractedData] = useState(null);
+  const [productMatches, setProductMatches] = useState([]);
   const queryClient = useQueryClient();
 
   const handleParse = async () => {
@@ -116,66 +119,55 @@ export default function EmailImport() {
         );
       }
 
-      // Create purchase order with matched data
-      const orderData = {
-        order_number: extractedData.order_number,
-        retailer: extractedData.retailer,
-        total_cost: extractedData.total_cost,
-        final_cost: extractedData.total_cost,
-        order_date: extractedData.order_date,
-        tracking_number: extractedData.tracking_number || '',
-        credit_card_id: matchedCard?.id || null,
-        card_name: matchedCard?.card_name || null,
-        status: extractedData.tracking_number ? 'shipped' : 'ordered',
-        items: extractedData.items?.map(item => {
-          // Try to match product by name or SKU
-          const matchedProduct = allProducts.find(p => 
-            p.name?.toLowerCase().includes(item.product_name?.toLowerCase()) ||
-            item.product_name?.toLowerCase().includes(p.name?.toLowerCase()) ||
-            (item.sku && p.upc === item.sku)
-          );
-
-          return {
-            product_id: matchedProduct?.id || '',
-            product_name: matchedProduct?.name || item.product_name,
-            upc: item.sku || matchedProduct?.upc || '',
-            quantity_ordered: item.quantity || 1,
-            quantity_received: 0,
-            unit_cost: item.unit_cost
-          };
-        }) || [],
-        notes: 'Auto-imported from PDF'
-      };
-
-      const created = await base44.entities.PurchaseOrder.create(orderData);
+      // Find product matches and suggestions
+      const matches = [];
       
-      // Create serial numbers if available
       for (const item of extractedData.items || []) {
-        if (item.serial_number && item.serial_number.trim()) {
-          const matchedProduct = allProducts.find(p => 
-            p.name?.toLowerCase().includes(item.product_name?.toLowerCase()) ||
-            item.product_name?.toLowerCase().includes(p.name?.toLowerCase()) ||
-            (item.sku && p.upc === item.sku)
-          );
-
-          if (matchedProduct) {
-            await base44.entities.SerialNumber.create({
-              serial: item.serial_number,
-              product_id: matchedProduct.id,
-              product_name: matchedProduct.name,
-              purchase_order_id: created.id,
-              order_number: created.order_number,
-              tracking_number: created.tracking_number || '',
-              status: 'in_stock'
-            });
-          }
-        }
+        // Find top 3 suggestions for each item
+        const suggestions = allProducts
+          .map(p => {
+            let score = 0;
+            const itemName = item.product_name?.toLowerCase() || '';
+            const prodName = p.name?.toLowerCase() || '';
+            
+            // Exact match
+            if (prodName === itemName) score = 100;
+            // Contains match
+            else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
+            // SKU/UPC match
+            else if (item.sku && p.upc === item.sku) score = 90;
+            // Word overlap
+            else {
+              const itemWords = itemName.split(' ');
+              const prodWords = prodName.split(' ');
+              const overlap = itemWords.filter(w => prodWords.includes(w)).length;
+              score = (overlap / Math.max(itemWords.length, prodWords.length)) * 70;
+            }
+            
+            return { product: p, score };
+          })
+          .filter(m => m.score > 30)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3);
+        
+        matches.push({
+          invoiceName: item.product_name,
+          sku: item.sku,
+          serial_number: item.serial_number,
+          quantity: item.quantity || 1,
+          unit_cost: item.unit_cost || 0,
+          suggestions,
+          selectedProduct: suggestions[0]?.product || null
+        });
       }
       
-      setResult({ success: true, message: 'Order imported successfully', order: created });
-      toast.success('Order imported successfully!');
-      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['serialNumbers'] });
+      // Show confirmation dialog
+      setExtractedData({
+        ...extractedData,
+        matchedCard
+      });
+      setProductMatches(matches);
+      setConfirmDialogOpen(true);
       setPdfFile(null);
 
     } catch (error) {
