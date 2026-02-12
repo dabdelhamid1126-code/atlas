@@ -34,6 +34,7 @@ export default function PurchaseOrders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [issuerFilter, setIssuerFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('order-date-new');
   const [productSearches, setProductSearches] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,6 +79,10 @@ export default function PurchaseOrders() {
         data.sort((a, b) => (b.final_cost || b.total_cost || 0) - (a.final_cost || a.total_cost || 0));
       } else if (sortOrder === 'total-low') {
         data.sort((a, b) => (a.final_cost || a.total_cost || 0) - (b.final_cost || b.total_cost || 0));
+      } else if (sortOrder === 'name-asc') {
+        data.sort((a, b) => (a.retailer || '').localeCompare(b.retailer || ''));
+      } else if (sortOrder === 'name-desc') {
+        data.sort((a, b) => (b.retailer || '').localeCompare(a.retailer || ''));
       }
       
       return data;
@@ -649,6 +654,7 @@ export default function PurchaseOrders() {
       order.retailer?.toLowerCase().includes(search.toLowerCase()) ||
       order.items?.some(item => item.product_name?.toLowerCase().includes(search.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const matchesCategory = categoryFilter === 'all' || order.category === categoryFilter;
     
     let matchesDate = true;
     if (dateFilter !== 'all' && order.order_date) {
@@ -669,7 +675,7 @@ export default function PurchaseOrders() {
       }
     }
     
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesStatus && matchesCategory && matchesDate;
   });
 
   const columns = [
@@ -752,15 +758,18 @@ export default function PurchaseOrders() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={issuerFilter} onValueChange={setIssuerFilter}>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by issuer" />
+            <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Issuers</SelectItem>
-            {[...new Set(creditCards.map(c => c.issuer).filter(Boolean))].sort().map(issuer => (
-              <SelectItem key={issuer} value={issuer}>{issuer}</SelectItem>
-            ))}
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="dining">Dining</SelectItem>
+            <SelectItem value="travel">Travel</SelectItem>
+            <SelectItem value="groceries">Groceries</SelectItem>
+            <SelectItem value="gas">Gas</SelectItem>
+            <SelectItem value="streaming">Streaming</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
         <Select value={dateFilter} onValueChange={setDateFilter}>
@@ -781,6 +790,8 @@ export default function PurchaseOrders() {
           <SelectContent>
             <SelectItem value="order-date-new">Order Date: New to Old</SelectItem>
             <SelectItem value="order-date-old">Order Date: Old to New</SelectItem>
+            <SelectItem value="name-asc">Name: A to Z</SelectItem>
+            <SelectItem value="name-desc">Name: Z to A</SelectItem>
             <SelectItem value="total-high">Total: High to Low</SelectItem>
             <SelectItem value="total-low">Total: Low to High</SelectItem>
           </SelectContent>
