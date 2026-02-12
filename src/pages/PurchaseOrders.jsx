@@ -619,7 +619,7 @@ export default function PurchaseOrders() {
       setLoadingTracking(true);
       try {
         const tracking = await base44.integrations.Core.InvokeLLM({
-          prompt: `Get the current shipping status for tracking number ${order.tracking_number} by checking the shipping carrier's official website (UPS, FedEx, USPS, etc.). Include the carrier name, current status, location, estimated delivery date, and latest update.`,
+          prompt: `Look up the EXACT current tracking status for tracking number ${order.tracking_number} on the shipping carrier's official tracking page. Today's date is ${format(new Date(), 'MMMM d, yyyy')}. Visit the actual carrier website (UPS.com, FedEx.com, USPS.com, etc.) and return the EXACT information shown there. Include: carrier name, current delivery status (delivered/in transit/out for delivery), current location, actual delivery date if delivered, and the most recent tracking update with timestamp.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
@@ -627,6 +627,7 @@ export default function PurchaseOrders() {
               carrier: { type: "string" },
               status: { type: "string" },
               location: { type: "string" },
+              delivered_date: { type: "string" },
               estimated_delivery: { type: "string" },
               latest_update: { type: "string" }
             }
@@ -1356,7 +1357,19 @@ export default function PurchaseOrders() {
               {/* Live Tracking Status */}
               {selectedOrder.tracking_number && (
                 <div className="border-t pt-4">
-                  <Label className="text-slate-500 mb-2 block">Tracking Status</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-slate-500">Tracking Status</Label>
+                    {!loadingTracking && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => viewDetails(selectedOrder)}
+                        className="h-7 text-xs"
+                      >
+                        Refresh
+                      </Button>
+                    )}
+                  </div>
                   {loadingTracking ? (
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1372,15 +1385,23 @@ export default function PurchaseOrders() {
                       )}
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-700">Status:</span>
-                        <span className="text-sm font-semibold text-blue-700">{trackingInfo.status}</span>
+                        <span className={`text-sm font-semibold ${trackingInfo.status?.toLowerCase().includes('delivered') ? 'text-green-700' : 'text-blue-700'}`}>
+                          {trackingInfo.status}
+                        </span>
                       </div>
+                      {trackingInfo.delivered_date && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-700">Delivered:</span>
+                          <span className="text-sm text-green-700 font-semibold">{trackingInfo.delivered_date}</span>
+                        </div>
+                      )}
                       {trackingInfo.location && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-slate-700">Location:</span>
                           <span className="text-sm text-slate-600">{trackingInfo.location}</span>
                         </div>
                       )}
-                      {trackingInfo.estimated_delivery && (
+                      {!trackingInfo.delivered_date && trackingInfo.estimated_delivery && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-slate-700">Estimated Delivery:</span>
                           <span className="text-sm text-slate-600">{trackingInfo.estimated_delivery}</span>
