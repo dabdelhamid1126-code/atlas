@@ -139,12 +139,12 @@ export default function EmailImport() {
             const itemName = item.product_name?.toLowerCase() || '';
             const prodName = p.name?.toLowerCase() || '';
             
-            // Exact match
-            if (prodName === itemName) score = 100;
+            // SKU/UPC exact match gets highest priority
+            if (item.sku && p.upc === item.sku) score = 100;
+            // Exact name match
+            else if (prodName === itemName) score = 95;
             // Contains match
             else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
-            // SKU/UPC match
-            else if (item.sku && p.upc === item.sku) score = 90;
             // Word overlap
             else {
               const itemWords = itemName.split(' ');
@@ -156,8 +156,13 @@ export default function EmailImport() {
             return { product: p, score };
           })
           .filter(m => m.score > 30)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 3);
+          .sort((a, b) => {
+            // First sort by score
+            if (b.score !== a.score) return b.score - a.score;
+            // Then alphabetically by name
+            return a.product.name.localeCompare(b.product.name);
+          })
+          .slice(0, 5);
         
         matches.push({
           invoiceName: item.product_name,
@@ -430,12 +435,14 @@ export default function EmailImport() {
                         <SelectValue placeholder="Select a product" />
                       </SelectTrigger>
                       <SelectContent>
-                        {match.suggestions.map((suggestion) => (
-                          <SelectItem key={suggestion.product.id} value={suggestion.product.id}>
-                            {suggestion.product.name} {suggestion.score > 80 ? '✓' : ''}
-                            {suggestion.product.upc && ` (${suggestion.product.upc})`}
-                          </SelectItem>
-                        ))}
+                        {match.suggestions
+                          .sort((a, b) => a.product.name.localeCompare(b.product.name))
+                          .map((suggestion) => (
+                            <SelectItem key={suggestion.product.id} value={suggestion.product.id}>
+                              {suggestion.product.name} {suggestion.score > 90 ? '✓' : ''}
+                              {suggestion.product.upc && ` (${suggestion.product.upc})`}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     {match.suggestions.length === 0 && (
@@ -459,10 +466,10 @@ export default function EmailImport() {
               onClick={async () => {
                 setProcessing(true);
                 try {
-                  // Prepare order items
+                  // Prepare order items - always use the product name from your list
                   const orderItems = productMatches.map(match => ({
                     product_id: match.selectedProduct?.id || '',
-                    product_name: match.selectedProduct?.name || match.invoiceName,
+                    product_name: match.selectedProduct?.name || '',
                     upc: match.selectedProduct?.upc || match.sku || '',
                     quantity_ordered: match.quantity,
                     quantity_received: 0,
