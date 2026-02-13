@@ -598,82 +598,20 @@ export default function PurchaseOrders() {
     }
   };
 
-  const fetchTrackingWithRetry = async (trackingNumber, attempt = 1) => {
-    const maxAttempts = 3;
+  const fetchTracking = async (trackingNumber, carrier) => {
     try {
-      const tracking = await base44.integrations.Core.InvokeLLM({
-        prompt: `Make an API call to TrackingMore to get package tracking data:
-
-API Endpoint: GET https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}
-Headers:
-  Tracking-Api-Key: 5d8ad0f7-6e93-4883-bbdd-e19d64e51e56
-  Content-Type: application/json
-
-The API returns JSON with this structure:
-{
-  "data": [
-    {
-      "carrier_code": "fedex",
-      "delivery_status": "delivered",
-      "substatus": "delivered",
-      "delivered_date": "2026-02-12",
-      "estimated_delivery_date": "2026-02-14",
-      "origin_info": {
-        "trackinfo": [
-          {
-            "checkpoint_date": "2026-02-12T14:00:00",
-            "checkpoint_status": "Package delivered to front door",
-            "checkpoint_delivery_location": "New York, NY"
-          }
-        ]
-      }
-    }
-  ]
-}
-
-Extract from data[0] (first tracking result):
-- carrier: data[0].carrier_code (convert to uppercase, e.g., "FEDEX")
-- status: data[0].delivery_status (e.g., "delivered", "transit", "pickup")
-- location: data[0].origin_info.trackinfo[0].checkpoint_delivery_location (FIRST item is latest)
-- delivered_date: data[0].delivered_date (if available)
-- estimated_delivery: data[0].estimated_delivery_date (if available)
-- latest_update: data[0].origin_info.trackinfo[0].checkpoint_status (latest event)
-- last_scan_date: data[0].origin_info.trackinfo[0].checkpoint_date (latest scan)
-
-Return as JSON with these exact field names.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            carrier: { type: "string" },
-            status: { type: "string" },
-            location: { type: "string" },
-            delivered_date: { type: "string" },
-            estimated_delivery: { type: "string" },
-            latest_update: { type: "string" },
-            last_scan_date: { type: "string" }
-          }
-        }
+      const result = await base44.functions.getTrackingInfo({
+        tracking_number: trackingNumber,
+        carrier: carrier
       });
       
-      console.log('Tracking response:', tracking);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       
-      return {
-        carrier: tracking.carrier?.toUpperCase() || 'Unknown',
-        status: tracking.status || 'checking',
-        location: tracking.location || 'Unknown location',
-        delivered_date: tracking.delivered_date || null,
-        estimated_delivery: tracking.estimated_delivery || null,
-        latest_update: tracking.latest_update || 'No recent updates',
-        last_scan_date: tracking.last_scan_date || null
-      };
+      return result;
     } catch (error) {
       console.error('Tracking error:', error);
-      if (attempt < maxAttempts) {
-        console.log(`Tracking attempt ${attempt} failed, retrying...`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return fetchTrackingWithRetry(trackingNumber, attempt + 1);
-      }
       throw error;
     }
   };
@@ -724,40 +662,63 @@ Return as JSON with these exact field names.`,
     
     // Fetch live tracking if tracking number exists
     if (order.tracking_number) {
-      setLoadingTracking(true);
-      try {
-        const tracking = await fetchTrackingWithRetry(order.tracking_number);
-        
-        // Analyze tracking for issues
-        const alerts = analyzeTracking(tracking, order);
-        setTrackingInfo({ ...tracking, alerts });
-        
-        // Auto-update order status if delivered
-        if (tracking.status && tracking.status.toLowerCase().includes('delivered') && order.status !== 'received') {
-          await updateMutation.mutateAsync({
-            id: order.id,
-            data: { ...order, status: 'received' }
-          });
-          setSelectedOrder({ ...order, status: 'received' });
-          toast.success('Order status updated to received');
+      await refreshTracking(order);
+    }
+  };
+
+  const refreshTracking = async (order) => {
+    setLoadingTracking(true);
+    try {
+      const tracking = await fetchTracking(order.tracking_number, order.carrier);
+      
+      // Analyze tracking for issues
+      const alerts = analyzeTracking(tracking, order);
+      setTrackingInfo({ ...tracking, alerts });
+      
+      // Auto-update order fields with tracking data
+      const updates = {
+        carrier: tracking.carrier,
+        tracking_status: tracking.status
+      };
+      
+      // Map tracking status to order status
+      if (tracking.status.toLowerCase().includes('delivered')) {
+        updates.status = 'received';
+      } else if (tracking.status.toLowerCase().includes('transit') || tracking.status.toLowerCase().includes('pickup')) {
+        if (order.status === 'pending' || order.status === 'ordered') {
+          updates.status = 'shipped';
         }
-        
-        // Show alerts
-        if (alerts.length > 0) {
-          alerts.forEach(alert => {
-            if (alert.type === 'error') {
-              toast.error(alert.message);
-            } else {
-              toast.warning(alert.message);
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch tracking after retries:', error);
-        toast.error('Could not fetch tracking information. Please try again later.');
-      } finally {
-        setLoadingTracking(false);
+      } else if (tracking.status.toLowerCase().includes('exception')) {
+        toast.error('Delivery exception detected!');
       }
+      
+      // Update order with tracking info
+      await updateMutation.mutateAsync({
+        id: order.id,
+        data: { ...order, ...updates }
+      });
+      
+      setSelectedOrder({ ...order, ...updates });
+      
+      if (updates.status && updates.status !== order.status) {
+        toast.success(`Order status updated to ${updates.status}`);
+      }
+      
+      // Show alerts
+      if (alerts.length > 0) {
+        alerts.forEach(alert => {
+          if (alert.type === 'error') {
+            toast.error(alert.message);
+          } else {
+            toast.warning(alert.message);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch tracking:', error);
+      toast.error('Could not fetch tracking information. Please try again later.');
+    } finally {
+      setLoadingTracking(false);
     }
   };
 
@@ -1470,7 +1431,21 @@ Return as JSON with these exact field names.`,
               {/* Live Tracking Status */}
               {selectedOrder.tracking_number && (
                 <div className="pb-4 border-b">
-                  <Label className="text-slate-500 text-sm mb-2 block">Live Tracking Status</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-slate-500 text-sm">Live Tracking Status</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => refreshTracking(selectedOrder)}
+                      disabled={loadingTracking}
+                    >
+                      {loadingTracking ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        'Refresh Tracking'
+                      )}
+                    </Button>
+                  </div>
                   {loadingTracking ? (
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1504,7 +1479,7 @@ Return as JSON with these exact field names.`,
                           </div>
                           <div>
                             <p className="text-xs text-slate-500 mb-1">Status</p>
-                            <p className="font-semibold text-slate-900">{trackingInfo.status || 'Checking...'}</p>
+                            <p className="font-semibold text-slate-900 capitalize">{trackingInfo.status || 'Checking...'}</p>
                           </div>
                         </div>
                         {trackingInfo.location && (
@@ -1531,13 +1506,16 @@ Return as JSON with these exact field names.`,
                             <p className="text-sm text-slate-700">{trackingInfo.latest_update}</p>
                           </div>
                         )}
-                        <div className="pt-2 border-t border-slate-200">
+                        <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                           <p className="text-xs text-slate-500">Tracking #: {selectedOrder.tracking_number}</p>
+                          {trackingInfo.last_scan_date && (
+                            <p className="text-xs text-slate-400">Last update: {new Date(trackingInfo.last_scan_date).toLocaleString()}</p>
+                          )}
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">Loading tracking info...</p>
+                    <p className="text-sm text-slate-500">Click refresh to load tracking</p>
                   )}
                 </div>
               )}
