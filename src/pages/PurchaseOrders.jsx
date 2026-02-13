@@ -603,24 +603,24 @@ export default function PurchaseOrders() {
     const maxAttempts = 3;
     try {
       const tracking = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are calling the AfterShip API to get real package tracking information.
+        prompt: `You are calling the TrackingMore API to get real package tracking information.
 
-Make an HTTP GET request to AfterShip API:
-URL: https://api.aftership.com/v4/trackings/${trackingNumber}
+Make an HTTP GET request to TrackingMore API:
+URL: https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}
 Headers: 
-- aftership-api-key: asat_3dc8e2e086b140479486922738c86d7a
+- Tracking-Api-Key: 5d8ad0f7-6e93-4883-bbdd-e19d64e51e56
 - Content-Type: application/json
 
 The API will return tracking data. Extract and return:
-- carrier (slug field, e.g., "fedex", "ups", "usps")
-- status (tag field, like "InTransit", "Delivered", "Exception")
-- location (from the most recent checkpoint's location field)
-- delivered_date (if status is Delivered)
-- estimated_delivery (expected_delivery field)
-- latest_update (most recent checkpoint's message and time)
-- last_scan_date (most recent checkpoint's checkpoint_time)
+- carrier (carrier_code field, e.g., "fedex", "ups", "usps")
+- status (delivery_status field, like "transit", "delivered", "exception")
+- location (from the latest_event.location or origin_info.trackinfo array's most recent entry)
+- delivered_date (if status is delivered, get from delivered_date field)
+- estimated_delivery (get from estimated_delivery_date field)
+- latest_update (from latest_event.description and latest_event.time_iso)
+- last_scan_date (from latest_event.time_iso)
 
-IMPORTANT: Look at the checkpoints array - the LAST item is the most recent tracking event. Get location from there.
+IMPORTANT: Look at the origin_info.trackinfo array - the FIRST item is the most recent tracking event. Get location from there.
 
 Return the tracking information in JSON format.`,
         add_context_from_internet: true,
