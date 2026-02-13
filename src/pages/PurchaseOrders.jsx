@@ -43,6 +43,7 @@ export default function PurchaseOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [trackingInfo, setTrackingInfo] = useState(null);
   const [loadingTracking, setLoadingTracking] = useState(false);
+  const [updatingAllTracking, setUpdatingAllTracking] = useState(false);
   const [formData, setFormData] = useState({
     order_number: '',
     tracking_number: '',
@@ -737,6 +738,54 @@ Return the tracking information in JSON format.`,
     }
   };
 
+  const updateAllTracking = async () => {
+    const ordersWithTracking = orders.filter(o => o.tracking_number && o.status !== 'received' && o.status !== 'cancelled');
+    
+    if (ordersWithTracking.length === 0) {
+      toast.info('No orders with tracking numbers found');
+      return;
+    }
+
+    if (!confirm(`Update tracking for ${ordersWithTracking.length} order(s)?`)) {
+      return;
+    }
+
+    setUpdatingAllTracking(true);
+    let updated = 0;
+    let failed = 0;
+
+    for (const order of ordersWithTracking) {
+      try {
+        const tracking = await fetchTrackingWithRetry(order.tracking_number);
+        
+        // Auto-update order status if delivered
+        if (tracking.status && tracking.status.toLowerCase().includes('delivered') && order.status !== 'received') {
+          await updateMutation.mutateAsync({
+            id: order.id,
+            data: { ...order, status: 'received' }
+          });
+          updated++;
+          toast.success(`Order ${order.order_number} marked as received`);
+        }
+      } catch (error) {
+        console.error(`Failed to update tracking for order ${order.order_number}:`, error);
+        failed++;
+      }
+    }
+
+    setUpdatingAllTracking(false);
+    
+    if (updated > 0) {
+      toast.success(`Updated ${updated} order(s) successfully`);
+    }
+    if (failed > 0) {
+      toast.error(`Failed to update ${failed} order(s)`);
+    }
+    if (updated === 0 && failed === 0) {
+      toast.info('No updates needed - all packages still in transit');
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number?.toLowerCase().includes(search.toLowerCase()) ||
@@ -820,9 +869,26 @@ Return the tracking information in JSON format.`,
         title="Purchase Orders" 
         description="Track purchases from retailers and suppliers"
         actions={
-          <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
-            <Plus className="h-4 w-4 mr-2" /> New Order
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={updateAllTracking} 
+              disabled={updatingAllTracking}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              {updatingAllTracking ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update All Tracking'
+              )}
+            </Button>
+            <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
+              <Plus className="h-4 w-4 mr-2" /> New Order
+            </Button>
+          </div>
         }
       />
 
