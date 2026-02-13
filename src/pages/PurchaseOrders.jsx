@@ -660,7 +660,7 @@ CRITICAL RULES:
         setTrackingInfo(tracking);
         
         // Auto-update order status if delivered
-        if ((tracking.status?.toLowerCase().includes('delivered') || tracking.delivered_date) && order.status !== 'received') {
+        if (tracking.status && tracking.status.toLowerCase().includes('delivered') && order.status !== 'received') {
           await updateMutation.mutateAsync({
             id: order.id,
             data: { ...order, status: 'received' }
@@ -668,6 +668,9 @@ CRITICAL RULES:
           setSelectedOrder({ ...order, status: 'received' });
           toast.success('Order status updated to received');
         }
+        
+        // Log the tracking response for debugging
+        console.log('Tracking response:', tracking);
       } catch (error) {
         console.error('Failed to fetch tracking:', error);
       } finally {
@@ -941,15 +944,16 @@ CRITICAL RULES:
             </div>
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
-              <Select value={formData.credit_card_id || undefined} onValueChange={(v) => {
-                setFormData({ ...formData, credit_card_id: v });
+              <Select value={formData.credit_card_id ? creditCards.find(c => c.id === formData.credit_card_id)?.card_name : undefined} onValueChange={(cardName) => {
+                const card = creditCards.find(c => c.card_name === cardName);
+                setFormData({ ...formData, credit_card_id: card?.id || '' });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
                   {creditCards.filter(c => c.active && (issuerFilter === 'all' || c.issuer === issuerFilter)).map(card => (
-                    <SelectItem key={card.id} value={card.id}>
+                    <SelectItem key={card.id} value={card.card_name}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
                       {card.reward_type === 'points' && `${card.points_rate}x pts`}
                       {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
