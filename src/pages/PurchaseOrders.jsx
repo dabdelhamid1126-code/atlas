@@ -599,24 +599,16 @@ export default function PurchaseOrders() {
   };
 
   const fetchTracking = async (trackingNumber, carrier) => {
-    try {
-      console.log('Calling getTrackingInfo with:', { tracking_number: trackingNumber, carrier });
-      const result = await base44.functions.getTrackingInfo({
-        tracking_number: trackingNumber,
-        carrier: carrier
-      });
-      
-      console.log('getTrackingInfo result:', result);
-      
-      if (!result || !result.success) {
-        throw new Error(result?.error || 'Failed to fetch tracking information');
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Tracking error:', error);
-      throw error;
+    const { data } = await base44.functions.invoke('getTrackingInfo', {
+      tracking_number: trackingNumber,
+      carrier: carrier
+    });
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch tracking information');
     }
+    
+    return data;
   };
 
   const analyzeTracking = (tracking, order) => {
