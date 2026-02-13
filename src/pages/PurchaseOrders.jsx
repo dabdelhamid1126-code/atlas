@@ -601,42 +601,31 @@ export default function PurchaseOrders() {
   const fetchTrackingWithRetry = async (trackingNumber, attempt = 1) => {
     const maxAttempts = 3;
     try {
-      const tracking = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are calling the TrackingMore API to get real package tracking information.
-
-Make an HTTP GET request to TrackingMore API:
-URL: https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}
-Headers: 
-- Tracking-Api-Key: 5d8ad0f7-6e93-4883-bbdd-e19d64e51e56
-- Content-Type: application/json
-
-The API will return tracking data. Extract and return:
-- carrier (carrier_code field, e.g., "fedex", "ups", "usps")
-- status (delivery_status field, like "transit", "delivered", "exception")
-- location (from the latest_event.location or origin_info.trackinfo array's most recent entry)
-- delivered_date (if status is delivered, get from delivered_date field)
-- estimated_delivery (get from estimated_delivery_date field)
-- latest_update (from latest_event.description and latest_event.time_iso)
-- last_scan_date (from latest_event.time_iso)
-
-IMPORTANT: Look at the origin_info.trackinfo array - the FIRST item is the most recent tracking event. Get location from there.
-
-Return the tracking information in JSON format.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            carrier: { type: "string" },
-            status: { type: "string" },
-            location: { type: "string" },
-            delivered_date: { type: "string" },
-            estimated_delivery: { type: "string" },
-            latest_update: { type: "string" },
-            last_scan_date: { type: "string" }
-          }
+      const response = await fetch(`https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}`, {
+        headers: {
+          'Tracking-Api-Key': '5d8ad0f7-6e93-4883-bbdd-e19d64e51e56',
+          'Content-Type': 'application/json'
         }
       });
-      return tracking;
+      
+      const data = await response.json();
+      
+      if (!response.ok || !data.data || data.data.length === 0) {
+        throw new Error('No tracking data found');
+      }
+      
+      const trackingData = data.data[0];
+      const latestEvent = trackingData.origin_info?.trackinfo?.[0];
+      
+      return {
+        carrier: trackingData.carrier_code || 'unknown',
+        status: trackingData.delivery_status || trackingData.substatus || 'unknown',
+        location: latestEvent?.checkpoint_delivery_location || latestEvent?.location || 'Unknown',
+        delivered_date: trackingData.delivered_date || null,
+        estimated_delivery: trackingData.estimated_delivery_date || null,
+        latest_update: latestEvent?.checkpoint_status || latestEvent?.status || 'No updates',
+        last_scan_date: latestEvent?.checkpoint_date || latestEvent?.time_iso || null
+      };
     } catch (error) {
       if (attempt < maxAttempts) {
         console.log(`Tracking attempt ${attempt} failed, retrying...`);
