@@ -598,6 +598,99 @@ export default function PurchaseOrders() {
     }
   };
 
+  const fetchTrackingWithRetry = async (trackingNumber, attempt = 1) => {
+    const maxAttempts = 3;
+    try {
+      const tracking = await base44.integrations.Core.InvokeLLM({
+        prompt: `LIVE PACKAGE TRACKING - Visit the actual carrier website and scrape the current tracking details.
+
+Tracking Number: ${trackingNumber}
+Current Date/Time: ${format(new Date(), 'EEEE, MMMM d, yyyy h:mm a')}
+
+INSTRUCTIONS:
+1. Identify the carrier from the tracking number pattern
+2. Visit the carrier's official tracking page (fedex.com, ups.com, or usps.com)
+3. Look at the tracking timeline - the MOST RECENT event (usually at the top) shows where the package is NOW
+
+CRITICAL - For Location:
+- Find the LATEST/NEWEST tracking event (most recent timestamp)
+- Extract ONLY that event's location
+- Do NOT report historical locations from earlier scans
+- Format: "City, State" from the most recent scan
+
+Example: 
+Timeline shows:
+- Feb 12, 3:43 PM - Arrived at FedEx location - KEASBY, NJ ← USE THIS (most recent)
+- Feb 7, 12:51 PM - Departed FedEx location - SACRAMENTO, CA ← IGNORE (old)
+- Feb 6, 4:12 PM - Picked up - FRESNO, CA ← IGNORE (old)
+
+Correct location = "Keasby, NJ" (from most recent event only)
+
+Return JSON with actual carrier data from the live tracking page.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            carrier: { type: "string" },
+            status: { type: "string" },
+            location: { type: "string" },
+            delivered_date: { type: "string" },
+            estimated_delivery: { type: "string" },
+            latest_update: { type: "string" },
+            last_scan_date: { type: "string" }
+          }
+        }
+      });
+      return tracking;
+    } catch (error) {
+      if (attempt < maxAttempts) {
+        console.log(`Tracking attempt ${attempt} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        return fetchTrackingWithRetry(trackingNumber, attempt + 1);
+      }
+      throw error;
+    }
+  };
+
+  const analyzeTracking = (tracking, order) => {
+    const alerts = [];
+    const today = new Date();
+    
+    // Check if package is delayed
+    if (tracking.estimated_delivery && !tracking.delivered_date) {
+      const estimatedDate = new Date(tracking.estimated_delivery);
+      const daysDiff = Math.floor((today - estimatedDate) / (1000 * 60 * 60 * 24));
+      if (daysDiff > 0) {
+        alerts.push({
+          type: 'warning',
+          message: `Package is ${daysDiff} day${daysDiff > 1 ? 's' : ''} past estimated delivery date`
+        });
+      }
+    }
+    
+    // Check if package is stuck at location
+    if (tracking.last_scan_date) {
+      const lastScan = new Date(tracking.last_scan_date);
+      const hoursSinceUpdate = Math.floor((today - lastScan) / (1000 * 60 * 60));
+      if (hoursSinceUpdate > 48 && !tracking.delivered_date) {
+        alerts.push({
+          type: 'error',
+          message: `No tracking updates for ${Math.floor(hoursSinceUpdate / 24)} days - package may be stuck`
+        });
+      }
+    }
+    
+    // Check for delivery exceptions
+    if (tracking.status?.toLowerCase().includes('exception') || tracking.status?.toLowerCase().includes('delayed')) {
+      alerts.push({
+        type: 'error',
+        message: 'Delivery exception or delay reported by carrier'
+      });
+    }
+    
+    return alerts;
+  };
+
   const viewDetails = async (order) => {
     setSelectedOrder(order);
     setDetailsOpen(true);
@@ -607,60 +700,11 @@ export default function PurchaseOrders() {
     if (order.tracking_number) {
       setLoadingTracking(true);
       try {
-        const tracking = await base44.integrations.Core.InvokeLLM({
-          prompt: `You MUST go to the actual carrier website RIGHT NOW and get the REAL LIVE tracking information. Do NOT give me old or cached data.
-
-Tracking Number: ${order.tracking_number}
-TODAY IS: ${format(new Date(), 'EEEE, MMMM d, yyyy')} (Thursday, February 13, 2026)
-
-STEP 1 - Identify carrier from tracking number format:
-- FedEx: 12 digits (like 511647419461)
-- UPS: 18 chars starting with "1Z"
-- USPS: 20-22 digits or 13 chars with letters
-
-STEP 2 - GO TO THE CARRIER WEBSITE NOW:
-Visit fedex.com/fedextrack OR ups.com/track OR usps.com/track
-Search for tracking number: ${order.tracking_number}
-
-STEP 3 - READ THE TRACKING PAGE:
-Look at the tracking timeline/history. The FIRST/TOP event is the MOST RECENT.
-
-CRITICAL INSTRUCTIONS FOR LOCATION:
-- Read the VERY FIRST event in the tracking timeline (most recent)
-- That location is where the package is RIGHT NOW
-- Example: If the first event says "Arrived at FedEx location - KEASBY, NJ - Feb 12 3:43 PM"
-  Then location = "Keasby, NJ" (NOT Memphis, NOT Sacramento, NOT anywhere else)
-- The package has MOVED from earlier locations - only report current location
-
-CRITICAL INSTRUCTIONS FOR STATUS:
-- If any event says "Delivered", status = "Delivered"
-- If latest event says package arrived somewhere, status = "In Transit"
-- If it says "Out for Delivery", status = "Out for Delivery"
-
-CRITICAL INSTRUCTIONS FOR DATES:
-- Look at the estimated delivery date shown on the page
-- If delivered, get the actual delivery date
-
-DO NOT:
-- Report old locations (like where it was yesterday)
-- Make assumptions
-- Use cached data
-
-RETURN THE ACTUAL LIVE DATA FROM THE CARRIER SITE RIGHT NOW.`,
-          add_context_from_internet: true,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              carrier: { type: "string" },
-              status: { type: "string" },
-              location: { type: "string" },
-              delivered_date: { type: "string" },
-              estimated_delivery: { type: "string" },
-              latest_update: { type: "string" }
-            }
-          }
-        });
-        setTrackingInfo(tracking);
+        const tracking = await fetchTrackingWithRetry(order.tracking_number);
+        
+        // Analyze tracking for issues
+        const alerts = analyzeTracking(tracking, order);
+        setTrackingInfo({ ...tracking, alerts });
         
         // Auto-update order status if delivered
         if (tracking.status && tracking.status.toLowerCase().includes('delivered') && order.status !== 'received') {
@@ -672,10 +716,19 @@ RETURN THE ACTUAL LIVE DATA FROM THE CARRIER SITE RIGHT NOW.`,
           toast.success('Order status updated to received');
         }
         
-        // Log the tracking response for debugging
-        console.log('Tracking response:', tracking);
+        // Show alerts
+        if (alerts.length > 0) {
+          alerts.forEach(alert => {
+            if (alert.type === 'error') {
+              toast.error(alert.message);
+            } else {
+              toast.warning(alert.message);
+            }
+          });
+        }
       } catch (error) {
-        console.error('Failed to fetch tracking:', error);
+        console.error('Failed to fetch tracking after retries:', error);
+        toast.error('Could not fetch tracking information. Please try again later.');
       } finally {
         setLoadingTracking(false);
       }
@@ -1398,43 +1451,63 @@ RETURN THE ACTUAL LIVE DATA FROM THE CARRIER SITE RIGHT NOW.`,
                       Loading tracking info...
                     </div>
                   ) : trackingInfo ? (
-                    <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Carrier</p>
-                          <p className="font-semibold text-slate-900">{trackingInfo.carrier || 'Unknown'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Status</p>
-                          <p className="font-semibold text-slate-900">{trackingInfo.status || 'Checking...'}</p>
-                        </div>
-                      </div>
-                      {trackingInfo.location && (
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Current Location</p>
-                          <p className="text-sm text-slate-700">{trackingInfo.location}</p>
-                        </div>
-                      )}
-                      {trackingInfo.delivered_date && (
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Delivered Date</p>
-                          <p className="text-sm text-green-700 font-medium">{trackingInfo.delivered_date}</p>
+                    <div className="space-y-3">
+                      {/* Alerts */}
+                      {trackingInfo.alerts && trackingInfo.alerts.length > 0 && (
+                        <div className="space-y-2">
+                          {trackingInfo.alerts.map((alert, idx) => (
+                            <div 
+                              key={idx} 
+                              className={`rounded-lg p-3 border ${
+                                alert.type === 'error' 
+                                  ? 'bg-red-50 border-red-200 text-red-800' 
+                                  : 'bg-amber-50 border-amber-200 text-amber-800'
+                              }`}
+                            >
+                              <p className="text-sm font-medium">⚠️ {alert.message}</p>
+                            </div>
+                          ))}
                         </div>
                       )}
-                      {trackingInfo.estimated_delivery && !trackingInfo.delivered_date && (
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Estimated Delivery</p>
-                          <p className="text-sm text-slate-700">{trackingInfo.estimated_delivery}</p>
+                      
+                      <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Carrier</p>
+                            <p className="font-semibold text-slate-900">{trackingInfo.carrier || 'Unknown'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Status</p>
+                            <p className="font-semibold text-slate-900">{trackingInfo.status || 'Checking...'}</p>
+                          </div>
                         </div>
-                      )}
-                      {trackingInfo.latest_update && (
-                        <div>
-                          <p className="text-xs text-slate-500 mb-1">Latest Update</p>
-                          <p className="text-sm text-slate-700">{trackingInfo.latest_update}</p>
+                        {trackingInfo.location && (
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Current Location</p>
+                            <p className="text-sm text-slate-700 font-medium">{trackingInfo.location}</p>
+                          </div>
+                        )}
+                        {trackingInfo.delivered_date && (
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Delivered Date</p>
+                            <p className="text-sm text-green-700 font-medium">{trackingInfo.delivered_date}</p>
+                          </div>
+                        )}
+                        {trackingInfo.estimated_delivery && !trackingInfo.delivered_date && (
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Estimated Delivery</p>
+                            <p className="text-sm text-slate-700">{trackingInfo.estimated_delivery}</p>
+                          </div>
+                        )}
+                        {trackingInfo.latest_update && (
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Latest Update</p>
+                            <p className="text-sm text-slate-700">{trackingInfo.latest_update}</p>
+                          </div>
+                        )}
+                        <div className="pt-2 border-t border-slate-200">
+                          <p className="text-xs text-slate-500">Tracking #: {selectedOrder.tracking_number}</p>
                         </div>
-                      )}
-                      <div className="pt-2 border-t border-slate-200">
-                        <p className="text-xs text-slate-500">Tracking #: {selectedOrder.tracking_number}</p>
                       </div>
                     </div>
                   ) : (
