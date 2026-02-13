@@ -240,21 +240,19 @@ export default function Rewards() {
     return { amount: 0, type: 'cashback', currency: 'USD' };
   };
 
-  const handleCardChange = (cardId) => {
-    const card = creditCards.find(c => c.id === cardId);
+  const handleCardChange = (cardName) => {
+    const card = creditCards.find(c => c.card_name === cardName);
     if (card) {
-      const calculated = calculateReward(cardId, formData.purchase_amount);
+      const calculated = calculateReward(card.id, formData.purchase_amount);
       setFormData({
         ...formData,
-        credit_card_id: cardId,
+        credit_card_id: card.id,
         card_name: card.card_name,
         source: card.card_name,
         type: calculated.type,
         amount: calculated.amount,
         currency: calculated.currency
       });
-    } else {
-      setFormData({ ...formData, credit_card_id: cardId });
     }
   };
 

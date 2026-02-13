@@ -608,52 +608,55 @@ export default function PurchaseOrders() {
       setLoadingTracking(true);
       try {
         const tracking = await base44.integrations.Core.InvokeLLM({
-          prompt: `CRITICAL PACKAGE TRACKING TASK - You must visit the actual carrier website and get REAL tracking data.
+          prompt: `You MUST go to the actual carrier website RIGHT NOW and get the REAL LIVE tracking information. Do NOT give me old or cached data.
 
 Tracking Number: ${order.tracking_number}
+TODAY IS: ${format(new Date(), 'EEEE, MMMM d, yyyy')} (Thursday, February 13, 2026)
 
-STEP 1 - Identify the shipping carrier:
-- FedEx: 12-15 digits (often starts with 96/7/8 or patterns like 51164...)
-- UPS: 18 characters starting with "1Z"
-- USPS: 20-22 digits starting with 94/92/93, OR 13 chars like "EA...US"
-- Amazon: Starts with "TBA"
-- DHL: 10-11 digits
+STEP 1 - Identify carrier from tracking number format:
+- FedEx: 12 digits (like 511647419461)
+- UPS: 18 chars starting with "1Z"
+- USPS: 20-22 digits or 13 chars with letters
 
-STEP 2 - Visit the carrier's OFFICIAL tracking page:
-- For FedEx: Go to fedex.com/fedextrack and search "${order.tracking_number}"
-- For UPS: Go to ups.com/track and search "${order.tracking_number}"
-- For USPS: Go to tools.usps.com/go/TrackConfirmAction and search "${order.tracking_number}"
-- For Amazon: Search amazon.com order tracker
-- For DHL: Go to dhl.com tracking
+STEP 2 - GO TO THE CARRIER WEBSITE NOW:
+Visit fedex.com/fedextrack OR ups.com/track OR usps.com/track
+Search for tracking number: ${order.tracking_number}
 
-STEP 3 - Extract the EXACT current information shown on the page:
+STEP 3 - READ THE TRACKING PAGE:
+Look at the tracking timeline/history. The FIRST/TOP event is the MOST RECENT.
 
-Current Date: ${format(new Date(), 'EEEE, MMMM d, yyyy')}
+CRITICAL INSTRUCTIONS FOR LOCATION:
+- Read the VERY FIRST event in the tracking timeline (most recent)
+- That location is where the package is RIGHT NOW
+- Example: If the first event says "Arrived at FedEx location - KEASBY, NJ - Feb 12 3:43 PM"
+  Then location = "Keasby, NJ" (NOT Memphis, NOT Sacramento, NOT anywhere else)
+- The package has MOVED from earlier locations - only report current location
 
-IMPORTANT RULES:
-1. Look at the LATEST tracking event (the most recent scan/update)
-2. The "Current Location" should be from the MOST RECENT scan, not old scans
-3. If package shows "Delivered", status must say "Delivered"
-4. If "In Transit", get the current facility location from latest scan
-5. Get the exact estimated delivery date shown on the page
-6. Return ACTUAL information from the carrier site - don't make assumptions
+CRITICAL INSTRUCTIONS FOR STATUS:
+- If any event says "Delivered", status = "Delivered"
+- If latest event says package arrived somewhere, status = "In Transit"
+- If it says "Out for Delivery", status = "Out for Delivery"
 
-Example good responses:
-- If latest scan shows "Arrived at FedEx location - KEASBY, NJ" on Feb 12, location should be "Keasby, NJ"
-- If latest scan shows package left Memphis yesterday, don't say it's still in Memphis
-- Always use the MOST RECENT tracking event for location
+CRITICAL INSTRUCTIONS FOR DATES:
+- Look at the estimated delivery date shown on the page
+- If delivered, get the actual delivery date
 
-Return the actual current status from the carrier's website.`,
+DO NOT:
+- Report old locations (like where it was yesterday)
+- Make assumptions
+- Use cached data
+
+RETURN THE ACTUAL LIVE DATA FROM THE CARRIER SITE RIGHT NOW.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
             properties: {
-              carrier: { type: "string", description: "Carrier name: FedEx, UPS, USPS, etc." },
-              status: { type: "string", description: "Current delivery status (e.g., 'In Transit', 'Delivered', 'Out for Delivery')" },
-              location: { type: "string", description: "MOST RECENT location from latest tracking scan (city, state)" },
-              delivered_date: { type: "string", description: "Delivery date if already delivered" },
-              estimated_delivery: { type: "string", description: "Expected delivery date if not delivered" },
-              latest_update: { type: "string", description: "The most recent tracking event/scan with timestamp" }
+              carrier: { type: "string" },
+              status: { type: "string" },
+              location: { type: "string" },
+              delivered_date: { type: "string" },
+              estimated_delivery: { type: "string" },
+              latest_update: { type: "string" }
             }
           }
         });
