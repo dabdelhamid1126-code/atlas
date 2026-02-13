@@ -601,31 +601,39 @@ export default function PurchaseOrders() {
   const fetchTrackingWithRetry = async (trackingNumber, attempt = 1) => {
     const maxAttempts = 3;
     try {
-      const response = await fetch(`https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}`, {
-        headers: {
-          'Tracking-Api-Key': '5d8ad0f7-6e93-4883-bbdd-e19d64e51e56',
-          'Content-Type': 'application/json'
+      const tracking = await base44.integrations.Core.InvokeLLM({
+        prompt: `Call TrackingMore API to get tracking information:
+
+URL: https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}
+Headers:
+- Tracking-Api-Key: 5d8ad0f7-6e93-4883-bbdd-e19d64e51e56
+- Content-Type: application/json
+
+The response will have a "data" array. Use the first item (data[0]) and extract:
+- carrier: from carrier_code field (e.g., "fedex", "ups", "usps")
+- status: from delivery_status field (like "delivered", "transit", "pickup", etc.)
+- location: from origin_info.trackinfo[0].checkpoint_delivery_location (the FIRST item in trackinfo array is most recent)
+- delivered_date: from delivered_date field
+- estimated_delivery: from estimated_delivery_date field
+- latest_update: from origin_info.trackinfo[0].checkpoint_status (most recent event description)
+- last_scan_date: from origin_info.trackinfo[0].checkpoint_date (most recent scan time)
+
+Return the extracted data in JSON format.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            carrier: { type: "string" },
+            status: { type: "string" },
+            location: { type: "string" },
+            delivered_date: { type: "string" },
+            estimated_delivery: { type: "string" },
+            latest_update: { type: "string" },
+            last_scan_date: { type: "string" }
+          }
         }
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok || !data.data || data.data.length === 0) {
-        throw new Error('No tracking data found');
-      }
-      
-      const trackingData = data.data[0];
-      const latestEvent = trackingData.origin_info?.trackinfo?.[0];
-      
-      return {
-        carrier: trackingData.carrier_code || 'unknown',
-        status: trackingData.delivery_status || trackingData.substatus || 'unknown',
-        location: latestEvent?.checkpoint_delivery_location || latestEvent?.location || 'Unknown',
-        delivered_date: trackingData.delivered_date || null,
-        estimated_delivery: trackingData.estimated_delivery_date || null,
-        latest_update: latestEvent?.checkpoint_status || latestEvent?.status || 'No updates',
-        last_scan_date: latestEvent?.checkpoint_date || latestEvent?.time_iso || null
-      };
+      return tracking;
     } catch (error) {
       if (attempt < maxAttempts) {
         console.log(`Tracking attempt ${attempt} failed, retrying...`);
