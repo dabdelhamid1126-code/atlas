@@ -602,31 +602,26 @@ export default function PurchaseOrders() {
     const maxAttempts = 3;
     try {
       const tracking = await base44.integrations.Core.InvokeLLM({
-        prompt: `LIVE PACKAGE TRACKING - Visit the actual carrier website and scrape the current tracking details.
+        prompt: `You are calling the AfterShip API to get real package tracking information.
 
-Tracking Number: ${trackingNumber}
-Current Date/Time: ${format(new Date(), 'EEEE, MMMM d, yyyy h:mm a')}
+Make an HTTP GET request to AfterShip API:
+URL: https://api.aftership.com/v4/trackings/${trackingNumber}
+Headers: 
+- aftership-api-key: asat_3dc8e2e086b140479486922738c86d7a
+- Content-Type: application/json
 
-INSTRUCTIONS:
-1. Identify the carrier from the tracking number pattern
-2. Visit the carrier's official tracking page (fedex.com, ups.com, or usps.com)
-3. Look at the tracking timeline - the MOST RECENT event (usually at the top) shows where the package is NOW
+The API will return tracking data. Extract and return:
+- carrier (slug field, e.g., "fedex", "ups", "usps")
+- status (tag field, like "InTransit", "Delivered", "Exception")
+- location (from the most recent checkpoint's location field)
+- delivered_date (if status is Delivered)
+- estimated_delivery (expected_delivery field)
+- latest_update (most recent checkpoint's message and time)
+- last_scan_date (most recent checkpoint's checkpoint_time)
 
-CRITICAL - For Location:
-- Find the LATEST/NEWEST tracking event (most recent timestamp)
-- Extract ONLY that event's location
-- Do NOT report historical locations from earlier scans
-- Format: "City, State" from the most recent scan
+IMPORTANT: Look at the checkpoints array - the LAST item is the most recent tracking event. Get location from there.
 
-Example: 
-Timeline shows:
-- Feb 12, 3:43 PM - Arrived at FedEx location - KEASBY, NJ ← USE THIS (most recent)
-- Feb 7, 12:51 PM - Departed FedEx location - SACRAMENTO, CA ← IGNORE (old)
-- Feb 6, 4:12 PM - Picked up - FRESNO, CA ← IGNORE (old)
-
-Correct location = "Keasby, NJ" (from most recent event only)
-
-Return JSON with actual carrier data from the live tracking page.`,
+Return the tracking information in JSON format.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
@@ -645,7 +640,7 @@ Return JSON with actual carrier data from the live tracking page.`,
     } catch (error) {
       if (attempt < maxAttempts) {
         console.log(`Tracking attempt ${attempt} failed, retrying...`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return fetchTrackingWithRetry(trackingNumber, attempt + 1);
       }
       throw error;
