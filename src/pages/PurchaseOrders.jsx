@@ -608,49 +608,52 @@ export default function PurchaseOrders() {
       setLoadingTracking(true);
       try {
         const tracking = await base44.integrations.Core.InvokeLLM({
-          prompt: `Track this package and give me LIVE tracking info from the carrier's official website.
+          prompt: `You are a package tracking assistant. I need REAL, ACCURATE tracking information from the carrier's official website.
 
-Tracking #: ${order.tracking_number}
-Retailer: ${order.retailer}
+Tracking Number: ${order.tracking_number}
 
-Instructions:
-1. Identify the shipping carrier (FedEx, UPS, USPS, Amazon Logistics, DHL, etc.)
-2. Look up this tracking number on the carrier's official tracking page
-3. Extract the CURRENT status directly from their website
+STEP 1 - IDENTIFY CARRIER:
+- FedEx: 12-15 digits, typically starts with 96/7/8 or contains numeric patterns
+- UPS: 18 characters, starts with "1Z"
+- USPS: 20-22 digits starting with 94/92/93, OR 13 chars like "EA123456789US"
+- Amazon: TBA tracking numbers
+- DHL: 10-11 digit waybill
 
-Carrier identification:
-- FedEx: 12-15 digits, starts with 96/7/8/4/6
-- UPS: 18 chars starting with "1Z" 
-- USPS: 20-22 digits (94/92/93) or 13 chars (EA...US)
-- Amazon: TBA or AMZN tracking codes
-- DHL: 10-11 digits
+STEP 2 - GET OFFICIAL TRACKING DATA:
+Go to the carrier's official tracking website:
+- FedEx: fedex.com/fedextrack
+- UPS: ups.com/track
+- USPS: tools.usps.com/go/TrackConfirmAction
+- Amazon: amazon.com/progress-tracker
+- DHL: dhl.com/en/express/tracking.html
 
-Visit the official carrier website:
-- FedEx → fedex.com/fedextrack
-- UPS → ups.com/track  
-- USPS → tools.usps.com/go/TrackConfirmAction
-- Amazon → amazon.com/progress-tracker
+STEP 3 - EXTRACT EXACT INFORMATION:
+Return the ACTUAL status text shown on the carrier's website. Common statuses:
+- "Delivered" (if delivered - MUST use this word)
+- "Out for Delivery"
+- "In Transit"
+- "Arrived at Facility"
+- "Exception" / "Delayed"
+- "Label Created"
 
-Return EXACT information from the tracking page:
-- Carrier name
-- Current delivery status (exact text from website)
-- Current location or last scanned location
-- Delivered date (if delivered - must include actual date)
-- Estimated delivery (if not delivered yet)
-- Latest tracking update/event
+Today's date: ${format(new Date(), 'MMMM d, yyyy')}
 
-CRITICAL: If the package is delivered, the status field MUST say "Delivered" and include the delivery date.
-Today is ${format(new Date(), 'EEEE, MMMM d, yyyy')}.`,
+CRITICAL RULES:
+1. If package shows as delivered on carrier site, status MUST contain the word "Delivered"
+2. Use exact status text from carrier website, don't paraphrase
+3. If delivered, include the exact delivery date shown
+4. Get the most recent tracking event/update
+5. Return empty string if information not available, don't guess`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
             properties: {
-              carrier: { type: "string" },
-              status: { type: "string" },
-              location: { type: "string" },
-              delivered_date: { type: "string" },
-              estimated_delivery: { type: "string" },
-              latest_update: { type: "string" }
+              carrier: { type: "string", description: "Exact carrier name (FedEx, UPS, USPS, etc.)" },
+              status: { type: "string", description: "Exact delivery status from carrier website" },
+              location: { type: "string", description: "Current location or delivery location" },
+              delivered_date: { type: "string", description: "Actual delivery date if delivered (YYYY-MM-DD or readable format)" },
+              estimated_delivery: { type: "string", description: "Estimated delivery date if not yet delivered" },
+              latest_update: { type: "string", description: "Most recent tracking event from carrier" }
             }
           }
         });
@@ -938,16 +941,15 @@ Today is ${format(new Date(), 'EEEE, MMMM d, yyyy')}.`,
             </div>
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
-              <Select value={formData.credit_card_id ? creditCards.find(c => c.id === formData.credit_card_id)?.card_name : undefined} onValueChange={(cardName) => {
-                const card = creditCards.find(c => c.card_name === cardName);
-                setFormData({ ...formData, credit_card_id: card?.id || '' });
+              <Select value={formData.credit_card_id || undefined} onValueChange={(v) => {
+                setFormData({ ...formData, credit_card_id: v });
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
                   {creditCards.filter(c => c.active && (issuerFilter === 'all' || c.issuer === issuerFilter)).map(card => (
-                    <SelectItem key={card.id} value={card.card_name}>
+                    <SelectItem key={card.id} value={card.id}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
                       {card.reward_type === 'points' && `${card.points_rate}x pts`}
                       {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
