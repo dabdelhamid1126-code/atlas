@@ -602,23 +602,45 @@ export default function PurchaseOrders() {
     const maxAttempts = 3;
     try {
       const tracking = await base44.integrations.Core.InvokeLLM({
-        prompt: `Call TrackingMore API to get tracking information:
+        prompt: `Make an API call to TrackingMore to get package tracking data:
 
-URL: https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}
+API Endpoint: GET https://api.trackingmore.com/v4/trackings/get?tracking_number=${trackingNumber}
 Headers:
-- Tracking-Api-Key: 5d8ad0f7-6e93-4883-bbdd-e19d64e51e56
-- Content-Type: application/json
+  Tracking-Api-Key: 5d8ad0f7-6e93-4883-bbdd-e19d64e51e56
+  Content-Type: application/json
 
-The response will have a "data" array. Use the first item (data[0]) and extract:
-- carrier: from carrier_code field (e.g., "fedex", "ups", "usps")
-- status: from delivery_status field (like "delivered", "transit", "pickup", etc.)
-- location: from origin_info.trackinfo[0].checkpoint_delivery_location (the FIRST item in trackinfo array is most recent)
-- delivered_date: from delivered_date field
-- estimated_delivery: from estimated_delivery_date field
-- latest_update: from origin_info.trackinfo[0].checkpoint_status (most recent event description)
-- last_scan_date: from origin_info.trackinfo[0].checkpoint_date (most recent scan time)
+The API returns JSON with this structure:
+{
+  "data": [
+    {
+      "carrier_code": "fedex",
+      "delivery_status": "delivered",
+      "substatus": "delivered",
+      "delivered_date": "2026-02-12",
+      "estimated_delivery_date": "2026-02-14",
+      "origin_info": {
+        "trackinfo": [
+          {
+            "checkpoint_date": "2026-02-12T14:00:00",
+            "checkpoint_status": "Package delivered to front door",
+            "checkpoint_delivery_location": "New York, NY"
+          }
+        ]
+      }
+    }
+  ]
+}
 
-Return the extracted data in JSON format.`,
+Extract from data[0] (first tracking result):
+- carrier: data[0].carrier_code (convert to uppercase, e.g., "FEDEX")
+- status: data[0].delivery_status (e.g., "delivered", "transit", "pickup")
+- location: data[0].origin_info.trackinfo[0].checkpoint_delivery_location (FIRST item is latest)
+- delivered_date: data[0].delivered_date (if available)
+- estimated_delivery: data[0].estimated_delivery_date (if available)
+- latest_update: data[0].origin_info.trackinfo[0].checkpoint_status (latest event)
+- last_scan_date: data[0].origin_info.trackinfo[0].checkpoint_date (latest scan)
+
+Return as JSON with these exact field names.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
@@ -633,8 +655,20 @@ Return the extracted data in JSON format.`,
           }
         }
       });
-      return tracking;
+      
+      console.log('Tracking response:', tracking);
+      
+      return {
+        carrier: tracking.carrier?.toUpperCase() || 'Unknown',
+        status: tracking.status || 'checking',
+        location: tracking.location || 'Unknown location',
+        delivered_date: tracking.delivered_date || null,
+        estimated_delivery: tracking.estimated_delivery || null,
+        latest_update: tracking.latest_update || 'No recent updates',
+        last_scan_date: tracking.last_scan_date || null
+      };
     } catch (error) {
+      console.error('Tracking error:', error);
       if (attempt < maxAttempts) {
         console.log(`Tracking attempt ${attempt} failed, retrying...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
