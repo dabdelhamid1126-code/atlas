@@ -677,13 +677,21 @@ export default function Rewards() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Credit Card</Label>
-              <Select value={formData.credit_card_id} onValueChange={handleCardChange}>
+              <Select 
+                value={formData.credit_card_id ? creditCards.find(c => c.id === formData.credit_card_id)?.card_name : ''} 
+                onValueChange={(cardName) => {
+                  const card = creditCards.find(c => c.card_name === cardName);
+                  if (card) {
+                    handleCardChange(card.id);
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
                   {creditCards.filter(c => c.active).map(card => (
-                    <SelectItem key={card.id} value={card.id}>
+                    <SelectItem key={card.id} value={card.card_name}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}% cashback`}
                       {card.reward_type === 'points' && `${card.points_rate}x points`}
                       {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
