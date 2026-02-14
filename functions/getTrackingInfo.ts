@@ -2,12 +2,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
-    const apiKey = Deno.env.get('PARCELSAPP_API_KEY');
+    const apiKey = Deno.env.get('PARCELAPP_API_KEY');
     
     if (!apiKey) {
       return Response.json({ 
         success: false,
-        error: 'PARCELSAPP_API_KEY not configured in app secrets'
+        error: 'PARCELAPP_API_KEY not configured in app secrets'
       }, { status: 500 });
     }
     
