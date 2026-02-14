@@ -21,18 +21,13 @@ Deno.serve(async (req) => {
     }
     
     // Call ParcelsApp API
-    const url = 'https://parcelsapp.com/api/v3/shipments/tracking';
+    const url = `https://parcelsapp.com/api/v3/shipments/tracking?trackingId=${tracking_number}&apiKey=${apiKey}`;
     
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        trackingId: tracking_number,
-        language: 'en'
-      })
+      }
     });
     
     if (!response.ok) {
