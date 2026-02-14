@@ -2,12 +2,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
-    const apiKey = Deno.env.get('TRACKINGMORE_API_KEY');
+    const apiKey = Deno.env.get('PARCELSAPP_API_KEY');
     
     if (!apiKey) {
       return Response.json({ 
         success: false,
-        error: 'TRACKINGMORE_API_KEY not configured in app secrets'
+        error: 'PARCELSAPP_API_KEY not configured in app secrets'
       }, { status: 500 });
     }
     
@@ -20,63 +20,52 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
     
-    // Call TrackingMore API - create tracking first, then get it
-    const createUrl = 'https://api.trackingmore.com/v4/trackings/create';
+    // Call ParcelsApp API
+    const url = 'https://parcelsapp.com/api/v3/shipments/tracking';
     
-    // Try to create/register the tracking
-    await fetch(createUrl, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Tracking-Api-Key': apiKey,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        tracking_number: tracking_number,
-        carrier_code: carrier?.toLowerCase() || 'auto'
+        trackingId: tracking_number,
+        language: 'en'
       })
-    });
-    
-    // Now fetch the tracking info
-    const url = `https://api.trackingmore.com/v4/trackings/get?tracking_numbers=${encodeURIComponent(tracking_number)}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Tracking-Api-Key': apiKey,
-        'Content-Type': 'application/json'
-      }
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('TrackingMore API error:', response.status, errorText);
+      console.error('ParcelsApp API error:', response.status, errorText);
       return Response.json({ 
         success: false,
-        error: `TrackingMore API error: ${response.status}` 
+        error: `ParcelsApp API error: ${response.status}` 
       }, { status: 500 });
     }
     
     const data = await response.json();
     
-    if (!data.data || data.data.length === 0) {
+    if (!data || !data.trackingId) {
       return Response.json({
         success: false,
         error: 'No tracking information found for this tracking number'
       }, { status: 404 });
     }
     
-    const trackingData = data.data[0];
-    const latestEvent = trackingData.origin_info?.trackinfo?.[0];
+    const latestCheckpoint = data.checkpoints && data.checkpoints.length > 0 
+      ? data.checkpoints[data.checkpoints.length - 1] 
+      : null;
     
     return Response.json({
       success: true,
-      carrier: trackingData.carrier_code?.toUpperCase() || carrier?.toUpperCase() || 'UNKNOWN',
-      status: trackingData.delivery_status || trackingData.substatus || 'unknown',
-      location: latestEvent?.checkpoint_delivery_location || latestEvent?.checkpoint_delivery_city || 'Unknown location',
-      delivered_date: trackingData.delivered_date || null,
-      estimated_delivery: trackingData.estimated_delivery_date || null,
-      latest_update: latestEvent?.checkpoint_status || 'No recent updates',
-      last_scan_date: latestEvent?.checkpoint_date || null,
+      carrier: data.courier?.name || carrier?.toUpperCase() || 'UNKNOWN',
+      status: data.status || 'unknown',
+      location: latestCheckpoint?.location || 'Unknown location',
+      delivered_date: data.deliveredAt || null,
+      estimated_delivery: data.eta || null,
+      latest_update: latestCheckpoint?.message || 'No recent updates',
+      last_scan_date: latestCheckpoint?.date || null,
       tracking_number: tracking_number
     });
     

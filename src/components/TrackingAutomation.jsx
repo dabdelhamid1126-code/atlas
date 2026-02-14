@@ -17,33 +17,18 @@ export default function TrackingAutomation() {
           });
           
           if (existingShipments.length === 0) {
-            // Register with TrackingMore API
+            // Create shipment record (ParcelsApp tracks automatically)
             try {
-              const response = await fetch('https://api.trackingmore.com/v4/trackings/create', {
-                method: 'POST',
-                headers: {
-                  'Tracking-Api-Key': '5d8ad0f7-6e93-4883-bbdd-e19d64e51e56',
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  tracking_number: order.tracking_number,
-                  carrier_code: 'auto'
-                })
+              await base44.entities.Shipment.create({
+                purchase_order_id: order.id,
+                order_number: order.order_number,
+                tracking_number: order.tracking_number,
+                carrier: order.carrier || 'auto-detected',
+                status: 'tracking',
+                last_update: new Date().toISOString()
               });
-
-              if (response.ok) {
-                // Create shipment record
-                await base44.entities.Shipment.create({
-                  purchase_order_id: order.id,
-                  order_number: order.order_number,
-                  tracking_number: order.tracking_number,
-                  carrier: 'auto-detected',
-                  status: 'registered',
-                  last_update: new Date().toISOString()
-                });
-                
-                toast.success(`Tracking registered: ${order.tracking_number}`);
-              }
+              
+              toast.success(`Tracking registered: ${order.tracking_number}`);
             } catch (error) {
               console.error('Failed to register tracking:', error);
             }
