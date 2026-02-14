@@ -34,23 +34,16 @@ Deno.serve(async (req) => {
         const courierCode = carrier ? carrier.toLowerCase() : 'fedex';
         console.log(`Using courier code: ${courierCode}`);
 
-        // Call TrackingMore API (POST to realtime endpoint)
-        const url = 'https://api.trackingmore.com/v4/trackings/realtime';
+        // Call TrackingMore API - GET single tracking
+        const url = `https://api.trackingmore.com/v4/trackings/get?courier_code=${courierCode}&tracking_number=${tracking_number}`;
         console.log(`Calling TrackingMore API: ${url}`);
         
-        const requestBody = {
-            tracking_number: tracking_number,
-            courier_code: courierCode
-        };
-        console.log(`Request body:`, JSON.stringify(requestBody, null, 2));
-        
         const response = await fetch(url, {
-            method: 'POST',
+            method: 'GET',
             headers: {
                 'Tracking-Api-Key': apiKey,
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
+            }
         });
 
         console.log(`API response status: ${response.status}`);
