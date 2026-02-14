@@ -20,8 +20,24 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
     
-    // Call TrackingMore API
-    const url = `https://api.trackingmore.com/v4/trackings/get?tracking_number=${encodeURIComponent(tracking_number)}`;
+    // Call TrackingMore API - create tracking first, then get it
+    const createUrl = 'https://api.trackingmore.com/v4/trackings/create';
+    
+    // Try to create/register the tracking
+    await fetch(createUrl, {
+      method: 'POST',
+      headers: {
+        'Tracking-Api-Key': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tracking_number: tracking_number,
+        carrier_code: carrier?.toLowerCase() || 'auto'
+      })
+    });
+    
+    // Now fetch the tracking info
+    const url = `https://api.trackingmore.com/v4/trackings/get?tracking_numbers=${encodeURIComponent(tracking_number)}`;
     
     const response = await fetch(url, {
       method: 'GET',
