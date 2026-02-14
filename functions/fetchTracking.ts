@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
         console.log(`Using courier code: ${courierCode}`);
 
         // Call TrackingMore API - GET single tracking
-        const url = `https://api.trackingmore.com/v4/trackings/get?courier_code=${courierCode}&tracking_number=${tracking_number}`;
+        const url = `https://api.trackingmore.com/v4/trackings/get?tracking_numbers=${tracking_number}`;
         console.log(`Calling TrackingMore API: ${url}`);
         
         const response = await fetch(url, {
