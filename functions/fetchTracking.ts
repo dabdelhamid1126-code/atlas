@@ -63,16 +63,23 @@ Deno.serve(async (req) => {
             console.error('Failed to parse create response:', e);
         }
 
-        // Step 2: Get tracking details
-        const url = `https://api.trackingmore.com/v4/trackings/get?tracking_numbers=${tracking_number}`;
-        console.log(`Getting tracking details: ${url}`);
+        // Step 2: Get realtime tracking data
+        const realtimeUrl = 'https://api.trackingmore.com/v4/trackings/realtime';
+        console.log(`Getting realtime tracking: ${realtimeUrl}`);
         
-        const response = await fetch(url, {
-            method: 'GET',
+        const realtimeBody = {
+            tracking_number: tracking_number,
+            courier_code: courierCode
+        };
+        console.log(`Realtime request body:`, JSON.stringify(realtimeBody, null, 2));
+        
+        const response = await fetch(realtimeUrl, {
+            method: 'POST',
             headers: {
                 'Tracking-Api-Key': apiKey,
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify(realtimeBody)
         });
 
         console.log(`API response status: ${response.status}`);
