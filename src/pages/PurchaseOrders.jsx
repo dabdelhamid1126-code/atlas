@@ -22,9 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Pencil, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
+import { detectCarrier } from '@/components/utils/carrierDetection';
 
 const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'received', 'cancelled'];
 
@@ -41,6 +42,7 @@ export default function PurchaseOrders() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [detectedCarrier, setDetectedCarrier] = useState('');
   const [formData, setFormData] = useState({
     order_number: '',
     tracking_number: '',
@@ -441,6 +443,8 @@ export default function PurchaseOrders() {
   const openDialog = (order = null) => {
     if (order) {
       setEditingOrder(order);
+      const detectedCar = order.tracking_number ? detectCarrier(order.tracking_number) : '';
+      setDetectedCarrier(detectedCar);
       setFormData({
         order_number: order.order_number || '',
         tracking_number: order.tracking_number || '',
@@ -464,6 +468,7 @@ export default function PurchaseOrders() {
       });
     } else {
       setEditingOrder(null);
+      setDetectedCarrier('');
       setFormData({
         order_number: '',
         tracking_number: '',
@@ -786,9 +791,29 @@ export default function PurchaseOrders() {
                 <Label>Tracking Number</Label>
                 <Input
                   value={formData.tracking_number}
-                  onChange={(e) => setFormData({ ...formData, tracking_number: e.target.value })}
+                  onChange={(e) => {
+                    const trackingNum = e.target.value;
+                    const detected = detectCarrier(trackingNum);
+                    setDetectedCarrier(detected);
+                    setFormData({ ...formData, tracking_number: trackingNum, carrier: detected.toLowerCase() });
+                  }}
                   placeholder="Tracking number"
                 />
+                {formData.tracking_number && (
+                  <div className="flex items-center gap-2 text-sm">
+                    {detectedCarrier !== 'unknown' ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="text-green-700">Carrier: {detectedCarrier} (auto-detected)</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <span className="text-amber-700">Carrier: Unknown - please verify tracking number</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -1316,9 +1341,16 @@ export default function PurchaseOrders() {
                       size="sm"
                       onClick={async () => {
                         try {
+                          // Auto-detect carrier if missing or unknown
+                          let carrierToUse = selectedOrder.carrier;
+                          if (!carrierToUse || carrierToUse === 'unknown') {
+                            carrierToUse = detectCarrier(selectedOrder.tracking_number).toLowerCase();
+                            console.log(`Auto-detected carrier: ${carrierToUse}`);
+                          }
+                          
                           const { data } = await base44.functions.invoke('fetchTracking', {
                             tracking_number: selectedOrder.tracking_number,
-                            carrier: selectedOrder.carrier
+                            carrier: carrierToUse
                           });
                           
                           // Determine new order status based on tracking
@@ -1333,12 +1365,12 @@ export default function PurchaseOrders() {
                             newStatus = 'shipped'; // Keep as shipped but with issue flag
                           }
                           
-                          // Update order with tracking info
+                          // Update order with tracking info (including detected carrier)
                           await base44.entities.PurchaseOrder.update(selectedOrder.id, {
                             tracking_status: data.status,
                             tracking_location: data.current_location,
                             delivered_date: data.delivered_date,
-                            carrier: data.carrier,
+                            carrier: data.carrier.toLowerCase(),
                             status: newStatus
                           });
                           
@@ -1351,7 +1383,7 @@ export default function PurchaseOrders() {
                             tracking_status: data.status,
                             tracking_location: data.current_location,
                             delivered_date: data.delivered_date,
-                            carrier: data.carrier,
+                            carrier: data.carrier.toLowerCase(),
                             status: newStatus
                           });
                           
@@ -1373,7 +1405,12 @@ export default function PurchaseOrders() {
                     </div>
                     <div>
                       <Label className="text-slate-500 text-xs">Carrier</Label>
-                      <p className="font-semibold text-sm mt-1 uppercase">{selectedOrder.carrier || 'N/A'}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="font-semibold text-sm uppercase">{selectedOrder.carrier || 'N/A'}</p>
+                        {selectedOrder.carrier && selectedOrder.carrier !== 'unknown' && (
+                          <span className="text-xs text-green-600">(auto-detected)</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
