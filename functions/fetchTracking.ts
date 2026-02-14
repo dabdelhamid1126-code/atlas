@@ -30,16 +30,27 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
 
-        // Call TrackingMore API
-        const url = `https://api.trackingmore.com/v4/trackings/get?tracking_number=${tracking_number}`;
+        // Convert carrier to lowercase courier code
+        const courierCode = carrier ? carrier.toLowerCase() : 'fedex';
+        console.log(`Using courier code: ${courierCode}`);
+
+        // Call TrackingMore API (POST to realtime endpoint)
+        const url = 'https://api.trackingmore.com/v4/trackings/realtime';
         console.log(`Calling TrackingMore API: ${url}`);
         
+        const requestBody = {
+            tracking_number: tracking_number,
+            courier_code: courierCode
+        };
+        console.log(`Request body:`, JSON.stringify(requestBody, null, 2));
+        
         const response = await fetch(url, {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Tracking-Api-Key': apiKey,
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify(requestBody)
         });
 
         console.log(`API response status: ${response.status}`);
@@ -87,15 +98,16 @@ Deno.serve(async (req) => {
         const trackingInfo = data.data;
         console.log(`Tracking info extracted:`, JSON.stringify(trackingInfo, null, 2));
         
-        // Get the latest event for current location
+        // Extract latest status and event based on TrackingMore API structure
+        const latestStatus = trackingInfo.latest_status || {};
         const latestEvent = trackingInfo.latest_event || {};
         
         const result = {
-            carrier: trackingInfo.carrier_code || carrier || 'Unknown',
-            status: trackingInfo.delivery_status || trackingInfo.substatus || 'Unknown',
-            current_location: latestEvent.location || trackingInfo.origin_country || 'N/A',
+            carrier: trackingInfo.courier_code || carrier || 'Unknown',
+            status: latestStatus.status || trackingInfo.delivery_status || 'Unknown',
+            current_location: latestEvent.location || 'N/A',
             delivered_date: trackingInfo.delivered_date || null,
-            latest_update: latestEvent.description || latestEvent.stage || 'No updates available',
+            latest_update: latestEvent.description || latestEvent.status || 'No updates available',
             tracking_number: trackingInfo.tracking_number || tracking_number
         };
         
