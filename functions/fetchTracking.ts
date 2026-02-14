@@ -31,47 +31,18 @@ Deno.serve(async (req) => {
         }
 
         // Convert carrier to lowercase courier code
-        const courierCode = carrier ? carrier.toLowerCase() : 'fedex';
+        const courierCode = carrier ? carrier.toLowerCase() : 'ups';
         console.log(`Using courier code: ${courierCode}`);
 
-        // Step 1: Create tracking (or get existing)
-        const createUrl = 'https://api.trackingmore.com/v4/trackings/create';
-        console.log(`Creating/updating tracking: ${createUrl}`);
-        
-        const createBody = {
-            tracking_number: tracking_number,
-            courier_code: courierCode
-        };
-        console.log(`Create request body:`, JSON.stringify(createBody, null, 2));
-        
-        const createResponse = await fetch(createUrl, {
-            method: 'POST',
-            headers: {
-                'Tracking-Api-Key': apiKey,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(createBody)
-        });
-
-        const createResponseText = await createResponse.text();
-        console.log(`Create API response: ${createResponseText}`);
-        
-        let createData;
-        try {
-            createData = JSON.parse(createResponseText);
-        } catch (e) {
-            console.error('Failed to parse create response:', e);
-        }
-
-        // Step 2: Get realtime tracking data
+        // Use Realtime Query API for instant results
         const realtimeUrl = 'https://api.trackingmore.com/v4/trackings/realtime';
-        console.log(`Getting realtime tracking: ${realtimeUrl}`);
+        console.log(`Calling Realtime API: ${realtimeUrl}`);
         
-        const realtimeBody = {
+        const requestBody = {
             tracking_number: tracking_number,
             courier_code: courierCode
         };
-        console.log(`Realtime request body:`, JSON.stringify(realtimeBody, null, 2));
+        console.log(`Request body:`, JSON.stringify(requestBody, null, 2));
         
         const response = await fetch(realtimeUrl, {
             method: 'POST',
@@ -79,7 +50,7 @@ Deno.serve(async (req) => {
                 'Tracking-Api-Key': apiKey,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(realtimeBody)
+            body: JSON.stringify(requestBody)
         });
 
         console.log(`API response status: ${response.status}`);
@@ -119,39 +90,45 @@ Deno.serve(async (req) => {
         if (!data.data) {
             console.log('Error: data.data is missing from response');
             return Response.json({ 
-                error: 'No tracking data in API response',
+                error: 'Tracking information not available yet. The package may not be in transit.',
                 received: data
             }, { status: 404 });
         }
 
-        // data.data is an array, get the first item
-        const trackingInfo = Array.isArray(data.data) ? data.data[0] : data.data;
-        console.log(`Tracking info extracted:`, JSON.stringify(trackingInfo, null, 2));
+        const trackingInfo = data.data;
+        console.log(`Tracking info:`, JSON.stringify(trackingInfo, null, 2));
         
         if (!trackingInfo) {
-            console.log('Error: No tracking data in array');
+            console.log('Error: No tracking data');
             return Response.json({ 
-                error: 'No tracking information found',
+                error: 'No tracking information found for this package',
                 received: data
             }, { status: 404 });
         }
 
-        // Parse latest_event string (format: "event,location,date")
-        const latestEventStr = trackingInfo.latest_event || '';
-        const eventParts = latestEventStr.split(',');
-        const eventDescription = eventParts[0] || 'No updates available';
-        const eventLocation = eventParts[1] || 'N/A';
+        // Get latest tracking event from origin_info.trackinfo array
+        const trackingEvents = trackingInfo.origin_info?.trackinfo || [];
+        const latestEvent = trackingEvents.length > 0 ? trackingEvents[0] : null;
         
-        // Get delivery date from origin_info.milestone_date
-        const milestoneDate = trackingInfo.origin_info?.milestone_date;
-        const deliveryDate = milestoneDate?.delivery_date || null;
+        // Extract tracking details
+        const currentLocation = latestEvent?.Details || 'N/A';
+        const latestUpdate = latestEvent?.StatusDescription || 'No updates available';
+        
+        // Find delivered date if status is delivered
+        let deliveredDate = null;
+        if (trackingInfo.delivery_status === 'delivered') {
+            const deliveredEvent = trackingEvents.find(e => 
+                e.StatusDescription?.toLowerCase().includes('delivered')
+            );
+            deliveredDate = deliveredEvent?.Date || null;
+        }
         
         const result = {
             carrier: (trackingInfo.courier_code || carrier || 'unknown').toUpperCase(),
-            status: trackingInfo.delivery_status || 'unknown',
-            current_location: eventLocation.trim(),
-            delivered_date: deliveryDate ? deliveryDate.split('T')[0] : null,
-            latest_update: eventDescription.trim(),
+            status: trackingInfo.delivery_status || 'pending',
+            current_location: currentLocation,
+            delivered_date: deliveredDate,
+            latest_update: latestUpdate,
             tracking_number: trackingInfo.tracking_number || tracking_number
         };
         
