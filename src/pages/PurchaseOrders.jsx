@@ -1279,7 +1279,7 @@ export default function PurchaseOrders() {
 
       {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
           </DialogHeader>
@@ -1307,11 +1307,102 @@ export default function PurchaseOrders() {
                 </div>
               </div>
               
-              {/* Tracking Number */}
+              {/* Live Tracking Status */}
               {selectedOrder.tracking_number && (
-                <div className="pb-4 border-b">
-                  <Label className="text-slate-500 text-sm">Tracking Number</Label>
-                  <p className="font-mono text-sm mt-1">{selectedOrder.tracking_number}</p>
+                <div className="pb-4 border-b bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-slate-900 font-semibold text-base">📦 Live Tracking Status</Label>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const { data } = await base44.functions.invoke('fetchTracking', {
+                            tracking_number: selectedOrder.tracking_number,
+                            carrier: selectedOrder.carrier
+                          });
+                          
+                          // Determine new order status based on tracking
+                          let newStatus = selectedOrder.status;
+                          const trackingStatus = data.status?.toLowerCase();
+                          
+                          if (trackingStatus?.includes('delivered')) {
+                            newStatus = 'received';
+                          } else if (trackingStatus?.includes('transit') || trackingStatus?.includes('out_for_delivery')) {
+                            newStatus = 'shipped';
+                          } else if (trackingStatus?.includes('exception') || trackingStatus?.includes('failed')) {
+                            newStatus = 'shipped'; // Keep as shipped but with issue flag
+                          }
+                          
+                          // Update order with tracking info
+                          await base44.entities.PurchaseOrder.update(selectedOrder.id, {
+                            tracking_status: data.status,
+                            tracking_location: data.current_location,
+                            delivered_date: data.delivered_date,
+                            carrier: data.carrier,
+                            status: newStatus
+                          });
+                          
+                          // Refresh data
+                          queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+                          
+                          // Update selected order
+                          setSelectedOrder({
+                            ...selectedOrder,
+                            tracking_status: data.status,
+                            tracking_location: data.current_location,
+                            delivered_date: data.delivered_date,
+                            carrier: data.carrier,
+                            status: newStatus
+                          });
+                          
+                          toast.success('Tracking information updated');
+                        } catch (error) {
+                          toast.error(error.response?.data?.error || 'Failed to fetch tracking information');
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      🔄 Refresh Tracking
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-slate-500 text-xs">Tracking Number</Label>
+                      <p className="font-mono text-sm mt-1">{selectedOrder.tracking_number}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-500 text-xs">Carrier</Label>
+                      <p className="font-semibold text-sm mt-1 uppercase">{selectedOrder.carrier || 'N/A'}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedOrder.tracking_status && (
+                    <>
+                      <div>
+                        <Label className="text-slate-500 text-xs">Status</Label>
+                        <p className="font-semibold text-sm mt-1 capitalize">{selectedOrder.tracking_status.replace(/_/g, ' ')}</p>
+                      </div>
+                      
+                      {selectedOrder.tracking_location && (
+                        <div>
+                          <Label className="text-slate-500 text-xs">Current Location</Label>
+                          <p className="text-sm mt-1">{selectedOrder.tracking_location}</p>
+                        </div>
+                      )}
+                      
+                      {selectedOrder.delivered_date && (
+                        <div>
+                          <Label className="text-slate-500 text-xs">Delivered Date</Label>
+                          <p className="text-sm mt-1 font-semibold text-green-700">{format(parseISO(selectedOrder.delivered_date), 'MMM d, yyyy')}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  
+                  {!selectedOrder.tracking_status && (
+                    <p className="text-sm text-slate-500 italic">Click "Refresh Tracking" to get live tracking information</p>
+                  )}
                 </div>
               )}
               <div className="pb-4">
