@@ -117,19 +117,34 @@ Deno.serve(async (req) => {
             }, { status: 404 });
         }
 
-        const trackingInfo = data.data;
+        // data.data is an array, get the first item
+        const trackingInfo = Array.isArray(data.data) ? data.data[0] : data.data;
         console.log(`Tracking info extracted:`, JSON.stringify(trackingInfo, null, 2));
         
-        // Extract latest status and event based on TrackingMore API structure
-        const latestStatus = trackingInfo.latest_status || {};
-        const latestEvent = trackingInfo.latest_event || {};
+        if (!trackingInfo) {
+            console.log('Error: No tracking data in array');
+            return Response.json({ 
+                error: 'No tracking information found',
+                received: data
+            }, { status: 404 });
+        }
+
+        // Parse latest_event string (format: "event,location,date")
+        const latestEventStr = trackingInfo.latest_event || '';
+        const eventParts = latestEventStr.split(',');
+        const eventDescription = eventParts[0] || 'No updates available';
+        const eventLocation = eventParts[1] || 'N/A';
+        
+        // Get delivery date from origin_info.milestone_date
+        const milestoneDate = trackingInfo.origin_info?.milestone_date;
+        const deliveryDate = milestoneDate?.delivery_date || null;
         
         const result = {
-            carrier: trackingInfo.courier_code || carrier || 'Unknown',
-            status: latestStatus.status || trackingInfo.delivery_status || 'Unknown',
-            current_location: latestEvent.location || 'N/A',
-            delivered_date: trackingInfo.delivered_date || null,
-            latest_update: latestEvent.description || latestEvent.status || 'No updates available',
+            carrier: (trackingInfo.courier_code || carrier || 'unknown').toUpperCase(),
+            status: trackingInfo.delivery_status || 'unknown',
+            current_location: eventLocation.trim(),
+            delivered_date: deliveryDate ? deliveryDate.split('T')[0] : null,
+            latest_update: eventDescription.trim(),
             tracking_number: trackingInfo.tracking_number || tracking_number
         };
         
