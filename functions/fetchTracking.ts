@@ -98,26 +98,16 @@ Deno.serve(async (req) => {
             }, { status: 404 });
         }
 
-        // Get latest tracking event from origin_info.trackinfo array
-        const trackingEvents = trackingInfo.origin_info?.trackinfo || [];
-        const latestEvent = trackingEvents.length > 0 ? trackingEvents[0] : null;
-        
-        // Extract tracking details
-        const currentLocation = latestEvent?.Details || 'N/A';
-        const latestUpdate = latestEvent?.StatusDescription || 'No updates available';
-        
-        // Find delivered date if status is delivered
-        let deliveredDate = null;
-        if (trackingInfo.delivery_status === 'delivered') {
-            const deliveredEvent = trackingEvents.find(e => 
-                e.StatusDescription?.toLowerCase().includes('delivered')
-            );
-            deliveredDate = deliveredEvent?.Date || null;
-        }
+        // Extract tracking details (same structure for all carriers)
+        const status = trackingInfo.latest_status?.status || trackingInfo.delivery_status || 'pending';
+        const latestEvent = trackingInfo.latest_event || {};
+        const currentLocation = latestEvent.location || latestEvent.description || 'N/A';
+        const latestUpdate = latestEvent.description || 'No updates available';
+        const deliveredDate = trackingInfo.delivery_date || null;
         
         const result = {
             carrier: (trackingInfo.courier_code || carrier || 'unknown').toUpperCase(),
-            status: trackingInfo.delivery_status || 'pending',
+            status: status,
             current_location: currentLocation,
             delivered_date: deliveredDate,
             latest_update: latestUpdate,
