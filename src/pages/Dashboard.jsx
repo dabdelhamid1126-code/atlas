@@ -247,12 +247,7 @@ export default function Dashboard() {
     }
   };
 
-  const quickLinks = [
-    { name: 'Scan & Receive', page: 'ScanReceive', icon: Package, gradient: 'from-blue-500 to-indigo-600' },
-    { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp, gradient: 'from-emerald-500 to-teal-600' },
-    { name: 'New Invoice', page: 'Invoices', icon: FileText, gradient: 'from-violet-500 to-purple-600' },
-    { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard, gradient: 'from-orange-500 to-red-600' },
-  ];
+
 
   if (loading) {
     return (

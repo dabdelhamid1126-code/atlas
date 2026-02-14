@@ -47,14 +47,9 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import ActivityLog from './pages/ActivityLog';
 import Analytics from './pages/Analytics';
-import DamagedItems from './pages/DamagedItems';
 import Dashboard from './pages/Dashboard';
-import DelayedOrders from './pages/DelayedOrders';
 import EmailImport from './pages/EmailImport';
-import Exports from './pages/Exports';
-import FixReceiving from './pages/FixReceiving';
 import GiftCards from './pages/GiftCards';
 import Inventory from './pages/Inventory';
 import InventoryValue from './pages/InventoryValue';
@@ -64,21 +59,13 @@ import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
 import Rewards from './pages/Rewards';
-import ScanReceive from './pages/ScanReceive';
-import SerialNumbers from './pages/SerialNumbers';
-import UserGuide from './pages/UserGuide';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "ActivityLog": ActivityLog,
     "Analytics": Analytics,
-    "DamagedItems": DamagedItems,
     "Dashboard": Dashboard,
-    "DelayedOrders": DelayedOrders,
     "EmailImport": EmailImport,
-    "Exports": Exports,
-    "FixReceiving": FixReceiving,
     "GiftCards": GiftCards,
     "Inventory": Inventory,
     "InventoryValue": InventoryValue,
@@ -88,9 +75,6 @@ export const PAGES = {
     "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,
     "Rewards": Rewards,
-    "ScanReceive": ScanReceive,
-    "SerialNumbers": SerialNumbers,
-    "UserGuide": UserGuide,
 }
 
 export const pagesConfig = {
