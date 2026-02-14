@@ -671,17 +671,7 @@ export default function PurchaseOrders() {
     }
   };
 
-  // Auto-refresh tracking every 30 minutes
-  React.useEffect(() => {
-    if (!detailsOpen || !selectedOrder?.tracking_number) return;
-    if (selectedOrder?.status === 'received' || selectedOrder?.tracking_status?.toLowerCase() === 'delivered') return;
-    
-    const interval = setInterval(() => {
-      fetchTrackingData(selectedOrder);
-    }, 30 * 60 * 1000); // 30 minutes
-    
-    return () => clearInterval(interval);
-  }, [detailsOpen, selectedOrder]);
+
 
   const handleDelete = async (order) => {
     if (confirm('Are you sure you want to delete this purchase order?')) {
@@ -1414,21 +1404,34 @@ export default function PurchaseOrders() {
                 <div className="pb-4 border-b bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-slate-900 font-semibold text-base">📦 Live Tracking Status</Label>
-                    <Button
-                      size="sm"
-                      onClick={() => fetchTrackingData(selectedOrder)}
-                      disabled={trackingLoading}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {trackingLoading ? '⏳ Updating...' : '🔄 Update Now'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {lastUpdated && (
+                        <p className="text-xs text-slate-500 italic">
+                          Last updated: {format(lastUpdated, 'MMM d, yyyy h:mm a')}
+                        </p>
+                      )}
+                      <button
+                        onClick={() => fetchTrackingData(selectedOrder)}
+                        disabled={trackingLoading}
+                        className="text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed p-1 rounded hover:bg-blue-100 transition-colors"
+                        title="Refresh tracking"
+                      >
+                        <svg
+                          className={`h-4 w-4 ${trackingLoading ? 'animate-spin' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  
-                  {lastUpdated && (
-                    <p className="text-xs text-slate-500 italic">
-                      Last updated: {format(lastUpdated, 'MMM d, yyyy h:mm a')}
-                    </p>
-                  )}
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1477,7 +1480,9 @@ export default function PurchaseOrders() {
                   )}
                   
                   {!trackingLoading && !selectedOrder.tracking_status && (
-                    <p className="text-sm text-slate-500 italic">No tracking information available yet</p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                      📭 Tracking information will appear once the package is in transit
+                    </div>
                   )}
                 </div>
               )}
