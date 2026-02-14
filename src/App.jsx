@@ -1,3 +1,4 @@
+import Tracker from "./Tracker";
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -58,6 +59,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/tracker" element={<Tracker />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
