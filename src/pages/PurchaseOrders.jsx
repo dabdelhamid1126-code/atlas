@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Eye, Trash2, X, Pencil, Loader2 } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 
@@ -41,8 +41,6 @@ export default function PurchaseOrders() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [trackingInfo, setTrackingInfo] = useState(null);
-  const [loadingTracking, setLoadingTracking] = useState(false);
   const [formData, setFormData] = useState({
     order_number: '',
     tracking_number: '',
@@ -598,123 +596,9 @@ export default function PurchaseOrders() {
     }
   };
 
-  const fetchTracking = async (trackingNumber, carrier) => {
-    const { data } = await base44.functions.invoke('getTrackingInfo', {
-      tracking_number: trackingNumber,
-      carrier: carrier
-    });
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to fetch tracking information');
-    }
-    
-    return data;
-  };
-
-  const analyzeTracking = (tracking, order) => {
-    const alerts = [];
-    const today = new Date();
-    
-    // Check if package is delayed
-    if (tracking.estimated_delivery && !tracking.delivered_date) {
-      const estimatedDate = new Date(tracking.estimated_delivery);
-      const daysDiff = Math.floor((today - estimatedDate) / (1000 * 60 * 60 * 24));
-      if (daysDiff > 0) {
-        alerts.push({
-          type: 'warning',
-          message: `Package is ${daysDiff} day${daysDiff > 1 ? 's' : ''} past estimated delivery date`
-        });
-      }
-    }
-    
-    // Check if package is stuck at location
-    if (tracking.last_scan_date) {
-      const lastScan = new Date(tracking.last_scan_date);
-      const hoursSinceUpdate = Math.floor((today - lastScan) / (1000 * 60 * 60));
-      if (hoursSinceUpdate > 48 && !tracking.delivered_date) {
-        alerts.push({
-          type: 'error',
-          message: `No tracking updates for ${Math.floor(hoursSinceUpdate / 24)} days - package may be stuck`
-        });
-      }
-    }
-    
-    // Check for delivery exceptions
-    if (tracking.status?.toLowerCase().includes('exception') || tracking.status?.toLowerCase().includes('delayed')) {
-      alerts.push({
-        type: 'error',
-        message: 'Delivery exception or delay reported by carrier'
-      });
-    }
-    
-    return alerts;
-  };
-
-  const viewDetails = async (order) => {
+  const viewDetails = (order) => {
     setSelectedOrder(order);
     setDetailsOpen(true);
-    setTrackingInfo(null);
-    
-    // Fetch live tracking if tracking number exists
-    if (order.tracking_number) {
-      await refreshTracking(order);
-    }
-  };
-
-  const refreshTracking = async (order) => {
-    setLoadingTracking(true);
-    try {
-      const tracking = await fetchTracking(order.tracking_number, order.carrier);
-      
-      // Analyze tracking for issues
-      const alerts = analyzeTracking(tracking, order);
-      setTrackingInfo({ ...tracking, alerts });
-      
-      // Auto-update order fields with tracking data
-      const updates = {
-        carrier: tracking.carrier,
-        tracking_status: tracking.status
-      };
-      
-      // Map tracking status to order status
-      if (tracking.status.toLowerCase().includes('delivered')) {
-        updates.status = 'received';
-      } else if (tracking.status.toLowerCase().includes('transit') || tracking.status.toLowerCase().includes('pickup')) {
-        if (order.status === 'pending' || order.status === 'ordered') {
-          updates.status = 'shipped';
-        }
-      } else if (tracking.status.toLowerCase().includes('exception')) {
-        toast.error('Delivery exception detected!');
-      }
-      
-      // Update order with tracking info
-      await updateMutation.mutateAsync({
-        id: order.id,
-        data: { ...order, ...updates }
-      });
-      
-      setSelectedOrder({ ...order, ...updates });
-      
-      if (updates.status && updates.status !== order.status) {
-        toast.success(`Order status updated to ${updates.status}`);
-      }
-      
-      // Show alerts
-      if (alerts.length > 0) {
-        alerts.forEach(alert => {
-          if (alert.type === 'error') {
-            toast.error(alert.message);
-          } else {
-            toast.warning(alert.message);
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to fetch tracking:', error);
-      toast.error('Could not fetch tracking information. Please try again later.');
-    } finally {
-      setLoadingTracking(false);
-    }
   };
 
   const handleDelete = async (order) => {
@@ -1423,95 +1307,11 @@ export default function PurchaseOrders() {
                 </div>
               </div>
               
-              {/* Live Tracking Status */}
+              {/* Tracking Number */}
               {selectedOrder.tracking_number && (
                 <div className="pb-4 border-b">
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-slate-500 text-sm">Live Tracking Status</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => refreshTracking(selectedOrder)}
-                      disabled={loadingTracking}
-                    >
-                      {loadingTracking ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Refresh Tracking'
-                      )}
-                    </Button>
-                  </div>
-                  {loadingTracking ? (
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Loading tracking info...
-                    </div>
-                  ) : trackingInfo ? (
-                    <div className="space-y-3">
-                      {/* Alerts */}
-                      {trackingInfo.alerts && trackingInfo.alerts.length > 0 && (
-                        <div className="space-y-2">
-                          {trackingInfo.alerts.map((alert, idx) => (
-                            <div 
-                              key={idx} 
-                              className={`rounded-lg p-3 border ${
-                                alert.type === 'error' 
-                                  ? 'bg-red-50 border-red-200 text-red-800' 
-                                  : 'bg-amber-50 border-amber-200 text-amber-800'
-                              }`}
-                            >
-                              <p className="text-sm font-medium">⚠️ {alert.message}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Carrier</p>
-                            <p className="font-semibold text-slate-900">{trackingInfo.carrier || 'Unknown'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Status</p>
-                            <p className="font-semibold text-slate-900 capitalize">{trackingInfo.status || 'Checking...'}</p>
-                          </div>
-                        </div>
-                        {trackingInfo.location && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Current Location</p>
-                            <p className="text-sm text-slate-700 font-medium">{trackingInfo.location}</p>
-                          </div>
-                        )}
-                        {trackingInfo.delivered_date && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Delivered Date</p>
-                            <p className="text-sm text-green-700 font-medium">{trackingInfo.delivered_date}</p>
-                          </div>
-                        )}
-                        {trackingInfo.estimated_delivery && !trackingInfo.delivered_date && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Estimated Delivery</p>
-                            <p className="text-sm text-slate-700">{trackingInfo.estimated_delivery}</p>
-                          </div>
-                        )}
-                        {trackingInfo.latest_update && (
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Latest Update</p>
-                            <p className="text-sm text-slate-700">{trackingInfo.latest_update}</p>
-                          </div>
-                        )}
-                        <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                          <p className="text-xs text-slate-500">Tracking #: {selectedOrder.tracking_number}</p>
-                          {trackingInfo.last_scan_date && (
-                            <p className="text-xs text-slate-400">Last update: {new Date(trackingInfo.last_scan_date).toLocaleString()}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-500">Click refresh to load tracking</p>
-                  )}
+                  <Label className="text-slate-500 text-sm">Tracking Number</Label>
+                  <p className="font-mono text-sm mt-1">{selectedOrder.tracking_number}</p>
                 </div>
               )}
               <div className="pb-4">
