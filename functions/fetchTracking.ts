@@ -34,9 +34,38 @@ Deno.serve(async (req) => {
         const courierCode = carrier ? carrier.toLowerCase() : 'fedex';
         console.log(`Using courier code: ${courierCode}`);
 
-        // Call TrackingMore API - GET single tracking
+        // Step 1: Create tracking (or get existing)
+        const createUrl = 'https://api.trackingmore.com/v4/trackings/create';
+        console.log(`Creating/updating tracking: ${createUrl}`);
+        
+        const createBody = {
+            tracking_number: tracking_number,
+            courier_code: courierCode
+        };
+        console.log(`Create request body:`, JSON.stringify(createBody, null, 2));
+        
+        const createResponse = await fetch(createUrl, {
+            method: 'POST',
+            headers: {
+                'Tracking-Api-Key': apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(createBody)
+        });
+
+        const createResponseText = await createResponse.text();
+        console.log(`Create API response: ${createResponseText}`);
+        
+        let createData;
+        try {
+            createData = JSON.parse(createResponseText);
+        } catch (e) {
+            console.error('Failed to parse create response:', e);
+        }
+
+        // Step 2: Get tracking details
         const url = `https://api.trackingmore.com/v4/trackings/get?tracking_numbers=${tracking_number}`;
-        console.log(`Calling TrackingMore API: ${url}`);
+        console.log(`Getting tracking details: ${url}`);
         
         const response = await fetch(url, {
             method: 'GET',
