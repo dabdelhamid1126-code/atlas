@@ -22,10 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Eye, Trash2, X, Pencil, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
-import { detectCarrier } from '@/components/utils/carrierDetection';
 
 const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'received', 'cancelled'];
 
@@ -42,9 +41,6 @@ export default function PurchaseOrders() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [trackingLoading, setTrackingLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [detectedCarrier, setDetectedCarrier] = useState('');
   const [formData, setFormData] = useState({
     order_number: '',
     tracking_number: '',
@@ -445,8 +441,6 @@ export default function PurchaseOrders() {
   const openDialog = (order = null) => {
     if (order) {
       setEditingOrder(order);
-      const detectedCar = order.tracking_number ? detectCarrier(order.tracking_number) : '';
-      setDetectedCarrier(detectedCar);
       setFormData({
         order_number: order.order_number || '',
         tracking_number: order.tracking_number || '',
@@ -470,7 +464,6 @@ export default function PurchaseOrders() {
       });
     } else {
       setEditingOrder(null);
-      setDetectedCarrier('');
       setFormData({
         order_number: '',
         tracking_number: '',
@@ -603,75 +596,10 @@ export default function PurchaseOrders() {
     }
   };
 
-  const fetchTrackingData = async (order) => {
-    if (!order.tracking_number) return;
-    
-    setTrackingLoading(true);
-    try {
-      // Auto-detect carrier if missing or unknown
-      let carrierToUse = order.carrier;
-      if (!carrierToUse || carrierToUse === 'unknown') {
-        carrierToUse = detectCarrier(order.tracking_number).toLowerCase();
-        console.log(`Auto-detected carrier: ${carrierToUse}`);
-      }
-      
-      const { data } = await base44.functions.invoke('fetchTracking', {
-        tracking_number: order.tracking_number,
-        carrier: carrierToUse
-      });
-      
-      // Determine new order status based on tracking
-      let newStatus = order.status;
-      const trackingStatus = data.status?.toLowerCase();
-      
-      if (trackingStatus?.includes('delivered')) {
-        newStatus = 'received';
-      } else if (trackingStatus?.includes('transit') || trackingStatus?.includes('out_for_delivery')) {
-        newStatus = 'shipped';
-      }
-      
-      // Update order with tracking info
-      await base44.entities.PurchaseOrder.update(order.id, {
-        tracking_status: data.status,
-        tracking_location: data.current_location,
-        delivered_date: data.delivered_date,
-        carrier: data.carrier.toLowerCase(),
-        status: newStatus
-      });
-      
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      
-      // Update selected order
-      setSelectedOrder({
-        ...order,
-        tracking_status: data.status,
-        tracking_location: data.current_location,
-        delivered_date: data.delivered_date,
-        carrier: data.carrier.toLowerCase(),
-        status: newStatus
-      });
-      
-      setLastUpdated(new Date());
-      toast.success('Tracking information updated');
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to fetch tracking information');
-    } finally {
-      setTrackingLoading(false);
-    }
-  };
-
   const viewDetails = (order) => {
     setSelectedOrder(order);
     setDetailsOpen(true);
-    setLastUpdated(null);
-    // Auto-fetch tracking data when dialog opens
-    if (order.tracking_number) {
-      fetchTrackingData(order);
-    }
   };
-
-
 
   const handleDelete = async (order) => {
     if (confirm('Are you sure you want to delete this purchase order?')) {
@@ -858,29 +786,9 @@ export default function PurchaseOrders() {
                 <Label>Tracking Number</Label>
                 <Input
                   value={formData.tracking_number}
-                  onChange={(e) => {
-                    const trackingNum = e.target.value;
-                    const detected = detectCarrier(trackingNum);
-                    setDetectedCarrier(detected);
-                    setFormData({ ...formData, tracking_number: trackingNum, carrier: detected.toLowerCase() });
-                  }}
+                  onChange={(e) => setFormData({ ...formData, tracking_number: e.target.value })}
                   placeholder="Tracking number"
                 />
-                {formData.tracking_number && (
-                  <div className="flex items-center gap-2 text-sm">
-                    {detectedCarrier !== 'unknown' ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span className="text-green-700">Carrier: {detectedCarrier} (auto-detected)</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="h-4 w-4 text-amber-600" />
-                        <span className="text-amber-700">Carrier: Unknown - please verify tracking number</span>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -1404,33 +1312,58 @@ export default function PurchaseOrders() {
                 <div className="pb-4 border-b bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-slate-900 font-semibold text-base">📦 Live Tracking Status</Label>
-                    <div className="flex items-center gap-2">
-                      {lastUpdated && (
-                        <p className="text-xs text-slate-500 italic">
-                          Last updated: {format(lastUpdated, 'MMM d, yyyy h:mm a')}
-                        </p>
-                      )}
-                      <button
-                        onClick={() => fetchTrackingData(selectedOrder)}
-                        disabled={trackingLoading}
-                        className="text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed p-1 rounded hover:bg-blue-100 transition-colors"
-                        title="Refresh tracking"
-                      >
-                        <svg
-                          className={`h-4 w-4 ${trackingLoading ? 'animate-spin' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          />
-                        </svg>
-                      </button>
-                    </div>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const { data } = await base44.functions.invoke('fetchTracking', {
+                            tracking_number: selectedOrder.tracking_number,
+                            carrier: selectedOrder.carrier
+                          });
+                          
+                          // Determine new order status based on tracking
+                          let newStatus = selectedOrder.status;
+                          const trackingStatus = data.status?.toLowerCase();
+                          
+                          if (trackingStatus?.includes('delivered')) {
+                            newStatus = 'received';
+                          } else if (trackingStatus?.includes('transit') || trackingStatus?.includes('out_for_delivery')) {
+                            newStatus = 'shipped';
+                          } else if (trackingStatus?.includes('exception') || trackingStatus?.includes('failed')) {
+                            newStatus = 'shipped'; // Keep as shipped but with issue flag
+                          }
+                          
+                          // Update order with tracking info
+                          await base44.entities.PurchaseOrder.update(selectedOrder.id, {
+                            tracking_status: data.status,
+                            tracking_location: data.current_location,
+                            delivered_date: data.delivered_date,
+                            carrier: data.carrier,
+                            status: newStatus
+                          });
+                          
+                          // Refresh data
+                          queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+                          
+                          // Update selected order
+                          setSelectedOrder({
+                            ...selectedOrder,
+                            tracking_status: data.status,
+                            tracking_location: data.current_location,
+                            delivered_date: data.delivered_date,
+                            carrier: data.carrier,
+                            status: newStatus
+                          });
+                          
+                          toast.success('Tracking information updated');
+                        } catch (error) {
+                          toast.error(error.response?.data?.error || 'Failed to fetch tracking information');
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      🔄 Refresh Tracking
+                    </Button>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -1440,12 +1373,7 @@ export default function PurchaseOrders() {
                     </div>
                     <div>
                       <Label className="text-slate-500 text-xs">Carrier</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="font-semibold text-sm uppercase">{selectedOrder.carrier || 'N/A'}</p>
-                        {selectedOrder.carrier && selectedOrder.carrier !== 'unknown' && (
-                          <span className="text-xs text-green-600">(auto-detected)</span>
-                        )}
-                      </div>
+                      <p className="font-semibold text-sm mt-1 uppercase">{selectedOrder.carrier || 'N/A'}</p>
                     </div>
                   </div>
                   
@@ -1472,17 +1400,8 @@ export default function PurchaseOrders() {
                     </>
                   )}
                   
-                  {trackingLoading && !selectedOrder.tracking_status && (
-                    <div className="flex items-center gap-2 text-sm text-blue-600">
-                      <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                      <span>Loading tracking information...</span>
-                    </div>
-                  )}
-                  
-                  {!trackingLoading && !selectedOrder.tracking_status && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                      📭 Tracking information will appear once the package is in transit
-                    </div>
+                  {!selectedOrder.tracking_status && (
+                    <p className="text-sm text-slate-500 italic">Click "Refresh Tracking" to get live tracking information</p>
                   )}
                 </div>
               )}
