@@ -676,7 +676,8 @@ export default function PurchaseOrders() {
     )},
     { header: 'Items', accessor: 'items', cell: (row) => {
       const totalQty = row.items?.reduce((sum, item) => sum + (item.quantity_ordered || 0), 0) || 0;
-      return <span>{totalQty} ({row.items?.length || 0} types)</span>;
+      const types = row.items?.length || 0;
+      return <span>{totalQty} item{totalQty !== 1 ? 's' : ''} ({types} type{types !== 1 ? 's' : ''})</span>;
     }},
     { header: 'Total', accessor: 'total_cost', cell: (row) => (
       <div>
