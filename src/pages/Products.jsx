@@ -269,7 +269,7 @@ export default function Products() {
                     
                     setLoadingUPC(true);
                     try {
-                      const { data } = await base44.integrations.Core.InvokeLLM({
+                      const data = await base44.integrations.Core.InvokeLLM({
                         prompt: `Search for product with UPC ${formData.upc}. Return the product name, brand, and a high-quality product image URL. Use web search to find accurate information.`,
                         add_context_from_internet: true,
                         response_json_schema: {
