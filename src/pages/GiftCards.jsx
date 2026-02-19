@@ -515,7 +515,9 @@ export default function GiftCards() {
               <Label>Credit Card Used</Label>
               <Select value={formData.credit_card_id} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select card (optional)" />
+                  <SelectValue placeholder="Select card (optional)">
+                    {formData.credit_card_id && creditCards.find(c => c.id === formData.credit_card_id)?.card_name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>No card</SelectItem>
