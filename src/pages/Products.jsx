@@ -111,17 +111,27 @@ export default function Products() {
       setEditingProduct(product);
       setFormData({
         name: product.name || '',
+        description: product.description || '',
         upc: product.upc || '',
+        ean: product.ean || '',
+        brand: product.brand || '',
         image: product.image || '',
-        category: product.category || ''
+        category: product.category || '',
+        lowest_recorded_price: product.lowest_recorded_price || '',
+        highest_recorded_price: product.highest_recorded_price || ''
       });
     } else {
       setEditingProduct(null);
       setFormData({
         name: '',
+        description: '',
         upc: '',
+        ean: '',
+        brand: '',
         image: '',
-        category: ''
+        category: '',
+        lowest_recorded_price: '',
+        highest_recorded_price: ''
       });
     }
     setDialogOpen(true);
