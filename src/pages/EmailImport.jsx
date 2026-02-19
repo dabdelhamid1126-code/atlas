@@ -446,6 +446,21 @@ export default function EmailImport() {
                   <span className="text-slate-600">Credit Card:</span>
                   <span className="ml-2 font-semibold">{extractedData?.matchedCard?.card_name || 'None matched'}</span>
                 </div>
+                {extractedData?.matchedGiftCards && extractedData.matchedGiftCards.length > 0 && (
+                  <div className="col-span-2">
+                    <span className="text-slate-600">Gift Cards Found:</span>
+                    <div className="ml-2 font-semibold text-green-700">
+                      {extractedData.matchedGiftCards.map((gc, i) => (
+                        <div key={i}>
+                          {gc.brand} - ${gc.value} ({gc.code.slice(0, 8)}...)
+                        </div>
+                      ))}
+                      <div className="text-xs text-slate-600 mt-1">
+                        Total: ${extractedData.matchedGiftCards.reduce((sum, gc) => sum + (gc.value || 0), 0).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
