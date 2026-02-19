@@ -317,6 +317,33 @@ export default function Products() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Product description"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Brand</Label>
+                <Input
+                  value={formData.brand}
+                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  placeholder="Product brand"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>EAN</Label>
+                <Input
+                  value={formData.ean}
+                  onChange={(e) => setFormData({ ...formData, ean: e.target.value })}
+                  placeholder="European Article Number"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
               <Label>Category</Label>
               <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
                 <SelectTrigger>
@@ -337,6 +364,28 @@ export default function Products() {
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 placeholder="https://example.com/image.jpg"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Lowest Recorded Price</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.lowest_recorded_price}
+                  onChange={(e) => setFormData({ ...formData, lowest_recorded_price: e.target.value })}
+                  placeholder="From UPC database"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Highest Recorded Price</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.highest_recorded_price}
+                  onChange={(e) => setFormData({ ...formData, highest_recorded_price: e.target.value })}
+                  placeholder="From UPC database"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
