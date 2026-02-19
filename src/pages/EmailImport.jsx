@@ -128,11 +128,22 @@ export default function EmailImport() {
         );
       }
 
-      // Find product matches and suggestions
+      // Find product matches and suggestions, and look up UPC details
       const matches = [];
       
       for (const item of extractedData.items || []) {
-        // Find top 5 suggestions for each item with better fuzzy matching
+        // Look up product details by UPC if available
+        let upcLookupData = null;
+        if (item.sku) {
+          try {
+            const { data: lookupResult } = await base44.functions.invoke('lookupUPC', { upc: item.sku });
+            upcLookupData = lookupResult;
+          } catch (error) {
+            console.error('UPC lookup failed:', error);
+          }
+        }
+        
+        // Find top 8 suggestions for each item with better fuzzy matching
         const suggestions = allProducts
           .map(p => {
             let score = 0;
@@ -195,7 +206,8 @@ export default function EmailImport() {
           quantity: item.quantity || 1,
           unit_cost: item.unit_cost || 0,
           suggestions,
-          selectedProduct: suggestions[0]?.product || null
+          selectedProduct: suggestions[0]?.product || null,
+          upcLookupData
         });
       }
       
