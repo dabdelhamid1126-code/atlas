@@ -515,6 +515,14 @@ export default function GiftCards() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label>Purchase Date</Label>
+              <Input
+                type="date"
+                value={formData.purchase_date}
+                onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Credit Card Used</Label>
               <Select value={formData.credit_card_id ? creditCards.find(c => c.id === formData.credit_card_id)?.card_name : undefined} onValueChange={(cardName) => {
                 const card = creditCards.find(c => c.card_name === cardName);

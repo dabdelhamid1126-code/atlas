@@ -269,31 +269,23 @@ export default function Products() {
                     
                     setLoadingUPC(true);
                     try {
-                      const data = await base44.integrations.Core.InvokeLLM({
-                        prompt: `Search for product with UPC ${formData.upc}. Return the product name, brand, and a high-quality product image URL. Use web search to find accurate information.`,
-                        add_context_from_internet: true,
-                        response_json_schema: {
-                          type: "object",
-                          properties: {
-                            name: { type: "string" },
-                            brand: { type: "string" },
-                            image_url: { type: "string" }
-                          }
-                        }
-                      });
+                      const response = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${formData.upc}`);
+                      const data = await response.json();
                       
-                      if (data.name) {
+                      if (data.items && data.items.length > 0) {
+                        const item = data.items[0];
                         setFormData({
                           ...formData,
-                          name: data.brand ? `${data.brand} ${data.name}` : data.name,
-                          image: data.image_url || formData.image
+                          name: item.title || formData.name,
+                          image: item.images?.[0] || formData.image,
+                          category: item.category?.toLowerCase() || formData.category
                         });
                         toast.success('Product info found!');
                       } else {
-                        toast.error('No product found for this UPC');
+                        toast.error('Product not found. Please fill in the details manually.');
                       }
                     } catch (error) {
-                      toast.error('Failed to lookup UPC');
+                      toast.error('Product not found. Please fill in the details manually.');
                     } finally {
                       setLoadingUPC(false);
                     }
