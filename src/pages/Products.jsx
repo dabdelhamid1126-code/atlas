@@ -37,9 +37,14 @@ export default function Products() {
   const [loadingUPC, setLoadingUPC] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     upc: '',
+    ean: '',
+    brand: '',
     image: '',
-    category: ''
+    category: '',
+    lowest_recorded_price: '',
+    highest_recorded_price: ''
   });
 
   const { data: products = [], isLoading } = useQuery({
