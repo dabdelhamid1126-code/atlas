@@ -445,11 +445,39 @@ export default function EmailImport() {
             <div className="space-y-3">
               <Label className="text-base font-semibold">Products ({productMatches.length})</Label>
               {productMatches.map((match, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
+                <div key={index} className="border rounded-lg p-4 space-y-3 bg-white relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newMatches = productMatches.filter((_, i) => i !== index);
+                      setProductMatches(newMatches);
+                      toast.success('Item removed');
+                    }}
+                    className="absolute top-2 right-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    Remove
+                  </Button>
+                  
+                  <div className="flex justify-between items-start pr-20">
+                    <div className="flex-1">
                       <p className="font-medium text-slate-900">From Invoice: {match.invoiceName}</p>
                       {match.sku && <p className="text-xs text-slate-500">SKU: {match.sku}</p>}
+                      
+                      {match.upcLookupData && (
+                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200 flex items-start gap-3">
+                          {match.upcLookupData.image && (
+                            <img src={match.upcLookupData.image} alt="Product" className="h-16 rounded" />
+                          )}
+                          <div className="flex-1">
+                            <p className="text-xs font-semibold text-blue-900">UPC Lookup Result:</p>
+                            <p className="text-xs text-blue-700">{match.upcLookupData.title}</p>
+                            {match.upcLookupData.brand && (
+                              <p className="text-xs text-blue-600">Brand: {match.upcLookupData.brand}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-600">Qty: {match.quantity}</p>
@@ -488,6 +516,26 @@ export default function EmailImport() {
                   </div>
                 </div>
               ))}
+              
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newMatches = [...productMatches];
+                  newMatches.push({
+                    invoiceName: 'New Item',
+                    sku: '',
+                    quantity: 1,
+                    unit_cost: 0,
+                    suggestions: [],
+                    selectedProduct: null,
+                    upcLookupData: null
+                  });
+                  setProductMatches(newMatches);
+                }}
+                className="w-full border-dashed"
+              >
+                + Add Item
+              </Button>
             </div>
           </div>
 
