@@ -34,6 +34,7 @@ export default function Products() {
   const [sortOrder, setSortOrder] = useState('name-asc');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [loadingUPC, setLoadingUPC] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     upc: '',
@@ -246,30 +247,62 @@ export default function Products() {
               />
             </div>
             <div className="space-y-2">
-              <Label>UPC</Label>
-              <Input
-                value={formData.upc}
-                onChange={(e) => {
-                  const upc = e.target.value;
-                  setFormData({ ...formData, upc });
-                  
-                  // Auto-fill name if UPC matches existing product
-                  if (upc && !editingProduct) {
-                    const matchingProduct = products.find(p => p.upc === upc);
-                    if (matchingProduct) {
-                      setFormData({ 
-                        ...formData, 
-                        upc,
-                        name: matchingProduct.name,
-                        category: matchingProduct.category || '',
-                        image: matchingProduct.image || ''
-                      });
-                      toast.success(`Found: ${matchingProduct.name}`);
+              <div className="flex items-center justify-between">
+                <Label>UPC</Label>
+                {loadingUPC && <span className="text-xs text-blue-600">Searching online...</span>}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={formData.upc}
+                  onChange={(e) => setFormData({ ...formData, upc: e.target.value })}
+                  placeholder="Barcode number"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    if (!formData.upc) {
+                      toast.error('Please enter a UPC');
+                      return;
                     }
-                  }
-                }}
-                placeholder="Barcode number"
-              />
+                    
+                    setLoadingUPC(true);
+                    try {
+                      const { data } = await base44.integrations.Core.InvokeLLM({
+                        prompt: `Search for product with UPC ${formData.upc}. Return the product name, brand, and a high-quality product image URL. Use web search to find accurate information.`,
+                        add_context_from_internet: true,
+                        response_json_schema: {
+                          type: "object",
+                          properties: {
+                            name: { type: "string" },
+                            brand: { type: "string" },
+                            image_url: { type: "string" }
+                          }
+                        }
+                      });
+                      
+                      if (data.name) {
+                        setFormData({
+                          ...formData,
+                          name: data.brand ? `${data.brand} ${data.name}` : data.name,
+                          image: data.image_url || formData.image
+                        });
+                        toast.success('Product info found!');
+                      } else {
+                        toast.error('No product found for this UPC');
+                      }
+                    } catch (error) {
+                      toast.error('Failed to lookup UPC');
+                    } finally {
+                      setLoadingUPC(false);
+                    }
+                  }}
+                  disabled={loadingUPC}
+                >
+                  🔍 Lookup
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
