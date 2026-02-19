@@ -44,6 +44,7 @@ export default function GiftCards() {
     code: '',
     pin: '',
     purchase_cost: '',
+    purchase_date: '',
     credit_card_id: '',
     status: 'available',
     used_order_number: '',
