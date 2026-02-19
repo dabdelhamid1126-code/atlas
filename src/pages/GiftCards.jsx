@@ -513,16 +513,17 @@ export default function GiftCards() {
             </div>
             <div className="space-y-2">
               <Label>Credit Card Used</Label>
-              <Select value={formData.credit_card_id} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
+              <Select value={formData.credit_card_id ? creditCards.find(c => c.id === formData.credit_card_id)?.card_name : undefined} onValueChange={(cardName) => {
+                const card = creditCards.find(c => c.card_name === cardName);
+                setFormData({ ...formData, credit_card_id: card?.id || '' });
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select card (optional)">
-                    {formData.credit_card_id && creditCards.find(c => c.id === formData.credit_card_id)?.card_name}
-                  </SelectValue>
+                  <SelectValue placeholder="Select card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>No card</SelectItem>
                   {creditCards.filter(c => c.active).map(card => (
-                    <SelectItem key={card.id} value={card.id}>
+                    <SelectItem key={card.id} value={card.card_name}>
                       {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
                       {card.reward_type === 'points' && `${card.points_rate}x pts`}
                       {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
