@@ -78,7 +78,7 @@ export default function EmailImport() {
 
       // Extract order data from PDF using LLM
       const extractedData = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
+        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -89,6 +89,10 @@ export default function EmailImport() {
             order_date: { type: "string" },
             tracking_number: { type: "string" },
             card_last_4: { type: "string" },
+            gift_card_codes: { 
+              type: "array",
+              items: { type: "string" }
+            },
             items: {
               type: "array",
               items: {
@@ -116,9 +120,10 @@ export default function EmailImport() {
         return;
       }
 
-      // Get all products and credit cards to match
+      // Get all products, credit cards, and gift cards to match
       const allProducts = await base44.entities.Product.list();
       const allCards = await base44.entities.CreditCard.list();
+      const allGiftCards = await base44.entities.GiftCard.list();
 
       // Match credit card by last 4 digits
       let matchedCard = null;
@@ -126,6 +131,19 @@ export default function EmailImport() {
         matchedCard = allCards.find(card => 
           card.card_name?.includes(extractedData.card_last_4)
         );
+      }
+
+      // Match gift cards by code
+      const matchedGiftCards = [];
+      if (extractedData.gift_card_codes && extractedData.gift_card_codes.length > 0) {
+        for (const giftCardCode of extractedData.gift_card_codes) {
+          const matched = allGiftCards.find(gc => 
+            gc.code && gc.code.includes(giftCardCode.replace(/\s+/g, ''))
+          );
+          if (matched) {
+            matchedGiftCards.push(matched);
+          }
+        }
       }
 
       // Find product matches and suggestions
@@ -202,7 +220,8 @@ export default function EmailImport() {
       // Show confirmation dialog
       setExtractedData({
         ...extractedData,
-        matchedCard
+        matchedCard,
+        matchedGiftCards
       });
       setProductMatches(matches);
       setConfirmDialogOpen(true);
