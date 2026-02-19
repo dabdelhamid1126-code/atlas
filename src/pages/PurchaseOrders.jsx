@@ -626,7 +626,7 @@ export default function PurchaseOrders() {
 
   const handleDelete = async (order) => {
     if (confirm('Are you sure you want to delete this purchase order?')) {
-      deleteMutation.mutate(order.id);
+      deleteMutation.mutate(order);
       await logActivity('Deleted purchase order', 'purchase_order', order.order_number);
     }
   };
