@@ -128,21 +128,10 @@ export default function EmailImport() {
         );
       }
 
-      // Find product matches and suggestions, and look up UPC details
+      // Find product matches and suggestions
       const matches = [];
       
       for (const item of extractedData.items || []) {
-        // Look up product details by UPC if available
-        let upcLookupData = null;
-        if (item.sku) {
-          try {
-            const { data: lookupResult } = await base44.functions.invoke('lookupUPC', { upc: item.sku });
-            upcLookupData = lookupResult;
-          } catch (error) {
-            console.error('UPC lookup failed:', error);
-          }
-        }
-        
         // Find top 8 suggestions for each item with better fuzzy matching
         const suggestions = allProducts
           .map(p => {
@@ -206,8 +195,7 @@ export default function EmailImport() {
           quantity: item.quantity || 1,
           unit_cost: item.unit_cost || 0,
           suggestions,
-          selectedProduct: suggestions[0]?.product || null,
-          upcLookupData
+          selectedProduct: suggestions[0]?.product || null
         });
       }
       
@@ -462,21 +450,15 @@ export default function EmailImport() {
                   <div className="flex justify-between items-start pr-20">
                     <div className="flex-1">
                       <p className="font-medium text-slate-900">From Invoice: {match.invoiceName}</p>
-                      {match.sku && <p className="text-xs text-slate-500">SKU: {match.sku}</p>}
-                      
-                      {match.upcLookupData && (
-                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200 flex items-start gap-3">
-                          {match.upcLookupData.image && (
-                            <img src={match.upcLookupData.image} alt="Product" className="h-16 rounded" />
-                          )}
-                          <div className="flex-1">
-                            <p className="text-xs font-semibold text-blue-900">UPC Lookup Result:</p>
-                            <p className="text-xs text-blue-700">{match.upcLookupData.title}</p>
-                            {match.upcLookupData.brand && (
-                              <p className="text-xs text-blue-600">Brand: {match.upcLookupData.brand}</p>
-                            )}
-                          </div>
-                        </div>
+                      {match.sku && (
+                        <a 
+                          href={`https://www.google.com/search?q=${encodeURIComponent(match.sku)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          UPC: {match.sku} (Search online)
+                        </a>
                       )}
                     </div>
                     <div className="text-right">
@@ -527,8 +509,7 @@ export default function EmailImport() {
                     quantity: 1,
                     unit_cost: 0,
                     suggestions: [],
-                    selectedProduct: null,
-                    upcLookupData: null
+                    selectedProduct: null
                   });
                   setProductMatches(newMatches);
                 }}
