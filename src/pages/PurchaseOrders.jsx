@@ -1129,7 +1129,7 @@ export default function PurchaseOrders() {
                       className="rounded"
                     />
                     <span className="text-sm flex-1">{gc.brand} - ${gc.value}</span>
-                    <span className="text-xs text-slate-500">{gc.code?.slice(0, 8)}...</span>
+                    <span className="text-xs text-slate-500">...{gc.code?.slice(-3)}</span>
                   </label>
                 ))}
                 {giftCards.filter(gc => gc.status === 'available').length === 0 && (

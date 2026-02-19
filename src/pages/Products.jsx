@@ -284,28 +284,20 @@ export default function Products() {
                     
                     setLoadingUPC(true);
                     try {
-                      const response = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${formData.upc}`);
-                      const data = await response.json();
+                      const { data } = await base44.functions.invoke('lookupUPC', {
+                        upc: formData.upc
+                      });
                       
-                      if (data.code === 'OK' && data.items && data.items.length > 0) {
-                        const item = data.items[0];
+                      if (data.title || data.image) {
                         setFormData({
                           ...formData,
-                          name: item.title || formData.name,
-                          description: item.description || formData.description,
-                          brand: item.brand || formData.brand,
-                          ean: item.ean || formData.ean,
-                          image: item.images?.[0] || formData.image,
-                          category: item.category?.toLowerCase() || formData.category,
-                          lowest_recorded_price: item.lowest_recorded_price || formData.lowest_recorded_price,
-                          highest_recorded_price: item.highest_recorded_price || formData.highest_recorded_price
+                          name: data.title || formData.name,
+                          image: data.image || formData.image
                         });
                         toast.success('Product info found!');
-                      } else {
-                        toast.error('Product not found. Please fill in the details manually.');
                       }
                     } catch (error) {
-                      toast.error('Product not found. Please fill in the details manually.');
+                      toast.error(error.response?.data?.error || 'Product not found. Please enter manually.');
                     } finally {
                       setLoadingUPC(false);
                     }
