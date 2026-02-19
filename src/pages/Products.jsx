@@ -39,12 +39,8 @@ export default function Products() {
     name: '',
     description: '',
     upc: '',
-    ean: '',
-    brand: '',
     image: '',
-    category: '',
-    lowest_recorded_price: '',
-    highest_recorded_price: ''
+    category: ''
   });
 
   const { data: products = [], isLoading } = useQuery({
@@ -113,12 +109,8 @@ export default function Products() {
         name: product.name || '',
         description: product.description || '',
         upc: product.upc || '',
-        ean: product.ean || '',
-        brand: product.brand || '',
         image: product.image || '',
-        category: product.category || '',
-        lowest_recorded_price: product.lowest_recorded_price || '',
-        highest_recorded_price: product.highest_recorded_price || ''
+        category: product.category || ''
       });
     } else {
       setEditingProduct(null);
@@ -126,12 +118,8 @@ export default function Products() {
         name: '',
         description: '',
         upc: '',
-        ean: '',
-        brand: '',
         image: '',
-        category: '',
-        lowest_recorded_price: '',
-        highest_recorded_price: ''
+        category: ''
       });
     }
     setDialogOpen(true);
@@ -317,24 +305,6 @@ export default function Products() {
                 rows={2}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Brand</Label>
-                <Input
-                  value={formData.brand}
-                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                  placeholder="Product brand"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>EAN</Label>
-                <Input
-                  value={formData.ean}
-                  onChange={(e) => setFormData({ ...formData, ean: e.target.value })}
-                  placeholder="European Article Number"
-                />
-              </div>
-            </div>
             <div className="space-y-2">
               <Label>Category</Label>
               <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
@@ -356,28 +326,6 @@ export default function Products() {
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 placeholder="https://example.com/image.jpg"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Lowest Recorded Price</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.lowest_recorded_price}
-                  onChange={(e) => setFormData({ ...formData, lowest_recorded_price: e.target.value })}
-                  placeholder="From UPC database"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Highest Recorded Price</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.highest_recorded_price}
-                  onChange={(e) => setFormData({ ...formData, highest_recorded_price: e.target.value })}
-                  placeholder="From UPC database"
-                />
-              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
