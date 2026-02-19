@@ -576,25 +576,89 @@ export default function EmailImport() {
                     unit_cost: match.unit_cost
                   }));
                   
+                  // Calculate gift card value and final cost
+                  const giftCardIds = extractedData.matchedGiftCards?.map(gc => gc.id) || [];
+                  const giftCardValue = extractedData.matchedGiftCards?.reduce((sum, gc) => sum + (gc.value || 0), 0) || 0;
+                  
                   const orderData = {
                     order_number: extractedData.order_number,
                     retailer: extractedData.retailer || 'Unknown',
                     tracking_number: extractedData.tracking_number || '',
                     credit_card_id: extractedData.matchedCard?.id || null,
                     card_name: extractedData.matchedCard?.card_name || null,
+                    gift_card_ids: giftCardIds,
+                    gift_card_value: giftCardValue,
                     status: extractedData.tracking_number ? 'shipped' : 'ordered',
                     order_date: extractedData.order_date || format(new Date(), 'yyyy-MM-dd'),
                     items: orderItems,
                     total_cost: extractedData.total_cost || 0,
-                    final_cost: extractedData.total_cost || 0,
+                    final_cost: (extractedData.total_cost || 0) - giftCardValue,
+                    category: 'other',
                     notes: 'Imported from PDF'
                   };
                   
                   const created = await base44.entities.PurchaseOrder.create(orderData);
                   
+                  // Mark gift cards as used
+                  for (const cardId of giftCardIds) {
+                    await base44.entities.GiftCard.update(cardId, {
+                      status: 'used',
+                      used_order_number: extractedData.order_number
+                    });
+                  }
+                  
+                  // Auto-create reward if card is selected
+                  if (extractedData.matchedCard?.id && orderData.total_cost) {
+                    const card = extractedData.matchedCard;
+                    const amount = orderData.final_cost;
+                    
+                    let rewardAmount = 0;
+                    let rewardType = 'cashback';
+                    let currency = 'USD';
+                    
+                    if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
+                      rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+                      rewardType = 'cashback';
+                      currency = 'USD';
+                    } else if (card.reward_type === 'points' && card.points_rate > 0) {
+                      rewardAmount = Math.round(amount * card.points_rate);
+                      rewardType = 'points';
+                      currency = 'points';
+                    } else if (card.reward_type === 'both') {
+                      if (card.cashback_rate > 0) {
+                        rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
+                        rewardType = 'cashback';
+                        currency = 'USD';
+                      } else if (card.points_rate > 0) {
+                        rewardAmount = Math.round(amount * card.points_rate);
+                        rewardType = 'points';
+                        currency = 'points';
+                      }
+                    }
+                    
+                    if (rewardAmount > 0) {
+                      await base44.entities.Reward.create({
+                        credit_card_id: card.id,
+                        card_name: card.card_name,
+                        source: card.card_name,
+                        type: rewardType,
+                        purchase_amount: amount,
+                        amount: parseFloat(rewardAmount),
+                        currency: currency,
+                        purchase_order_id: created.id,
+                        order_number: extractedData.order_number,
+                        date_earned: orderData.order_date,
+                        status: 'pending',
+                        notes: `Auto-generated from imported order ${extractedData.order_number}`
+                      });
+                    }
+                  }
+                  
                   setResult({ success: true, message: 'Order imported successfully', order: created });
-                  toast.success('Order imported successfully!');
+                  toast.success('Order imported with rewards calculated!');
                   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+                  queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+                  queryClient.invalidateQueries({ queryKey: ['rewards'] });
                   setConfirmDialogOpen(false);
                   setExtractedData(null);
                   setProductMatches([]);
