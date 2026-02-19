@@ -238,10 +238,33 @@ export default function PurchaseOrders() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.PurchaseOrder.delete(id),
+    mutationFn: async (order) => {
+      // Delete associated rewards
+      const orderRewards = await base44.entities.Reward.filter({ 
+        purchase_order_id: order.id 
+      });
+      for (const reward of orderRewards) {
+        await base44.entities.Reward.delete(reward.id);
+      }
+      
+      // Mark gift cards as available again
+      if (order.gift_card_ids && order.gift_card_ids.length > 0) {
+        for (const cardId of order.gift_card_ids) {
+          await base44.entities.GiftCard.update(cardId, {
+            status: 'available',
+            used_order_number: null
+          });
+        }
+      }
+      
+      // Delete the order
+      await base44.entities.PurchaseOrder.delete(order.id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      toast.success('Purchase order deleted');
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      toast.success('Order and associated rewards deleted');
     }
   });
 
