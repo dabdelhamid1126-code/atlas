@@ -49,6 +49,7 @@ export default function PurchaseOrders() {
     credit_card_id: '',
     gift_card_ids: [],
     is_pickup: false,
+    pickup_location: '',
     status: 'pending',
     order_date: '',
     expected_date: '',
@@ -472,6 +473,7 @@ export default function PurchaseOrders() {
         credit_card_id: order.credit_card_id || '',
         gift_card_ids: order.gift_card_ids || [],
         is_pickup: order.is_pickup || false,
+        pickup_location: order.pickup_location || '',
         status: order.status || 'pending',
         order_date: order.order_date || '',
         expected_date: order.expected_date || '',
@@ -495,6 +497,7 @@ export default function PurchaseOrders() {
         credit_card_id: '',
         gift_card_ids: [],
         is_pickup: false,
+        pickup_location: '',
         status: 'pending',
         order_date: format(new Date(), 'yyyy-MM-dd'),
         expected_date: '',
@@ -671,7 +674,11 @@ export default function PurchaseOrders() {
     { header: 'Status', accessor: 'status', cell: (row) => (
       <div className="flex items-center gap-2">
         <StatusBadge status={row.status} />
-        {row.is_pickup && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Pickup</span>}
+        {row.is_pickup && (
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded" title={row.pickup_location || 'Pickup'}>
+            📍 Pickup
+          </span>
+        )}
       </div>
     )},
     { header: 'Items', accessor: 'items', cell: (row) => {
@@ -887,6 +894,16 @@ export default function PurchaseOrders() {
                 />
                 <span className="text-sm font-medium">Pickup Order</span>
               </label>
+              {formData.is_pickup && (
+                <div className="ml-6">
+                  <Label>Pickup Location</Label>
+                  <Input
+                    value={formData.pickup_location}
+                    onChange={(e) => setFormData({ ...formData, pickup_location: e.target.value })}
+                    placeholder="Enter pickup location"
+                  />
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Credit Card (for rewards tracking)</Label>
