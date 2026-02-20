@@ -1340,7 +1340,15 @@ export default function PurchaseOrders() {
               <div className="grid grid-cols-2 gap-6 pb-4 border-b">
                 <div>
                   <Label className="text-slate-500 text-sm">Status</Label>
-                  <div className="mt-1"><StatusBadge status={selectedOrder.status} /></div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <StatusBadge status={selectedOrder.status} />
+                    {selectedOrder.is_pickup && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">📍 Pickup</span>
+                    )}
+                  </div>
+                  {selectedOrder.is_pickup && selectedOrder.pickup_location && (
+                    <p className="text-sm text-slate-600 mt-1">{selectedOrder.pickup_location}</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-slate-500 text-sm">Total</Label>

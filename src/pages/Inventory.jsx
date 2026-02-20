@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Filter, Eye, Plus, Minus } from 'lucide-react';
+import { Search, Filter, Eye, Plus, Minus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const STATUSES = ['pending', 'received', 'in_stock', 'reserved', 'exported', 'damaged'];
@@ -44,6 +44,13 @@ export default function Inventory() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.InventoryItem.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.InventoryItem.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     }
@@ -136,6 +143,19 @@ export default function Inventory() {
         </Button>
         <Button variant="ghost" size="icon" onClick={() => viewDetails(row)}>
           <Eye className="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={async () => {
+            if (confirm(`Delete ${row.product_name} from inventory?`)) {
+              await deleteMutation.mutateAsync(row.id);
+              await logActivity('Deleted inventory item', `Removed ${row.product_name} (${row.quantity} units)`);
+            }
+          }}
+          title="Delete item"
+        >
+          <Trash2 className="h-4 w-4 text-red-600" />
         </Button>
       </div>
     )}
