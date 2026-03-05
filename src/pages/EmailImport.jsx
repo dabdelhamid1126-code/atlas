@@ -346,7 +346,12 @@ export default function EmailImport() {
 
               <TabsContent value="gmail" className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-slate-600">Select an order confirmation email to import</p>
+                  <p className="text-sm text-slate-600">
+                    Select one or more emails to import
+                    {selectedGmailIds.length > 0 && (
+                      <span className="ml-2 font-semibold text-indigo-600">({selectedGmailIds.length} selected)</span>
+                    )}
+                  </p>
                   <Button variant="outline" size="sm" onClick={fetchGmailEmails} disabled={loadingGmail}>
                     <RefreshCw className={`h-4 w-4 mr-1 ${loadingGmail ? 'animate-spin' : ''}`} />
                     Refresh
@@ -362,27 +367,149 @@ export default function EmailImport() {
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {gmailEmails.map(email => (
-                      <div
-                        key={email.id}
-                        onClick={() => loadGmailEmail(email.id)}
-                        className={`border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors ${selectedGmailId === email.id ? 'border-indigo-400 bg-indigo-50' : ''}`}
-                      >
-                        <p className="font-medium text-sm text-slate-900 truncate">{email.subject}</p>
-                        <p className="text-xs text-slate-500 truncate">{email.from}</p>
-                        <p className="text-xs text-slate-400 mt-1 truncate">{email.snippet}</p>
+                    {gmailEmails.map(email => {
+                      const isSelected = selectedGmailIds.includes(email.id);
+                      return (
+                        <div
+                          key={email.id}
+                          onClick={() => toggleGmailSelection(email.id)}
+                          className={`border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors flex items-start gap-3 ${isSelected ? 'border-indigo-400 bg-indigo-50' : ''}`}
+                        >
+                          <div className={`mt-0.5 w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}`}>
+                            {isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-slate-900 truncate">{email.subject}</p>
+                            <p className="text-xs text-slate-500 truncate">{email.from}</p>
+                            <p className="text-xs text-slate-400 mt-1 truncate">{email.snippet}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Batch import results */}
+                {batchResults.length > 0 && (
+                  <div className="space-y-1">
+                    {batchResults.map((r, i) => (
+                      <div key={i} className={`text-xs px-3 py-1.5 rounded flex items-center gap-2 ${r.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        {r.success ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                        {r.subject}: {r.message}
                       </div>
                     ))}
                   </div>
                 )}
-                {selectedGmailId && (
+
+                {selectedGmailIds.length > 0 && (
                   <Button
-                    onClick={handleParse}
-                    disabled={processing || !emailContent.trim()}
+                    onClick={async () => {
+                      setProcessing(true);
+                      setBatchResults([]);
+                      const results = [];
+                      for (const id of selectedGmailIds) {
+                        const emailMeta = gmailEmails.find(e => e.id === id);
+                        try {
+                          const res = await base44.functions.invoke('fetchGmailEmails', { messageId: id });
+                          const { subject, body } = res.data || {};
+                          const content = `Subject: ${subject}\n\n${body}`;
+
+                          const extractedData = await base44.integrations.Core.InvokeLLM({
+                            prompt: `Extract order information from this order confirmation email. Extract: order number, retailer name, total cost (number only), order date (YYYY-MM-DD), tracking number if available, last 4 digits of credit card, gift card codes (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.`,
+                            prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.`,
+                            file_urls: [],
+                            response_json_schema: {
+                              type: "object",
+                              properties: {
+                                retailer: { type: "string" },
+                                order_number: { type: "string" },
+                                total_cost: { type: "number" },
+                                order_date: { type: "string" },
+                                tracking_number: { type: "string" },
+                                card_last_4: { type: "string" },
+                                gift_card_codes: { type: "array", items: { type: "string" } },
+                                items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
+                              }
+                            },
+                            prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.\n\n${content}`
+                          });
+
+                          const existing = await base44.entities.PurchaseOrder.filter({ order_number: extractedData.order_number });
+                          if (existing.length > 0) {
+                            results.push({ subject: emailMeta?.subject || id, success: false, message: `Already exists (${extractedData.order_number})` });
+                            continue;
+                          }
+
+                          const allProducts = await base44.entities.Product.list();
+                          const allCards = await base44.entities.CreditCard.list();
+                          const allGiftCards = await base44.entities.GiftCard.list();
+
+                          let matchedCard = null;
+                          if (extractedData.card_last_4) {
+                            matchedCard = allCards.find(c => c.card_name?.includes(extractedData.card_last_4));
+                          }
+                          const matchedGiftCards = [];
+                          for (const code of extractedData.gift_card_codes || []) {
+                            const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
+                            if (gc) matchedGiftCards.push(gc);
+                          }
+
+                          const orderItems = (extractedData.items || []).map(item => {
+                            const match = allProducts.find(p => p.upc === item.sku) || allProducts.find(p => p.name?.toLowerCase().includes(item.product_name?.toLowerCase()?.slice(0, 10)));
+                            return {
+                              product_id: match?.id || '',
+                              product_name: match?.name || item.product_name || '',
+                              upc: match?.upc || item.sku || '',
+                              quantity_ordered: item.quantity || 1,
+                              quantity_received: 0,
+                              unit_cost: item.unit_cost || 0
+                            };
+                          });
+
+                          const giftCardIds = matchedGiftCards.map(gc => gc.id);
+                          const giftCardValue = matchedGiftCards.reduce((s, gc) => s + (gc.value || 0), 0);
+
+                          const created = await base44.entities.PurchaseOrder.create({
+                            order_number: extractedData.order_number,
+                            retailer: extractedData.retailer || 'Unknown',
+                            tracking_number: extractedData.tracking_number || '',
+                            credit_card_id: matchedCard?.id || null,
+                            card_name: matchedCard?.card_name || null,
+                            gift_card_ids: giftCardIds,
+                            gift_card_value: giftCardValue,
+                            status: extractedData.tracking_number ? 'shipped' : 'ordered',
+                            order_date: extractedData.order_date || format(new Date(), 'yyyy-MM-dd'),
+                            items: orderItems,
+                            total_cost: extractedData.total_cost || 0,
+                            final_cost: (extractedData.total_cost || 0) - giftCardValue,
+                            category: 'other',
+                            notes: 'Imported from Gmail'
+                          });
+
+                          for (const cardId of giftCardIds) {
+                            await base44.entities.GiftCard.update(cardId, { status: 'used', used_order_number: extractedData.order_number });
+                          }
+
+                          results.push({ subject: emailMeta?.subject || id, success: true, message: `Imported as ${extractedData.order_number}` });
+                        } catch (err) {
+                          results.push({ subject: emailMeta?.subject || id, success: false, message: err.message });
+                        }
+                      }
+                      setBatchResults(results);
+                      setSelectedGmailIds([]);
+                      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+                      const successCount = results.filter(r => r.success).length;
+                      if (successCount > 0) toast.success(`${successCount} order(s) imported!`);
+                      setProcessing(false);
+                    }}
+                    disabled={processing}
                     className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
                     size="lg"
                   >
-                    {processing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</> : <><Upload className="h-4 w-4 mr-2" />Import Selected Email</>}
+                    {processing
+                      ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
+                      : <><Upload className="h-4 w-4 mr-2" />Import {selectedGmailIds.length} Email{selectedGmailIds.length > 1 ? 's' : ''}</>
+                    }
                   </Button>
                 )}
               </TabsContent>
