@@ -895,7 +895,7 @@ export default function PurchaseOrders() {
                 <input
                   type="checkbox"
                   checked={formData.is_pickup}
-                  onChange={(e) => setFormData({ ...formData, is_pickup: e.target.checked })}
+                  onChange={(e) => setFormData({ ...formData, is_pickup: e.target.checked, is_dropship: e.target.checked ? false : formData.is_dropship })}
                   className="rounded"
                 />
                 <span className="text-sm font-medium">Pickup Order</span>
@@ -907,6 +907,28 @@ export default function PurchaseOrders() {
                     value={formData.pickup_location}
                     onChange={(e) => setFormData({ ...formData, pickup_location: e.target.value })}
                     placeholder="Enter pickup location"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.is_dropship}
+                  onChange={(e) => setFormData({ ...formData, is_dropship: e.target.checked, is_pickup: e.target.checked ? false : formData.is_pickup })}
+                  className="rounded"
+                />
+                <span className="text-sm font-medium">Dropship Order</span>
+                <span className="text-xs text-slate-500">(ships directly to seller)</span>
+              </label>
+              {formData.is_dropship && (
+                <div className="ml-6">
+                  <Label>Ship To (Seller)</Label>
+                  <Input
+                    value={formData.dropship_to}
+                    onChange={(e) => setFormData({ ...formData, dropship_to: e.target.value })}
+                    placeholder="Seller name or address"
                   />
                 </div>
               )}
