@@ -404,103 +404,102 @@ export default function EmailImport() {
                 {selectedGmailIds.length > 0 && (
                   <Button
                     onClick={async () => {
+                      if (selectedGmailIds.length === 0) return;
                       setProcessing(true);
-                      setBatchResults([]);
-                      const results = [];
-                      for (const id of selectedGmailIds) {
-                        const emailMeta = gmailEmails.find(e => e.id === id);
-                        try {
-                          const res = await base44.functions.invoke('fetchGmailEmails', { messageId: id });
-                          const { subject, body } = res.data || {};
-                          const content = `Subject: ${subject}\n\n${body}`;
+                      // For now, process the first selected email and show the confirmation dialog
+                      // (same flow as PDF import)
+                      const id = selectedGmailIds[0];
+                      const emailMeta = gmailEmails.find(e => e.id === id);
+                      try {
+                        const res = await base44.functions.invoke('fetchGmailEmails', { messageId: id });
+                        const { subject, body } = res.data || {};
+                        const content = `Subject: ${subject}\n\n${body}`;
 
-                          const extractedData = await base44.integrations.Core.InvokeLLM({
-                            prompt: `Extract order information from this order confirmation email. Extract: order number, retailer name, total cost (number only), order date (YYYY-MM-DD), tracking number if available, last 4 digits of credit card, gift card codes (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.`,
-                            prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.`,
-                            file_urls: [],
-                            response_json_schema: {
-                              type: "object",
-                              properties: {
-                                retailer: { type: "string" },
-                                order_number: { type: "string" },
-                                total_cost: { type: "number" },
-                                order_date: { type: "string" },
-                                tracking_number: { type: "string" },
-                                card_last_4: { type: "string" },
-                                gift_card_codes: { type: "array", items: { type: "string" } },
-                                items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
-                              }
-                            },
-                            prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.\n\n${content}`
-                          });
-
-                          const existing = await base44.entities.PurchaseOrder.filter({ order_number: extractedData.order_number });
-                          if (existing.length > 0) {
-                            results.push({ subject: emailMeta?.subject || id, success: false, message: `Already exists (${extractedData.order_number})` });
-                            continue;
+                        const extracted = await base44.integrations.Core.InvokeLLM({
+                          prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.\n\n${content}`,
+                          response_json_schema: {
+                            type: "object",
+                            properties: {
+                              retailer: { type: "string" },
+                              order_number: { type: "string" },
+                              total_cost: { type: "number" },
+                              order_date: { type: "string" },
+                              tracking_number: { type: "string" },
+                              card_last_4: { type: "string" },
+                              gift_card_codes: { type: "array", items: { type: "string" } },
+                              items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
+                            }
                           }
+                        });
 
-                          const allProducts = await base44.entities.Product.list();
-                          const allCards = await base44.entities.CreditCard.list();
-                          const allGiftCards = await base44.entities.GiftCard.list();
-
-                          let matchedCard = null;
-                          if (extractedData.card_last_4) {
-                            matchedCard = allCards.find(c => c.card_name?.includes(extractedData.card_last_4));
-                          }
-                          const matchedGiftCards = [];
-                          for (const code of extractedData.gift_card_codes || []) {
-                            const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
-                            if (gc) matchedGiftCards.push(gc);
-                          }
-
-                          const orderItems = (extractedData.items || []).map(item => {
-                            const match = allProducts.find(p => p.upc === item.sku) || allProducts.find(p => p.name?.toLowerCase().includes(item.product_name?.toLowerCase()?.slice(0, 10)));
-                            return {
-                              product_id: match?.id || '',
-                              product_name: match?.name || item.product_name || '',
-                              upc: match?.upc || item.sku || '',
-                              quantity_ordered: item.quantity || 1,
-                              quantity_received: 0,
-                              unit_cost: item.unit_cost || 0
-                            };
-                          });
-
-                          const giftCardIds = matchedGiftCards.map(gc => gc.id);
-                          const giftCardValue = matchedGiftCards.reduce((s, gc) => s + (gc.value || 0), 0);
-
-                          const created = await base44.entities.PurchaseOrder.create({
-                            order_number: extractedData.order_number,
-                            retailer: extractedData.retailer || 'Unknown',
-                            tracking_number: extractedData.tracking_number || '',
-                            credit_card_id: matchedCard?.id || null,
-                            card_name: matchedCard?.card_name || null,
-                            gift_card_ids: giftCardIds,
-                            gift_card_value: giftCardValue,
-                            status: extractedData.tracking_number ? 'shipped' : 'ordered',
-                            order_date: extractedData.order_date || format(new Date(), 'yyyy-MM-dd'),
-                            items: orderItems,
-                            total_cost: extractedData.total_cost || 0,
-                            final_cost: (extractedData.total_cost || 0) - giftCardValue,
-                            category: 'other',
-                            notes: 'Imported from Gmail'
-                          });
-
-                          for (const cardId of giftCardIds) {
-                            await base44.entities.GiftCard.update(cardId, { status: 'used', used_order_number: extractedData.order_number });
-                          }
-
-                          results.push({ subject: emailMeta?.subject || id, success: true, message: `Imported as ${extractedData.order_number}` });
-                        } catch (err) {
-                          results.push({ subject: emailMeta?.subject || id, success: false, message: err.message });
+                        const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
+                        if (existing.length > 0) {
+                          toast.error(`Order ${extracted.order_number} already exists`);
+                          setProcessing(false);
+                          return;
                         }
+
+                        const [allProducts, allCards, allGiftCards] = await Promise.all([
+                          base44.entities.Product.list(),
+                          base44.entities.CreditCard.list(),
+                          base44.entities.GiftCard.list()
+                        ]);
+
+                        let matchedCard = null;
+                        if (extracted.card_last_4) {
+                          matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
+                        }
+                        const matchedGiftCards = [];
+                        for (const code of extracted.gift_card_codes || []) {
+                          const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
+                          if (gc) matchedGiftCards.push(gc);
+                        }
+
+                        const matches = [];
+                        for (const item of extracted.items || []) {
+                          const suggestions = allProducts
+                            .map(p => {
+                              let score = 0;
+                              const itemName = item.product_name?.toLowerCase() || '';
+                              const prodName = p.name?.toLowerCase() || '';
+                              if (item.sku && p.upc === item.sku) score = 100;
+                              else if (prodName === itemName) score = 95;
+                              else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
+                              else {
+                                const itemWords = itemName.split(/\s+/).filter(w => w.length > 2);
+                                const prodWords = prodName.split(/\s+/).filter(w => w.length > 2);
+                                const matchingWords = itemWords.filter(iw => prodWords.some(pw => pw.includes(iw) || iw.includes(pw) || (Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3)))))).length;
+                                if (matchingWords > 0) score = (matchingWords / Math.max(itemWords.length, prodWords.length)) * 75;
+                                if (Math.abs(itemName.length - prodName.length) < 5) score += 5;
+                                const itemNumbers = itemName.match(/\d+/g) || [];
+                                const prodNumbers = prodName.match(/\d+/g) || [];
+                                score += itemNumbers.filter(num => prodNumbers.includes(num)).length * 10;
+                              }
+                              return { product: p, score };
+                            })
+                            .filter(m => m.score > 20)
+                            .sort((a, b) => b.score !== a.score ? b.score - a.score : a.product.name.localeCompare(b.product.name))
+                            .slice(0, 8);
+
+                          matches.push({
+                            invoiceName: item.product_name,
+                            sku: item.sku,
+                            quantity: item.quantity || 1,
+                            unit_cost: item.unit_cost || 0,
+                            suggestions,
+                            selectedProduct: suggestions[0]?.product || null
+                          });
+                        }
+
+                        setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'Gmail' });
+                        setProductMatches(matches);
+                        setConfirmDialogOpen(true);
+                        setSelectedGmailIds([]);
+                      } catch (err) {
+                        toast.error('Failed to process email: ' + err.message);
+                      } finally {
+                        setProcessing(false);
                       }
-                      setBatchResults(results);
-                      setSelectedGmailIds([]);
-                      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-                      const successCount = results.filter(r => r.success).length;
-                      if (successCount > 0) toast.success(`${successCount} order(s) imported!`);
-                      setProcessing(false);
                     }}
                     disabled={processing}
                     className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
@@ -508,7 +507,7 @@ export default function EmailImport() {
                   >
                     {processing
                       ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
-                      : <><Upload className="h-4 w-4 mr-2" />Import {selectedGmailIds.length} Email{selectedGmailIds.length > 1 ? 's' : ''}</>
+                      : <><Upload className="h-4 w-4 mr-2" />Review & Import {selectedGmailIds.length > 1 ? `(1 of ${selectedGmailIds.length})` : 'Email'}</>
                     }
                   </Button>
                 )}
