@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
     try {
@@ -12,12 +12,12 @@ Deno.serve(async (req) => {
         const { upc } = await req.json();
         
         if (!upc) {
-            return Response.json({ 
-                error: 'UPC is required' 
-            }, { status: 400 });
+            return Response.json({ error: 'UPC is required' }, { status: 400 });
         }
 
-        const response = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`);
+        const response = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`, {
+            headers: { 'Accept': 'application/json' }
+        });
         const data = await response.json();
         
         if (data.code === 'OK' && data.items && data.items.length > 0) {
@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
         }
     } catch (error) {
         return Response.json({ 
-            error: 'Product not found. Please enter manually.' 
+            error: 'Product not found. Please enter manually.',
+            details: error.message
         }, { status: 500 });
     }
 });
