@@ -59,7 +59,6 @@ import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
 import Rewards from './pages/Rewards';
-import PackageTracking from './pages/PackageTracking';
 import __Layout from './Layout.jsx';
 
 
@@ -76,7 +75,6 @@ export const PAGES = {
     "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,
     "Rewards": Rewards,
-    "PackageTracking": PackageTracking,
 }
 
 export const pagesConfig = {
