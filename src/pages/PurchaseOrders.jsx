@@ -626,6 +626,12 @@ export default function PurchaseOrders() {
       bonus_amount: formData.bonus_amount ? parseFloat(formData.bonus_amount) : null
     };
     
+    // Save new seller if entered manually
+    if (formData.is_dropship && formData.dropship_to && !sellers.find(s => s.name === formData.dropship_to)) {
+      base44.entities.Seller.create({ name: formData.dropship_to });
+      queryClient.invalidateQueries({ queryKey: ['sellers'] });
+    }
+
     if (editingOrder) {
       updateMutation.mutate({ id: editingOrder.id, data: dataToSubmit });
     } else {
