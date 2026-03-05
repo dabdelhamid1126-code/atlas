@@ -848,6 +848,7 @@ export default function PurchaseOrders() {
                     <SelectItem value="Costco">Costco</SelectItem>
                     <SelectItem value="Sam's Club">Sam's Club</SelectItem>
                     <SelectItem value="eBay">eBay</SelectItem>
+                    <SelectItem value="Woot">Woot</SelectItem>
                     <SelectItem value="Apple">Apple</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
