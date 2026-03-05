@@ -19,7 +19,8 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Truck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
