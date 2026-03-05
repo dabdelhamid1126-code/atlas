@@ -685,6 +685,11 @@ export default function PurchaseOrders() {
             📍 Pickup
           </span>
         )}
+        {row.is_dropship && (
+          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded" title={row.dropship_to || 'Dropship'}>
+            🚚 Dropship
+          </span>
+        )}
       </div>
     )},
     { header: 'Items', accessor: 'items', cell: (row) => {
