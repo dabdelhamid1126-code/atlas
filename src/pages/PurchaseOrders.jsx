@@ -657,7 +657,13 @@ export default function PurchaseOrders() {
       order.retailer?.toLowerCase().includes(search.toLowerCase()) ||
       order.items?.some(item => item.product_name?.toLowerCase().includes(search.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || order.category === categoryFilter;
+    let matchesCategory = true;
+    if (categoryFilter === 'dropship') matchesCategory = order.is_dropship === true;
+    else if (categoryFilter === 'pickup') matchesCategory = order.is_pickup === true;
+    else if (categoryFilter === 'shipping') matchesCategory = !order.is_dropship && !order.is_pickup;
+
+    const retailerFilterValue = retailerFilter;
+    const matchesRetailer = retailerFilterValue === 'all' || order.retailer === retailerFilterValue;
     
     let matchesDate = true;
     if (dateFilter !== 'all' && order.order_date) {
