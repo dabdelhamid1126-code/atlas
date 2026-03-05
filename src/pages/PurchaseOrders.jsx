@@ -502,6 +502,8 @@ export default function PurchaseOrders() {
         gift_card_ids: [],
         is_pickup: false,
         pickup_location: '',
+        is_dropship: false,
+        dropship_to: '',
         status: 'pending',
         order_date: format(new Date(), 'yyyy-MM-dd'),
         expected_date: '',
