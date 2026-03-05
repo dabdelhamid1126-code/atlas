@@ -30,7 +30,8 @@ export default function EmailImport() {
   const [productMatches, setProductMatches] = useState([]);
   const [gmailEmails, setGmailEmails] = useState([]);
   const [loadingGmail, setLoadingGmail] = useState(false);
-  const [selectedGmailId, setSelectedGmailId] = useState(null);
+  const [selectedGmailIds, setSelectedGmailIds] = useState([]);
+  const [batchResults, setBatchResults] = useState([]);
   const queryClient = useQueryClient();
 
   const fetchGmailEmails = async () => {
@@ -45,19 +46,10 @@ export default function EmailImport() {
     }
   };
 
-  const loadGmailEmail = async (id) => {
-    setSelectedGmailId(id);
-    setProcessing(true);
-    try {
-      const res = await base44.functions.invoke('fetchGmailEmails', { messageId: id });
-      const { subject, body } = res.data || {};
-      setEmailContent(`Subject: ${subject}\n\n${body}`);
-      toast.success('Email loaded! Click "Import Order" to process it.');
-    } catch (e) {
-      toast.error('Failed to load email: ' + e.message);
-    } finally {
-      setProcessing(false);
-    }
+  const toggleGmailSelection = (id) => {
+    setSelectedGmailIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
   };
 
   const handleParse = async () => {
