@@ -654,9 +654,87 @@ export default function PurchaseOrders() {
     }
   };
 
+  const [addUpdateDialog, setAddUpdateDialog] = useState(false);
+  const [updateForm, setUpdateForm] = useState({ status: 'In Transit', location: '', description: '', event_datetime: '' });
+
+  const { data: allTrackingUpdates = [] } = useQuery({
+    queryKey: ['trackingUpdates'],
+    queryFn: () => base44.entities.TrackingUpdate.list('-event_datetime'),
+  });
+
   const viewDetails = (order) => {
     setSelectedOrder(order);
     setDetailsOpen(true);
+  };
+
+  const saveOrderField = async (field, value) => {
+    await base44.entities.PurchaseOrder.update(selectedOrder.id, { [field]: value });
+    setSelectedOrder(prev => ({ ...prev, [field]: value }));
+    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+    toast.success('Updated');
+  };
+
+  const syncShipment = async (order) => {
+    if (!order.tracking_number) return;
+    const existing = await base44.entities.Shipment.filter({ tracking_number: order.tracking_number });
+    const statusMap = {
+      pending: 'Pending', ordered: 'Pending', shipped: 'In Transit',
+      in_transit: 'In Transit', out_for_delivery: 'Out for Delivery',
+      partially_received: 'In Transit', received: 'Delivered',
+      exception: 'Exception', cancelled: 'Exception',
+    };
+    const shipStatus = statusMap[order.current_status || order.status] || 'Pending';
+    if (existing && existing.length > 0) {
+      await base44.entities.Shipment.update(existing[0].id, {
+        current_status: shipStatus,
+        carrier_name: order.carrier || existing[0].carrier_name,
+        estimated_delivery_date: order.expected_date || existing[0].estimated_delivery_date,
+      });
+    } else {
+      await base44.entities.Shipment.create({
+        tracking_number: order.tracking_number,
+        recipient_name: order.retailer || 'Unknown',
+        carrier_name: order.carrier || '',
+        current_status: shipStatus,
+        estimated_delivery_date: order.expected_date || null,
+      });
+    }
+    queryClient.invalidateQueries({ queryKey: ['shipments'] });
+  };
+
+  const handleAutoTrack = async () => {
+    if (!selectedOrder?.tracking_number) return;
+    const updates = allTrackingUpdates.filter(u => u.tracking_number === selectedOrder.tracking_number);
+    if (updates.length === 0) { toast.error('No tracking updates found for this tracking number'); return; }
+    const latest = updates.sort((a, b) => new Date(b.event_datetime) - new Date(a.event_datetime))[0];
+    const statusMap = {
+      'Pending': 'pending', 'In Transit': 'shipped', 'Out for Delivery': 'out_for_delivery',
+      'Delivered': 'received', 'Exception': 'exception',
+    };
+    const newStatus = statusMap[latest.status] || selectedOrder.status;
+    await base44.entities.PurchaseOrder.update(selectedOrder.id, { status: newStatus, tracking_location: latest.location });
+    setSelectedOrder(prev => ({ ...prev, status: newStatus, tracking_location: latest.location }));
+    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+    toast.success(`Status updated to ${latest.status}`);
+  };
+
+  const handleAddUpdate = async (e) => {
+    e.preventDefault();
+    await base44.entities.TrackingUpdate.create({
+      tracking_number: selectedOrder.tracking_number,
+      shipment_id: selectedOrder.shipment_id || '',
+      ...updateForm,
+    });
+    // also update shipment
+    const existing = await base44.entities.Shipment.filter({ tracking_number: selectedOrder.tracking_number });
+    if (existing && existing.length > 0) {
+      await base44.entities.Shipment.update(existing[0].id, { current_status: updateForm.status });
+      setSelectedOrder(prev => ({ ...prev, shipment_id: existing[0].id }));
+    }
+    queryClient.invalidateQueries({ queryKey: ['trackingUpdates'] });
+    setAddUpdateDialog(false);
+    setUpdateForm({ status: 'In Transit', location: '', description: '', event_datetime: '' });
+    toast.success('Tracking update added');
   };
 
   const handleDelete = async (order) => {
