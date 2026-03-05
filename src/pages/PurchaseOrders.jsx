@@ -116,6 +116,11 @@ export default function PurchaseOrders() {
     queryFn: () => base44.entities.Reward.list()
   });
 
+  const { data: sellers = [] } = useQuery({
+    queryKey: ['sellers'],
+    queryFn: () => base44.entities.Seller.list()
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const newOrder = await base44.entities.PurchaseOrder.create(data);
