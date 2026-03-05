@@ -337,7 +337,11 @@ export default function EmailImport() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="paste" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="gmail" onClick={fetchGmailEmails}>
+                  <Inbox className="h-4 w-4 mr-2" />
+                  Gmail
+                </TabsTrigger>
                 <TabsTrigger value="paste">
                   <Mail className="h-4 w-4 mr-2" />
                   Paste Email
@@ -347,6 +351,49 @@ export default function EmailImport() {
                   Upload PDF
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="gmail" className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-slate-600">Select an order confirmation email to import</p>
+                  <Button variant="outline" size="sm" onClick={fetchGmailEmails} disabled={loadingGmail}>
+                    <RefreshCw className={`h-4 w-4 mr-1 ${loadingGmail ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+                {loadingGmail ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                  </div>
+                ) : gmailEmails.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    No order emails found. Click Refresh to load from Gmail.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {gmailEmails.map(email => (
+                      <div
+                        key={email.id}
+                        onClick={() => loadGmailEmail(email.id)}
+                        className={`border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors ${selectedGmailId === email.id ? 'border-indigo-400 bg-indigo-50' : ''}`}
+                      >
+                        <p className="font-medium text-sm text-slate-900 truncate">{email.subject}</p>
+                        <p className="text-xs text-slate-500 truncate">{email.from}</p>
+                        <p className="text-xs text-slate-400 mt-1 truncate">{email.snippet}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {selectedGmailId && (
+                  <Button
+                    onClick={handleParse}
+                    disabled={processing || !emailContent.trim()}
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                    size="lg"
+                  >
+                    {processing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</> : <><Upload className="h-4 w-4 mr-2" />Import Selected Email</>}
+                  </Button>
+                )}
+              </TabsContent>
 
               <TabsContent value="paste" className="space-y-4">
                 <Textarea
