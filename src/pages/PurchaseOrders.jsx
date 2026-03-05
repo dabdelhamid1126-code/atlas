@@ -1519,8 +1519,9 @@ export default function PurchaseOrders() {
                       variant="outline"
                       className="text-xs h-7"
                       onClick={handleAutoTrack}
+                      disabled={autoTracking}
                     >
-                      <Package className="h-3 w-3 mr-1" /> Track Package
+                      <Package className="h-3 w-3 mr-1" /> {autoTracking ? 'Tracking...' : 'Track Package'}
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
