@@ -1059,7 +1059,7 @@ export default function PurchaseOrders() {
               </div>
             )}
             
-            {formData.credit_card_id && formData.retailer?.toLowerCase().includes('amazon') && (() => {
+            {formData.credit_card_id && (formData.retailer?.toLowerCase().includes('amazon') || formData.retailer?.toLowerCase().includes('woot')) && (() => {
               const orderTotal = parseFloat(formData.original_price) || formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0);
               const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
                 const gc = giftCards.find(g => g.id === id);
