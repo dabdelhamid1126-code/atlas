@@ -28,7 +28,37 @@ export default function EmailImport() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
   const [productMatches, setProductMatches] = useState([]);
+  const [gmailEmails, setGmailEmails] = useState([]);
+  const [loadingGmail, setLoadingGmail] = useState(false);
+  const [selectedGmailId, setSelectedGmailId] = useState(null);
   const queryClient = useQueryClient();
+
+  const fetchGmailEmails = async () => {
+    setLoadingGmail(true);
+    try {
+      const res = await base44.functions.invoke('fetchGmailEmails', {});
+      setGmailEmails(res.data?.emails || []);
+    } catch (e) {
+      toast.error('Failed to fetch Gmail: ' + e.message);
+    } finally {
+      setLoadingGmail(false);
+    }
+  };
+
+  const loadGmailEmail = async (id) => {
+    setSelectedGmailId(id);
+    setProcessing(true);
+    try {
+      const res = await base44.functions.invoke('fetchGmailEmails', { messageId: id });
+      const { subject, body } = res.data || {};
+      setEmailContent(`Subject: ${subject}\n\n${body}`);
+      toast.success('Email loaded! Click "Import Order" to process it.');
+    } catch (e) {
+      toast.error('Failed to load email: ' + e.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const handleParse = async () => {
     if (!emailContent.trim()) {
