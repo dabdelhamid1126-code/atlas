@@ -776,13 +776,10 @@ export default function PurchaseOrders() {
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="dining">Dining</SelectItem>
-            <SelectItem value="travel">Travel</SelectItem>
-            <SelectItem value="groceries">Groceries</SelectItem>
-            <SelectItem value="gas">Gas</SelectItem>
-            <SelectItem value="streaming">Streaming</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
+            <SelectItem value="all">All Orders</SelectItem>
+            <SelectItem value="dropship">Dropship</SelectItem>
+            <SelectItem value="pickup">Pickup</SelectItem>
+            <SelectItem value="shipping">Shipping</SelectItem>
           </SelectContent>
         </Select>
         <Select value={dateFilter} onValueChange={setDateFilter}>
