@@ -1382,6 +1382,12 @@ export default function PurchaseOrders() {
                   {selectedOrder.is_pickup && selectedOrder.pickup_location && (
                     <p className="text-sm text-slate-600 mt-1">{selectedOrder.pickup_location}</p>
                   )}
+                  {selectedOrder.is_dropship && (
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded mt-1 inline-block">🚚 Dropship</span>
+                  )}
+                  {selectedOrder.is_dropship && selectedOrder.dropship_to && (
+                    <p className="text-sm text-slate-600 mt-1">To: {selectedOrder.dropship_to}</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-slate-500 text-sm">Total</Label>
