@@ -934,13 +934,30 @@ export default function PurchaseOrders() {
                 <span className="text-xs text-slate-500">(ships directly to seller)</span>
               </label>
               {formData.is_dropship && (
-                <div className="ml-6">
+                <div className="ml-6 space-y-2">
                   <Label>Ship To (Seller)</Label>
-                  <Input
+                  <Select
                     value={formData.dropship_to}
-                    onChange={(e) => setFormData({ ...formData, dropship_to: e.target.value })}
-                    placeholder="Seller name or address"
-                  />
+                    onValueChange={(v) => setFormData({ ...formData, dropship_to: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select seller" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sellers.map(s => (
+                        <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                      ))}
+                      <SelectItem value="__new__">+ Add new seller...</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(formData.dropship_to === '__new__' || (formData.dropship_to && !sellers.find(s => s.name === formData.dropship_to))) && (
+                    <Input
+                      value={formData.dropship_to === '__new__' ? '' : formData.dropship_to}
+                      onChange={(e) => setFormData({ ...formData, dropship_to: e.target.value })}
+                      placeholder="Enter new seller name"
+                      autoFocus
+                    />
+                  )}
                 </div>
               )}
             </div>
