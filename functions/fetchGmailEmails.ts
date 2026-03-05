@@ -56,8 +56,8 @@ Deno.serve(async (req) => {
       return Response.json({ subject, from, date, body: bodyText });
     }
 
-    // Otherwise list order confirmation emails
-    const query = '(subject:(order confirmation OR order placed OR your order OR order receipt OR order shipped OR order summary OR purchase confirmation OR order details OR thanks for your order OR thank you for your order OR invoice) OR from:(woot.com OR amazon.com OR bestbuy.com OR walmart.com OR target.com OR costco.com OR ebay.com OR newegg.com OR bhphotovideo.com OR antonline.com)) newer_than:180d';
+    // Only fetch actual order confirmation emails, not promotions
+    const query = 'subject:(("order confirmation") OR ("order placed") OR ("order receipt") OR ("purchase confirmation") OR ("thanks for your order") OR ("thank you for your order") OR ("your order of") OR ("your recent order")) newer_than:180d -category:promotions';
     const listRes = await fetch(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=30`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
