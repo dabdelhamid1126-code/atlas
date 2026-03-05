@@ -55,19 +55,53 @@ export default function TrackingLookup() {
     setUpdates([]);
     setSearched(true);
 
-    const results = await base44.entities.Shipment.filter({ tracking_number: query.trim() });
-    if (!results || results.length === 0) {
+    const trimmed = query.trim();
+
+    // 1. Try local Shipment record
+    const results = await base44.entities.Shipment.filter({ tracking_number: trimmed });
+
+    // 2. Fetch live data from external API in parallel
+    let liveData = null;
+    try {
+      const res = await base44.functions.invoke('trackPackageExternal', { tracking_number: trimmed });
+      liveData = res?.data;
+    } catch (_) {}
+
+    if ((!results || results.length === 0) && (!liveData || !liveData.current_status)) {
       setError('No shipment found with that tracking number.');
       setLoading(false);
       return;
     }
 
-    const found = results[0];
+    // Use local record as base, overlay live status if available
+    let found = results?.[0] || {
+      tracking_number: trimmed,
+      current_status: liveData?.current_status || 'In Transit',
+      estimated_delivery_date: liveData?.estimated_delivery ? liveData.estimated_delivery.split('T')[0] : null,
+    };
+
+    if (liveData?.current_status) {
+      found = { ...found, current_status: liveData.current_status };
+      if (liveData.estimated_delivery) found.estimated_delivery_date = liveData.estimated_delivery.split('T')[0];
+    }
+
     setShipment(found);
 
-    const trackingUpdates = await base44.entities.TrackingUpdate.filter({ shipment_id: found.id });
-    const sorted = (trackingUpdates || []).sort((a, b) => new Date(b.event_datetime) - new Date(a.event_datetime));
-    setUpdates(sorted);
+    // Merge local + live events
+    let localUpdates = [];
+    if (results?.[0]?.id) {
+      const tu = await base44.entities.TrackingUpdate.filter({ tracking_number: trimmed });
+      localUpdates = tu || [];
+    }
+
+    const liveEvents = (liveData?.events || []).map((ev, i) => ({ ...ev, id: `live-${i}` }));
+    const existingDates = new Set(localUpdates.map(u => u.event_datetime));
+    const merged = [
+      ...localUpdates,
+      ...liveEvents.filter(ev => !existingDates.has(ev.event_datetime)),
+    ].sort((a, b) => new Date(b.event_datetime) - new Date(a.event_datetime));
+
+    setUpdates(merged);
     setLoading(false);
   };
 
