@@ -684,7 +684,7 @@ export default function PurchaseOrders() {
       }
     }
     
-    return matchesSearch && matchesStatus && matchesCategory && matchesDate;
+    return matchesSearch && matchesStatus && matchesCategory && matchesDate && matchesRetailer;
   });
 
   const columns = [
