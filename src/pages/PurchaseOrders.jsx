@@ -22,9 +22,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Pencil, MapPin, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
+
+const CARRIERS = ['UPS', 'FedEx', 'USPS', 'DHL', 'OnTrac', 'LaserShip', 'Amazon Logistics', 'Other'];
+
+const ORDER_DETAIL_STATUSES = [
+  { value: 'pending', label: 'Pending', color: 'bg-slate-100 text-slate-700' },
+  { value: 'ordered', label: 'Ordered', color: 'bg-blue-100 text-blue-700' },
+  { value: 'shipped', label: 'Shipped', color: 'bg-indigo-100 text-indigo-700' },
+  { value: 'in_transit', label: 'In Transit', color: 'bg-cyan-100 text-cyan-700' },
+  { value: 'out_for_delivery', label: 'Out for Delivery', color: 'bg-orange-100 text-orange-700' },
+  { value: 'partially_received', label: 'Partially Received', color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'received', label: 'Delivered', color: 'bg-green-100 text-green-700' },
+  { value: 'exception', label: 'Exception', color: 'bg-red-100 text-red-700' },
+  { value: 'cancelled', label: 'Cancelled', color: 'bg-slate-200 text-slate-600' },
+];
+
+const TRACKING_STATUSES = ['Pending', 'In Transit', 'Out for Delivery', 'Delivered', 'Exception'];
+
+const trackingStatusColors = {
+  'Pending': 'bg-slate-100 text-slate-700',
+  'In Transit': 'bg-blue-100 text-blue-700',
+  'Out for Delivery': 'bg-orange-100 text-orange-700',
+  'Delivered': 'bg-green-100 text-green-700',
+  'Exception': 'bg-red-100 text-red-700',
+};
+
+const trackingStatusDots = {
+  'Pending': 'bg-slate-400',
+  'In Transit': 'bg-blue-500',
+  'Out for Delivery': 'bg-orange-500',
+  'Delivered': 'bg-green-500',
+  'Exception': 'bg-red-500',
+};
 
 const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'received', 'cancelled'];
 
