@@ -36,6 +36,7 @@ export default function PurchaseOrders() {
   const [dateFilter, setDateFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('order-date-new');
+  const [retailerFilter, setRetailerFilter] = useState('all');
   const [productSearches, setProductSearches] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
