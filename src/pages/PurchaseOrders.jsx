@@ -1436,6 +1436,7 @@ export default function PurchaseOrders() {
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
+              {/* Order & Retailer */}
               <div className="grid grid-cols-2 gap-6 pb-4 border-b">
                 <div>
                   <Label className="text-slate-500 text-sm">Order Number</Label>
@@ -1446,18 +1447,28 @@ export default function PurchaseOrders() {
                   <p className="font-semibold text-lg capitalize">{selectedOrder.retailer}</p>
                 </div>
               </div>
-              
+
+              {/* Status (editable) + Total */}
               <div className="grid grid-cols-2 gap-6 pb-4 border-b">
                 <div>
-                  <Label className="text-slate-500 text-sm">Status</Label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <StatusBadge status={selectedOrder.status} />
-                    {selectedOrder.is_pickup && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">📍 Pickup</span>
-                    )}
-                  </div>
-                  {selectedOrder.is_pickup && selectedOrder.pickup_location && (
-                    <p className="text-sm text-slate-600 mt-1">{selectedOrder.pickup_location}</p>
+                  <Label className="text-slate-500 text-sm mb-1 block">Status</Label>
+                  <Select
+                    value={selectedOrder.status}
+                    onValueChange={(v) => saveOrderField('status', v)}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ORDER_DETAIL_STATUSES.map(s => (
+                        <SelectItem key={s.value} value={s.value}>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${s.color}`}>{s.label}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedOrder.is_pickup && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded mt-1 inline-block">📍 {selectedOrder.pickup_location || 'Pickup'}</span>
                   )}
                 </div>
                 <div>
@@ -1465,22 +1476,59 @@ export default function PurchaseOrders() {
                   <p className="font-semibold text-lg">${selectedOrder.final_cost?.toFixed(2) || selectedOrder.total_cost?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
-              
+
+              {/* Tracking Section */}
               {selectedOrder.tracking_number && (
-                <div className="pb-4 border-b">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="pb-4 border-b space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-slate-700 font-semibold">📦 Tracking</Label>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7"
+                      onClick={handleAutoTrack}
+                    >
+                      <Package className="h-3 w-3 mr-1" /> Track Package
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-slate-500 text-xs">Tracking Number</Label>
                       <p className="font-mono text-sm mt-1">{selectedOrder.tracking_number}</p>
                     </div>
                     <div>
-                      <Label className="text-slate-500 text-xs">Carrier</Label>
-                      <p className="font-semibold text-sm mt-1 uppercase">{selectedOrder.carrier || 'N/A'}</p>
+                      <Label className="text-slate-500 text-xs mb-1 block">Carrier</Label>
+                      <Select
+                        value={selectedOrder.carrier || ''}
+                        onValueChange={async (v) => {
+                          await saveOrderField('carrier', v);
+                          await syncShipment({ ...selectedOrder, carrier: v });
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select carrier" /></SelectTrigger>
+                        <SelectContent>
+                          {CARRIERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
+                  </div>
+                  <div>
+                    <Label className="text-slate-500 text-xs mb-1 block">Estimated Delivery Date</Label>
+                    <Input
+                      type="date"
+                      className="h-8 text-sm"
+                      value={selectedOrder.expected_date || ''}
+                      onChange={async (e) => {
+                        await saveOrderField('expected_date', e.target.value);
+                        await syncShipment({ ...selectedOrder, expected_date: e.target.value });
+                      }}
+                    />
                   </div>
                 </div>
               )}
-              <div className="pb-4">
+
+              {/* Items */}
+              <div className="pb-4 border-b">
                 <Label className="text-slate-500 text-sm mb-2 block">Items ({selectedOrder.items?.length || 0})</Label>
                 <div className="space-y-2">
                   {selectedOrder.items?.map((item, i) => (
@@ -1491,38 +1539,90 @@ export default function PurchaseOrders() {
                   ))}
                 </div>
               </div>
-              
+
+              {/* Tracking Timeline */}
+              {selectedOrder.tracking_number && (() => {
+                const orderUpdates = allTrackingUpdates
+                  .filter(u => u.tracking_number === selectedOrder.tracking_number)
+                  .sort((a, b) => new Date(b.event_datetime) - new Date(a.event_datetime));
+                return (
+                  <div className="pb-4 border-b">
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-slate-700 font-semibold">Tracking Timeline</Label>
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
+                        setUpdateForm({ status: 'In Transit', location: '', description: '', event_datetime: new Date().toISOString().slice(0, 16) });
+                        setAddUpdateDialog(true);
+                      }}>
+                        <Plus className="h-3 w-3 mr-1" /> Add Update
+                      </Button>
+                    </div>
+                    {orderUpdates.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-3">No tracking updates yet</p>
+                    ) : (
+                      <div className="space-y-0">
+                        {orderUpdates.map((u, i) => {
+                          const isLast = i === orderUpdates.length - 1;
+                          return (
+                            <div key={u.id} className="flex gap-3">
+                              <div className="flex flex-col items-center">
+                                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${trackingStatusDots[u.status] || 'bg-slate-400'}`} />
+                                {!isLast && <div className="w-0.5 bg-slate-200 flex-1 mt-1 mb-1 min-h-[12px]" />}
+                              </div>
+                              <div className={`flex-1 ${!isLast ? 'pb-4' : 'pb-1'}`}>
+                                <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${trackingStatusColors[u.status] || 'bg-slate-100 text-slate-700'}`}>
+                                    {u.status}
+                                  </span>
+                                  {u.location && (
+                                    <span className="text-xs text-slate-500 flex items-center gap-0.5">
+                                      <MapPin className="h-2.5 w-2.5" />{u.location}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-slate-800">{u.description}</p>
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                  {format(new Date(u.event_datetime), 'MMM d, yyyy • h:mm a')}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Rewards */}
               {selectedOrder.credit_card_id && (() => {
                 const orderRewards = rewards.filter(r => r.purchase_order_id === selectedOrder.id);
                 if (orderRewards.length > 0) {
                   const totalCashback = orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
                   const totalPoints = orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
-                  
                   return (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                       <Label className="text-slate-500 text-sm mb-3 block">Reward Earned</Label>
                       {orderRewards.map((reward, idx) => (
                         <div key={idx} className="mb-3 last:mb-0">
                           <p className="text-sm text-slate-700 mb-1">
-                            {reward.currency === 'USD' ? '$' : ''}{reward.amount?.toFixed(2)}{reward.currency === 'points' ? '' : ''} {reward.currency === 'USD' ? 'cashback' : 'cashback'}
+                            {reward.currency === 'USD' ? '$' : ''}{reward.amount?.toFixed(2)} {reward.currency === 'USD' ? 'cashback' : 'pts'}
                           </p>
                           <p className="text-xs text-slate-500">
                             {reward.notes?.includes('Auto-generated') ? `Auto-generated from order ${selectedOrder.order_number}` : reward.notes}
                           </p>
                         </div>
                       ))}
-                      
                       <div className="mt-4 pt-4 border-t border-green-200 space-y-2">
                         {totalCashback > 0 && (
                           <div>
                             <p className="text-2xl font-semibold text-green-600">${totalCashback.toFixed(2)} cashback</p>
-                            <p className="text-xs text-slate-600">From {selectedOrder.card_name} ({orderRewards.find(r => r.currency === 'USD')?.credit_card_id?.slice(-4) || ''}) • {orderRewards[0].status}</p>
+                            <p className="text-xs text-slate-600">From {selectedOrder.card_name} • {orderRewards[0].status}</p>
                           </div>
                         )}
                         {totalPoints > 0 && (
                           <div>
-                            <p className="text-2xl font-semibold text-green-600">{Math.round(totalPoints)} cashback</p>
-                            <p className="text-xs text-slate-600">From {selectedOrder.card_name} ({orderRewards.find(r => r.currency === 'points')?.credit_card_id?.slice(-4) || ''}) • pending</p>
+                            <p className="text-2xl font-semibold text-green-600">{Math.round(totalPoints)} pts</p>
+                            <p className="text-xs text-slate-600">From {selectedOrder.card_name} • pending</p>
                           </div>
                         )}
                       </div>
@@ -1535,6 +1635,46 @@ export default function PurchaseOrders() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Tracking Update Dialog */}
+      <Dialog open={addUpdateDialog} onOpenChange={setAddUpdateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Tracking Update</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddUpdate} className="space-y-4">
+            <div className="bg-slate-50 rounded-lg p-3 text-sm">
+              <span className="text-slate-500">Tracking: </span>
+              <span className="font-mono font-semibold">{selectedOrder?.tracking_number}</span>
+            </div>
+            <div className="space-y-1">
+              <Label>Status *</Label>
+              <Select value={updateForm.status} onValueChange={v => setUpdateForm({...updateForm, status: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TRACKING_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Date & Time *</Label>
+              <Input type="datetime-local" value={updateForm.event_datetime} onChange={e => setUpdateForm({...updateForm, event_datetime: e.target.value})} required />
+            </div>
+            <div className="space-y-1">
+              <Label>Location</Label>
+              <Input value={updateForm.location} onChange={e => setUpdateForm({...updateForm, location: e.target.value})} placeholder="City, State" />
+            </div>
+            <div className="space-y-1">
+              <Label>Description *</Label>
+              <Textarea value={updateForm.description} onChange={e => setUpdateForm({...updateForm, description: e.target.value})} placeholder="Package has departed facility..." required rows={3} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddUpdateDialog(false)}>Cancel</Button>
+              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">Add Update</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
