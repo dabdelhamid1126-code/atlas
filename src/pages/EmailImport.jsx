@@ -434,7 +434,17 @@ export default function EmailImport() {
 
                         const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
                         if (existing.length > 0) {
-                          toast.error(`Order ${extracted.order_number} already exists`);
+                          const existingOrder = existing[0];
+                          if (extracted.tracking_number && !existingOrder.tracking_number) {
+                            // Update tracking on existing order
+                            await base44.entities.PurchaseOrder.update(existingOrder.id, {
+                              tracking_number: extracted.tracking_number,
+                              status: 'shipped'
+                            });
+                            toast.success(`Tracking updated for order ${extracted.order_number}`);
+                          } else {
+                            toast.error(`Order ${extracted.order_number} already exists`);
+                          }
                           setProcessing(false);
                           return;
                         }
