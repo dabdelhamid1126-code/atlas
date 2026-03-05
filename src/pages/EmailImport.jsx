@@ -789,7 +789,7 @@ export default function EmailImport() {
                     total_cost: extractedData.total_cost || 0,
                     final_cost: (extractedData.total_cost || 0) - giftCardValue,
                     category: 'other',
-                    notes: 'Imported from PDF'
+                    notes: `Imported from ${extractedData.importSource || 'PDF'}`
                   };
                   
                   const created = await base44.entities.PurchaseOrder.create(orderData);
