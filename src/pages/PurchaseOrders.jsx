@@ -789,6 +789,17 @@ export default function PurchaseOrders() {
             <SelectItem value="shipping">Shipping</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={retailerFilter} onValueChange={setRetailerFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Retailer" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Retailers</SelectItem>
+            {[...new Set(orders.map(o => o.retailer).filter(Boolean))].sort().map(r => (
+              <SelectItem key={r} value={r}>{r}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={dateFilter} onValueChange={setDateFilter}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Filter by date" />
