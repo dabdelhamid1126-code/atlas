@@ -476,6 +476,8 @@ export default function PurchaseOrders() {
         gift_card_ids: order.gift_card_ids || [],
         is_pickup: order.is_pickup || false,
         pickup_location: order.pickup_location || '',
+        is_dropship: order.is_dropship || false,
+        dropship_to: order.dropship_to || '',
         status: order.status || 'pending',
         order_date: order.order_date || '',
         expected_date: order.expected_date || '',
