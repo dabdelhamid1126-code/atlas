@@ -20,7 +20,7 @@ import {
   X,
   LogOut,
   ChevronRight,
-  Truck
+
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -39,7 +39,7 @@ const navigation = [
   { name: 'Invoices', page: 'Invoices', icon: FileText },
   { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
   { name: 'Order Lookup', page: 'OrderLookup', icon: Search },
-  { name: 'Package Tracking', page: 'PackageTracking', icon: Truck },
+
 ];
 
 export default function Layout({ children, currentPageName }) {
