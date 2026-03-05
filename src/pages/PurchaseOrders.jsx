@@ -960,7 +960,7 @@ export default function PurchaseOrders() {
               </Select>
             </div>
             
-            {formData.retailer?.toLowerCase().includes('amazon') && (
+            {(formData.retailer?.toLowerCase().includes('amazon') || formData.retailer?.toLowerCase().includes('woot')) && (
               <div className="space-y-4 p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200">
                 <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                   🛒 Amazon Order Pricing
