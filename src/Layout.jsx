@@ -8,19 +8,17 @@ import {
   Package,
   ShoppingCart,
   PackageCheck,
-  AlertTriangle,
-  Hash,
   CreditCard,
   TrendingUp,
   FileText,
   BarChart3,
   Search,
-  HelpCircle,
   Menu,
   X,
   LogOut,
   ChevronRight,
-
+  Truck,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
