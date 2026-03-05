@@ -56,9 +56,9 @@ import InventoryValue from './pages/InventoryValue';
 import Invoices from './pages/Invoices';
 import OrderLookup from './pages/OrderLookup';
 import Products from './pages/Products';
-import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
 import Rewards from './pages/Rewards';
+import PurchaseOrders from './pages/PurchaseOrders';
 import __Layout from './Layout.jsx';
 
 
@@ -72,9 +72,9 @@ export const PAGES = {
     "Invoices": Invoices,
     "OrderLookup": OrderLookup,
     "Products": Products,
-    "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,
     "Rewards": Rewards,
+    "PurchaseOrders": PurchaseOrders,
 }
 
 export const pagesConfig = {
