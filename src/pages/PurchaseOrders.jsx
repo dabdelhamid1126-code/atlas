@@ -702,20 +702,52 @@ export default function PurchaseOrders() {
     queryClient.invalidateQueries({ queryKey: ['shipments'] });
   };
 
+  const [autoTracking, setAutoTracking] = useState(false);
+
   const handleAutoTrack = async () => {
     if (!selectedOrder?.tracking_number) return;
-    const updates = allTrackingUpdates.filter(u => u.tracking_number === selectedOrder.tracking_number);
-    if (updates.length === 0) { toast.error('No tracking updates found for this tracking number'); return; }
-    const latest = updates.sort((a, b) => new Date(b.event_datetime) - new Date(a.event_datetime))[0];
-    const statusMap = {
-      'Pending': 'pending', 'In Transit': 'shipped', 'Out for Delivery': 'out_for_delivery',
-      'Delivered': 'received', 'Exception': 'exception',
-    };
-    const newStatus = statusMap[latest.status] || selectedOrder.status;
-    await base44.entities.PurchaseOrder.update(selectedOrder.id, { status: newStatus, tracking_location: latest.location });
-    setSelectedOrder(prev => ({ ...prev, status: newStatus, tracking_location: latest.location }));
-    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-    toast.success(`Status updated to ${latest.status}`);
+    setAutoTracking(true);
+    try {
+      const res = await base44.functions.invoke('trackPackageExternal', {
+        tracking_number: selectedOrder.tracking_number,
+        carrier: selectedOrder.carrier || '',
+      });
+      const { current_status, events, estimated_delivery } = res.data;
+
+      // Upsert tracking events — skip ones already stored for this tracking number
+      if (events && events.length > 0) {
+        const existingForNum = allTrackingUpdates.filter(u => u.tracking_number === selectedOrder.tracking_number);
+        const existingDates = new Set(existingForNum.map(u => u.event_datetime));
+        const newEvents = events.filter(ev => !existingDates.has(ev.event_datetime));
+        for (const ev of newEvents) {
+          await base44.entities.TrackingUpdate.create({
+            tracking_number: selectedOrder.tracking_number,
+            shipment_id: selectedOrder.shipment_id || '',
+            ...ev,
+          });
+        }
+        if (newEvents.length > 0) queryClient.invalidateQueries({ queryKey: ['trackingUpdates'] });
+      }
+
+      // Map to order status
+      const statusMap = {
+        'Pending': 'pending', 'In Transit': 'shipped', 'Out for Delivery': 'out_for_delivery',
+        'Delivered': 'received', 'Exception': 'exception',
+      };
+      const newStatus = statusMap[current_status] || selectedOrder.status;
+      const updateFields = { status: newStatus };
+      if (estimated_delivery) updateFields.expected_date = estimated_delivery.split('T')[0];
+
+      await base44.entities.PurchaseOrder.update(selectedOrder.id, updateFields);
+      setSelectedOrder(prev => ({ ...prev, ...updateFields }));
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      await syncShipment({ ...selectedOrder, ...updateFields });
+      toast.success(`Tracking updated — ${current_status}`);
+    } catch (err) {
+      toast.error('Could not fetch tracking info');
+    } finally {
+      setAutoTracking(false);
+    }
   };
 
   const handleAddUpdate = async (e) => {
