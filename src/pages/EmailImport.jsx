@@ -40,7 +40,10 @@ export default function EmailImport() {
   const fetchGmailEmails = async () => {
     setLoadingGmail(true);
     try {
-      const res = await base44.functions.invoke('fetchGmailEmails', {});
+      const params = {};
+      if (gmailAfterDate) params.afterDate = gmailAfterDate;
+      if (gmailBeforeDate) params.beforeDate = gmailBeforeDate;
+      const res = await base44.functions.invoke('fetchGmailEmails', params);
       setGmailEmails(res.data?.emails || []);
     } catch (e) {
       toast.error('Failed to fetch Gmail: ' + e.message);
