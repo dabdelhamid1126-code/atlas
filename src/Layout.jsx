@@ -72,7 +72,7 @@ export default function Layout({ children, currentPageName }) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-semibold text-slate-900">DaliaDistroFlip</span>
+          <span className="font-semibold text-slate-900">FalconFlips</span>
         </div>
         {user && (
           <Avatar className="h-8 w-8">
@@ -105,7 +105,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">FF</span>
               </div>
-              <span className="font-bold text-slate-900 tracking-tight">DaliaDistroFlip</span>
+              <span className="font-bold text-slate-900 tracking-tight">FalconFlips</span>
             </div>
             <Button
               variant="ghost"
