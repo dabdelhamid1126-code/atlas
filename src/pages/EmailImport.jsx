@@ -348,8 +348,7 @@ export default function EmailImport() {
         description="Paste order confirmation emails from any retailer to automatically create purchase orders"
       />
 
-      <div className="max-w-4xl">
-      <div className="grid gap-6">
+      <div className="max-w-4xl grid gap-6">
         {/* Instructions Card */}
         <Card>
           <CardHeader>
