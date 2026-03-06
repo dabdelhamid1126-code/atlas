@@ -395,9 +395,11 @@ export default function EmailImport() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
               <p className="text-sm text-blue-900">
-                <strong>Supported retailers:</strong> All retailers (Amazon, Best Buy, Walmart, Target, etc.)
+                <strong>Supported retailers:</strong> Amazon, Best Buy, Woot, Walmart, Target
                 <br />
                 <strong>Extracted data:</strong> Order number, total, items, tracking number, order date, credit card (last 4), SKU codes
+                <br />
+                <strong>Smart grouping:</strong> Order + shipping emails for the same order are automatically combined
               </p>
             </div>
           </CardContent>
