@@ -430,10 +430,10 @@ export default function EmailImport() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="gmail" className="space-y-3">
+              <TabsContent value="gmail" className="space-y-3 pt-3">
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-slate-600">
-                    Select one or more emails to import
+                    Order + tracking emails are grouped together automatically
                     {selectedGmailIds.length > 0 && (
                       <span className="ml-2 font-semibold text-indigo-600">({selectedGmailIds.length} selected)</span>
                     )}
@@ -452,22 +452,34 @@ export default function EmailImport() {
                     No order emails found. Click Refresh to load from Gmail.
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {gmailEmails.map(email => {
-                      const isSelected = selectedGmailIds.includes(email.id);
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {gmailEmails.map(group => {
+                      const isSelected = selectedGmailIds.includes(group.id);
                       return (
                         <div
-                          key={email.id}
-                          onClick={() => toggleGmailSelection(email.id)}
+                          key={group.id}
+                          onClick={() => toggleGmailSelection(group.id)}
                           className={`border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors flex items-start gap-3 ${isSelected ? 'border-indigo-400 bg-indigo-50' : ''}`}
                         >
                           <div className={`mt-0.5 w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}`}>
                             {isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-slate-900 truncate">{email.subject}</p>
-                            <p className="text-xs text-slate-500 truncate">{email.from}</p>
-                            <p className="text-xs text-slate-400 mt-1 truncate">{email.snippet}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm text-slate-900 truncate">{group.subject}</p>
+                              {group.emailCount > 1 && (
+                                <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                  {group.emailCount} emails
+                                </span>
+                              )}
+                              {group.hasTracking && (
+                                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                  + tracking
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 truncate">{group.from}</p>
+                            <p className="text-xs text-slate-400 mt-1 truncate">{group.snippet}</p>
                           </div>
                         </div>
                       );
@@ -475,7 +487,6 @@ export default function EmailImport() {
                   </div>
                 )}
 
-                {/* Batch import results */}
                 {batchResults.length > 0 && (
                   <div className="space-y-1">
                     {batchResults.map((r, i) => (
@@ -492,17 +503,22 @@ export default function EmailImport() {
                     onClick={async () => {
                       if (selectedGmailIds.length === 0) return;
                       setProcessing(true);
-                      // For now, process the first selected email and show the confirmation dialog
-                      // (same flow as PDF import)
                       const id = selectedGmailIds[0];
-                      const emailMeta = gmailEmails.find(e => e.id === id);
+                      const group = gmailEmails.find(e => e.id === id);
                       try {
-                        const res = await base44.functions.invoke('fetchGmailEmails', { messageId: id });
+                        // Fetch all emails in the group (order + tracking) together
+                        const idsToFetch = group?.ids || [id];
+                        const res = idsToFetch.length > 1
+                          ? await base44.functions.invoke('fetchGmailEmails', { messageIds: idsToFetch })
+                          : await base44.functions.invoke('fetchGmailEmails', { messageId: id });
                         const { subject, body } = res.data || {};
                         const content = `Subject: ${subject}\n\n${body}`;
 
                         const extracted = await base44.integrations.Core.InvokeLLM({
-                          prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.\n\n${content}`,
+                          prompt: `Extract order information from this email content from one of these retailers: Amazon, Best Buy, Woot, Walmart, or Target. 
+The content may contain both an order confirmation email AND a shipping/tracking email for the same order combined together.
+Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number (look in both emails), last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.
+If there are two emails for the same order, merge the data (e.g. get the tracking number from the shipping email and the items/total from the order confirmation).\n\n${content}`,
                           response_json_schema: {
                             type: "object",
                             properties: {
@@ -522,7 +538,6 @@ export default function EmailImport() {
                         if (existing.length > 0) {
                           const existingOrder = existing[0];
                           if (extracted.tracking_number && !existingOrder.tracking_number) {
-                            // Update tracking on existing order
                             await base44.entities.PurchaseOrder.update(existingOrder.id, {
                               tracking_number: extracted.tracking_number,
                               status: 'shipped'
@@ -603,7 +618,7 @@ export default function EmailImport() {
                   >
                     {processing
                       ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
-                      : <><Upload className="h-4 w-4 mr-2" />Review & Import {selectedGmailIds.length > 1 ? `(1 of ${selectedGmailIds.length})` : 'Email'}</>
+                      : <><Upload className="h-4 w-4 mr-2" />Review & Import Selected</>
                     }
                   </Button>
                 )}
