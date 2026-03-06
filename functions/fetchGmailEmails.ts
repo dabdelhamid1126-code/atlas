@@ -71,9 +71,16 @@ Deno.serve(async (req) => {
 
     // Fetch list of order emails from target retailers only
     // Two query types: order confirmations + shipping/tracking emails
+    const { afterDate, beforeDate } = body;
     const retailers = 'from:(amazon OR bestbuy OR "best buy" OR woot OR walmart OR target)';
-    const orderQuery = `${retailers} subject:(("order confirmation") OR ("order placed") OR ("order receipt") OR ("thanks for your order") OR ("thank you for your order") OR ("your order") OR ("order #") OR ("order number")) newer_than:90d -category:promotions`;
-    const trackingQuery = `${retailers} subject:((shipped OR "tracking number" OR "out for delivery" OR "on the way" OR "package shipped" OR "order shipped")) newer_than:90d -category:promotions`;
+    // Build date range filter: Gmail uses after:YYYY/MM/DD before:YYYY/MM/DD
+    let dateFilter = '';
+    if (afterDate) dateFilter += ` after:${afterDate.replace(/-/g, '/')}`;
+    if (beforeDate) dateFilter += ` before:${beforeDate.replace(/-/g, '/')}`;
+    const baseFilter = dateFilter || ' newer_than:90d';
+
+    const orderQuery = `${retailers} subject:(("order confirmation") OR ("order placed") OR ("order receipt") OR ("thanks for your order") OR ("thank you for your order") OR ("your order") OR ("order #") OR ("order number"))${baseFilter} -category:promotions`;
+    const trackingQuery = `${retailers} subject:((shipped OR "tracking number" OR "out for delivery" OR "on the way" OR "package shipped" OR "order shipped"))${baseFilter} -category:promotions`;
 
     const [orderListRes, trackingListRes] = await Promise.all([
       fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(orderQuery)}&maxResults=40`, { headers: { Authorization: `Bearer ${accessToken}` } }),
