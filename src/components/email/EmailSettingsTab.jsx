@@ -192,6 +192,12 @@ export default function EmailSettingsTab({ onSyncNow }) {
                 {syncing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
                 Sync Now
               </Button>
+              <Button size="sm" variant="outline" asChild>
+                <a href="https://app.base44.com/settings/connectors" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3" />
+                  Change Gmail Account
+                </a>
+              </Button>
             </div>
           </div>
 
