@@ -498,7 +498,7 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
                             {isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-medium text-sm text-slate-900 truncate">{group.subject}</p>
                               {group.emailCount > 1 && (
                                 <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
@@ -508,6 +508,11 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
                               {group.hasTracking && (
                                 <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
                                   + tracking
+                                </span>
+                              )}
+                              {group.date && (
+                                <span className="text-xs text-slate-400 flex-shrink-0 ml-auto">
+                                  {new Date(group.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </span>
                               )}
                             </div>
