@@ -347,23 +347,7 @@ export default function EmailImport() {
         description="Paste order confirmation emails from any retailer to automatically create purchase orders"
       />
 
-      <Tabs defaultValue="import" className="max-w-4xl">
-        <TabsList className="mb-6">
-          <TabsTrigger value="import" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Import Orders
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Email Settings
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="settings">
-          <EmailSettingsTab onSyncNow={fetchGmailEmails} />
-        </TabsContent>
-
-        <TabsContent value="import">
+      <div className="max-w-4xl">
       <div className="grid gap-6">
         {/* Instructions Card */}
         <Card>
