@@ -985,8 +985,6 @@ export default function EmailImport() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </TabsContent>
-      </Tabs>
     </div>
   );
 }
