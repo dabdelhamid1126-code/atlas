@@ -33,6 +33,8 @@ export default function EmailImport() {
   const [loadingGmail, setLoadingGmail] = useState(false);
   const [selectedGmailIds, setSelectedGmailIds] = useState([]);
   const [batchResults, setBatchResults] = useState([]);
+  const [gmailAfterDate, setGmailAfterDate] = useState('');
+  const [gmailBeforeDate, setGmailBeforeDate] = useState('');
   const queryClient = useQueryClient();
 
   const fetchGmailEmails = async () => {
