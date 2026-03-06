@@ -705,8 +705,7 @@ export default function EmailImport() {
           </Card>
         )}
       </div>
-      </TabsContent>
-      </Tabs>
+      </div>
 
       {/* Product Matching Confirmation Dialog */}
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
