@@ -65,7 +65,10 @@ export default function EmailImport() {
     try {
       // Use the same LLM extraction flow as PDF/Gmail
       const extracted = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.\n\n${emailContent}`,
+        prompt: `Extract order information from this email content from one of these retailers: Amazon, Best Buy, Woot, Walmart, or Target.
+The content may contain both an order confirmation and a shipping/tracking email for the same order combined together.
+Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number (look in both emails if present), last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.
+If there are two emails for the same order, merge the data.\n\n${emailContent}`,
         response_json_schema: {
           type: "object",
           properties: {
