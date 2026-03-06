@@ -439,17 +439,42 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
               </TabsList>
 
               <TabsContent value="gmail" className="space-y-3 pt-3">
+                <div className="flex flex-wrap gap-2 items-end">
+                  <div className="flex-1 min-w-[140px]">
+                    <label className="text-xs text-slate-500 mb-1 block">From date</label>
+                    <Input
+                      type="date"
+                      value={gmailAfterDate}
+                      onChange={e => setGmailAfterDate(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[140px]">
+                    <label className="text-xs text-slate-500 mb-1 block">To date</label>
+                    <Input
+                      type="date"
+                      value={gmailBeforeDate}
+                      onChange={e => setGmailBeforeDate(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <Button size="sm" onClick={fetchGmailEmails} disabled={loadingGmail} className="h-8">
+                    <RefreshCw className={`h-4 w-4 mr-1 ${loadingGmail ? 'animate-spin' : ''}`} />
+                    Search
+                  </Button>
+                  {(gmailAfterDate || gmailBeforeDate) && (
+                    <Button size="sm" variant="ghost" className="h-8 text-slate-500" onClick={() => { setGmailAfterDate(''); setGmailBeforeDate(''); }}>
+                      Clear
+                    </Button>
+                  )}
+                </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-slate-600">
-                    Order + tracking emails are grouped together automatically
+                  <p className="text-xs text-slate-500">
+                    Order + tracking emails grouped automatically
                     {selectedGmailIds.length > 0 && (
                       <span className="ml-2 font-semibold text-indigo-600">({selectedGmailIds.length} selected)</span>
                     )}
                   </p>
-                  <Button variant="outline" size="sm" onClick={fetchGmailEmails} disabled={loadingGmail}>
-                    <RefreshCw className={`h-4 w-4 mr-1 ${loadingGmail ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
                 </div>
                 {loadingGmail ? (
                   <div className="flex items-center justify-center py-8">
