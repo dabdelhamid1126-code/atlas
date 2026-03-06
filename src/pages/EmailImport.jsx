@@ -62,21 +62,104 @@ export default function EmailImport() {
     setResult(null);
 
     try {
-      const response = await base44.functions.parseOrderEmail({
-        emailSubject: emailContent.substring(0, 200),
-        emailBody: emailContent,
-        emailHtml: emailContent
+      // Use the same LLM extraction flow as PDF/Gmail
+      const extracted = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract order information from this order confirmation email (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.\n\n${emailContent}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            retailer: { type: "string" },
+            order_number: { type: "string" },
+            total_cost: { type: "number" },
+            order_date: { type: "string" },
+            tracking_number: { type: "string" },
+            card_last_4: { type: "string" },
+            gift_card_codes: { type: "array", items: { type: "string" } },
+            items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
+          }
+        }
       });
 
-      setResult(response);
-      
-      if (response.success) {
-        toast.success('Order imported successfully!');
-        queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-        setEmailContent('');
-      } else {
-        toast.error(response.message || 'Failed to parse email');
+      if (!extracted.order_number) {
+        toast.error('Could not extract order number from email');
+        setResult({ success: false, message: 'Could not extract order information' });
+        return;
       }
+
+      const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
+      if (existing.length > 0) {
+        const existingOrder = existing[0];
+        if (extracted.tracking_number && !existingOrder.tracking_number) {
+          await base44.entities.PurchaseOrder.update(existingOrder.id, {
+            tracking_number: extracted.tracking_number,
+            status: 'shipped'
+          });
+          toast.success(`Tracking updated for order ${extracted.order_number}`);
+          setEmailContent('');
+          setResult({ success: true, message: `Tracking updated for existing order ${extracted.order_number}` });
+        } else {
+          toast.error(`Order ${extracted.order_number} already exists`);
+          setResult({ success: false, message: `Order ${extracted.order_number} already exists` });
+        }
+        return;
+      }
+
+      const [allProducts, allCards, allGiftCards] = await Promise.all([
+        base44.entities.Product.list(),
+        base44.entities.CreditCard.list(),
+        base44.entities.GiftCard.list()
+      ]);
+
+      let matchedCard = null;
+      if (extracted.card_last_4) {
+        matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
+      }
+      const matchedGiftCards = [];
+      for (const code of extracted.gift_card_codes || []) {
+        const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
+        if (gc) matchedGiftCards.push(gc);
+      }
+
+      const matches = [];
+      for (const item of extracted.items || []) {
+        const suggestions = allProducts
+          .map(p => {
+            let score = 0;
+            const itemName = item.product_name?.toLowerCase() || '';
+            const prodName = p.name?.toLowerCase() || '';
+            if (item.sku && p.upc === item.sku) score = 100;
+            else if (prodName === itemName) score = 95;
+            else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
+            else {
+              const itemWords = itemName.split(/\s+/).filter(w => w.length > 2);
+              const prodWords = prodName.split(/\s+/).filter(w => w.length > 2);
+              const matchingWords = itemWords.filter(iw => prodWords.some(pw => pw.includes(iw) || iw.includes(pw) || (Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3)))))).length;
+              if (matchingWords > 0) score = (matchingWords / Math.max(itemWords.length, prodWords.length)) * 75;
+              if (Math.abs(itemName.length - prodName.length) < 5) score += 5;
+              const itemNumbers = itemName.match(/\d+/g) || [];
+              const prodNumbers = prodName.match(/\d+/g) || [];
+              score += itemNumbers.filter(num => prodNumbers.includes(num)).length * 10;
+            }
+            return { product: p, score };
+          })
+          .filter(m => m.score > 20)
+          .sort((a, b) => b.score !== a.score ? b.score - a.score : a.product.name.localeCompare(b.product.name))
+          .slice(0, 8);
+
+        matches.push({
+          invoiceName: item.product_name,
+          sku: item.sku,
+          quantity: item.quantity || 1,
+          unit_cost: item.unit_cost || 0,
+          suggestions,
+          selectedProduct: suggestions[0]?.product || null
+        });
+      }
+
+      setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'Email' });
+      setProductMatches(matches);
+      setConfirmDialogOpen(true);
+      setEmailContent('');
     } catch (error) {
       toast.error('Error parsing email: ' + error.message);
       setResult({ success: false, message: error.message });
