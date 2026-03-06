@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import {
   Mail, CheckCircle, XCircle, Loader2, RefreshCw, Wifi, WifiOff,
-  Clock, AlertTriangle, BarChart3, Settings, Inbox
+  Clock, AlertTriangle, BarChart3, Settings, Inbox, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
