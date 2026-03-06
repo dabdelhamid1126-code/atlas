@@ -141,16 +141,13 @@ Deno.serve(async (req) => {
     for (const email of sorted) {
       if (usedIds.has(email.id)) continue;
       const orderNum = extractOrderNum(email.subject, email.snippet);
-      const senderDomain = email.from.match(/@([\w.]+)/)?.[1] || '';
       
-      // Find related emails (same order number or same sender within 7 days)
-      const related = emails.filter(other => {
+      // Only group emails that share the exact same order number
+      const related = orderNum ? emails.filter(other => {
         if (other.id === email.id || usedIds.has(other.id)) return false;
         const otherNum = extractOrderNum(other.subject, other.snippet);
-        const otherDomain = other.from.match(/@([\w.]+)/)?.[1] || '';
-        if (orderNum && otherNum && orderNum === otherNum) return true;
-        return false;
-      });
+        return otherNum && otherNum === orderNum;
+      }) : [];
 
       const groupEmails = [email, ...related];
       groupEmails.forEach(e => usedIds.add(e.id));
