@@ -314,7 +314,7 @@ export default function Dashboard() {
               <p className={`text-3xl font-bold ${financialStats.roi >= 0 ? 'text-violet-600' : 'text-red-600'}`}>
                 {financialStats.roi.toFixed(1)}%
               </p>
-              <p className="text-xs text-slate-500 mt-1">Return on investment</p>
+              <p className="text-xs text-muted-foreground mt-1">Return on investment</p>
             </CardContent>
           </Card>
         </div>
