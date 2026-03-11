@@ -278,7 +278,7 @@ export default function Dashboard() {
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">Monthly Spent</p>
+                <p className="text-sm font-medium text-muted-foreground">Monthly Spent</p>
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center">
                   <DollarSign className="h-5 w-5 text-white" />
                 </div>
