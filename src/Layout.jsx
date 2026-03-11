@@ -102,10 +102,12 @@ export default function Layout({ children, currentPageName }) {
           {/* Logo */}
           <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm">FF</span>
+              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-sm">DD</span>
               </div>
-              <span className="font-bold text-slate-900 tracking-tight">FalconFlips</span>
+              <div>
+                <span className="font-bold text-white tracking-tight block text-sm">Dalia Distro LLC</span>
+              </div>
             </div>
             <Button
               variant="ghost"
