@@ -486,7 +486,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <h2 className="text-lg font-bold text-slate-900 mb-4">Operations Overview</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">Operations Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatsCard
             title="Inventory Items"
