@@ -283,7 +283,7 @@ export default function Dashboard() {
                   <DollarSign className="h-5 w-5 text-white" />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-slate-900">${financialStats.monthlySpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+              <p className="text-3xl font-bold text-foreground">${financialStats.monthlySpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
               <p className="text-xs text-slate-500 mt-1">This month</p>
             </CardContent>
           </Card>
