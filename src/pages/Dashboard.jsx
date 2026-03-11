@@ -461,7 +461,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">Points Earned</p>
+                  <p className="text-sm text-muted-foreground mb-1">Points Earned</p>
                   <p className="text-2xl font-bold text-violet-600">
                     {financialStats.mostUsedCardRewards.points.toLocaleString()}
                   </p>
