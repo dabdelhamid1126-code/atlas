@@ -439,7 +439,7 @@ export default function Dashboard() {
 
         {/* Most Used Card Rewards */}
         {financialStats.mostUsedCard && (
-          <Card className="card-modern mt-4 border-2 border-orange-200">
+          <Card className="card-modern mt-4 border-2 border-orange-500/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-orange-600" />
