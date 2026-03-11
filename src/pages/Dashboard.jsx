@@ -365,7 +365,7 @@ export default function Dashboard() {
                   <CreditCard className="h-5 w-5 text-white" />
                 </div>
               </div>
-              <p className="text-lg font-bold text-slate-900 truncate">
+              <p className="text-lg font-bold text-foreground truncate">
                 {financialStats.mostUsedCard?.card_name || 'N/A'}
               </p>
               <p className="text-xs text-slate-500 mt-1">
