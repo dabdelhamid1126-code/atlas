@@ -403,9 +403,9 @@ export default function Dashboard() {
                 selectedMetric === 'points' ? financialStats.pointsTrend :
                 financialStats.spentTrend
               }>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="month" stroke="#64748b" style={{ fontSize: '12px' }} />
-                <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(258,20%,22%)" />
+                <XAxis dataKey="month" stroke="hsl(258,15%,60%)" style={{ fontSize: '12px' }} />
+                <YAxis stroke="hsl(258,15%,60%)" style={{ fontSize: '12px' }} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'hsl(258,30%,12%)', border: '1px solid hsl(258,20%,22%)', borderRadius: '8px', color: '#f5f5f5' }}
                   formatter={(value) => 
