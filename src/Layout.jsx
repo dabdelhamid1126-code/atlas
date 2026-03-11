@@ -148,9 +148,9 @@ export default function Layout({ children, currentPageName }) {
           {/* User Section */}
           {user && (
             <div className="border-t border-white/10 p-4">
-              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-white/50">
+              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-secondary">
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-sm font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-violet-700 text-white text-sm font-semibold">
                     {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
