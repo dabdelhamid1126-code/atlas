@@ -155,10 +155,10 @@ export default function Layout({ children, currentPageName }) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">
+                  <p className="text-sm font-semibold text-foreground truncate">
                     {user.full_name || 'User'}
                   </p>
-                  <p className="text-xs text-slate-600 truncate">{user.email}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
               </div>
               <Button
