@@ -147,7 +147,7 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User Section */}
           {user && (
-            <div className="border-t border-white/10 p-4">
+            <div className="border-t border-border p-4">
               <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-secondary">
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="bg-gradient-to-br from-purple-600 to-violet-700 text-white text-sm font-semibold">
