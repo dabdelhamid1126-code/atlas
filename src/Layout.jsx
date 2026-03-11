@@ -26,18 +26,38 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 
-const navigation = [
-  { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
-  { name: 'Inventory', page: 'Inventory', icon: Package },
-  { name: 'Products', page: 'Products', icon: ShoppingCart },
-  { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
-  { name: 'Import from Email', page: 'EmailImport', icon: Menu },
-  { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
-  { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
-  { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp },
-  { name: 'Invoices', page: 'Invoices', icon: FileText },
-  { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
-  { name: 'Order Lookup', page: 'OrderLookup', icon: Search },
+const navigationGroups = [
+  {
+    label: 'OVERVIEW',
+    items: [
+      { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
+      { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
+    ]
+  },
+  {
+    label: 'ORDERS',
+    items: [
+      { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
+      { name: 'Import from Email', page: 'EmailImport', icon: Search },
+      { name: 'Order Lookup', page: 'OrderLookup', icon: HelpCircle },
+    ]
+  },
+  {
+    label: 'INVENTORY',
+    items: [
+      { name: 'Inventory', page: 'Inventory', icon: Package },
+      { name: 'Products', page: 'Products', icon: ShoppingCart },
+      { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp },
+    ]
+  },
+  {
+    label: 'FINANCE',
+    items: [
+      { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
+      { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
+      { name: 'Invoices', page: 'Invoices', icon: FileText },
+    ]
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {
