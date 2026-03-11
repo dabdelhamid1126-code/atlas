@@ -407,7 +407,7 @@ export default function Dashboard() {
                 <XAxis dataKey="month" stroke="#64748b" style={{ fontSize: '12px' }} />
                 <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: 'hsl(258,30%,12%)', border: '1px solid hsl(258,20%,22%)', borderRadius: '8px', color: '#f5f5f5' }}
                   formatter={(value) => 
                     selectedMetric === 'points' 
                       ? value.toLocaleString()
