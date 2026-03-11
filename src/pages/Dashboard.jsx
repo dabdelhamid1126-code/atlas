@@ -455,7 +455,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">Cashback Earned</p>
+                  <p className="text-sm text-muted-foreground mb-1">Cashback Earned</p>
                   <p className="text-2xl font-bold text-emerald-600">
                     ${financialStats.mostUsedCardRewards.cashback.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </p>
