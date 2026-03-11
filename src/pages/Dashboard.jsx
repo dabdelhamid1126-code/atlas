@@ -348,7 +348,7 @@ export default function Dashboard() {
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">Gift Card Spend</p>
+                <p className="text-sm font-medium text-muted-foreground">Gift Card Spend</p>
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
                   <CreditCard className="h-5 w-5 text-white" />
                 </div>
