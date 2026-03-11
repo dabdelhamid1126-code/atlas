@@ -299,14 +299,14 @@ export default function Dashboard() {
               <p className={`text-3xl font-bold ${financialStats.monthlyProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 ${financialStats.monthlyProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
               </p>
-              <p className="text-xs text-slate-500 mt-1">This month</p>
+              <p className="text-xs text-muted-foreground mt-1">This month</p>
             </CardContent>
           </Card>
 
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">ROI</p>
+                <p className="text-sm font-medium text-muted-foreground">ROI</p>
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                   <TrendingUp className="h-5 w-5 text-white" />
                 </div>
