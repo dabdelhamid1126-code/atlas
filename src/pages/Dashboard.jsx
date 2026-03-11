@@ -360,7 +360,7 @@ export default function Dashboard() {
           <Card className="card-modern overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-500">Most Used Card</p>
+                <p className="text-sm font-medium text-muted-foreground">Most Used Card</p>
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
                   <CreditCard className="h-5 w-5 text-white" />
                 </div>
