@@ -341,7 +341,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <p className="text-3xl font-bold text-violet-600">{financialStats.totalPoints.toLocaleString()}</p>
-              <p className="text-xs text-slate-500 mt-1">points</p>
+              <p className="text-xs text-muted-foreground mt-1">points</p>
             </CardContent>
           </Card>
 
