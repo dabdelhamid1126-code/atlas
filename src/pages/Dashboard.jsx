@@ -368,7 +368,7 @@ export default function Dashboard() {
               <p className="text-lg font-bold text-foreground truncate">
                 {financialStats.mostUsedCard?.card_name || 'N/A'}
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Spent: ${financialStats.mostUsedCardSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
               </p>
             </CardContent>
