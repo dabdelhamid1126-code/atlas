@@ -72,14 +72,16 @@ export default function Analytics() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [orders, invoices, rewards] = await Promise.all([
+      const [orders, invoices, rewards, creditCards] = await Promise.all([
         base44.entities.PurchaseOrder.list(),
         base44.entities.Invoice.list(),
         base44.entities.Reward.list(),
+        base44.entities.CreditCard.list(),
       ]);
       setAllOrders(orders);
       setAllInvoices(invoices);
       setAllRewards(rewards);
+      setAllCreditCards(creditCards);
     } finally {
       setLoading(false);
     }
