@@ -676,11 +676,11 @@ export default function Rewards() {
             <div className="space-y-2">
               <Label>Credit Card</Label>
               <Select 
-                value={formData.credit_card_id ? creditCards.find(c => c.id === formData.credit_card_id)?.card_name : ''} 
-                onValueChange={(cardName) => {
-                  const card = creditCards.find(c => c.card_name === cardName);
+                value={formData.credit_card_id || ''} 
+                onValueChange={(cardId) => {
+                  const card = creditCards.find(c => c.id === cardId);
                   if (card) {
-                    handleCardChange(card.id);
+                    handleCardChange(cardId);
                   }
                 }}
               >
@@ -688,13 +688,16 @@ export default function Rewards() {
                   <SelectValue placeholder="Select a card (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {creditCards.filter(c => c.active).map(card => (
-                    <SelectItem key={card.id} value={card.card_name}>
-                      {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}% cashback`}
-                      {card.reward_type === 'points' && `${card.points_rate}x points`}
-                      {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
-                    </SelectItem>
-                  ))}
+                  {creditCards.filter(c => c.active).map(card => {
+                    const lastFour = card.id?.slice(-4) || 'XXXX';
+                    return (
+                      <SelectItem key={card.id} value={card.id}>
+                        {card.card_name} ({lastFour}) - {card.reward_type === 'cashback' && `${card.cashback_rate}% cashback`}
+                        {card.reward_type === 'points' && `${card.points_rate}x points`}
+                        {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
