@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { User, Target, Database, Mail, Bell, Palette, Shield } from 'lucide-react';
+import { User, Target, Database, Palette } from 'lucide-react';
 import GoalsTab from '@/components/settings/GoalsTab';
 import DataTab from '@/components/settings/DataTab';
+import AppearanceTab from '@/components/settings/AppearanceTab';
 
 const tabs = [
-  { key: 'profile',     label: 'Profile',       icon: User },
-  { key: 'goals',       label: 'Goals',          icon: Target },
-  { key: 'data',        label: 'Data',           icon: Database },
-  { key: 'email',       label: 'Email Setup',    icon: Mail },
-  { key: 'notifications', label: 'Notifications', icon: Bell, soon: true },
-  { key: 'appearance',  label: 'Appearance',     icon: Palette },
-  { key: 'security',    label: 'Security',       icon: Shield },
+  { key: 'profile',    label: 'Profile',    icon: User },
+  { key: 'goals',      label: 'Goals',      icon: Target },
+  { key: 'data',       label: 'Data',       icon: Database },
+  { key: 'appearance', label: 'Appearance', icon: Palette },
 ];
 
 export default function Settings() {
@@ -35,19 +33,15 @@ export default function Settings() {
             return (
               <button
                 key={tab.key}
-                disabled={tab.soon}
-                onClick={() => !tab.soon && setActiveTab(tab.key)}
+                onClick={() => setActiveTab(tab.key)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
                   isActive
                     ? 'bg-secondary border border-purple-500/50 text-foreground'
-                    : tab.soon
-                    ? 'text-muted-foreground/40 cursor-not-allowed'
                     : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {tab.label}
-                {tab.soon && <span className="ml-auto text-xs text-muted-foreground/50">Soon</span>}
               </button>
             );
           })}
@@ -56,8 +50,6 @@ export default function Settings() {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        {activeTab === 'goals' && <GoalsTab user={user} />}
-        {activeTab === 'data' && <DataTab />}
         {activeTab === 'profile' && (
           <div>
             <h2 className="text-lg font-bold text-foreground mb-1">Profile</h2>
@@ -71,24 +63,9 @@ export default function Settings() {
             )}
           </div>
         )}
-        {activeTab === 'email' && (
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-1">Email Setup</h2>
-            <p className="text-sm text-muted-foreground">Configure email import settings on the Import from Email page.</p>
-          </div>
-        )}
-        {activeTab === 'appearance' && (
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-1">Appearance</h2>
-            <p className="text-sm text-muted-foreground">Theme settings coming soon.</p>
-          </div>
-        )}
-        {activeTab === 'security' && (
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-1">Security</h2>
-            <p className="text-sm text-muted-foreground">Security settings coming soon.</p>
-          </div>
-        )}
+        {activeTab === 'goals' && <GoalsTab user={user} />}
+        {activeTab === 'data' && <DataTab />}
+        {activeTab === 'appearance' && <AppearanceTab />}
       </div>
     </div>
   );
