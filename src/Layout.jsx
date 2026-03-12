@@ -51,14 +51,7 @@ const navigationGroups = [
       { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
       { name: 'Import from Email', page: 'EmailImport', icon: Search },
       { name: 'Order Lookup', page: 'OrderLookup', icon: HelpCircle },
-    ]
-  },
-  {
-    label: 'INVENTORY',
-    items: [
-      { name: 'Inventory', page: 'Inventory', icon: Package },
       { name: 'Products', page: 'Products', icon: ShoppingCart },
-      { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp },
     ]
   },
   {
@@ -73,7 +66,7 @@ const navigationGroups = [
   {
     label: 'OPERATIONS',
     items: [
-      { name: 'Vendors & Buyers', page: 'Stores', icon: Store },
+      { name: 'Stores', page: 'Stores', icon: Store },
     ]
   },
   {
