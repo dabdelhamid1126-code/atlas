@@ -180,6 +180,7 @@ export default function Rewards() {
       setCardFormData({
         card_name: card.card_name || '',
         issuer: card.issuer || '',
+        last_four: card.last_four || '',
         cashback_rate: card.cashback_rate || '',
         points_rate: card.points_rate || '',
         dining_points_rate: card.dining_points_rate || '',
@@ -197,6 +198,7 @@ export default function Rewards() {
       setCardFormData({
         card_name: '',
         issuer: '',
+        last_four: '',
         cashback_rate: '',
         points_rate: '',
         dining_points_rate: '',
