@@ -23,6 +23,7 @@ export default function PurchaseOrders() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [visibleColumns, setVisibleColumns] = useState(['retailer', 'orderNum', 'tracking', 'status', 'total', 'items', 'orderDate', 'actions']);
 
   // Data queries
   const { data: orders = [], isLoading } = useQuery({
