@@ -291,6 +291,14 @@ export default function POFormModal({
               <SelectTrigger>
                 <SelectValue placeholder="Select card (optional)" />
               </SelectTrigger>
+              {formData.credit_card_id && (() => {
+                const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
+                return (
+                  <div className="absolute left-3 text-sm text-slate-900 pointer-events-none">
+                    {selectedCard?.card_name} ({selectedCard?.id?.slice(-4)})
+                  </div>
+                );
+              })()}
               <SelectContent>
                 {creditCards.filter(c => c.active).map(card => {
                   let rewardDisplay = '';
