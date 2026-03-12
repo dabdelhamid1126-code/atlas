@@ -35,7 +35,7 @@ const navigationGroups = [
     label: 'OVERVIEW',
     items: [
       { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
-      { name: 'Analytics & Insights', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
+      { name: 'Trading Network', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
     ]
   },
   {
