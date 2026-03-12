@@ -142,13 +142,13 @@ export default function PODetailsModal({ open, onOpenChange, order, products, re
               {totalCashback > 0 && (
                 <div>
                   <p className="text-2xl font-semibold text-green-600">${totalCashback.toFixed(2)} cashback</p>
-                  <p className="text-xs text-slate-600">{order.card_name} • {orderRewards[0]?.status || 'pending'}</p>
+                  <p className="text-xs text-slate-600">{cardDisplay} • {orderRewards[0]?.status || 'pending'}</p>
                 </div>
               )}
               {totalPoints > 0 && (
                 <div className="mt-2">
                   <p className="text-2xl font-semibold text-green-600">{Math.round(totalPoints)} pts</p>
-                  <p className="text-xs text-slate-600">{order.card_name} • {orderRewards[0]?.status || 'pending'}</p>
+                  <p className="text-xs text-slate-600">{cardDisplay} • {orderRewards[0]?.status || 'pending'}</p>
                 </div>
               )}
             </div>
