@@ -6,10 +6,15 @@ import {
   ChevronLeft, ChevronRight, Edit2, ExternalLink, Trash2
 } from 'lucide-react';
 
-const BG = '#0d0f1e';
-const CARD_BG = '#1a1d2e';
-const BORDER = '#2a2d3e';
-const MUTED = '#6b7280';
+// Use CSS variables from theme system
+const getStyles = () => ({
+  BG: 'var(--bg-primary)',
+  CARD_BG: 'var(--bg-card)',
+  BORDER: 'var(--border-color)',
+  MUTED: 'var(--text-muted)',
+  TEXT_PRIMARY: 'var(--text-primary)',
+  ACCENT: 'var(--accent-primary)'
+});
 
 const MODE_TABS = [
   { key: 'all', label: 'All', icon: Grid3X3 },
