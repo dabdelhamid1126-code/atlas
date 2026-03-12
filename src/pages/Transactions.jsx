@@ -606,14 +606,14 @@ function SelectEl({ children, ...props }) {
   return <select style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px', fontSize: 14, width: '100%', cursor: 'pointer' }} {...props}>{children}</select>;
 }
 
-function SummaryCard({ label, value, icon, iconBg, iconColor, valueColor }) {
+function SummaryCard({ label, value, icon, style }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: iconBg, border: `1px solid ${BORDER}` }}>
+    <div className="rounded-xl p-4" style={{ background: style.CARD_BG, border: `1px solid ${style.BORDER}` }}>
       <div className="flex items-center gap-2 mb-2">
-        <span style={{ color: iconColor }}>{icon}</span>
-        <span style={{ color: iconColor, fontSize: 12, fontWeight: 600 }}>{label}</span>
+        <span style={{ color: style.ACCENT }}>{icon}</span>
+        <span style={{ color: style.MUTED, fontSize: 12, fontWeight: 600 }}>{label}</span>
       </div>
-      <div className="text-xl font-bold" style={{ color: valueColor }}>{value}</div>
+      <div className="text-xl font-bold" style={{ color: style.TEXT_PRIMARY }}>{value}</div>
     </div>
   );
 }
