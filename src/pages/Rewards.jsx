@@ -863,13 +863,24 @@ export default function Rewards() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label>Issuer</Label>
-              <Input
-                value={cardFormData.issuer}
-                onChange={(e) => setCardFormData({ ...cardFormData, issuer: e.target.value })}
-                placeholder="e.g., Chase, Amex"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Issuer</Label>
+                <Input
+                  value={cardFormData.issuer}
+                  onChange={(e) => setCardFormData({ ...cardFormData, issuer: e.target.value })}
+                  placeholder="e.g., Chase, Amex"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Last 4 Digits</Label>
+                <Input
+                  value={cardFormData.last_four || ''}
+                  onChange={(e) => setCardFormData({ ...cardFormData, last_four: e.target.value })}
+                  placeholder="e.g., 1234"
+                  maxLength={4}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Reward Type *</Label>
