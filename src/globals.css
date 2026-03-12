@@ -4,6 +4,22 @@
 
 @layer base {
   :root {
+    /* Theme system variables - applied dynamically */
+    --bg-primary: #060914;
+    --bg-card: #0f1419;
+    --bg-hover: #1a1f2e;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.45);
+    --accent-primary: #7c3aed;
+    --accent-success: #4ade80;
+    --accent-danger: #f87171;
+    --accent-warning: #fbbf24;
+    --sidebar-bg: #0e0e1e;
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-border: rgba(255, 255, 255, 0.1);
+
+    /* Legacy variables for compatibility */
     --background: 240 50% 8%;
     --foreground: 0 0% 96%;
     --card: 240 44% 14%;
