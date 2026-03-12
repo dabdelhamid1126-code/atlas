@@ -192,41 +192,42 @@ export default function Dashboard() {
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Your latest stats are in</p>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-4 items-center">
-        {/* Time Filters */}
-        <div className="flex rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
-          {TIME_FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => setTimeFilter(f)}
-              className="px-3 py-2 text-xs font-medium transition-colors"
-              style={{
-                color: timeFilter === f ? 'white' : 'var(--text-muted)',
-                background: timeFilter === f ? 'var(--accent-primary)' : 'transparent'
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
+      {/* Filter Tabs - Combined */}
+      <div className="flex flex-wrap gap-2 items-center">
         {/* Type Filters */}
-        <div className="flex rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
-          {TYPE_FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => setTypeFilter(f)}
-              className="px-3 py-2 text-xs font-medium transition-colors"
-              style={{
-                color: typeFilter === f ? 'white' : 'var(--text-muted)',
-                background: typeFilter === f ? 'var(--accent-primary)' : 'transparent'
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+        {TYPE_FILTERS.map(f => (
+          <button
+            key={f}
+            onClick={() => setTypeFilter(f)}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{
+              color: typeFilter === f ? 'white' : 'var(--text-muted)',
+              background: typeFilter === f ? 'var(--accent-primary)' : 'transparent',
+              border: `1px solid ${typeFilter === f ? 'var(--accent-primary)' : 'var(--border-color)'}`
+            }}
+          >
+            {f}
+          </button>
+        ))}
+
+        {/* Separator */}
+        <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 8px' }} />
+
+        {/* Time Filters */}
+        {TIME_FILTERS.map(f => (
+          <button
+            key={f}
+            onClick={() => setTimeFilter(f)}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{
+              color: timeFilter === f ? 'white' : 'var(--text-muted)',
+              background: timeFilter === f ? 'var(--accent-primary)' : 'transparent',
+              border: `1px solid ${timeFilter === f ? 'var(--accent-primary)' : 'var(--border-color)'}`
+            }}
+          >
+            {f}
+          </button>
+        ))}
       </div>
 
       {/* Key Metrics Grid - 5 columns */}
