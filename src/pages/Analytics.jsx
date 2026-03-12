@@ -162,11 +162,11 @@ export default function Analytics() {
             <button
               key={f}
               onClick={() => setTypeFilter(f)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
-                typeFilter === f
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'border-border text-muted-foreground hover:text-foreground bg-card'
-              }`}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all"
+              style={typeFilter === f
+                ? { background: '#6366f1', color: '#fff', border: '1px solid #6366f1' }
+                : { background: '#1a1d2e', color: '#6b7280', border: '1px solid #2a2d3e' }
+              }
             >
               {f}
             </button>
@@ -181,16 +181,18 @@ export default function Analytics() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-card border border-border">
+      <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl" style={{ background: '#1a1d2e', border: '1px solid #2a2d3e' }}>
         {/* Period toggle */}
-        <div className="flex rounded-lg overflow-hidden border border-border">
+        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid #2a2d3e' }}>
           {PERIOD_FILTERS.map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                period === p ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className="px-3 py-1.5 text-xs font-medium transition-colors"
+              style={period === p
+                ? { background: '#6366f1', color: '#fff' }
+                : { color: '#6b7280', background: 'transparent' }
+              }
             >
               {p}
             </button>
