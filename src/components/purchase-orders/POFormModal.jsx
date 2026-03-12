@@ -294,9 +294,18 @@ export default function POFormModal({
               <SelectContent>
                 {creditCards.filter(c => c.active).map(card => {
                   const lastFour = card.id?.slice(-4) || 'XXXX';
+                  let rewardDisplay = '';
+                  if (card.reward_type === 'cashback' && card.cashback_rate) {
+                    rewardDisplay = `${card.cashback_rate}%`;
+                  } else if (card.reward_type === 'points' && card.points_rate) {
+                    rewardDisplay = `${card.points_rate}x pts`;
+                  } else if (card.reward_type === 'both') {
+                    if (card.cashback_rate) rewardDisplay = `${card.cashback_rate}%`;
+                    else if (card.points_rate) rewardDisplay = `${card.points_rate}x pts`;
+                  }
                   return (
                     <SelectItem key={card.id} value={card.id}>
-                      {card.card_name || 'Unnamed Card'} ({lastFour})
+                      {card.card_name || 'Unnamed Card'} ({lastFour}) {rewardDisplay ? `- ${rewardDisplay}` : ''}
                     </SelectItem>
                   );
                 })}
