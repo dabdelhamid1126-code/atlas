@@ -336,9 +336,11 @@ export default function Rewards() {
   });
 
   const rewardColumns = [
-    { header: 'Source', accessor: 'source', cell: (row) => (
-      <span className="font-medium">{row.source}</span>
-    )},
+    { header: 'Source', accessor: 'source', cell: (row) => {
+      const card = creditCards.find(c => c.id === row.credit_card_id);
+      const label = card ? cardLabel(card) : (row.source || '-');
+      return <span className="font-medium">{label}</span>;
+    }},
     { header: 'Type', accessor: 'type', cell: (row) => (
       <div className="flex items-center gap-2">
         {row.type === 'cashback' && <DollarSign className="h-4 w-4 text-green-600" />}
