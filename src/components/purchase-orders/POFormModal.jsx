@@ -290,9 +290,9 @@ export default function POFormModal({
             <Select value={formData.credit_card_id || ''} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
               <SelectTrigger>
                 {formData.credit_card_id ? (() => {
-                  const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
-                  return <span>{selectedCard?.card_name} ({selectedCard?.id?.slice(-4)})</span>;
-                })() : <SelectValue placeholder="Select card (optional)" />}
+                    const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
+                    return <span>{selectedCard?.card_name}</span>;
+                  })() : <SelectValue placeholder="Select card (optional)" />}
               </SelectTrigger>
               <SelectContent>
                 {creditCards.filter(c => c.active).map(card => {
