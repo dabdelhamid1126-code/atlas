@@ -100,12 +100,12 @@ export default function Transactions() {
   const fmt = (n) => n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
+  const styles = getStyles();
+  
   const selectStyle = {
-    background: CARD_BG, border: `1px solid ${BORDER}`, color: '#e5e7eb',
+    background: styles.CARD_BG, border: `1px solid ${styles.BORDER}`, color: '#e5e7eb',
     borderRadius: 8, padding: '6px 10px', fontSize: 13, outline: 'none', cursor: 'pointer'
   };
-
-  const styles = getStyles();
   
   return (
     <div>
