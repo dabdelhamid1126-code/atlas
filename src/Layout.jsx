@@ -57,6 +57,12 @@ const navigationGroups = [
       { name: 'Invoices', page: 'Invoices', icon: FileText },
     ]
   },
+  {
+    label: 'ACCOUNT',
+    items: [
+      { name: 'Settings', page: 'Settings', icon: Settings },
+    ]
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {
