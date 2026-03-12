@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Target } from 'lucide-react';
 
-export default function Goals() {
+export default function Goals({ isEmbedded = false, onSave = null }) {
   const queryClient = useQueryClient();
   const [goals, setGoals] = useState({
     profit: { weekly: 0, monthly: 0, weeklyActive: false, monthlyActive: false },
@@ -71,6 +71,7 @@ export default function Goals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] });
+      if (onSave) onSave();
     },
   });
 
@@ -102,6 +103,82 @@ export default function Goals() {
     { key: 'cashback', label: 'Cashback', color: 'text-pink-400' },
     { key: 'transactions', label: 'Transactions', color: 'text-purple-400' },
   ];
+
+  if (isEmbedded) {
+    return (
+      <div className="space-y-4">
+        {goalTypes.map(({ key, label, color }) => (
+          <div key={key} className="space-y-3">
+            <div className={`text-sm font-semibold ${color}`}>{label}</div>
+            
+            <div className="flex flex-col gap-3">
+              {/* Weekly */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button className={`px-3 py-1 rounded text-sm font-medium ${
+                    goals[key].weeklyActive 
+                      ? 'bg-purple-600 text-white border border-purple-500' 
+                      : 'bg-secondary text-muted-foreground border border-border'
+                  }`} onClick={() => handleActiveChange(key, 'weekly', !goals[key].weeklyActive)}>
+                    Weekly
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {key !== 'transactions' && <span className="text-muted-foreground text-sm">$</span>}
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      value={goals[key].weekly || ''}
+                      onChange={(e) => handleValueChange(key, 'weekly', e.target.value)}
+                      className="bg-secondary border-border w-32 h-8 text-sm"
+                    />
+                  </div>
+                </div>
+                <Switch
+                  checked={goals[key].weeklyActive}
+                  onCheckedChange={(checked) => handleActiveChange(key, 'weekly', checked)}
+                />
+              </div>
+
+              {/* Monthly */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button className={`px-3 py-1 rounded text-sm font-medium ${
+                    goals[key].monthlyActive 
+                      ? 'bg-purple-600 text-white border border-purple-500' 
+                      : 'bg-secondary text-muted-foreground border border-border'
+                  }`} onClick={() => handleActiveChange(key, 'monthly', !goals[key].monthlyActive)}>
+                    Monthly
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {key !== 'transactions' && <span className="text-muted-foreground text-sm">$</span>}
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      value={goals[key].monthly || ''}
+                      onChange={(e) => handleValueChange(key, 'monthly', e.target.value)}
+                      className="bg-secondary border-border w-32 h-8 text-sm"
+                    />
+                  </div>
+                </div>
+                <Switch
+                  checked={goals[key].monthlyActive}
+                  onCheckedChange={(checked) => handleActiveChange(key, 'monthly', checked)}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+        <Button
+          onClick={() => saveMutation.mutate()}
+          disabled={saveMutation.isPending}
+          className="bg-purple-600 hover:bg-purple-700 text-white w-full"
+          size="sm"
+        >
+          {saveMutation.isPending ? 'Saving...' : 'Save Goals'}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

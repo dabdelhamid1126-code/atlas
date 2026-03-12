@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Target, Settings as SettingsIcon, Upload } from 'lucide-react';
+import Goals from './Goals';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -142,16 +143,10 @@ export default function Settings() {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle>Goal Tracking</CardTitle>
-            <CardDescription>Set and manage your financial goals</CardDescription>
+            <CardDescription>Set profit, revenue, cashback, or transaction targets. Active goals appear on your Dashboard.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">Click the button below to configure your goals.</p>
-            <a href="/Goals">
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                <Target className="h-4 w-4 mr-2" />
-                Go to Goals Settings
-              </Button>
-            </a>
+            <Goals isEmbedded={true} />
           </CardContent>
         </Card>
       )}
