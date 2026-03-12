@@ -71,7 +71,7 @@ export default function TransactionsTableMerged({
     if (!cardId) return '—';
     const card = creditCards.find(c => c.id === cardId);
     if (card) {
-      return `${card.card_name} (${cardId.slice(-4)})`;
+      return `${card.card_name} (${card.id?.slice(-4) || 'XXXX'})`;
     }
     return cardId;
   };
