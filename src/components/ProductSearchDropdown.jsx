@@ -78,7 +78,7 @@ export default function ProductSearchDropdown({
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900 truncate">
-                    {truncateText(selectedProduct.name, 28)}
+                    {truncateText(selectedProduct.name, 40)}
                   </p>
                   {selectedProduct.upc && (
                     <p className="text-xs text-slate-500">{selectedProduct.upc}</p>
