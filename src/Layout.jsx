@@ -63,6 +63,7 @@ const navigationGroups = [
   {
     label: 'FINANCE',
     items: [
+      { name: 'Expenses', page: 'Expenses', icon: Receipt },
       { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
       { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
       { name: 'Invoices', page: 'Invoices', icon: FileText },
