@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Plus, Download, Settings, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/shared/PageHeader';
-import TransactionsStatsBar from '@/components/transactions/TransactionsStatsBar';
-import TransactionsFilters from '@/components/transactions/TransactionsFilters';
-import TransactionsTableMerged from '@/components/transactions/TransactionsTableMerged';
+import TransactionsStatsBar from '@/components/transactions/TransactionsStatsBar.jsx';
+import TransactionsFilters from '@/components/transactions/TransactionsFilters.jsx';
+import TransactionsTableMerged from '@/components/transactions/TransactionsTableMerged.jsx';
 import POFormModal from '@/components/purchase-orders/POFormModal';
 import PODetailsModal from '@/components/purchase-orders/PODetailsModal';
 
