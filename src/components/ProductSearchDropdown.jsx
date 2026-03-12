@@ -1,6 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Check, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+const truncateText = (text, maxLength) => {
+  if (!text) return '';
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
 
 export default function ProductSearchDropdown({ 
   products, 
@@ -51,31 +65,44 @@ export default function ProductSearchDropdown({
     <div className="relative" ref={containerRef}>
       {selectedProduct && !isOpen ? (
         // Selected state - show product with image and tag
-        <div className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-lg">
-          {selectedProduct.image && (
-            <img 
-              src={selectedProduct.image} 
-              alt={selectedProduct.name}
-              className="h-8 w-8 rounded object-cover"
-            />
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-900 truncate">{selectedProduct.name}</p>
-            {selectedProduct.upc && (
-              <p className="text-xs text-slate-500">{selectedProduct.upc}</p>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-lg">
+                {selectedProduct.image && (
+                  <img 
+                    src={selectedProduct.image} 
+                    alt={selectedProduct.name}
+                    className="h-8 w-8 rounded object-cover flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">
+                    {truncateText(selectedProduct.name, 28)}
+                  </p>
+                  {selectedProduct.upc && (
+                    <p className="text-xs text-slate-500">{selectedProduct.upc}</p>
+                  )}
+                </div>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded whitespace-nowrap flex-shrink-0">
+                  ✓ From inventory
+                </span>
+                <button
+                  onClick={handleClear}
+                  className="p-1 hover:bg-slate-100 rounded flex-shrink-0"
+                  type="button"
+                >
+                  <X className="h-4 w-4 text-slate-400" />
+                </button>
+              </div>
+            </TooltipTrigger>
+            {selectedProduct.name && selectedProduct.name.length > 28 && (
+              <TooltipContent>
+                <p>{selectedProduct.name}</p>
+              </TooltipContent>
             )}
-          </div>
-          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded whitespace-nowrap">
-            ✓ From inventory
-          </span>
-          <button
-            onClick={handleClear}
-            className="p-1 hover:bg-slate-100 rounded"
-            type="button"
-          >
-            <X className="h-4 w-4 text-slate-400" />
-          </button>
-        </div>
+          </Tooltip>
+        </TooltipProvider>
       ) : (
         // Search input
         <div>
@@ -103,43 +130,55 @@ export default function ProductSearchDropdown({
                 </div>
               ) : filteredProducts.length > 0 ? (
                 filteredProducts.map(product => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleSelect(product)}
-                    className="w-full text-left p-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0 flex items-start gap-3 transition-colors"
-                    type="button"
-                  >
-                    {/* Product Image */}
-                    {product.image && (
-                      <img 
-                        src={product.image}
-                        alt={product.name}
-                        className="h-12 w-12 rounded object-cover flex-shrink-0"
-                      />
-                    )}
-                    
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 text-sm">{product.name}</p>
-                      {product.upc && (
-                        <p className="text-xs text-slate-500">{product.upc}</p>
-                      )}
-                    </div>
+                  <TooltipProvider key={product.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => handleSelect(product)}
+                          className="w-full text-left p-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0 flex items-start gap-3 transition-colors"
+                          type="button"
+                        >
+                          {/* Product Image */}
+                          {product.image && (
+                            <img 
+                              src={product.image}
+                              alt={product.name}
+                              className="h-12 w-12 rounded object-cover flex-shrink-0"
+                            />
+                          )}
+                          
+                          {/* Product Details */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-900 text-sm">
+                              {truncateText(product.name, 35)}
+                            </p>
+                            {product.upc && (
+                              <p className="text-xs text-slate-500">{product.upc}</p>
+                            )}
+                          </div>
 
-                    {/* Right side: Price and Category */}
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      {product.price && (
-                        <p className="text-sm font-semibold text-purple-600">
-                          ${parseFloat(product.price).toFixed(2)}
-                        </p>
+                          {/* Right side: Price and Category */}
+                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                            {product.price && (
+                              <p className="text-sm font-semibold text-purple-600">
+                                ${parseFloat(product.price).toFixed(2)}
+                              </p>
+                            )}
+                            {product.category && (
+                              <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded capitalize">
+                                {product.category}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      </TooltipTrigger>
+                      {product.name && product.name.length > 35 && (
+                        <TooltipContent>
+                          <p>{product.name}</p>
+                        </TooltipContent>
                       )}
-                      {product.category && (
-                        <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded capitalize">
-                          {product.category}
-                        </span>
-                      )}
-                    </div>
-                  </button>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))
               ) : (
                 <div className="p-4 text-sm text-slate-500 text-center">
