@@ -38,6 +38,14 @@ const navigationGroups = [
     ]
   },
   {
+    label: 'TRANSACTIONS',
+    items: [
+      { name: 'Transactions', page: 'Transactions', icon: ArrowLeftRight },
+      { name: 'Add Transaction', page: 'AddTransaction', icon: PlusCircle },
+      { name: 'Bulk Upload', page: 'BulkUpload', icon: Upload },
+    ]
+  },
+  {
     label: 'ORDERS',
     items: [
       { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
