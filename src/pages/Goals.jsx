@@ -106,76 +106,74 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
 
   if (isEmbedded) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         {goalTypes.map(({ key, label, color }) => (
-          <div key={key} className="space-y-3">
-            <div className={`text-sm font-semibold ${color}`}>{label}</div>
+          <div key={key} className="pb-6 border-b border-border last:border-0 last:pb-0">
+            <div className={`text-sm font-semibold ${color} mb-4`}>{label}</div>
             
-            <div className="flex flex-col gap-3">
-              {/* Weekly */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button className={`px-3 py-1 rounded text-sm font-medium ${
-                    goals[key].weeklyActive 
-                      ? 'bg-purple-600 text-white border border-purple-500' 
-                      : 'bg-secondary text-muted-foreground border border-border'
-                  }`} onClick={() => handleActiveChange(key, 'weekly', !goals[key].weeklyActive)}>
+            <div className="flex items-center justify-between gap-4">
+              {/* Timeframe & Input */}
+              <div className="flex items-center gap-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleValueChange(key, 'weekly', goals[key].weekly)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                      goals[key].weeklyActive
+                        ? 'bg-purple-600 text-white border border-purple-600'
+                        : 'bg-transparent text-muted-foreground border border-border hover:text-foreground'
+                    }`}
+                  >
                     Weekly
                   </button>
-                  <div className="flex items-center gap-1">
-                    {key !== 'transactions' && <span className="text-muted-foreground text-sm">$</span>}
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={goals[key].weekly || ''}
-                      onChange={(e) => handleValueChange(key, 'weekly', e.target.value)}
-                      className="bg-secondary border-border w-32 h-8 text-sm"
-                    />
-                  </div>
-                </div>
-                <Switch
-                  checked={goals[key].weeklyActive}
-                  onCheckedChange={(checked) => handleActiveChange(key, 'weekly', checked)}
-                />
-              </div>
-
-              {/* Monthly */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button className={`px-3 py-1 rounded text-sm font-medium ${
-                    goals[key].monthlyActive 
-                      ? 'bg-purple-600 text-white border border-purple-500' 
-                      : 'bg-secondary text-muted-foreground border border-border'
-                  }`} onClick={() => handleActiveChange(key, 'monthly', !goals[key].monthlyActive)}>
+                  <button
+                    onClick={() => handleValueChange(key, 'monthly', goals[key].monthly)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                      goals[key].monthlyActive
+                        ? 'bg-purple-600 text-white border border-purple-600'
+                        : 'bg-transparent text-muted-foreground border border-border hover:text-foreground'
+                    }`}
+                  >
                     Monthly
                   </button>
-                  <div className="flex items-center gap-1">
-                    {key !== 'transactions' && <span className="text-muted-foreground text-sm">$</span>}
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={goals[key].monthly || ''}
-                      onChange={(e) => handleValueChange(key, 'monthly', e.target.value)}
-                      className="bg-secondary border-border w-32 h-8 text-sm"
-                    />
-                  </div>
                 </div>
-                <Switch
-                  checked={goals[key].monthlyActive}
-                  onCheckedChange={(checked) => handleActiveChange(key, 'monthly', checked)}
-                />
+
+                <div className="flex items-center gap-1">
+                  {key !== 'transactions' && <span className="text-muted-foreground text-sm">$</span>}
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={goals[key].weekly || goals[key].monthly || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (goals[key].weeklyActive) handleValueChange(key, 'weekly', val);
+                      else handleValueChange(key, 'monthly', val);
+                    }}
+                    className="bg-secondary border-border w-24 h-8 text-sm"
+                  />
+                </div>
               </div>
+
+              {/* Toggle */}
+              <Switch
+                checked={goals[key].weeklyActive || goals[key].monthlyActive}
+                onCheckedChange={(checked) => {
+                  handleActiveChange(key, 'weekly', checked);
+                  handleActiveChange(key, 'monthly', checked);
+                }}
+              />
             </div>
           </div>
         ))}
-        <Button
-          onClick={() => saveMutation.mutate()}
-          disabled={saveMutation.isPending}
-          className="bg-purple-600 hover:bg-purple-700 text-white w-full"
-          size="sm"
-        >
-          {saveMutation.isPending ? 'Saving...' : 'Save Goals'}
-        </Button>
+
+        <div className="pt-4">
+          <Button
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+            className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-6"
+          >
+            {saveMutation.isPending ? 'Saving...' : 'Save Goals'}
+          </Button>
+        </div>
       </div>
     );
   }

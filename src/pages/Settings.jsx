@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Target, Settings as SettingsIcon, Upload } from 'lucide-react';
+import { User, Target, Settings as SettingsIcon, Upload, Database, Mail } from 'lucide-react';
 import Goals from './Goals';
 
 export default function Settings() {
@@ -50,8 +50,8 @@ export default function Settings() {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'goals', label: 'Goals', icon: Target },
-    { id: 'data', label: 'Data', icon: SettingsIcon },
-    { id: 'email', label: 'Email Setup', icon: SettingsIcon },
+    { id: 'data', label: 'Data', icon: Database },
+    { id: 'email', label: 'Email Setup', icon: Mail },
   ];
 
   return (
