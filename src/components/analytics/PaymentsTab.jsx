@@ -5,17 +5,18 @@ import {
 } from 'recharts';
 import { CreditCard, Gift, TrendingUp } from 'lucide-react';
 
-const CARD_BG = '#12122a';
-const DONUT_COLORS = ['#7c3aed', '#4f46e5', '#818cf8', '#a78bfa', '#c084fc'];
-const tooltipStyle = { background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 };
+const CARD_BG = '#1a1d2e';
+const CARD_BORDER = '#2a2d3e';
+const DONUT_COLORS = ['#818cf8', '#60a5fa', '#4ade80', '#a855f7', '#22c55e'];
+const tooltipStyle = { background: '#1a1d2e', border: '1px solid #2a2d3e', borderRadius: 8, fontSize: 12, color: '#e2e8f0' };
 
 function ChartCard({ title, subtitle, children, fullWidth }) {
   return (
-    <div className={`rounded-2xl p-5 flex flex-col gap-3${fullWidth ? ' col-span-2' : ''}`}
-      style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.07)' }}>
+    <div className={`rounded-xl p-5 flex flex-col gap-3${fullWidth ? ' col-span-2' : ''}`}
+      style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
       <div>
         <p className="text-xs font-bold tracking-widest text-white uppercase">{title}</p>
-        {subtitle && <p className="text-[11px] text-white/40 mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -25,7 +26,7 @@ function ChartCard({ title, subtitle, children, fullWidth }) {
 function SummaryCard({ icon: Icon, iconBg, label, value, valueColor }) {
   return (
     <div className="flex-1 rounded-xl p-4 flex items-center gap-3 min-w-0"
-      style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.07)' }}>
+      style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
       <div className="p-2 rounded-lg shrink-0" style={{ background: iconBg }}>
         <Icon className="h-4 w-4" style={{ color: valueColor }} />
       </div>
@@ -93,11 +94,11 @@ export default function PaymentsTab({ orders, rewards, creditCards }) {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={cardStats} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="cardName" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+              <XAxis dataKey="cardName" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
               <Tooltip contentStyle={tooltipStyle} formatter={v => [fmtUSD(v)]} />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-              <Bar dataKey="spent" name="Spent" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8, color: '#9ca3af' }} />
+              <Bar dataKey="spent" name="Spent" fill="#818cf8" radius={[4, 4, 0, 0]} />
               <Bar dataKey="cashback" name="Cashback" fill="#4ade80" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -134,23 +135,23 @@ export default function PaymentsTab({ orders, rewards, creditCards }) {
       </div>
 
       {/* Effective vs Stated Rate – full width */}
-      <div className="rounded-2xl p-5" style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="rounded-xl p-5" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
         <p className="text-xs font-bold tracking-widest text-white uppercase mb-3">Effective Cashback Rate vs Stated Rate</p>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={cardStats} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis dataKey="cardName" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
+            <XAxis dataKey="cardName" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
             <Tooltip contentStyle={tooltipStyle} formatter={v => [`${Number(v).toFixed(2)}%`]} />
-            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8, color: '#9ca3af' }} />
             <Bar dataKey="statedRate" name="Stated Rate" fill="#7c3aed" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="effectiveRate" name="Effective Rate" fill="#4ade80" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="effectiveRate" name="Effective Rate" fill="#22c55e" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Payment Method Performance Table */}
-      <div className="rounded-2xl p-5" style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="rounded-xl p-5" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
         <p className="text-xs font-bold tracking-widest text-white uppercase mb-4">Payment Method Performance</p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -188,10 +189,10 @@ export default function PaymentsTab({ orders, rewards, creditCards }) {
 
       {/* Summary Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <SummaryCard icon={CreditCard} iconBg="#1e3a5f"  label="Total PM Spend"  value={fmtUSD(totals.totalSpent)}   valueColor="#60a5fa" />
-        <SummaryCard icon={Gift}       iconBg="#2e1065"  label="Total Cashback"  value={fmtUSD(totals.totalCashback)} valueColor="#a78bfa" />
-        <SummaryCard icon={TrendingUp} iconBg="#052e16"  label="Best Rate"       value={fmtPct(totals.bestRate)}      valueColor="#4ade80" />
-        <SummaryCard icon={CreditCard} iconBg="#1e3a5f"  label="Best Card"       value={totals.bestCard}              valueColor="#60a5fa" />
+        <SummaryCard icon={CreditCard} iconBg="#1e3a5f22" label="Total PM Spend"  value={fmtUSD(totals.totalSpent)}    valueColor="#60a5fa" />
+        <SummaryCard icon={Gift}       iconBg="#2e106522" label="Total Cashback"  value={fmtUSD(totals.totalCashback)} valueColor="#a855f7" />
+        <SummaryCard icon={TrendingUp} iconBg="#05521622" label="Best Rate"       value={fmtPct(totals.bestRate)}      valueColor="#22c55e" />
+        <SummaryCard icon={CreditCard} iconBg="#1e3a5f22" label="Best Card"       value={totals.bestCard}              valueColor="#60a5fa" />
       </div>
     </div>
   );
