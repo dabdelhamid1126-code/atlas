@@ -178,32 +178,29 @@ export default function Transactions() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl" style={{ background: CARD_BG, border: `1px solid ${BORDER}` }}>
-        <div className="flex items-center gap-2 flex-1 min-w-40 rounded-lg px-3 py-1.5" style={{ background: '#0d0f1e', border: `1px solid ${BORDER}` }}>
-          <Search size={13} color={MUTED} />
+      <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-xl" style={{ background: styles.CARD_BG, border: `1px solid ${styles.BORDER}` }}>
+        <div className="flex items-center gap-2 flex-1 min-w-40 rounded-lg px-3 py-2" style={{ background: styles.BG, border: `1px solid ${styles.BORDER}` }}>
+          <Search size={13} color={styles.MUTED} />
           <input
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search products, store"
+            placeholder="Search products..."
             className="bg-transparent outline-none text-sm flex-1"
-            style={{ color: '#e5e7eb' }}
+            style={{ color: styles.TEXT_PRIMARY }}
           />
         </div>
-        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} style={selectStyle}>
+        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} style={{ ...selectStyle, background: styles.CARD_BG, border: `1px solid ${styles.BORDER}`, color: styles.TEXT_PRIMARY }}>
           <option value="all">All Statuses</option>
           {statuses.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace('_', ' ')}</option>)}
         </select>
-        <select value={vendorFilter} onChange={e => { setVendorFilter(e.target.value); setPage(1); }} style={selectStyle}>
+        <select value={vendorFilter} onChange={e => { setVendorFilter(e.target.value); setPage(1); }} style={{ ...selectStyle, background: styles.CARD_BG, border: `1px solid ${styles.BORDER}`, color: styles.TEXT_PRIMARY }}>
           <option value="all">All Vendors</option>
           {vendors.map(v => <option key={v} value={v}>{v}</option>)}
         </select>
-        <select value={platformFilter} onChange={e => { setPlatformFilter(e.target.value); setPage(1); }} style={selectStyle}>
+        <select value={platformFilter} onChange={e => { setPlatformFilter(e.target.value); setPage(1); }} style={{ ...selectStyle, background: styles.CARD_BG, border: `1px solid ${styles.BORDER}`, color: styles.TEXT_PRIMARY }}>
           <option value="all">All Platforms</option>
           {platforms.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
-        <button style={{ display: 'flex', alignItems: 'center', gap: 5, color: MUTED, fontSize: 13, background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
-          <Filter size={13} /> More Filters
-        </button>
       </div>
 
       {/* Table */}
