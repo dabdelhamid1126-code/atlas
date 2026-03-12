@@ -200,25 +200,26 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User Section */}
           {user && (
-            <div className="border-t border-border p-4">
-              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-secondary">
+            <div className="p-4" style={{ borderTop: `1px solid var(--border-color)` }}>
+              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-violet-700 text-white text-sm font-semibold">
+                  <AvatarFallback style={{ background: 'var(--accent-primary)', color: 'white' }} className="text-sm font-semibold">
                     {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
                     {user.full_name || 'User'}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{user.email}</p>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                className="w-full justify-start rounded-xl transition-colors"
+                style={{ color: 'var(--accent-danger)' }}
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign out
