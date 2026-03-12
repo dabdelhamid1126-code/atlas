@@ -286,7 +286,7 @@ export default function POFormModal({
 
           {/* Credit Card */}
           <div className="space-y-2">
-            <Label>Credit Card (optional)</Label>
+            <Label>Credit Card (for rewards tracking)</Label>
             <Select value={formData.credit_card_id || ''} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
               <SelectTrigger>
                 <SelectValue placeholder="Select card (optional)" />
@@ -305,18 +305,21 @@ export default function POFormModal({
                   }
                   return (
                     <SelectItem key={card.id} value={card.id}>
-                      {card.card_name || 'Unnamed Card'} ({lastFour}) {rewardDisplay ? `- ${rewardDisplay}` : ''}
+                      {card.card_name || 'Unnamed Card'} ({lastFour}){rewardDisplay ? ` - ${rewardDisplay}` : ''}
                     </SelectItem>
                   );
                 })}
               </SelectContent>
-              </Select>
-              {formData.credit_card_id && (
-              <div className="text-sm text-slate-600">
-                Selected: {creditCards.find(c => c.id === formData.credit_card_id)?.card_name || 'Unnamed Card'} ({creditCards.find(c => c.id === formData.credit_card_id)?.id.slice(-4)})
-              </div>
-              )}
-              </div>
+            </Select>
+            {formData.credit_card_id && (() => {
+              const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
+              return selectedCard ? (
+                <div className="text-sm text-slate-600">
+                  Selected: {selectedCard.card_name} ({selectedCard.id?.slice(-4)})
+                </div>
+              ) : null;
+            })()}
+          </div>
 
           {/* Gift Cards */}
           <div className="space-y-2">
