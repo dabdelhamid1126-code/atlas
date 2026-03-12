@@ -49,11 +49,10 @@
   }
   
   html, body {
-    @apply bg-[#060914] text-foreground antialiased;
-    background: 
-      radial-gradient(circle at 15% 25%, rgba(120,80,255,0.15), transparent 40%),
-      radial-gradient(circle at 80% 65%, rgba(255,120,80,0.12), transparent 40%),
-      #060914;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    @apply antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
