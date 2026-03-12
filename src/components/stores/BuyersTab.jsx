@@ -13,16 +13,6 @@ import { BuyerIcon, BUYER_PRESETS } from './VendorLogos';
 const TYPE_LABELS = { wholesale_churning: 'Wholesale / Churn', marketplace: 'Marketplace' };
 const TYPE_COLORS = { wholesale_churning: '#F59E0B', marketplace: '#3B82F6' };
 
-function TypeTag({ type }) {
-  const label = TYPE_LABELS[type] || type;
-  const color = TYPE_COLORS[type] || '#6B7280';
-  return (
-    <span style={{ background: color + '22', color, border: `1px solid ${color}44`, borderRadius: 6, padding: '1px 8px', fontSize: 11, fontWeight: 600 }}>
-      {label}
-    </span>
-  );
-}
-
 export default function BuyersTab({ buyers }) {
   const qc = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
