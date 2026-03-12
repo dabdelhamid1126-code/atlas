@@ -696,9 +696,7 @@ export default function Rewards() {
                 <SelectContent>
                   {creditCards.filter(c => c.active).map(card => (
                     <SelectItem key={card.id} value={card.card_name}>
-                      {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}% cashback`}
-                      {card.reward_type === 'points' && `${card.points_rate}x points`}
-                      {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
+                      {cardLabel(card)}
                     </SelectItem>
                   ))}
                 </SelectContent>
