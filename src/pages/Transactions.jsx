@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
   Tag, Package, CheckCircle, DollarSign, Search,
-  ChevronLeft, ChevronRight, Edit2, TrendingUp
+  ChevronLeft, ChevronRight, Edit2, TrendingUp, Grid3x3, Globe
 } from 'lucide-react';
 
 // Use CSS variables from theme system
