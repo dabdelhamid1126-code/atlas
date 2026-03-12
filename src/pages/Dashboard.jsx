@@ -186,20 +186,21 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {/* Header with Greeting */}
       <div>
-        <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Dashboard</h1>
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Overview of your business performance</p>
+        <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Welcome back, {firstName}</h1>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Your latest stats are in</p>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap gap-4 items-center">
+        {/* Time Filters */}
         <div className="flex rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
           {TIME_FILTERS.map(f => (
             <button
               key={f}
               onClick={() => setTimeFilter(f)}
-              className="px-4 py-2 text-xs font-medium transition-colors"
+              className="px-3 py-2 text-xs font-medium transition-colors"
               style={{
                 color: timeFilter === f ? 'white' : 'var(--text-muted)',
                 background: timeFilter === f ? 'var(--accent-primary)' : 'transparent'
@@ -209,11 +210,28 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+        {/* Type Filters */}
+        <div className="flex rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
+          {TYPE_FILTERS.map(f => (
+            <button
+              key={f}
+              onClick={() => setTypeFilter(f)}
+              className="px-3 py-2 text-xs font-medium transition-colors"
+              style={{
+                color: typeFilter === f ? 'white' : 'var(--text-muted)',
+                background: typeFilter === f ? 'var(--accent-primary)' : 'transparent'
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metricDefs.slice(0, 4).map(({ key, label, format: fmt, Icon }) => (
+      {/* Key Metrics Grid - 5 columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {metricDefs.map(({ key, label, format: fmt, Icon, sub }) => (
           <div
             key={key}
             className="rounded-xl p-5"
@@ -223,9 +241,16 @@ export default function Dashboard() {
               <p className="text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>{label}</p>
               <Icon className="h-4 w-4" style={{ color: 'var(--accent-primary)' }} />
             </div>
-            <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{fmt(metrics[key])}</p>
+            <p className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{fmt(metrics[key])}</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{sub(filteredOrders, metrics)}</p>
           </div>
         ))}
+      </div>
+
+      {/* Goal Tracker and Status Pipeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <GoalTracker />
+        <StatusPipeline orders={filteredOrders} />
       </div>
 
       {/* Charts */}
@@ -237,9 +262,6 @@ export default function Dashboard() {
           <ByStatusChart data={byStatusData} />
         </div>
       </div>
-
-      {/* Status Pipeline */}
-      <StatusPipeline orders={filteredOrders} />
     </div>
   );
 }
