@@ -11,13 +11,13 @@ const INPUT_STYLE = { background: 'rgba(255,255,255,0.05)', border: '1px solid r
 const SECTION_STYLE = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '20px', marginBottom: 16, backdropFilter: 'blur(12px)' };
 
 const CATEGORIES = ['Electronics', 'Phones', 'Tablets', 'Laptops', 'Gaming', 'Accessories', 'Wearables', 'Audio', 'Other'];
-const STATUSES = ['Purchased', 'Ordered', 'Shipped', 'Received', 'Cancelled'];
+const STATUSES = ['Pending', 'Purchased', 'Shipped', 'Delivered', 'Completed'];
 
-function SectionTitle({ icon, label, color }) {
+function SectionTitle({ icon, label }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <span style={{ color }}>{icon}</span>
-      <span style={{ color, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</span>
+    <div className="flex items-center gap-2 mb-5 pb-4 border-b border-[rgba(255,255,255,0.05)]">
+      <span className="text-purple-400">{icon}</span>
+      <span className="text-xs uppercase font-bold tracking-wider text-white">{label}</span>
     </div>
   );
 }
@@ -25,7 +25,7 @@ function SectionTitle({ icon, label, color }) {
 function Field({ label, required, children }) {
   return (
     <div className="flex flex-col">
-      <label style={LABEL_STYLE}>{label}{required && <span style={{ color: '#a855f7' }}> *</span>}</label>
+      <label style={LABEL_STYLE}>{label}{required && <span className="text-purple-400"> *</span>}</label>
       {children}
     </div>
   );
@@ -37,7 +37,7 @@ function InputEl({ ...props }) {
 
 function SelectEl({ children, ...props }) {
   return (
-    <select style={{ ...INPUT_STYLE, cursor: 'pointer', appearance: 'none' }} {...props}>
+    <select style={{ ...INPUT_STYLE, cursor: 'pointer', appearance: 'none', paddingRight: 28 }} {...props}>
       {children}
     </select>
   );
