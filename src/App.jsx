@@ -63,14 +63,14 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/Settings" element={
-        <Layout currentPageName="Settings">
+        <LayoutWrapper currentPageName="Settings">
           <Settings />
-        </Layout>
+        </LayoutWrapper>
       } />
       <Route path="/Goals" element={
-        <Layout currentPageName="Goals">
+        <LayoutWrapper currentPageName="Goals">
           <Goals />
-        </Layout>
+        </LayoutWrapper>
       } />
       <Route path="/Transactions" element={
         <LayoutWrapper currentPageName="Transactions">
