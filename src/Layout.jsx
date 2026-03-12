@@ -141,27 +141,36 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Navigation */}
           <ScrollArea className="flex-1 py-4">
-            <nav className="px-3 space-y-1">
-              {filteredNav.map((item) => {
-                const isActive = currentPageName === item.page;
-                return (
-                  <Link
-                    key={item.page}
-                    to={createPageUrl(item.page)}
-                    onClick={() => setSidebarOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                      isActive
-                        ? "bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-lg shadow-purple-900/40"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    )}
-                  >
-                    <item.icon className={cn("h-4.5 w-4.5", isActive ? "text-white" : "text-slate-400")} />
-                    {item.name}
-                    {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
-                  </Link>
-                );
-              })}
+            <nav className="px-3 space-y-4">
+              {filteredGroups.map((group) => (
+                <div key={group.label}>
+                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase">
+                    {group.label}
+                  </p>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const isActive = currentPageName === item.page;
+                      return (
+                        <Link
+                          key={item.page}
+                          to={createPageUrl(item.page)}
+                          onClick={() => setSidebarOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                            isActive
+                              ? "bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-lg shadow-purple-900/40"
+                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          )}
+                        >
+                          <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "text-slate-400")} />
+                          {item.name}
+                          {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
           </ScrollArea>
 
