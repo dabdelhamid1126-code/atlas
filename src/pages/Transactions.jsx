@@ -203,31 +203,37 @@ export default function Transactions() {
         </select>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        <SummaryCard label="Total Items" value={summary.totalItems} icon={<Package size={16} />} style={styles} />
+        <SummaryCard label="Listed" value={summary.listed} icon={<Tag size={16} />} style={styles} />
+        <SummaryCard label="Sold" value={summary.sold} icon={<CheckCircle size={16} />} style={styles} />
+        <SummaryCard label="Total Cost" value={fmt(summary.totalCost)} icon={<DollarSign size={16} />} style={styles} />
+        <SummaryCard label="Total Profit" value={fmt(summary.totalProfit)} icon={<TrendingUp size={16} />} style={styles} />
+      </div>
+
       {/* Table */}
-      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
+      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${styles.BORDER}` }}>
         <div className="overflow-x-auto">
           <table className="w-full" style={{ borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#12152a' }}>
-                <th className="px-4 py-3 text-left" style={{ width: 36 }}>
-                  <input type="checkbox" style={{ accentColor: '#6366f1' }} />
-                </th>
-                {['DATE', 'PRODUCT', 'VENDOR', 'PLATFORM', 'QTY', 'COST', 'SALE', 'PROFIT', 'CASHBACK', 'ORDER #', 'TRACKING #', 'PAYMENT', 'STATUS'].map(col => (
-                  <th key={col} className="px-4 py-3 text-left" style={{ color: MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+              <tr style={{ background: styles.CARD_BG }}>
+                {['DATE', 'PRODUCT', 'VENDOR', 'QTY', 'COST', 'SALE', 'PROFIT', 'STATUS'].map(col => (
+                  <th key={col} className="px-4 py-3 text-left" style={{ color: styles.MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
                     {col}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-center" style={{ width: 100, color: MUTED, fontSize: 11, fontWeight: 700 }}>ACTIONS</th>
+                <th className="px-4 py-3 text-center" style={{ width: 60, color: styles.MUTED, fontSize: 11, fontWeight: 700 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-12" style={{ color: MUTED }}>Loading...</td>
+                  <td colSpan={8} className="text-center py-12" style={{ color: styles.MUTED }}>Loading...</td>
                 </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-12" style={{ color: MUTED }}>No transactions found</td>
+                  <td colSpan={8} className="text-center py-12" style={{ color: styles.MUTED }}>No transactions found</td>
                 </tr>
               ) : paginated.map((order, idx) => {
                 const productName = (order.items || []).map(i => i.product_name).filter(Boolean).join(', ') || order.order_number;
@@ -236,61 +242,33 @@ export default function Transactions() {
                 const sale = order.sale_price;
                 const cashback = rewardsByOrder[order.id];
                 const profit = (sale != null && cost != null) ? (sale - cost + (cashback || 0)) : null;
-                
-                const statusBadgeStyle = {
-                  'pending': { bg: '#dbeafe', text: '#1e40af' },
-                  'purchased': { bg: '#dbeafe', text: '#1e40af' },
-                  'shipped': { bg: '#fef3c7', text: '#b45309' },
-                  'delivered': { bg: '#e9d5ff', text: '#6b21a8' },
-                  'completed': { bg: '#d1fae5', text: '#065f46' },
-                  'cancelled': { bg: '#fee2e2', text: '#991b1b' },
-                };
-                const statusStyle = statusBadgeStyle[order.status] || { bg: '#e5e7eb', text: '#374151' };
-                
-                const truncate = (str, len = 20) => str && str.length > len ? str.slice(0, len) + '...' : str;
-                const cardName = order.card_name || (creditCards.find(c => c.id === order.credit_card_id)?.card_name || '—');
+                const statusStyle = { 'pending': '#60a5fa', 'shipped': '#fbbf24', 'completed': '#4ade80', 'cancelled': '#f87171' }[order.status] || styles.MUTED;
                 
                 return (
                   <tr
                     key={order.id}
-                    style={{ background: idx % 2 === 0 ? CARD_BG : '#1e2235', borderBottom: `1px solid ${BORDER}`, transition: 'background 0.15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#252840'}
-                    onMouseLeave={e => e.currentTarget.style.background = idx % 2 === 0 ? CARD_BG : '#1e2235'}
+                    style={{ background: idx % 2 === 0 ? styles.CARD_BG : 'transparent', borderBottom: `1px solid ${styles.BORDER}`, transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = styles.BG}
+                    onMouseLeave={e => e.currentTarget.style.background = idx % 2 === 0 ? styles.CARD_BG : 'transparent'}
                   >
-                    <td className="px-4 py-3">
-                      <input type="checkbox" style={{ accentColor: '#6366f1' }} />
-                    </td>
-                    <td className="px-4 py-3 text-sm" style={{ color: MUTED, whiteSpace: 'nowrap' }}>{fmtDate(order.order_date)}</td>
-                    <td className="px-4 py-3 text-sm text-white max-w-xs truncate" title={productName}>{productName || '—'}</td>
-                    <td className="px-4 py-3 text-sm" style={{ color: '#e5e7eb' }}>{order.retailer || '—'}</td>
-                    <td className="px-4 py-3 text-sm" style={{ color: MUTED }}>{order.platform || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-right" style={{ color: '#e5e7eb' }}>{qty}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: styles.MUTED, whiteSpace: 'nowrap' }}>{fmtDate(order.order_date)}</td>
+                    <td className="px-4 py-3 text-sm max-w-xs truncate" style={{ color: styles.TEXT_PRIMARY }} title={productName}>{productName || '—'}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: styles.TEXT_PRIMARY }}>{order.retailer || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-right" style={{ color: styles.TEXT_PRIMARY }}>{qty}</td>
                     <td className="px-4 py-3 text-sm text-right" style={{ color: '#f87171' }}>{fmt(cost)}</td>
-                    <td className="px-4 py-3 text-sm text-right" style={{ color: '#e5e7eb' }}>{sale != null ? fmt(sale) : '—'}</td>
-                    <td className="px-4 py-3 text-sm text-right font-medium" style={{ color: profit == null ? MUTED : profit >= 0 ? '#4ade80' : '#f87171' }}>
+                    <td className="px-4 py-3 text-sm text-right" style={{ color: styles.TEXT_PRIMARY }}>{sale != null ? fmt(sale) : '—'}</td>
+                    <td className="px-4 py-3 text-sm text-right font-medium" style={{ color: profit == null ? styles.MUTED : profit >= 0 ? '#4ade80' : '#f87171' }}>
                       {profit == null ? '—' : fmt(profit)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right" style={{ color: '#4ade80' }}>{cashback ? fmt(cashback) : '—'}</td>
-                    <td className="px-4 py-3 text-sm text-white" title={order.order_number}>{truncate(order.order_number)}</td>
-                    <td className="px-4 py-3 text-sm text-white" title={order.tracking_number}>{truncate(order.tracking_number)}</td>
-                    <td className="px-4 py-3 text-sm" style={{ color: '#e5e7eb' }}>{cardName}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: statusStyle.bg, color: statusStyle.text }}>
-                        {(order.status || 'pending').toUpperCase()}
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: statusStyle + '22', color: statusStyle }}>
+                        {(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => setEditingOrder(order)} className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors" title="Edit">
-                          <Edit2 size={14} className="text-purple-400" />
-                        </button>
-                        <button className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors" title="Expand">
-                          <ExternalLink size={14} className="text-[rgba(255,255,255,0.4)]" />
-                        </button>
-                        <button className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors" title="Delete">
-                          <Trash2 size={14} className="text-red-400" />
-                        </button>
-                      </div>
+                      <button onClick={() => setEditingOrder(order)} className="p-1 hover:opacity-70 transition-opacity" title="Edit">
+                        <Edit2 size={14} style={{ color: styles.ACCENT }} />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -300,23 +278,23 @@ export default function Transactions() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderTop: `1px solid ${BORDER}`, background: '#12152a' }}>
-          <span style={{ color: MUTED, fontSize: 13 }}>
-            {filtered.length === 0 ? 'No results' : `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, filtered.length)} of ${filtered.length}`}
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderTop: `1px solid ${styles.BORDER}`, background: styles.CARD_BG }}>
+          <span style={{ color: styles.MUTED, fontSize: 13 }}>
+            {filtered.length === 0 ? 'No results' : `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, filtered.length)} of ${filtered.length}`}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '4px 8px', color: page === 1 ? BORDER : '#e5e7eb', cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+              style={{ background: styles.BG, border: `1px solid ${styles.BORDER}`, borderRadius: 6, padding: '4px 8px', color: page === 1 ? styles.BORDER : styles.TEXT_PRIMARY, cursor: page === 1 ? 'not-allowed' : 'pointer' }}
             >
               <ChevronLeft size={14} />
             </button>
-            <span style={{ color: MUTED, fontSize: 13 }}>Page {page} of {totalPages}</span>
+            <span style={{ color: styles.MUTED, fontSize: 13 }}>Page {page} / {totalPages}</span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '4px 8px', color: page === totalPages ? BORDER : '#e5e7eb', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}
+              style={{ background: styles.BG, border: `1px solid ${styles.BORDER}`, borderRadius: 6, padding: '4px 8px', color: page === totalPages ? styles.BORDER : styles.TEXT_PRIMARY, cursor: page === totalPages ? 'not-allowed' : 'pointer' }}
             >
               <ChevronRight size={14} />
             </button>
