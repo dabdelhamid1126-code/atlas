@@ -40,7 +40,7 @@ export default function POTable({ orders, onEdit, onView, onDelete, isLoading })
                     <td className="px-4 py-3">
                       <input type="checkbox" className="rounded" />
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium">{order.retailer}</td>
+                    <td className="px-4 py-3 text-sm font-medium capitalize">{order.retailer || 'Unknown'}</td>
                     <td className="px-4 py-3 text-sm font-mono text-slate-600">{order.order_number}</td>
                     <td className="px-4 py-3 text-sm text-slate-600">{order.tracking_number || '—'}</td>
                     <td className="px-4 py-3">
