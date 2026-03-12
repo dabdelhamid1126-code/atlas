@@ -564,14 +564,29 @@ export default function PurchaseOrders() {
     newItems[index].product_id = product.id;
     newItems[index].product_name = product.name;
     newItems[index].upc = product.upc;
-    newItems[index].unit_cost = parseFloat(product.price) || 0;
+    newItems[index].unit_cost = product.price ? parseFloat(product.price) : 0;
     newItems[index].quantity_ordered = 1;
     newItems[index].quantity_received = 0;
     setFormData({ ...formData, items: newItems });
+    setProductSearches({ ...productSearches, [index]: '' });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.order_number?.trim()) {
+      toast.error('Order number is required');
+      return;
+    }
+    if (!formData.retailer?.trim()) {
+      toast.error('Retailer is required');
+      return;
+    }
+    if (formData.items.length === 0) {
+      toast.error('Add at least one item to the order');
+      return;
+    }
     
     // Check for duplicate order number
     if (!editingOrder) {
@@ -1381,7 +1396,7 @@ export default function PurchaseOrders() {
 
       {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[90vw] max-w-[650px] min-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
           </DialogHeader>
@@ -1462,24 +1477,26 @@ export default function PurchaseOrders() {
                         </div>
                         
                         {/* Product Details */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
-                            {item.product_name}
+                        <div className="flex-1 min-w-0 pr-2">
+                          <p className="text-sm font-semibold text-slate-900 line-clamp-2">
+                            {item.product_name && item.product_name.length > 35 
+                              ? item.product_name.substring(0, 35) + '...'
+                              : item.product_name}
                           </p>
                           {item.upc && (
-                            <p className="text-xs text-slate-500 mt-0.5">
+                            <p className="text-xs text-slate-500 mt-1">
                               UPC: {item.upc}
                             </p>
                           )}
                           {product?.category && (
-                            <span className="inline-block mt-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded capitalize">
+                            <span className="inline-block mt-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded capitalize">
                               {product.category}
                             </span>
                           )}
                         </div>
                         
                         {/* Qty and Price */}
-                        <div className="text-right flex-shrink-0">
+                        <div className="text-right flex-shrink-0 whitespace-nowrap">
                           <p className="text-sm font-medium text-slate-900">
                             {item.quantity_ordered} × ${item.unit_cost?.toFixed(2)}
                           </p>
