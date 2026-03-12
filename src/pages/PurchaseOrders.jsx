@@ -505,6 +505,7 @@ export default function PurchaseOrders() {
         }}
         onDelete={handleDelete}
         isLoading={isLoading}
+        visibleColumns={visibleColumns}
       />
 
       <POFormModal
