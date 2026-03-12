@@ -105,14 +105,15 @@ export default function Transactions() {
     borderRadius: 8, padding: '6px 10px', fontSize: 13, outline: 'none', cursor: 'pointer'
   };
 
+  const styles = getStyles();
+  
   return (
-    <div style={{ background: BG, minHeight: '100vh', color: '#e5e7eb' }}>
+    <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Transactions</h1>
-          <p style={{ color: MUTED, fontSize: 14, marginTop: 2 }}>Track and manage your purchases by mode</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-1" style={{ color: styles.TEXT_PRIMARY }}>Transactions</h1>
+        <p style={{ color: styles.MUTED, fontSize: 14 }}>Track and manage all your orders</p>
+      </div>
         <div className="flex items-center gap-2">
           <button style={{ ...selectStyle, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px' }}>
             <Columns size={14} /> <span>Columns</span>
