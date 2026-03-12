@@ -293,43 +293,52 @@ export default function Expenses() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {filtered.map(exp => (
-            <div key={exp.id} style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 18px' }} className="flex items-center gap-4">
-              {/* Icon */}
-              <div style={{ background: '#12152a', border: `1px solid ${BORDER}`, borderRadius: 8, padding: 8, flexShrink: 0 }}>
-                <Crown size={16} color="#f59e0b" />
-              </div>
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p style={{ color: exp.is_active ? '#fff' : MUTED, fontWeight: 600, fontSize: 14 }}>{exp.name}</p>
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <span style={{ background: CATEGORY_COLORS[exp.category] + '22', color: CATEGORY_COLORS[exp.category], fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, letterSpacing: '0.04em' }}>
-                    {exp.category}
-                  </span>
-                  <span style={{ color: MUTED, fontSize: 12 }}>· {exp.frequency}</span>
-                  {exp.payment_method && <span style={{ color: MUTED, fontSize: 12 }}>· {exp.payment_method}</span>}
-                  {exp.next_due_date && <span style={{ color: MUTED, fontSize: 12 }}>· Next: {format(parseISO(exp.next_due_date), 'MMM d, yyyy')}</span>}
+          {filtered.map(exp => {
+            const inactive = !exp.is_active;
+            const catColor = inactive ? MUTED : CATEGORY_COLORS[exp.category];
+            return (
+              <div key={exp.id}
+                style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 18px', opacity: inactive ? 0.55 : 1, transition: 'opacity 0.2s' }}
+                className="flex items-center gap-4"
+              >
+                {/* Icon */}
+                <div style={{ background: '#12152a', border: `1px solid ${BORDER}`, borderRadius: 8, padding: 8, flexShrink: 0 }}>
+                  <Crown size={16} color={inactive ? MUTED : '#f59e0b'} />
+                </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p style={{ color: inactive ? MUTED : '#fff', fontWeight: 600, fontSize: 14 }}>{exp.name}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span style={{ background: catColor + '22', color: catColor, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, letterSpacing: '0.04em' }}>
+                      {exp.category}
+                    </span>
+                    <span style={{ color: MUTED, fontSize: 12 }}>· {exp.frequency}</span>
+                    {exp.payment_method && <span style={{ color: MUTED, fontSize: 12 }}>· {exp.payment_method}</span>}
+                    {exp.next_due_date && <span style={{ color: MUTED, fontSize: 12 }}>· Next: {format(parseISO(exp.next_due_date), 'MMM d, yyyy')}</span>}
+                  </div>
+                </div>
+                {/* Amount */}
+                <div className="text-right">
+                  <p style={{ color: inactive ? MUTED : '#fff', fontWeight: 700, fontSize: 15 }}>${parseFloat(exp.amount || 0).toFixed(2)}</p>
+                  <p style={{ color: MUTED, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    {inactive ? 'INACTIVE' : exp.frequency}
+                  </p>
+                </div>
+                {/* Actions */}
+                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                  <button onClick={() => handleToggle(exp)} title={inactive ? 'Activate' : 'Deactivate'} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
+                    {inactive ? <Circle size={16} color={MUTED} /> : <CheckCircle2 size={16} color="#4ade80" />}
+                  </button>
+                  <button onClick={() => handleEdit(exp)} title="Edit" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
+                    <Pencil size={14} color={MUTED} />
+                  </button>
+                  <button onClick={() => handleDelete(exp.id)} title="Delete" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
+                    <Trash2 size={14} color="#f87171" />
+                  </button>
                 </div>
               </div>
-              {/* Amount */}
-              <div className="text-right">
-                <p style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>${parseFloat(exp.amount || 0).toFixed(2)}</p>
-                <p style={{ color: MUTED, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{exp.frequency}</p>
-              </div>
-              {/* Actions */}
-              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                <button onClick={() => handleToggle(exp)} title={exp.is_active ? 'Deactivate' : 'Activate'} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
-                  {exp.is_active ? <CheckCircle2 size={16} color="#4ade80" /> : <Circle size={16} color={MUTED} />}
-                </button>
-                <button onClick={() => handleEdit(exp)} title="Edit" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
-                  <Pencil size={14} color={MUTED} />
-                </button>
-                <button onClick={() => handleDelete(exp.id)} title="Delete" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
-                  <Trash2 size={14} color="#f87171" />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
