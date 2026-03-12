@@ -16,7 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
-  const [metrics, setMetrics] = useState({ totalCost: 0, saleRevenue: 0, cashback: 0, netProfit: 0, avgRoi: 0 });
+  const [metrics, setMetrics] = useState({ totalCost: 0, saleRevenue: 0, cashback: 0, points: 0, netProfit: 0, avgRoi: 0 });
   const [trendData, setTrendData] = useState([]);
   const [byStatusData, setByStatusData] = useState([]);
   const [topCards, setTopCards] = useState([]);
@@ -93,10 +93,11 @@ export default function Dashboard() {
       const totalCost = filteredOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
       const saleRevenue = paidInvoices.reduce((s, i) => s + (i.total || 0), 0);
       const cashback = filteredRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
+      const points = filteredRewards.filter(r => r.currency === 'points').reduce((s, r) => s + (r.amount || 0), 0);
       const netProfit = saleRevenue - totalCost;
       const avgRoi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
 
-      setMetrics({ totalCost, saleRevenue, cashback, netProfit, avgRoi });
+      setMetrics({ totalCost, saleRevenue, cashback, points, netProfit, avgRoi });
 
       // Trend data last 6 months with filters
       const now = new Date();
@@ -237,9 +238,9 @@ export default function Dashboard() {
           icon={<TrendingUp className="h-4 w-4" />}
         />
         <MetricCard
-          label="Cashback"
+          label="Cashback + Points"
           value={`$${metrics.cashback.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub={`${((metrics.cashback / (metrics.totalCost || 1)) * 100).toFixed(1)}% avg rate`}
+          sub={`${metrics.points.toLocaleString()} points earned`}
           color="pink"
           icon={<CreditCard className="h-4 w-4" />}
         />
