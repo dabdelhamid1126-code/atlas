@@ -45,23 +45,28 @@ function SelectEl({ children, ...props }) {
 
 export default function AddTransaction() {
   const [mode, setMode] = useState('churning');
+  const [multiItem, setMultiItem] = useState(false);
+  const [expandSale, setExpandSale] = useState(false);
   const [creditCards, setCreditCards] = useState([]);
-  const [sellers, setSellers] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [buyers, setBuyers] = useState([]);
+  const [giftCards, setGiftCards] = useState([]);
 
   // Form state
   const [form, setForm] = useState({
-    productName: '', category: '', sku: '',
-    unitPrice: '', quantity: 1, date: '', tax: '', shipping: '', fees: '',
-    vendor: '', buyer: '', status: 'Purchased', orderNumber: '', tracking: '',
-    paymentMethod: '', cashbackRate: '', giftCard: '',
-    includeTaxCashback: true, includeShippingCashback: true,
-    salePerUnit: true, salePrice: '', saleDate: '', payoutDate: '',
-    notes: ''
+    orderNumber: '', trackingNumber: '', vendor: '', status: 'Pending',
+    productName: '', category: '', sku: '', pickup: false, dropship: false,
+    unitPrice: '', quantity: 1, tax: '', shipping: '', fees: '', date: '',
+    creditCard: '', selectedGiftCards: [], cashbackRate: '', includeTax: true, includeShipping: true,
+    buyer: '', buyerOrderNumber: '', buyerTrackingNumbers: [],
+    salePrice: '', saleDate: '', payoutDate: '', notes: ''
   });
 
   useEffect(() => {
     base44.entities.CreditCard.list().then(setCreditCards).catch(() => {});
-    base44.entities.Seller.list().then(setSellers).catch(() => {});
+    base44.entities.Vendor.list().then(setVendors).catch(() => {});
+    base44.entities.Buyer.list().then(setBuyers).catch(() => {});
+    base44.entities.GiftCard.list().then(gc => setGiftCards(gc.filter(g => g.status === 'available'))).catch(() => {});
   }, []);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
