@@ -71,6 +71,7 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    initTheme();
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
