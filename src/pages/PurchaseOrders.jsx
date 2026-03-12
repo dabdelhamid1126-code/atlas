@@ -1438,14 +1438,58 @@ export default function PurchaseOrders() {
                 </div>
               )}
               <div className="pb-4">
-                <Label className="text-slate-500 text-sm mb-2 block">Items ({selectedOrder.items?.length || 0})</Label>
-                <div className="space-y-2">
-                  {selectedOrder.items?.map((item, i) => (
-                    <div key={i} className="flex justify-between items-start">
-                      <span className="text-sm text-slate-900">{item.product_name}</span>
-                      <span className="text-sm text-slate-900">{item.quantity_ordered} x ${item.unit_cost?.toFixed(2)}</span>
-                    </div>
-                  ))}
+                <Label className="text-slate-500 text-sm mb-3 block">Items ({selectedOrder.items?.length || 0})</Label>
+                <div className="space-y-3">
+                  {selectedOrder.items?.map((item, i) => {
+                    const product = products.find(p => p.id === item.product_id);
+                    const lineTotal = (item.quantity_ordered || 0) * (item.unit_cost || 0);
+                    
+                    return (
+                      <div key={i} className="flex gap-3 py-3 border-b border-slate-100 last:border-b-0">
+                        {/* Product Image */}
+                        <div className="flex-shrink-0">
+                          {product?.image ? (
+                            <img 
+                              src={product.image}
+                              alt={item.product_name}
+                              className="h-12 w-12 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center">
+                              <Package className="h-6 w-6 text-slate-300" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Product Details */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">
+                            {item.product_name}
+                          </p>
+                          {item.upc && (
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              UPC: {item.upc}
+                            </p>
+                          )}
+                          {product?.category && (
+                            <span className="inline-block mt-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded capitalize">
+                              {product.category}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Qty and Price */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-medium text-slate-900">
+                            {item.quantity_ordered} × ${item.unit_cost?.toFixed(2)}
+                          </p>
+                          <p className="text-sm font-bold text-slate-900 mt-1">
+                            ${lineTotal.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               
