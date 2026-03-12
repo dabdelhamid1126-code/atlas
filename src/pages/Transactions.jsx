@@ -127,7 +127,7 @@ export default function Transactions() {
               className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all"
               style={active
                 ? { background: '#6366f1', color: '#fff', border: '1px solid #6366f1' }
-                : { background: 'transparent', color: MUTED, border: `1px solid ${BORDER}` }
+                : { background: 'transparent', color: styles.MUTED, border: `1px solid ${styles.BORDER}` }
               }
             >
               <Icon size={13} />
