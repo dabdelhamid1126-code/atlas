@@ -1388,8 +1388,14 @@ export default function PurchaseOrders() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
-              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
-                {editingOrder ? 'Update Order' : 'Create Order'}
+              <Button 
+                type="submit" 
+                className="bg-black hover:bg-gray-800 text-white"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending 
+                  ? 'Saving...' 
+                  : (editingOrder ? 'Update Order' : 'Create Order')}
               </Button>
             </DialogFooter>
           </form>
