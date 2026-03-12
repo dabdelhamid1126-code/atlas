@@ -145,7 +145,7 @@ export default function Layout({ children, currentPageName }) {
                 <span className="text-white font-bold text-sm">DD</span>
               </div>
               <div>
-                <span className="font-bold text-white tracking-tight block text-sm">Dalia Distro LLC</span>
+                <span className="font-bold tracking-tight block text-sm" style={{ color: 'var(--text-primary)' }}>Dalia Distro LLC</span>
               </div>
             </div>
             <Button
