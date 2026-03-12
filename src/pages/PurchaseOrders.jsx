@@ -1343,37 +1343,39 @@ export default function PurchaseOrders() {
               </div>
             </div>
 
-            {formData.items.length > 0 && (
-              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal:</span>
-                  <span className="font-semibold">
-                    ${formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0).toFixed(2)}
-                  </span>
-                </div>
-                {formData.gift_card_ids.length > 0 && (
-                  <div className="flex justify-between text-sm text-green-700">
-                    <span>Gift Cards ({formData.gift_card_ids.length}):</span>
+            {formData.items.length > 0 && (() => {
+              const itemSubtotal = formData.items.reduce((sum, item) => sum + ((item.quantity_ordered || 0) * (item.unit_cost || 0)), 0);
+              const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
+                const gc = giftCards.find(g => g.id === id);
+                return sum + (gc?.value || 0);
+              }, 0);
+              const finalTotal = itemSubtotal - giftCardTotal;
+              
+              return (
+                <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Items Subtotal:</span>
                     <span className="font-semibold">
-                      -${formData.gift_card_ids.reduce((sum, id) => {
-                        const gc = giftCards.find(g => g.id === id);
-                        return sum + (gc?.value || 0);
-                      }, 0).toFixed(2)}
+                      ${itemSubtotal.toFixed(2)}
                     </span>
                   </div>
-                )}
-                <div className="flex justify-between text-base font-bold border-t pt-2">
-                  <span>Final Total:</span>
-                  <span>
-                    ${(formData.items.reduce((sum, item) => sum + (item.quantity_ordered * item.unit_cost), 0) - 
-                      formData.gift_card_ids.reduce((sum, id) => {
-                        const gc = giftCards.find(g => g.id === id);
-                        return sum + (gc?.value || 0);
-                      }, 0)).toFixed(2)}
-                  </span>
+                  {giftCardTotal > 0 && (
+                    <div className="flex justify-between text-sm text-green-700">
+                      <span>Gift Cards ({formData.gift_card_ids.length}):</span>
+                      <span className="font-semibold">
+                        -${giftCardTotal.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-base font-bold border-t pt-2">
+                    <span>Final Total:</span>
+                    <span>
+                      ${finalTotal.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <div className="space-y-2">
               <Label>Notes</Label>
