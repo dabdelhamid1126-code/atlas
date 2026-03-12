@@ -136,11 +136,23 @@ export default function TransactionsFilters({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cards</SelectItem>
-                  {creditCards.map(card => (
-                    <SelectItem key={card.id} value={card.id}>
-                      {card.card_name} ({card.id?.slice(-4) || 'XXXX'})
-                    </SelectItem>
-                  ))}
+                  {creditCards.map(card => {
+                    const lastFour = card.id?.slice(-4) || 'XXXX';
+                    let rewardDisplay = '';
+                    if (card.reward_type === 'cashback' && card.cashback_rate) {
+                      rewardDisplay = `${card.cashback_rate}%`;
+                    } else if (card.reward_type === 'points' && card.points_rate) {
+                      rewardDisplay = `${card.points_rate}x pts`;
+                    } else if (card.reward_type === 'both') {
+                      if (card.cashback_rate) rewardDisplay = `${card.cashback_rate}%`;
+                      else if (card.points_rate) rewardDisplay = `${card.points_rate}x pts`;
+                    }
+                    return (
+                      <SelectItem key={card.id} value={card.id}>
+                        {card.card_name} ({lastFour}){rewardDisplay ? ` - ${rewardDisplay}` : ''}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
