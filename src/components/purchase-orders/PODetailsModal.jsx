@@ -19,7 +19,7 @@ export default function PODetailsModal({ open, onOpenChange, order, products, re
   const totalPoints = orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
   
   const card = creditCards.find(c => c.id === order.credit_card_id);
-  const cardDisplay = card ? `${card.card_name} (${order.credit_card_id?.slice(-4) || 'XXXX'})` : order.card_name;
+  const cardDisplay = card ? `${card.card_name} (${card.id?.slice(-4) || 'XXXX'})` : order.card_name || '';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
