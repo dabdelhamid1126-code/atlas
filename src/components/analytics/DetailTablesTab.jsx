@@ -1,20 +1,21 @@
 import React, { useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 
-const CARD_BG = '#12122a';
+const CARD_BG = '#1a1d2e';
+const CARD_BORDER = '#2a2d3e';
 const fmtUSD = v => `$${(v ?? 0).toFixed(2)}`;
 const fmtPct = v => `${(v ?? 0).toFixed(2)}%`;
 
 function TableCard({ title, subtitle, badge, children }) {
   return (
-    <div className="rounded-2xl p-5" style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.07)' }}>
+    <div className="rounded-xl p-5" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
       <div className="flex items-start justify-between mb-4">
         <div>
           <p className="text-xs font-bold tracking-widest text-white uppercase">{title}</p>
-          {subtitle && <p className="text-[11px] text-white/40 mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>{subtitle}</p>}
         </div>
         {badge && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0" style={{ background: '#4f46e5', color: '#c7d2fe' }}>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: '#6366f1', color: '#e0e7ff' }}>
             {badge}
           </span>
         )}
