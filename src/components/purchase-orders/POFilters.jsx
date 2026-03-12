@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -27,66 +27,77 @@ export default function POFilters({
   const retailers = [...new Set(orders.map(o => o.retailer).filter(Boolean))].sort();
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-6">
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <Input
-          placeholder="Search orders..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
+    <div className="space-y-4 mb-6">
+      {/* Search and buttons row */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Search products, stores..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 bg-slate-50"
+          />
+        </div>
       </div>
 
-      <Select value={retailerFilter} onValueChange={setRetailerFilter}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Retailers</SelectItem>
-          {retailers.map(r => (
-            <SelectItem key={r} value={r}>{r}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {/* 2x2 Grid of filters */}
+      <div className="grid grid-cols-2 gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="bg-slate-50">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {STATUSES.map(s => (
+              <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Statuses</SelectItem>
-          {STATUSES.map(s => (
-            <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select value={retailerFilter} onValueChange={setRetailerFilter}>
+          <SelectTrigger className="bg-slate-50">
+            <SelectValue placeholder="All Retailers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Retailers</SelectItem>
+            {retailers.map(r => (
+              <SelectItem key={r} value={r}>{r}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Categories</SelectItem>
-          <SelectItem value="dropship">Dropship</SelectItem>
-          <SelectItem value="pickup">Pickup</SelectItem>
-          <SelectItem value="shipping">Shipping</SelectItem>
-        </SelectContent>
-      </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="bg-slate-50">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="dropship">Dropship</SelectItem>
+            <SelectItem value="pickup">Pickup</SelectItem>
+            <SelectItem value="shipping">Shipping</SelectItem>
+          </SelectContent>
+        </Select>
 
-      <Select value={sortOrder} onValueChange={setSortOrder}>
-        <SelectTrigger className="w-48">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="order-date-new">Date: New to Old</SelectItem>
-          <SelectItem value="order-date-old">Date: Old to New</SelectItem>
-          <SelectItem value="name-asc">Name: A to Z</SelectItem>
-          <SelectItem value="name-desc">Name: Z to A</SelectItem>
-          <SelectItem value="total-high">Total: High to Low</SelectItem>
-          <SelectItem value="total-low">Total: Low to High</SelectItem>
-        </SelectContent>
-      </Select>
+        <Select value={sortOrder} onValueChange={setSortOrder}>
+          <SelectTrigger className="bg-slate-50">
+            <SelectValue placeholder="Sort by..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="order-date-new">Date: New to Old</SelectItem>
+            <SelectItem value="order-date-old">Date: Old to New</SelectItem>
+            <SelectItem value="name-asc">Name: A to Z</SelectItem>
+            <SelectItem value="name-desc">Name: Z to A</SelectItem>
+            <SelectItem value="total-high">Total: High to Low</SelectItem>
+            <SelectItem value="total-low">Total: Low to High</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* More Filters */}
+      <button className="flex items-center gap-2 text-slate-600 hover:text-slate-900 text-sm">
+        <Filter className="h-4 w-4" /> More Filters
+      </button>
     </div>
   );
 }
