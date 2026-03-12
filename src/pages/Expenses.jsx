@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
+
+function cardLabel(card) {
+  return card.last_four ? `${card.card_name} (${card.last_four})` : card.card_name;
+}
 import {
   DollarSign, TrendingUp, Receipt, Clock, Search, Plus,
   Crown, Pencil, Trash2, X, CheckCircle2, Circle, Zap

@@ -83,6 +83,8 @@ export default function Rewards() {
     }
   });
 
+  const cardLabel = (card) => card.last_four ? `${card.card_name} (${card.last_four})` : card.card_name;
+
 
 
   const createRewardMutation = useMutation({

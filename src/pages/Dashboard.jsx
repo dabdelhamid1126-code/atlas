@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DollarSign, TrendingUp, Percent, ShoppingCart, Tag } from 'lucide-react';
+import { DollarSign, TrendingUp, Percent, ShoppingCart, Tag, Receipt, Crown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, startOfYear, isAfter, subDays } from 'date-fns';
 import StatusPipeline from '@/components/dashboard/StatusPipeline';
 import ProfitRevenueChart from '@/components/dashboard/ProfitRevenueChart';
