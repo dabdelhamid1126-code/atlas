@@ -60,6 +60,7 @@ export default function Analytics() {
   const [allOrders, setAllOrders] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
   const [allRewards, setAllRewards] = useState([]);
+  const [allCreditCards, setAllCreditCards] = useState([]);
   const [typeFilter, setTypeFilter] = useState('All');
   const [period, setPeriod] = useState('Monthly');
   const [activeTab, setActiveTab] = useState('Overview');
