@@ -3,10 +3,13 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import Settings from './pages/Settings';
+import Goals from './pages/Goals';
+import Layout from './layout';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -58,6 +61,16 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/Settings" element={
+        <Layout currentPageName="Settings">
+          <Settings />
+        </Layout>
+      } />
+      <Route path="/Goals" element={
+        <Layout currentPageName="Goals">
+          <Goals />
+        </Layout>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
