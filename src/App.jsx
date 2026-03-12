@@ -71,6 +71,11 @@ const AuthenticatedApp = () => {
           <Goals />
         </Layout>
       } />
+      <Route path="/Transactions" element={
+        <Layout currentPageName="Transactions">
+          <Transactions />
+        </Layout>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
