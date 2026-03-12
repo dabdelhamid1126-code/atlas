@@ -13,6 +13,7 @@ import PODetailsModal from '@/components/purchase-orders/PODetailsModal';
 
 export default function PurchaseOrders() {
   const queryClient = useQueryClient();
+  const [mode, setMode] = useState('all');
   const [search, setSearch] = useState('');
   const [retailerFilter, setRetailerFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -345,17 +346,45 @@ export default function PurchaseOrders() {
     }
   };
 
+  const modes = [
+    { id: 'all', label: 'All', icon: '▦' },
+    { id: 'churning', label: 'Churning', icon: '◆' },
+    { id: 'marketplace', label: 'Marketplace', icon: '◆' },
+  ];
+
   return (
     <div>
       <PageHeader
         title="Purchase Orders"
-        description="Track purchases from retailers and suppliers"
+        description="Track and manage your purchases by mode"
         actions={
-          <Button onClick={openCreateDialog} className="bg-black hover:bg-gray-800 text-white">
-            <Plus className="h-4 w-4 mr-2" /> New Order
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline">Columns</Button>
+            <Button variant="outline">PRO</Button>
+            <Button variant="outline">CSV</Button>
+            <Button onClick={openCreateDialog} className="bg-black hover:bg-gray-800 text-white">
+              <Plus className="h-4 w-4 mr-2" /> New Order
+            </Button>
+          </div>
         }
       />
+
+      {/* Mode Tabs */}
+      <div className="flex items-center gap-2 mb-6">
+        {modes.map(m => (
+          <button
+            key={m.id}
+            onClick={() => setMode(m.id)}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+              mode === m.id
+                ? 'bg-purple-200 text-purple-900'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            {m.icon} {m.label}
+          </button>
+        ))}
+      </div>
 
       <POStatsBar orders={filteredOrders} />
 
