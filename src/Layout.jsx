@@ -132,14 +132,14 @@ export default function Layout({ children, currentPageName }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 border-r border-white/10 transition-transform duration-300 lg:translate-x-0 shadow-xl",
-          "bg-[#0e0e1e]",
+          "fixed top-0 left-0 z-50 h-full w-64 transition-transform duration-300 lg:translate-x-0 shadow-xl",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{ background: 'var(--sidebar-bg)', borderRight: `1px solid var(--border-color)` }}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
+          <div className="h-16 flex items-center justify-between px-5" style={{ borderBottom: `1px solid var(--border-color)` }}>
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">DD</span>
