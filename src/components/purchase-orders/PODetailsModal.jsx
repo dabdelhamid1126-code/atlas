@@ -11,12 +11,15 @@ import { Label } from '@/components/ui/label';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Package } from 'lucide-react';
 
-export default function PODetailsModal({ open, onOpenChange, order, products, rewards }) {
+export default function PODetailsModal({ open, onOpenChange, order, products, rewards, creditCards = [] }) {
   if (!order) return null;
 
   const orderRewards = rewards.filter(r => r.purchase_order_id === order.id);
   const totalCashback = orderRewards.filter(r => r.currency === 'USD').reduce((sum, r) => sum + (r.amount || 0), 0);
   const totalPoints = orderRewards.filter(r => r.currency === 'points').reduce((sum, r) => sum + (r.amount || 0), 0);
+  
+  const card = creditCards.find(c => c.id === order.credit_card_id);
+  const cardDisplay = card ? `${card.card_name} (${order.credit_card_id?.slice(-4) || 'XXXX'})` : order.card_name;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
