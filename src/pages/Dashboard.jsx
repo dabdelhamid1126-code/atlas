@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DollarSign, TrendingUp, CreditCard, Percent } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, Percent, Target } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
+import { Button } from '@/components/ui/button';
 import MetricCard from '@/components/dashboard/MetricCard';
 import StatusPipeline from '@/components/dashboard/StatusPipeline';
 import ProfitRevenueChart from '@/components/dashboard/ProfitRevenueChart';
 import ByStatusChart from '@/components/dashboard/ByStatusChart';
 import TopCards from '@/components/dashboard/TopCards';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
+import GoalTracker from '@/components/dashboard/GoalTracker';
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -18,6 +20,8 @@ export default function Dashboard() {
   const [trendData, setTrendData] = useState([]);
   const [byStatusData, setByStatusData] = useState([]);
   const [topCards, setTopCards] = useState([]);
+  const [timeFilter, setTimeFilter] = useState('30Days');
+  const [modeFilter, setModeFilter] = useState('All');
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -119,10 +123,51 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{greeting()}, {firstName}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Your latest stats at a glance.</p>
+      {/* Header with Filters */}
+      <div className="flex flex-col gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{greeting()}, {firstName}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Here's what's happening across your accounts.</p>
+        </div>
+        
+        {/* Filter Buttons */}
+        <div className="flex flex-wrap gap-3">
+          {/* Mode Filter */}
+          <div className="flex gap-2">
+            {['All', 'Churning', 'Resell'].map(mode => (
+              <Button
+                key={mode}
+                size="sm"
+                onClick={() => setModeFilter(mode)}
+                className={`rounded-full ${
+                  modeFilter === mode
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {mode}
+              </Button>
+            ))}
+          </div>
+
+          {/* Time Filter */}
+          <div className="flex gap-2">
+            {['Today', '7 Days', '30 Days', 'YTD', 'All Time'].map(time => (
+              <Button
+                key={time}
+                size="sm"
+                onClick={() => setTimeFilter(time)}
+                className={`rounded-full ${
+                  timeFilter === time
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {time}
+              </Button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Top Metric Cards */}
@@ -163,6 +208,9 @@ export default function Dashboard() {
           icon={<Percent className="h-4 w-4" />}
         />
       </div>
+
+      {/* Goal Tracker */}
+      <GoalTracker metrics={metrics} />
 
       {/* Status Pipeline */}
       <StatusPipeline orders={allOrders} />
