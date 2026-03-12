@@ -154,9 +154,11 @@ export default function Expenses() {
     load();
   };
 
-  const handleToggle = async (e) => {
-    await base44.entities.Expense.update(e.id, { is_active: !e.is_active });
-    load();
+  const handleToggle = async (exp) => {
+    const newActive = !exp.is_active;
+    // Optimistic update for instant recalculation
+    setExpenses(prev => prev.map(e => e.id === exp.id ? { ...e, is_active: newActive } : e));
+    await base44.entities.Expense.update(exp.id, { is_active: newActive });
   };
 
   const handleEdit = (e) => {
