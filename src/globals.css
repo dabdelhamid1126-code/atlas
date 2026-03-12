@@ -31,57 +31,183 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground antialiased;
+  
+  html, body {
+    @apply bg-[#060914] text-foreground antialiased;
+    background: 
+      radial-gradient(circle at 15% 25%, rgba(120,80,255,0.15), transparent 40%),
+      radial-gradient(circle at 80% 65%, rgba(255,120,80,0.12), transparent 40%),
+      #060914;
   }
 }
 
-/* Modern Card Styling */
-.card-modern {
-  @apply bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200;
+/* Premium Card Styling */
+.card-glass {
+  @apply backdrop-blur-[12px] bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-[16px];
 }
 
-/* Gradient Backgrounds */
-.gradient-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Typography */
+.text-page-title {
+  @apply text-4xl font-bold tracking-wide text-white;
 }
 
-.gradient-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.text-page-subtitle {
+  @apply text-base text-[rgba(255,255,255,0.5)];
 }
 
-.gradient-warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+.text-metric-value {
+  @apply text-2xl font-bold text-white;
 }
 
-.gradient-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+.text-metric-label {
+  @apply text-xs uppercase font-semibold text-[rgba(255,255,255,0.4)] tracking-wider;
 }
 
-/* Glassmorphism */
-.glass {
-  @apply backdrop-blur-md bg-white/70 border border-white/20;
+.text-muted-light {
+  @apply text-[rgba(255,255,255,0.45)];
 }
 
-/* Modern Button Hover Effects */
-.btn-modern {
-  @apply relative overflow-hidden transition-all duration-300;
+/* Premium Button Styles */
+.btn-primary-premium {
+  @apply px-4 py-2 rounded-[10px] font-medium transition-all duration-200;
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  box-shadow: 0 0 20px rgba(124,58,237,0.4);
 }
 
-.btn-modern::before {
-  content: '';
-  @apply absolute inset-0 bg-white/20 translate-y-full transition-transform duration-300;
+.btn-primary-premium:hover {
+  @apply brightness-[1.15] scale-[1.02];
 }
 
-.btn-modern:hover::before {
-  @apply translate-y-0;
+.btn-secondary-premium {
+  @apply px-4 py-2 rounded-[10px] font-medium bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.1)] transition-all duration-200;
 }
 
-/* Smooth Animations */
-@keyframes slideUp {
+.btn-secondary-premium:hover {
+  @apply brightness-[1.2] bg-[rgba(255,255,255,0.08)];
+}
+
+/* Input & Dropdown Styling */
+.input-premium,
+.textarea-premium,
+.select-premium {
+  @apply bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[10px] text-white placeholder-[rgba(255,255,255,0.3)] transition-all duration-200;
+}
+
+.input-premium:focus,
+.textarea-premium:focus,
+.select-premium:focus {
+  @apply border-[rgba(124,58,237,0.6)] outline-none;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+}
+
+/* Metric Card */
+.metric-card-premium {
+  @apply p-6 rounded-[16px] backdrop-blur-[12px] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] transition-all duration-200;
+}
+
+.metric-card-premium:hover {
+  @apply -translate-y-0.5 border-[rgba(255,255,255,0.12)];
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.metric-icon-container {
+  @apply w-12 h-12 rounded-lg flex items-center justify-center;
+}
+
+/* Color-coded metric icons */
+.metric-icon-purple {
+  @apply bg-[rgba(124,58,237,0.2)] text-purple-400;
+  box-shadow: 0 0 20px rgba(124,58,237,0.2);
+}
+
+.metric-icon-green {
+  @apply bg-[rgba(34,197,94,0.2)] text-green-400;
+  box-shadow: 0 0 20px rgba(34,197,94,0.2);
+}
+
+.metric-icon-blue {
+  @apply bg-[rgba(59,130,246,0.2)] text-blue-400;
+  box-shadow: 0 0 20px rgba(59,130,246,0.2);
+}
+
+.metric-icon-amber {
+  @apply bg-[rgba(245,158,11,0.2)] text-amber-400;
+  box-shadow: 0 0 20px rgba(245,158,11,0.2);
+}
+
+/* Sidebar */
+.sidebar-premium {
+  @apply bg-[rgba(6,9,20,0.95)] backdrop-blur-[20px] border-r border-[rgba(255,255,255,0.06)];
+}
+
+.sidebar-item-active {
+  @apply bg-gradient-to-r from-[#7c3aed] to-[#6366f1] text-white rounded-lg;
+  border-left: 3px solid #fff;
+}
+
+/* Table Styling */
+.table-row-premium {
+  @apply border-b border-[rgba(255,255,255,0.05)] transition-all duration-200;
+}
+
+.table-row-premium:hover {
+  @apply bg-[rgba(255,255,255,0.03)];
+}
+
+/* Modal */
+.modal-premium {
+  @apply bg-[#0d1117] border border-[rgba(255,255,255,0.1)] rounded-[20px] backdrop-blur-[20px];
+  box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+}
+
+/* Badges & Tags */
+.badge-premium {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200;
+}
+
+.badge-purple {
+  @apply bg-[rgba(124,58,237,0.2)] text-purple-300;
+}
+
+.badge-green {
+  @apply bg-[rgba(34,197,94,0.2)] text-green-300;
+}
+
+.badge-blue {
+  @apply bg-[rgba(59,130,246,0.2)] text-blue-300;
+}
+
+.badge-red {
+  @apply bg-[rgba(239,68,68,0.2)] text-red-300;
+}
+
+.badge-amber {
+  @apply bg-[rgba(245,158,11,0.2)] text-amber-300;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[rgba(255,255,255,0.1)] rounded-full transition-colors duration-200;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[rgba(255,255,255,0.2)];
+}
+
+/* Animations */
+@keyframes slideUpFade {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -89,33 +215,38 @@
   }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
+.animate-slide-up-fade {
+  animation: slideUpFade 0.3s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
 
-/* Modern Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Smooth hover transitions */
+.transition-premium {
+  @apply transition-all duration-200 ease;
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-slate-100;
+/* Gradient Text */
+.gradient-text-purple {
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400;
+/* Focus Rings */
+.focus-ring-premium:focus-visible {
+  @apply outline-none;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
 }
