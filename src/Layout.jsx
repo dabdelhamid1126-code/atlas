@@ -70,6 +70,12 @@ const navigationGroups = [
     ]
   },
   {
+    label: 'OPERATIONS',
+    items: [
+      { name: 'Vendors & Buyers', page: 'Stores', icon: Store },
+    ]
+  },
+  {
     label: 'ACCOUNT',
     items: [
       { name: 'Settings', page: 'Settings', icon: Settings },
