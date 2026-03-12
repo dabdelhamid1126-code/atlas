@@ -88,14 +88,16 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
-      const [orders, rewards, invoices] = await Promise.all([
+      const [orders, rewards, invoices, expenses] = await Promise.all([
         base44.entities.PurchaseOrder.list(),
         base44.entities.Reward.list(),
         base44.entities.Invoice.list(),
+        base44.entities.Expense.list(),
       ]);
       setAllOrders(orders);
       setAllRewards(rewards);
       setAllInvoices(invoices);
+      setAllExpenses(expenses);
     } catch (e) {
       console.error(e);
     } finally {

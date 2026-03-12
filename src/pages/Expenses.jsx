@@ -385,11 +385,9 @@ export default function Expenses() {
             <Field label="Payment Method">
               <select style={INPUT_STYLE} value={form.payment_method} onChange={e => set('payment_method', e.target.value)}>
                 <option value="">None</option>
-                <option value="Cash">Cash</option>
-                <option value="Credit Card">Credit Card</option>
-                <option value="Debit Card">Debit Card</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Bank Transfer">Bank Transfer</option>
+                {creditCards.map(c => (
+                  <option key={c.id} value={cardLabel(c)}>{cardLabel(c)}</option>
+                ))}
               </select>
             </Field>
             <Field label="Linked Account">
