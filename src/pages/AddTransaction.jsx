@@ -76,23 +76,29 @@ export default function AddTransaction() {
     return (u * (form.quantity || 1)).toFixed(2);
   }, [form.unitPrice, form.quantity]);
 
+  const giftCardTotal = useMemo(() => {
+    return form.selectedGiftCards.reduce((sum, gcId) => {
+      const gc = giftCards.find(g => g.id === gcId);
+      return sum + (gc?.value || 0);
+    }, 0).toFixed(2);
+  }, [form.selectedGiftCards, giftCards]);
+
   const subtotal = useMemo(() => {
     const base = parseFloat(totalPrice) || 0;
     return base + (parseFloat(form.tax) || 0) + (parseFloat(form.shipping) || 0) + (parseFloat(form.fees) || 0);
   }, [totalPrice, form.tax, form.shipping, form.fees]);
 
+  const totalCost = useMemo(() => {
+    return (subtotal - parseFloat(giftCardTotal || 0)).toFixed(2);
+  }, [subtotal, giftCardTotal]);
+
   const cashbackAmount = useMemo(() => {
     let base = parseFloat(totalPrice) || 0;
-    if (form.includeTaxCashback) base += parseFloat(form.tax) || 0;
-    if (form.includeShippingCashback) base += parseFloat(form.shipping) || 0;
+    if (form.includeTax) base += parseFloat(form.tax) || 0;
+    if (form.includeShipping) base += parseFloat(form.shipping) || 0;
     const rate = parseFloat(form.cashbackRate) || 0;
     return ((base * rate) / 100).toFixed(2);
-  }, [totalPrice, form.tax, form.shipping, form.cashbackRate, form.includeTaxCashback, form.includeShippingCashback]);
-
-  const commission = useMemo(() => {
-    const sale = parseFloat(form.salePrice) || 0;
-    return (sale * 0.13).toFixed(2); // 13% default commission
-  }, [form.salePrice]);
+  }, [totalPrice, form.tax, form.shipping, form.cashbackRate, form.includeTax, form.includeShipping]);
 
   const handleSubmit = async () => {
     const items = form.productName ? [{
