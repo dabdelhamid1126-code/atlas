@@ -261,6 +261,48 @@ export default function Dashboard() {
           <ByStatusChart data={byStatusData} />
         </div>
       </div>
+
+      {/* Expenses Summary */}
+      <div className="rounded-2xl border bg-card p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-muted-foreground" />
+            <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Expenses</p>
+          </div>
+          <Link to="/Expenses" className="text-xs text-primary hover:underline font-medium">View All Expenses →</Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border p-4" style={{ borderColor: '#a855f733' }}>
+            <p className="text-xs text-muted-foreground font-medium mb-1">Monthly Expenses</p>
+            <p className="text-xl font-bold" style={{ color: '#a855f7' }}>${expenseMonthlyCost.toFixed(2)}</p>
+          </div>
+          <div className="rounded-xl border p-4" style={{ borderColor: '#60a5fa33' }}>
+            <p className="text-xs text-muted-foreground font-medium mb-1">Annual Expenses</p>
+            <p className="text-xl font-bold" style={{ color: '#60a5fa' }}>${expenseAnnualCost.toFixed(2)}</p>
+          </div>
+        </div>
+        {topExpenses.length > 0 && (
+          <div className="space-y-2">
+            {topExpenses.map(exp => {
+              const catColor = EXPENSE_CATEGORY_COLORS[exp.category] || '#9ca3af';
+              return (
+                <div key={exp.id} className="flex items-center gap-3 py-1">
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#12152a' }}>
+                    <Crown className="h-3.5 w-3.5" style={{ color: '#f59e0b' }} />
+                  </div>
+                  <span className="flex-1 text-sm font-medium text-foreground truncate">{exp.name}</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: catColor + '22', color: catColor }}>{exp.category}</span>
+                  <span className="text-sm font-bold text-foreground">${parseFloat(exp.amount || 0).toFixed(2)}</span>
+                  <span className="text-xs text-muted-foreground w-14 text-right">{exp.frequency}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {topExpenses.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">No active expenses tracked yet.</p>
+        )}
+      </div>
     </div>
   );
 }
