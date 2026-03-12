@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DollarSign, TrendingUp, CreditCard, Percent, Target } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths, parseISO, subDays, startOfYear } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import MetricCard from '@/components/dashboard/MetricCard';
 import StatusPipeline from '@/components/dashboard/StatusPipeline';
@@ -28,6 +28,52 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    loadData();
+  }, [timeFilter, modeFilter]);
+
+  const getDateFilter = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    switch (timeFilter) {
+      case 'Today':
+        return today;
+      case '7 Days':
+        return subDays(today, 7);
+      case '30 Days':
+        return subDays(today, 30);
+      case 'YTD':
+        return startOfYear(now);
+      case 'All Time':
+        return new Date(1970, 0, 1);
+      default:
+        return subDays(today, 30);
+    }
+  };
+
+  const filterByMode = (orders) => {
+    if (modeFilter === 'All') return orders;
+    
+    return orders.filter(order => {
+      if (modeFilter === 'Churning') {
+        return order.type === 'Churning' || order.buyer_type === 'Wholesale / Churning';
+      }
+      if (modeFilter === 'Resell') {
+        return order.type === 'Marketplace' || order.buyer_type === 'Marketplace';
+      }
+      return true;
+    });
+  };
+
+  const filterByTime = (items, dateField) => {
+    const cutoffDate = getDateFilter();
+    return items.filter(item => {
+      const itemDate = item[dateField] ? new Date(parseISO(item[dateField])) : null;
+      return itemDate && itemDate >= cutoffDate;
+    });
+  };
+
   const loadData = async () => {
     try {
       const [orders, rewards, invoices, creditCards] = await Promise.all([
@@ -39,23 +85,27 @@ export default function Dashboard() {
 
       setAllOrders(orders);
 
-      const totalCost = orders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
-      const paidInvoices = invoices.filter(i => i.status === 'paid');
+      // Apply filters
+      const filteredOrders = filterByTime(filterByMode(orders), 'order_date');
+      const paidInvoices = filterByTime(invoices.filter(i => i.status === 'paid'), 'invoice_date');
+      const filteredRewards = filterByTime(rewards, 'date_earned');
+
+      const totalCost = filteredOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
       const saleRevenue = paidInvoices.reduce((s, i) => s + (i.total || 0), 0);
-      const cashback = rewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
+      const cashback = filteredRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
       const netProfit = saleRevenue - totalCost;
       const avgRoi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
 
       setMetrics({ totalCost, saleRevenue, cashback, netProfit, avgRoi });
 
-      // Trend data last 6 months
+      // Trend data last 6 months with filters
       const now = new Date();
       const trend = [];
       for (let i = 5; i >= 0; i--) {
         const md = subMonths(now, i);
         const mStart = startOfMonth(md);
         const mEnd = endOfMonth(md);
-        const mOrders = orders.filter(o => {
+        const mOrders = filteredOrders.filter(o => {
           const d = o.order_date ? parseISO(o.order_date) : null;
           return d && d >= mStart && d <= mEnd;
         });
@@ -70,14 +120,14 @@ export default function Dashboard() {
       }
       setTrendData(trend);
 
-      // By status
+      // By status with filters
       const statusCounts = {};
-      orders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
+      filteredOrders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
       setByStatusData(Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
 
-      // Top cards
+      // Top cards with filters
       const cardMap = {};
-      orders.forEach(o => {
+      filteredOrders.forEach(o => {
         if (o.credit_card_id) {
           if (!cardMap[o.credit_card_id]) {
             const card = creditCards.find(c => c.id === o.credit_card_id);
@@ -175,7 +225,7 @@ export default function Dashboard() {
         <MetricCard
           label="Total Cost"
           value={`$${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub={`${allOrders.length} total orders`}
+          sub={`${filterByTime(filterByMode(allOrders), 'order_date').length} orders`}
           color="blue"
           icon={<DollarSign className="h-4 w-4" />}
         />
@@ -213,7 +263,7 @@ export default function Dashboard() {
       <GoalTracker metrics={metrics} />
 
       {/* Status Pipeline */}
-      <StatusPipeline orders={allOrders} />
+      <StatusPipeline orders={filterByTime(filterByMode(allOrders), 'order_date')} />
 
       {/* Charts + Side Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -228,7 +278,7 @@ export default function Dashboard() {
 
       {/* Recent Transactions */}
       <RecentTransactions
-        orders={[...allOrders].sort((a, b) =>
+        orders={[...filterByTime(filterByMode(allOrders), 'order_date')].sort((a, b) =>
           new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date)
         )}
       />
