@@ -59,6 +59,7 @@ import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
 import Rewards from './pages/Rewards';
 import Dashboard from './pages/Dashboard';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +76,7 @@ export const PAGES = {
     "ReceiveItems": ReceiveItems,
     "Rewards": Rewards,
     "Dashboard": Dashboard,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
