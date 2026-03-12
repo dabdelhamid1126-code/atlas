@@ -22,7 +22,9 @@ const PAGE_SIZE = 25;
 export default function Transactions() {
   const [orders, setOrders] = useState([]);
   const [rewards, setRewards] = useState([]);
+  const [creditCards, setCreditCards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingOrder, setEditingOrder] = useState(null);
 
   const [modeTab, setModeTab] = useState('all');
   const [search, setSearch] = useState('');
