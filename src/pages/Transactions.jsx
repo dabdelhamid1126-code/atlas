@@ -220,11 +220,12 @@ export default function Transactions() {
                 <th className="px-4 py-3 text-left" style={{ width: 36 }}>
                   <input type="checkbox" style={{ accentColor: '#6366f1' }} />
                 </th>
-                {['DATE', 'PRODUCT', 'VENDOR', 'PLATFORM', 'QTY', 'COST', 'SALE', 'PROFIT', 'CASHBACK'].map(col => (
+                {['DATE', 'PRODUCT', 'VENDOR', 'PLATFORM', 'QTY', 'COST', 'SALE', 'PROFIT', 'CASHBACK', 'ORDER #', 'TRACKING #', 'PAYMENT', 'STATUS'].map(col => (
                   <th key={col} className="px-4 py-3 text-left" style={{ color: MUTED, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
                     {col}
                   </th>
                 ))}
+                <th className="px-4 py-3 text-center" style={{ width: 100, color: MUTED, fontSize: 11, fontWeight: 700 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
