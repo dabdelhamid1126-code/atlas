@@ -5,19 +5,20 @@ import {
 } from 'recharts';
 import { DollarSign, TrendingUp, Gift, Percent } from 'lucide-react';
 
-const CARD_BG = '#12122a';
-const DONUT_COLORS = ['#7c3aed', '#4f46e5', '#818cf8', '#a78bfa', '#c084fc'];
+const CARD_BG = '#1a1d2e';
+const CARD_BORDER = '#2a2d3e';
+const DONUT_COLORS = ['#818cf8', '#60a5fa', '#4ade80', '#a855f7', '#22c55e'];
 
 function ChartCard({ title, subtitle, badge, children }) {
   return (
-    <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.07)' }}>
+    <div className="rounded-xl p-5 flex flex-col gap-3" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-bold tracking-widest text-white uppercase">{title}</p>
-          <p className="text-[11px] text-white/40 mt-0.5">{subtitle}</p>
+          {subtitle && <p className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>{subtitle}</p>}
         </div>
         {badge && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: '#4f46e5', color: '#c7d2fe' }}>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#6366f1', color: '#e0e7ff' }}>
             {badge}
           </span>
         )}
@@ -29,7 +30,7 @@ function ChartCard({ title, subtitle, badge, children }) {
 
 function SummaryCard({ icon: Icon, iconBg, label, value, valueColor }) {
   return (
-    <div className="flex-1 rounded-xl p-4 flex items-center gap-3" style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.07)' }}>
+    <div className="flex-1 rounded-xl p-4 flex items-center gap-3" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
       <div className="p-2 rounded-lg shrink-0" style={{ background: iconBg }}>
         <Icon className="h-4 w-4" style={{ color: valueColor }} />
       </div>
@@ -90,7 +91,7 @@ export default function BreakdownsTab({ orders, invoices, rewards }) {
     return { sales, profit, cashback, avgRoi };
   }, [storeData]);
 
-  const tooltipStyle = { background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 };
+  const tooltipStyle = { background: '#1a1d2e', border: '1px solid #2a2d3e', borderRadius: 8, fontSize: 12, color: '#e2e8f0' };
 
   return (
     <div className="space-y-4">
@@ -101,8 +102,8 @@ export default function BreakdownsTab({ orders, invoices, rewards }) {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={storeData} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
-              <YAxis type="category" dataKey="store" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={60} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+              <YAxis type="category" dataKey="store" tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} width={60} />
               <Tooltip contentStyle={tooltipStyle} formatter={v => [fmtUSD(v)]} />
               <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
               <Bar dataKey="sales" name="Sales" fill="#60a5fa" radius={[0, 4, 4, 0]} />
@@ -116,13 +117,13 @@ export default function BreakdownsTab({ orders, invoices, rewards }) {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={storeData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="store" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+              <XAxis dataKey="store" tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
               <Tooltip contentStyle={tooltipStyle} formatter={v => [fmtUSD(v)]} />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8, color: '#9ca3af' }} />
               <Bar dataKey="sales" name="Sales" fill="#60a5fa" radius={[4, 4, 0, 0]} />
               <Bar dataKey="profit" name="Profit" fill="#4ade80" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="cashback" name="Cashback" fill="#a78bfa" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="cashback" name="Cashback" fill="#a855f7" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -132,8 +133,8 @@ export default function BreakdownsTab({ orders, invoices, rewards }) {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={storeData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="store" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
+              <XAxis dataKey="store" tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
               <Tooltip contentStyle={tooltipStyle} formatter={v => [fmtPct(v), 'ROI']} />
               <Bar dataKey="roi" name="ROI %" fill="#4ade80" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -171,10 +172,10 @@ export default function BreakdownsTab({ orders, invoices, rewards }) {
 
       {/* Summary Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <SummaryCard icon={DollarSign} iconBg="#1e3a5f" label="Total Store Sales"  value={fmtUSD(totals.sales)}   valueColor="#60a5fa" />
-        <SummaryCard icon={TrendingUp} iconBg="#052e16" label="Store Profit"        value={fmtUSD(totals.profit)}  valueColor="#4ade80" />
-        <SummaryCard icon={Gift}       iconBg="#2e1065" label="Store Cashback"      value={fmtUSD(totals.cashback)} valueColor="#a78bfa" />
-        <SummaryCard icon={Percent}    iconBg="#052e16" label="Avg Store ROI"       value={fmtPct(totals.avgRoi)}  valueColor="#4ade80" />
+        <SummaryCard icon={DollarSign} iconBg="#1e3a5f22" label="Total Store Sales"  value={fmtUSD(totals.sales)}    valueColor="#60a5fa" />
+        <SummaryCard icon={TrendingUp} iconBg="#05521622" label="Store Profit"       value={fmtUSD(totals.profit)}   valueColor="#4ade80" />
+        <SummaryCard icon={Gift}       iconBg="#2e106522" label="Store Cashback"     value={fmtUSD(totals.cashback)} valueColor="#a855f7" />
+        <SummaryCard icon={Percent}    iconBg="#05521622" label="Avg Store ROI"      value={fmtPct(totals.avgRoi)}   valueColor="#22c55e" />
       </div>
     </div>
   );
