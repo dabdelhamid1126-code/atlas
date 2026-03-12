@@ -163,7 +163,7 @@ export default function Layout({ children, currentPageName }) {
             <nav className="px-3 space-y-4">
               {filteredGroups.map((group) => (
                 <div key={group.label}>
-                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase">
+                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest uppercase" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
                     {group.label}
                   </p>
                   <div className="space-y-0.5">
@@ -174,14 +174,19 @@ export default function Layout({ children, currentPageName }) {
                           key={item.page}
                           to={createPageUrl(item.page)}
                           onClick={() => setSidebarOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                            isActive
-                              ? "bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-lg shadow-purple-900/40"
-                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          )}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+                          style={{
+                            background: isActive ? 'var(--accent-primary)' : 'transparent',
+                            color: isActive ? 'white' : 'var(--text-muted)',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isActive) e.currentTarget.style.background = 'transparent';
+                          }}
                         >
-                          <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "text-slate-400")} />
+                          <item.icon className="h-4 w-4 shrink-0" />
                           {item.name}
                           {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
                         </Link>
