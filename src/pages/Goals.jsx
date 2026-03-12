@@ -163,15 +163,12 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
             </div>
 
             {/* Toggle Switch */}
-            <Switch
+            <GoalToggle
               checked={goals[key].weeklyActive || goals[key].monthlyActive}
-              onCheckedChange={(checked) => {
+              onChange={(checked) => {
                 handleActiveChange(key, 'weekly', checked);
                 handleActiveChange(key, 'monthly', checked);
               }}
-              className={`${
-                (goals[key].weeklyActive || goals[key].monthlyActive) ? 'bg-green-500' : 'bg-slate-300'
-              }`}
             />
           </div>
         ))}
