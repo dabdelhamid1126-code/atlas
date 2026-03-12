@@ -293,7 +293,6 @@ export default function POFormModal({
               </SelectTrigger>
               <SelectContent>
                 {creditCards.filter(c => c.active).map(card => {
-                  const lastFour = card.id?.slice(-4) || 'XXXX';
                   let rewardDisplay = '';
                   if (card.reward_type === 'cashback' && card.cashback_rate) {
                     rewardDisplay = `${card.cashback_rate}%`;
@@ -305,7 +304,7 @@ export default function POFormModal({
                   }
                   return (
                     <SelectItem key={card.id} value={card.id}>
-                      {card.card_name || 'Unnamed Card'} ({lastFour}){rewardDisplay ? ` - ${rewardDisplay}` : ''}
+                      {card.card_name}{rewardDisplay ? ` - ${rewardDisplay}` : ''}
                     </SelectItem>
                   );
                 })}
