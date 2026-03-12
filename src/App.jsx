@@ -10,7 +10,6 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Settings from './pages/Settings';
 import Goals from './pages/Goals';
 import Transactions from './pages/Transactions';
-import Layout from './layout';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
