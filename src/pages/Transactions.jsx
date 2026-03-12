@@ -244,6 +244,20 @@ export default function Transactions() {
                 const sale = order.sale_price;
                 const cashback = rewardsByOrder[order.id];
                 const profit = (sale != null && cost != null) ? (sale - cost + (cashback || 0)) : null;
+                
+                const statusBadgeStyle = {
+                  'pending': { bg: '#dbeafe', text: '#1e40af' },
+                  'purchased': { bg: '#dbeafe', text: '#1e40af' },
+                  'shipped': { bg: '#fef3c7', text: '#b45309' },
+                  'delivered': { bg: '#e9d5ff', text: '#6b21a8' },
+                  'completed': { bg: '#d1fae5', text: '#065f46' },
+                  'cancelled': { bg: '#fee2e2', text: '#991b1b' },
+                };
+                const statusStyle = statusBadgeStyle[order.status] || { bg: '#e5e7eb', text: '#374151' };
+                
+                const truncate = (str, len = 20) => str && str.length > len ? str.slice(0, len) + '...' : str;
+                const cardName = order.card_name || (creditCards.find(c => c.id === order.credit_card_id)?.card_name || '—');
+                
                 return (
                   <tr
                     key={order.id}
@@ -264,7 +278,28 @@ export default function Transactions() {
                     <td className="px-4 py-3 text-sm text-right font-medium" style={{ color: profit == null ? MUTED : profit >= 0 ? '#4ade80' : '#f87171' }}>
                       {profit == null ? '—' : fmt(profit)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right" style={{ color: '#60a5fa' }}>{cashback ? fmt(cashback) : '—'}</td>
+                    <td className="px-4 py-3 text-sm text-right" style={{ color: '#4ade80' }}>{cashback ? fmt(cashback) : '—'}</td>
+                    <td className="px-4 py-3 text-sm text-white" title={order.order_number}>{truncate(order.order_number)}</td>
+                    <td className="px-4 py-3 text-sm text-white" title={order.tracking_number}>{truncate(order.tracking_number)}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: '#e5e7eb' }}>{cardName}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: statusStyle.bg, color: statusStyle.text }}>
+                        {(order.status || 'pending').toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button onClick={() => setEditingOrder(order)} className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors" title="Edit">
+                          <Edit2 size={14} className="text-purple-400" />
+                        </button>
+                        <button className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors" title="Expand">
+                          <ExternalLink size={14} className="text-[rgba(255,255,255,0.4)]" />
+                        </button>
+                        <button className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors" title="Delete">
+                          <Trash2 size={14} className="text-red-400" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
