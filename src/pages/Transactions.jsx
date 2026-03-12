@@ -136,45 +136,6 @@ export default function Transactions() {
         })}
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
-        <SummaryCard
-          label="Total Items"
-          value={summary.totalItems}
-          icon={<Package size={16} />}
-          iconBg="#1e293b" iconColor="#94a3b8"
-          valueBg="#1e293b" valueColor="#e5e7eb"
-        />
-        <SummaryCard
-          label="Listed"
-          value={summary.listed}
-          icon={<Tag size={16} />}
-          iconBg="#2d1f0a" iconColor="#f59e0b"
-          valueBg="#2d1f0a" valueColor="#f59e0b"
-        />
-        <SummaryCard
-          label="Sold / Done"
-          value={summary.sold}
-          icon={<CheckCircle size={16} />}
-          iconBg="#0a2414" iconColor="#4ade80"
-          valueBg="#0a2414" valueColor="#4ade80"
-        />
-        <SummaryCard
-          label="Total Cost"
-          value={fmt(summary.totalCost)}
-          icon={<DollarSign size={16} />}
-          iconBg="#2a0a0a" iconColor="#f87171"
-          valueBg="#2a0a0a" valueColor="#f87171"
-        />
-        <SummaryCard
-          label="Total Profit"
-          value={fmt(summary.totalProfit)}
-          icon={<DollarSign size={16} />}
-          iconBg="#0a2414" iconColor="#4ade80"
-          valueBg="#0a2414" valueColor="#4ade80"
-        />
-      </div>
-
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-xl" style={{ background: styles.CARD_BG, border: `1px solid ${styles.BORDER}` }}>
         <div className="flex items-center gap-2 flex-1 min-w-40 rounded-lg px-3 py-2" style={{ background: styles.BG, border: `1px solid ${styles.BORDER}` }}>
