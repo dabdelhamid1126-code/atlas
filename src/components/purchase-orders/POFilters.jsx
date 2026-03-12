@@ -45,7 +45,7 @@ export default function POFilters({
       <div className="grid grid-cols-2 gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="bg-slate-50">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
@@ -57,10 +57,10 @@ export default function POFilters({
 
         <Select value={retailerFilter} onValueChange={setRetailerFilter}>
           <SelectTrigger className="bg-slate-50">
-            <SelectValue placeholder="All Retailers" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Retailers</SelectItem>
+            <SelectItem value="all">All Vendors</SelectItem>
             {retailers.map(r => (
               <SelectItem key={r} value={r}>{r}</SelectItem>
             ))}
@@ -69,7 +69,7 @@ export default function POFilters({
 
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="bg-slate-50">
-            <SelectValue placeholder="All Categories" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
@@ -81,11 +81,11 @@ export default function POFilters({
 
         <Select value={sortOrder} onValueChange={setSortOrder}>
           <SelectTrigger className="bg-slate-50">
-            <SelectValue placeholder="Sort by..." />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="order-date-new">Date: New to Old</SelectItem>
-            <SelectItem value="order-date-old">Date: Old to New</SelectItem>
+            <SelectItem value="order-date-new">Newest First</SelectItem>
+            <SelectItem value="order-date-old">Oldest First</SelectItem>
             <SelectItem value="name-asc">Name: A to Z</SelectItem>
             <SelectItem value="name-desc">Name: Z to A</SelectItem>
             <SelectItem value="total-high">Total: High to Low</SelectItem>
