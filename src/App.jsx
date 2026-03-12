@@ -163,6 +163,11 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // Filter out Inventory and InventoryValue from Pages
+  const filteredPages = Object.fromEntries(
+    Object.entries(Pages).filter(([path]) => path !== 'Inventory' && path !== 'InventoryValue')
+  );
+
   return (
     <Routes>
       <Route path="/" element={
@@ -170,7 +175,7 @@ const AuthenticatedApp = () => {
           <MainPage />
         </LayoutWrapper>
       } />
-      {Object.entries(Pages).map(([path, Page]) => (
+      {Object.entries(filteredPages).map(([path, Page]) => (
         <Route
           key={path}
           path={`/${path}`}
