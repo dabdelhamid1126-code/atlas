@@ -386,7 +386,7 @@ export default function Transactions() {
             break;
           case 'payment':
             const card = creditCards.find(c => c.id === order.credit_card_id);
-            val = card ? `${card.card_name} (${order.credit_card_id?.slice(-4) || 'XXXX'})` : order.card_name || '';
+            val = card ? `${card.card_name} (${card.id?.slice(-4) || 'XXXX'})` : order.card_name || '';
             break;
           case 'status':
             val = order.status || '';
