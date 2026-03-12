@@ -14,6 +14,7 @@ import CumulativeProfit from '@/components/analytics/CumulativeProfit';
 import PeriodPnL from '@/components/analytics/PeriodPnL';
 import BreakdownsTab from '@/components/analytics/BreakdownsTab';
 import PaymentsTab from '@/components/analytics/PaymentsTab';
+import DetailTablesTab from '@/components/analytics/DetailTablesTab';
 
 const TYPE_FILTERS = ['All', 'Churning', 'Marketplace'];
 const PERIOD_FILTERS = ['Monthly', 'Quarterly', 'Yearly'];
