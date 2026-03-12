@@ -838,7 +838,7 @@ export default function PurchaseOrders() {
 
       {/* Create Order Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[90vw] max-w-[800px] min-w-[680px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}</DialogTitle>
           </DialogHeader>
@@ -1272,7 +1272,7 @@ export default function PurchaseOrders() {
               <div className="space-y-3">
                 {formData.items.map((item, index) => (
                    <div key={index} className="flex gap-2 items-end p-3 bg-slate-50 rounded-lg">
-                     <div className="flex-1">
+                     <div style={{ width: '40%' }}>
                        <Label className="text-xs">Product</Label>
                        <div className="mb-2">
                          <ProductSearchDropdown
@@ -1285,38 +1285,43 @@ export default function PurchaseOrders() {
                          />
                        </div>
                      </div>
-                    <div className="w-24">
-                      <Label className="text-xs">Qty Ordered</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity_ordered}
-                        onChange={(e) => updateItem(index, 'quantity_ordered', e.target.value)}
-                      />
-                    </div>
-                    <div className="w-24">
-                      <Label className="text-xs">Qty Received</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={item.quantity_received || 0}
-                        onChange={(e) => updateItem(index, 'quantity_received', e.target.value)}
-                      />
-                    </div>
-                    <div className="w-28">
-                      <Label className="text-xs">Unit Cost</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.unit_cost}
-                        onChange={(e) => updateItem(index, 'unit_cost', e.target.value)}
-                      />
-                    </div>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                    </div>
-                    ))}
+                     <div style={{ width: '15%' }}>
+                       <Label className="text-xs">Qty Ordered</Label>
+                       <Input
+                         type="number"
+                         min="1"
+                         value={item.quantity_ordered}
+                         onChange={(e) => updateItem(index, 'quantity_ordered', e.target.value)}
+                         className="text-sm"
+                       />
+                     </div>
+                     <div style={{ width: '15%' }}>
+                       <Label className="text-xs">Qty Received</Label>
+                       <Input
+                         type="number"
+                         min="0"
+                         value={item.quantity_received || 0}
+                         onChange={(e) => updateItem(index, 'quantity_received', e.target.value)}
+                         className="text-sm"
+                       />
+                     </div>
+                     <div style={{ width: '20%' }}>
+                       <Label className="text-xs">Unit Cost</Label>
+                       <Input
+                         type="number"
+                         step="0.01"
+                         value={item.unit_cost}
+                         onChange={(e) => updateItem(index, 'unit_cost', e.target.value)}
+                         className="text-sm"
+                       />
+                     </div>
+                     <div style={{ width: '10%' }} className="flex justify-end">
+                       <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                         <X className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
+                 ))}
                 {formData.items.length === 0 && (
                   <p className="text-sm text-slate-500 text-center py-4">No items added</p>
                 )}
