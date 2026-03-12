@@ -307,6 +307,14 @@ export default function PurchaseOrders() {
 
   // Filter logic
   const filteredOrders = orders.filter(order => {
+    // Tab filter (mode)
+    let matchesMode = true;
+    if (mode === 'churning') {
+      matchesMode = order.delivery_type === 'Dropship' || order.order_type === 'Churning';
+    } else if (mode === 'marketplace') {
+      matchesMode = order.order_type === 'Marketplace' || order.delivery_type === 'Pickup';
+    }
+
     const matchesSearch = 
       order.order_number?.toLowerCase().includes(search.toLowerCase()) ||
       order.retailer?.toLowerCase().includes(search.toLowerCase()) ||
@@ -319,7 +327,7 @@ export default function PurchaseOrders() {
 
     const matchesRetailer = retailerFilter === 'all' || order.retailer === retailerFilter;
 
-    return matchesSearch && matchesStatus && matchesCategory && matchesRetailer;
+    return matchesMode && matchesSearch && matchesStatus && matchesCategory && matchesRetailer;
   });
 
   const openCreateDialog = () => {
