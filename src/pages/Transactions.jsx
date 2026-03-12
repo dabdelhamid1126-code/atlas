@@ -113,7 +113,6 @@ export default function Transactions() {
         <h1 className="text-3xl font-bold mb-1" style={{ color: styles.TEXT_PRIMARY }}>Transactions</h1>
         <p style={{ color: styles.MUTED, fontSize: 14 }}>Track and manage all your orders</p>
       </div>
-        </div>
 
       {/* Mode Tabs */}
       <div className="flex items-center gap-2 mb-5">
