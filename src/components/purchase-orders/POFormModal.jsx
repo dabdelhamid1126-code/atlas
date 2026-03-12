@@ -289,16 +289,13 @@ export default function POFormModal({
             <Label>Credit Card (for rewards tracking)</Label>
             <Select value={formData.credit_card_id || ''} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select card (optional)" />
+                <SelectValue placeholder="Select card (optional)">
+                  {formData.credit_card_id ? (() => {
+                    const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
+                    return selectedCard ? `${selectedCard.card_name} (${selectedCard.id?.slice(-4)})` : 'Select card (optional)';
+                  })() : 'Select card (optional)'}
+                </SelectValue>
               </SelectTrigger>
-              {formData.credit_card_id && (() => {
-                const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
-                return (
-                  <div className="absolute left-3 text-sm text-slate-900 pointer-events-none">
-                    {selectedCard?.card_name} ({selectedCard?.id?.slice(-4)})
-                  </div>
-                );
-              })()}
               <SelectContent>
                 {creditCards.filter(c => c.active).map(card => {
                   let rewardDisplay = '';
