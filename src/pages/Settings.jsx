@@ -13,7 +13,7 @@ const tabs = [
 ];
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('goals');
+  const [activeTab, setActiveTab] = useState('appearance');
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -24,8 +24,8 @@ export default function Settings() {
     <div className="flex gap-8">
       {/* Sidebar */}
       <aside className="w-56 shrink-0">
-        <h1 className="text-2xl font-bold text-foreground mb-1">Settings</h1>
-        <p className="text-sm text-muted-foreground mb-6">Manage your account preferences</p>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Settings</h1>
+        <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Manage your account preferences</p>
         <nav className="space-y-1">
           {tabs.map(tab => {
             const Icon = tab.icon;
@@ -34,11 +34,12 @@ export default function Settings() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
-                  isActive
-                    ? 'bg-secondary border border-purple-500/50 text-foreground'
-                    : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
-                }`}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
+                style={{
+                  background: isActive ? 'var(--bg-card)' : 'transparent',
+                  color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)',
+                  border: isActive ? `1px solid var(--accent-primary)` : 'none'
+                }}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {tab.label}
@@ -52,13 +53,13 @@ export default function Settings() {
       <div className="flex-1 min-w-0">
         {activeTab === 'profile' && (
           <div>
-            <h2 className="text-lg font-bold text-foreground mb-1">Profile</h2>
-            <p className="text-sm text-muted-foreground mb-4">Your account info.</p>
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Profile</h2>
+            <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Your account info.</p>
             {user && (
-              <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
-                <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Name</p><p className="text-foreground font-medium">{user.full_name || '—'}</p></div>
-                <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Email</p><p className="text-foreground font-medium">{user.email || '—'}</p></div>
-                <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Role</p><p className="text-foreground font-medium capitalize">{user.role || 'user'}</p></div>
+              <div className="rounded-2xl p-6 space-y-3" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
+                <div><p className="text-xs uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Name</p><p className="font-medium" style={{ color: 'var(--text-primary)' }}>{user.full_name || '—'}</p></div>
+                <div><p className="text-xs uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Email</p><p className="font-medium" style={{ color: 'var(--text-primary)' }}>{user.email || '—'}</p></div>
+                <div><p className="text-xs uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Role</p><p className="font-medium capitalize" style={{ color: 'var(--text-primary)' }}>{user.role || 'user'}</p></div>
               </div>
             )}
           </div>
