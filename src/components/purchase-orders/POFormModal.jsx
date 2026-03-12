@@ -292,11 +292,14 @@ export default function POFormModal({
                 <SelectValue placeholder="Select card (optional)" />
               </SelectTrigger>
               <SelectContent>
-                {creditCards.filter(c => c.active).map(card => (
-                  <SelectItem key={card.id} value={card.id}>
-                    {card.card_name}
-                  </SelectItem>
-                ))}
+                {creditCards.filter(c => c.active).map(card => {
+                  const lastFour = card.id?.slice(-4) || 'XXXX';
+                  return (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.card_name || 'Unnamed Card'} ({lastFour})
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -305,24 +308,26 @@ export default function POFormModal({
           <div className="space-y-2">
             <Label>Gift Cards</Label>
             <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
-              {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).map(gc => (
-                <label key={gc.id} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.gift_card_ids.includes(gc.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({ ...formData, gift_card_ids: [...formData.gift_card_ids, gc.id] });
-                      } else {
-                        setFormData({ ...formData, gift_card_ids: formData.gift_card_ids.filter(id => id !== gc.id) });
-                      }
-                    }}
-                    className="rounded"
-                  />
-                  <span className="text-sm flex-1">{gc.brand} - ${gc.value}</span>
-                  <span className="text-xs text-slate-500">...{gc.code?.slice(-3)}</span>
-                </label>
-              ))}
+              {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).map(gc => {
+                const lastThree = gc.code?.slice(-3) || 'XXX';
+                return (
+                  <label key={gc.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.gift_card_ids.includes(gc.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, gift_card_ids: [...formData.gift_card_ids, gc.id] });
+                        } else {
+                          setFormData({ ...formData, gift_card_ids: formData.gift_card_ids.filter(id => id !== gc.id) });
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm flex-1">{gc.brand} - ${gc.value} ...{lastThree}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
