@@ -84,9 +84,12 @@ export default function PODetailsModal({ open, onOpenChange, order, products, re
               {order.items?.map((item, i) => {
                 const product = products.find(p => p.id === item.product_id);
                 const lineTotal = (item.quantity_ordered || 0) * (item.unit_cost || 0);
+                const displayName = item.product_name && item.product_name.length > 40
+                  ? item.product_name.substring(0, 40) + '...'
+                  : item.product_name;
 
                 return (
-                  <div key={i} className="flex gap-3 py-3 border-b last:border-b-0">
+                  <div key={i} className="flex gap-3 py-3 border-b last:border-b-0" title={item.product_name}>
                     <div className="flex-shrink-0">
                       {product?.image ? (
                         <img
@@ -103,9 +106,7 @@ export default function PODetailsModal({ open, onOpenChange, order, products, re
 
                     <div className="flex-1 min-w-0 pr-2">
                       <p className="text-sm font-semibold text-slate-900 line-clamp-2">
-                        {item.product_name && item.product_name.length > 40
-                          ? item.product_name.substring(0, 40) + '...'
-                          : item.product_name}
+                        {displayName}
                       </p>
                       {item.upc && (
                         <p className="text-xs text-slate-500 mt-1">UPC: {item.upc}</p>
