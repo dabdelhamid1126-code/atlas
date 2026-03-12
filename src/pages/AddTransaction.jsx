@@ -104,23 +104,30 @@ export default function AddTransaction() {
     const items = form.productName ? [{
       product_name: form.productName,
       upc: form.sku,
-      quantity_ordered: form.quantity,
+      quantity_ordered: parseInt(form.quantity) || 1,
       unit_cost: parseFloat(form.unitPrice) || 0,
     }] : [];
+    
     await base44.entities.PurchaseOrder.create({
       order_number: form.orderNumber || `TXN-${Date.now()}`,
       retailer: form.vendor,
       mode: mode,
-      platform: form.buyer,
-      status: (form.status || 'pending').toLowerCase().replace(' ', '_'),
+      platform: mode === 'churning' ? form.buyer : undefined,
+      status: form.status.toLowerCase().replace(' ', '_'),
+      category: form.category.toLowerCase(),
       items,
       total_cost: subtotal,
-      final_cost: subtotal - (parseFloat(form.giftCard) || 0),
+      final_cost: totalCost,
+      gift_card_value: parseFloat(giftCardTotal) || 0,
+      is_pickup: form.pickup,
+      is_dropship: form.dropship,
+      dropship_to: form.dropship ? form.buyer : undefined,
       sale_price: parseFloat(form.salePrice) || undefined,
-      order_date: form.date || undefined,
-      tracking_number: form.tracking,
+      order_date: form.date || new Date().toISOString().split('T')[0],
+      tracking_number: form.trackingNumber,
       notes: form.notes,
-      credit_card_id: form.paymentMethod,
+      credit_card_id: form.creditCard || undefined,
+      extra_cashback_percent: parseFloat(form.cashbackRate) || 0,
     });
     window.location.href = createPageUrl('Transactions');
   };
