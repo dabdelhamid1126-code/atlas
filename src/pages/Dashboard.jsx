@@ -185,72 +185,48 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-5">
-      {/* Header + Filters */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">Dalia Distro LLC</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Here's how your numbers are looking.</p>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Dashboard</h1>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Overview of your business performance</p>
+      </div>
 
-        <div className="flex flex-wrap gap-2">
-          {/* Type filters */}
-          <div className="flex rounded-xl overflow-hidden border border-border bg-card">
-            {TYPE_FILTERS.map(f => (
-              <button
-                key={f}
-                onClick={() => setTypeFilter(f)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  typeFilter === f ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {f === 'All' && '⚡ '}{f === 'Churning' && '♻️ '}{f === 'Resell' && '🏷️ '}{f}
-              </button>
-            ))}
-          </div>
-
-          {/* Time filters */}
-          <div className="flex rounded-xl overflow-hidden border border-border bg-card">
-            {TIME_FILTERS.map(f => (
-              <button
-                key={f}
-                onClick={() => setTimeFilter(f)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  timeFilter === f ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
+          {TIME_FILTERS.map(f => (
+            <button
+              key={f}
+              onClick={() => setTimeFilter(f)}
+              className="px-4 py-2 text-xs font-medium transition-colors"
+              style={{
+                color: timeFilter === f ? 'white' : 'var(--text-muted)',
+                background: timeFilter === f ? 'var(--accent-primary)' : 'transparent'
+              }}
+            >
+              {f}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {metricDefs.map(({ key, label, format: fmt, color, Icon, sub }) => (
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {metricDefs.slice(0, 4).map(({ key, label, format: fmt, Icon }) => (
           <div
             key={key}
-            className="rounded-2xl border bg-card p-5 flex flex-col gap-3"
-            style={{ borderColor: `${color}33` }}
+            className="rounded-xl p-5"
+            style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}
           >
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">{label}</p>
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: `${color}22`, color }}>
-                <Icon className="h-4 w-4" />
-              </div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)' }}>{label}</p>
+              <Icon className="h-4 w-4" style={{ color: 'var(--accent-primary)' }} />
             </div>
-            <p className="text-2xl font-bold" style={{ color }}>{fmt(metrics[key])}</p>
-            <p className="text-xs text-muted-foreground">{sub(filteredOrders, metrics)}</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{fmt(metrics[key])}</p>
           </div>
         ))}
       </div>
-
-      {/* Goal Tracker */}
-      <GoalTracker goals={goals} metrics={metrics} />
-
-      {/* Status Pipeline */}
-      <StatusPipeline orders={filteredOrders} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -262,47 +238,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Expenses Summary */}
-      <div className="rounded-2xl border bg-card p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Receipt className="h-4 w-4 text-muted-foreground" />
-            <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Expenses</p>
-          </div>
-          <Link to="/Expenses" className="text-xs text-primary hover:underline font-medium">View All Expenses →</Link>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border p-4" style={{ borderColor: '#a855f733' }}>
-            <p className="text-xs text-muted-foreground font-medium mb-1">Monthly Expenses</p>
-            <p className="text-xl font-bold" style={{ color: '#a855f7' }}>${expenseMonthlyCost.toFixed(2)}</p>
-          </div>
-          <div className="rounded-xl border p-4" style={{ borderColor: '#60a5fa33' }}>
-            <p className="text-xs text-muted-foreground font-medium mb-1">Annual Expenses</p>
-            <p className="text-xl font-bold" style={{ color: '#60a5fa' }}>${expenseAnnualCost.toFixed(2)}</p>
-          </div>
-        </div>
-        {topExpenses.length > 0 && (
-          <div className="space-y-2">
-            {topExpenses.map(exp => {
-              const catColor = EXPENSE_CATEGORY_COLORS[exp.category] || '#9ca3af';
-              return (
-                <div key={exp.id} className="flex items-center gap-3 py-1">
-                  <div className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#12152a' }}>
-                    <Crown className="h-3.5 w-3.5" style={{ color: '#f59e0b' }} />
-                  </div>
-                  <span className="flex-1 text-sm font-medium text-foreground truncate">{exp.name}</span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: catColor + '22', color: catColor }}>{exp.category}</span>
-                  <span className="text-sm font-bold text-foreground">${parseFloat(exp.amount || 0).toFixed(2)}</span>
-                  <span className="text-xs text-muted-foreground w-14 text-right">{exp.frequency}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {topExpenses.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">No active expenses tracked yet.</p>
-        )}
-      </div>
+      {/* Status Pipeline */}
+      <StatusPipeline orders={filteredOrders} />
     </div>
   );
 }
