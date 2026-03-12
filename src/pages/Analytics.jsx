@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, Download, ChevronRight } from 'lucide-react';
+import { RefreshCw, Download, ChevronRight, BarChart2, Layers, CreditCard, Table2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   format, subMonths, startOfMonth, endOfMonth, parseISO,
@@ -18,7 +18,12 @@ import DetailTablesTab from '@/components/analytics/DetailTablesTab';
 
 const TYPE_FILTERS = ['All', 'Churning', 'Marketplace'];
 const PERIOD_FILTERS = ['Monthly', 'Quarterly', 'Yearly'];
-const TABS = ['Overview', 'Breakdowns', 'Payments', 'Detail Tables'];
+const TABS = [
+  { label: 'Overview', icon: BarChart2 },
+  { label: 'Breakdowns', icon: Layers },
+  { label: 'Payments', icon: CreditCard },
+  { label: 'Detail Tables', icon: Table2 },
+];
 
 function getPeriodBuckets(period, orders, invoices, rewards) {
   const now = new Date();
@@ -214,20 +219,24 @@ export default function Analytics() {
       <AnalyticsMetricCards metrics={metrics} trendData={trendData} />
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 border-b border-border">
-        {TABS.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-              activeTab === tab
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="flex gap-1.5 p-1.5 rounded-xl" style={{ background: '#1a1d2e', border: '1px solid #2a2d3e' }}>
+        {TABS.map(({ label, icon: Icon }) => {
+          const isActive = activeTab === label;
+          return (
+            <button
+              key={label}
+              onClick={() => setActiveTab(label)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={isActive
+                ? { background: 'linear-gradient(135deg, #6366f1, #7c3aed)', color: '#fff', boxShadow: '0 2px 12px rgba(99,102,241,0.35)' }
+                : { color: '#6b7280', background: 'transparent' }
+              }
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Overview Tab */}
