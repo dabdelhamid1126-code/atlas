@@ -230,7 +230,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
+      <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <div className="p-4 lg:p-8">
           {children}
         </div>
