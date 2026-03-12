@@ -235,8 +235,13 @@ export default function Analytics() {
         </div>
       )}
 
+      {/* Breakdowns Tab */}
+      {activeTab === 'Breakdowns' && (
+        <BreakdownsTab orders={filteredOrders} invoices={filteredInvoices} rewards={allRewards} />
+      )}
+
       {/* Placeholder tabs */}
-      {activeTab !== 'Overview' && (
+      {activeTab !== 'Overview' && activeTab !== 'Breakdowns' && (
         <div className="flex items-center justify-center h-48 rounded-xl border border-border bg-card text-muted-foreground text-sm">
           {activeTab} — coming soon
         </div>
