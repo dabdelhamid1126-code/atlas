@@ -17,7 +17,7 @@ const getStyles = () => ({
 });
 
 const MODE_TABS = [
-  { key: 'all', label: 'All', icon: Grid3X3 },
+  { key: 'all', label: 'All', icon: Grid3x3 },
   { key: 'churning', label: 'Churning', icon: Tag },
   { key: 'marketplace', label: 'Marketplace', icon: Globe },
 ];
