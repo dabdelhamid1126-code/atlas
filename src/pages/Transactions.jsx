@@ -367,11 +367,11 @@ function EditTransactionModal({ order, creditCards, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="modal-premium max-w-2xl max-h-[90vh] overflow-y-auto w-full">
-        <div className="sticky top-0 border-b border-[rgba(255,255,255,0.08)] p-6 bg-[#0d1117]/95">
+      <div className="max-w-2xl max-h-[90vh] overflow-y-auto w-full rounded-xl" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
+        <div className="sticky top-0 border-b p-6" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Edit Transaction</h2>
-            <button onClick={onClose} className="text-[rgba(255,255,255,0.4)] hover:text-white text-2xl leading-none">×</button>
+            <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Edit Transaction</h2>
+            <button onClick={onClose} className="text-2xl leading-none" style={{ color: 'var(--text-muted)' }}>×</button>
           </div>
         </div>
 
