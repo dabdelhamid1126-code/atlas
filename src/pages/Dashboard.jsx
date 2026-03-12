@@ -158,7 +158,7 @@ export default function Dashboard() {
       {/* Header + Filters */}
       <div className="flex flex-col md:flex-row md:items-center gap-4">
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">Welcome back, {firstName}</h1>
+          <h1 className="text-2xl font-bold text-foreground">Dalia Distro LLC</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Here's how your numbers are looking.</p>
         </div>
 
