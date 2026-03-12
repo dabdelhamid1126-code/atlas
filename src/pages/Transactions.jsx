@@ -331,8 +331,310 @@ export default function Transactions() {
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingOrder && <EditTransactionModal order={editingOrder} creditCards={creditCards} onClose={() => setEditingOrder(null)} onSave={() => setEditingOrder(null)} />}
     </div>
   );
+}
+
+function EditTransactionModal({ order, creditCards, onClose, onSave }) {
+  const [form, setForm] = useState({
+    productName: (order.items?.[0]?.product_name || ''),
+    status: order.status || 'pending',
+    vendor: order.retailer || '',
+    buyer: order.platform || '',
+    date: order.order_date || '',
+    unitPrice: order.items?.[0]?.unit_cost || 0,
+    quantity: order.items?.[0]?.quantity_ordered || 1,
+    tax: order.total_cost ? (order.total_cost - (order.items?.[0]?.unit_cost || 0) * (order.items?.[0]?.quantity_ordered || 1)) * 0.1 : 0,
+    taxRate: 10,
+    shipping: 0,
+    fees: 0,
+    creditCard: order.credit_card_id || '',
+    cashbackRate: order.extra_cashback_percent || 0,
+    includeTax: true,
+    includeShipping: false,
+    amazonYaCB: 0,
+    giftCard: 0,
+    salePrice: order.sale_price || 0,
+    saleDate: '',
+    payoutDate: '',
+    notes: order.notes || '',
+  });
+
+  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  const totalPrice = useMemo(() => parseFloat(form.unitPrice) * parseInt(form.quantity) || 0, [form.unitPrice, form.quantity]);
+  const calculatedTax = useMemo(() => totalPrice * (parseFloat(form.taxRate) / 100) || 0, [totalPrice, form.taxRate]);
+  
+  const cashbackBase = useMemo(() => {
+    let base = totalPrice;
+    if (form.includeTax) base += calculatedTax;
+    if (form.includeShipping) base += parseFloat(form.shipping) || 0;
+    return base;
+  }, [totalPrice, calculatedTax, form.includeTax, form.includeShipping, form.shipping]);
+
+  const cashbackAmount = useMemo(() => {
+    let rate = parseFloat(form.cashbackRate) || 0;
+    if (form.amazonYaCB) rate += parseFloat(form.amazonYaCB) || 0;
+    return (cashbackBase * (rate / 100)).toFixed(2);
+  }, [cashbackBase, form.cashbackRate, form.amazonYaCB]);
+
+  const totalCost = useMemo(() => {
+    const cost = totalPrice + calculatedTax + (parseFloat(form.shipping) || 0) + (parseFloat(form.fees) || 0) - (parseFloat(form.giftCard) || 0);
+    return cost.toFixed(2);
+  }, [totalPrice, calculatedTax, form.shipping, form.fees, form.giftCard]);
+
+  const commission = useMemo(() => {
+    if (!form.salePrice) return 0;
+    return (parseFloat(form.salePrice) - totalCost).toFixed(2);
+  }, [form.salePrice, totalCost]);
+
+  const netProfit = useMemo(() => {
+    if (!form.salePrice) return 0;
+    return (parseFloat(form.salePrice) - totalCost + parseFloat(cashbackAmount)).toFixed(2);
+  }, [form.salePrice, totalCost, cashbackAmount]);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="modal-premium max-w-2xl max-h-[90vh] overflow-y-auto w-full">
+        <div className="sticky top-0 border-b border-[rgba(255,255,255,0.08)] p-6 bg-[#0d1117]/95">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">Edit Transaction</h2>
+            <button onClick={onClose} className="text-[rgba(255,255,255,0.4)] hover:text-white text-2xl leading-none">×</button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* SECTION 1: TOP INFO */}
+          <div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <Field label="Product Name *">
+                <InputEl value={form.productName} onChange={e => set('productName', e.target.value)} placeholder="Product name" />
+              </Field>
+              <Field label="Status">
+                <SelectEl value={form.status} onChange={e => set('status', e.target.value)}>
+                  {['pending', 'purchased', 'shipped', 'delivered', 'completed', 'cancelled'].map(s => (
+                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  ))}
+                </SelectEl>
+              </Field>
+            </div>
+
+            <div className="mb-4">
+              <label className="text-xs uppercase font-bold tracking-wider text-[rgba(255,255,255,0.4)] block mb-3">Transaction Type</label>
+              <div className="flex gap-2">
+                {['auto', 'churning', 'marketplace'].map(m => (
+                  <button key={m} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${m === 'auto' ? 'bg-purple-600 text-white' : 'bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.6)]'}`}>
+                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-[rgba(255,255,255,0.3)] mt-2">Override which tab this transaction appears under. Auto uses the buyer type.</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Field label="Vendor">
+                <InputEl value={form.vendor} onChange={e => set('vendor', e.target.value)} placeholder="Vendor" />
+              </Field>
+              <Field label="Buyer/Platform">
+                <InputEl value={form.buyer} onChange={e => set('buyer', e.target.value)} placeholder="Buyer" />
+              </Field>
+              <Field label="Date">
+                <InputEl type="date" value={form.date} onChange={e => set('date', e.target.value)} />
+              </Field>
+              <Field label="Category">
+                <SelectEl value="" onChange={() => {}}>
+                  <option>Select category</option>
+                </SelectEl>
+              </Field>
+            </div>
+          </div>
+
+          {/* SECTION 2: PURCHASE DETAILS */}
+          <div className="border-t border-[rgba(255,255,255,0.08)] pt-6">
+            <h3 className="text-xs uppercase font-bold tracking-wider text-purple-400 mb-4">Purchase Details</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Field label="Unit Price">
+                  <div className="flex items-center border border-[rgba(255,255,255,0.1)] rounded-[10px] bg-[rgba(255,255,255,0.05)]">
+                    <span className="px-3 text-[rgba(255,255,255,0.3)]">$</span>
+                    <input type="number" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0' }} value={form.unitPrice} onChange={e => set('unitPrice', e.target.value)} />
+                  </div>
+                </Field>
+                <Field label="Qty">
+                  <input type="number" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px' }} value={form.quantity} onChange={e => set('quantity', e.target.value)} min={1} />
+                </Field>
+                <Field label="Total">
+                  <div className="flex items-center border border-[rgba(255,255,255,0.1)] rounded-[10px] bg-[rgba(255,255,255,0.02)]">
+                    <span className="px-3 text-[rgba(255,255,255,0.3)]">$</span>
+                    <input type="text" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0' }} value={totalPrice.toFixed(2)} disabled />
+                  </div>
+                </Field>
+                <Field label="Tax Rate %">
+                  <input type="number" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px' }} value={form.taxRate} onChange={e => set('taxRate', e.target.value)} />
+                </Field>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <Field label="Shipping ($)">
+                  <input type="number" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px' }} value={form.shipping} onChange={e => set('shipping', e.target.value)} placeholder="0.00" />
+                </Field>
+                <Field label="Fees ($)">
+                  <input type="number" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px' }} value={form.fees} onChange={e => set('fees', e.target.value)} placeholder="0.00" />
+                </Field>
+                <Field label="Tax ($)">
+                  <div className="flex items-center border border-[rgba(255,255,255,0.1)] rounded-[10px] bg-[rgba(255,255,255,0.02)]">
+                    <span className="px-3 text-[rgba(255,255,255,0.3)]">$</span>
+                    <input type="text" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0' }} value={calculatedTax.toFixed(2)} disabled />
+                  </div>
+                </Field>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: CASHBACK DETAILS */}
+          <div className="border-t border-[rgba(255,255,255,0.08)] pt-6">
+            <h3 className="text-xs uppercase font-bold tracking-wider text-purple-400 mb-4">Cashback Details</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Field label="Payment Method">
+                  <SelectEl value={form.creditCard} onChange={e => set('creditCard', e.target.value)}>
+                    <option value="">Select card</option>
+                    {creditCards.map(c => <option key={c.id} value={c.id}>{c.card_name}</option>)}
+                  </SelectEl>
+                </Field>
+                <Field label="Cashback %">
+                  <input type="number" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px' }} value={form.cashbackRate} onChange={e => set('cashbackRate', e.target.value)} placeholder="0.0" />
+                </Field>
+                <Field label="Cashback $">
+                  <div className="flex items-center border border-[rgba(255,255,255,0.1)] rounded-[10px] bg-[rgba(255,255,255,0.02)]">
+                    <span className="px-3 text-green-400">$</span>
+                    <input type="text" style={{ background: 'transparent', outline: 'none', color: '#4ade80', flex: 1, padding: '10px 0', fontWeight: 'bold' }} value={cashbackAmount} disabled />
+                  </div>
+                </Field>
+              </div>
+              <p className="text-xs text-[rgba(255,255,255,0.3)]">Auto-calculated from % & flags</p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.includeTax} onChange={e => set('includeTax', e.target.checked)} className="w-4 h-4 accent-purple-500" />
+                  <span className="text-sm text-white">Include tax in cashback</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.includeShipping} onChange={e => set('includeShipping', e.target.checked)} className="w-4 h-4 accent-purple-500" />
+                  <span className="text-sm text-white">Include shipping in cashback</span>
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Amazon YA CB %">
+                  <input type="number" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px' }} value={form.amazonYaCB} onChange={e => set('amazonYaCB', e.target.value)} placeholder="e.g. 5" />
+                  <p className="text-xs text-[rgba(255,255,255,0.3)] mt-1">Young Adult cashback rate (Amazon only)</p>
+                </Field>
+                <Field label="Gift Card Used ($)">
+                  <input type="number" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px' }} value={form.giftCard} onChange={e => set('giftCard', e.target.value)} placeholder="0.00" />
+                  <p className="text-xs text-[rgba(255,255,255,0.3)] mt-1">Amount paid via vendor gift card</p>
+                </Field>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 4: SALE DETAILS */}
+          <div className="border-t border-[rgba(255,255,255,0.08)] pt-6">
+            <h3 className="text-xs uppercase font-bold tracking-wider text-green-400 mb-4">Sale Details</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Sale Price (Total)">
+                  <div className="flex items-center border border-[rgba(255,255,255,0.1)] rounded-[10px] bg-[rgba(255,255,255,0.05)]">
+                    <span className="px-3 text-[rgba(255,255,255,0.3)]">$</span>
+                    <input type="number" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0' }} value={form.salePrice} onChange={e => set('salePrice', e.target.value)} />
+                  </div>
+                  {form.salePrice && form.quantity && (
+                    <p className="text-xs text-green-400 mt-2">${(parseFloat(form.salePrice) / parseInt(form.quantity)).toFixed(2)}/unit</p>
+                  )}
+                  <button className="text-purple-400 text-xs mt-2">Switch to per unit</button>
+                </Field>
+                <Field label="Commission">
+                  <div className="flex items-center border border-[rgba(255,255,255,0.1)] rounded-[10px] bg-[rgba(255,255,255,0.02)]">
+                    <span className="px-3 text-amber-400">$</span>
+                    <input type="text" style={{ background: 'transparent', outline: 'none', color: '#fbbf24', flex: 1, padding: '10px 0', fontWeight: 'bold' }} value={commission} disabled />
+                  </div>
+                  <p className="text-xs text-[rgba(255,255,255,0.3)] mt-1">Auto: sale - cost</p>
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Sale Date">
+                  <InputEl type="date" value={form.saleDate} onChange={e => set('saleDate', e.target.value)} />
+                </Field>
+                <Field label="Payout Date">
+                  <InputEl type="date" value={form.payoutDate} onChange={e => set('payoutDate', e.target.value)} />
+                </Field>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 5: NOTES */}
+          <div className="border-t border-[rgba(255,255,255,0.08)] pt-6">
+            <label className="text-xs uppercase font-bold tracking-wider text-[rgba(255,255,255,0.4)] block mb-3">Notes</label>
+            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Any additional notes..." rows={3} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px', fontFamily: 'inherit', resize: 'vertical' }} />
+          </div>
+
+          {/* SUMMARY */}
+          <div className="modal-premium p-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-[rgba(255,255,255,0.6)]">Cost of Goods:</span>
+              <span className="text-white font-semibold">${totalPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[rgba(255,255,255,0.6)]">Total Cost:</span>
+              <span className="text-purple-300 font-bold">${totalCost}</span>
+            </div>
+            {form.salePrice && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[rgba(255,255,255,0.6)]">Sell For:</span>
+                  <span className="text-green-400 font-bold">${form.salePrice}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[rgba(255,255,255,0.6)]">Cashback:</span>
+                  <span className="text-green-400 font-bold">+${cashbackAmount}</span>
+                </div>
+                <div className="border-t border-[rgba(255,255,255,0.1)] pt-2 mt-2 flex justify-between">
+                  <span className="text-[rgba(255,255,255,0.6)] font-semibold">Net Profit:</span>
+                  <span className="text-green-400 text-lg font-bold">+${netProfit}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="border-t border-[rgba(255,255,255,0.08)] p-6 flex gap-3 justify-end">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.08)] transition-all">
+            Cancel
+          </button>
+          <button onClick={onSave} className="px-6 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-all font-medium">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div className="flex flex-col">
+      <label className="text-xs uppercase font-bold tracking-wider text-[rgba(255,255,255,0.4)] mb-2 block">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function InputEl({ ...props }) {
+  return <input style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px', fontSize: 14, width: '100%' }} {...props} />;
+}
+
+function SelectEl({ children, ...props }) {
+  return <select style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', borderRadius: 10, padding: '10px 12px', fontSize: 14, width: '100%', cursor: 'pointer' }} {...props}>{children}</select>;
 }
 
 function SummaryCard({ label, value, icon, iconBg, iconColor, valueColor }) {
