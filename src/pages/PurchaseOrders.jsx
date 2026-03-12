@@ -361,6 +361,76 @@ export default function PurchaseOrders() {
     { id: 'marketplace', label: 'Marketplace', icon: '◆' },
   ];
 
+  const columnOptions = [
+    { id: 'retailer', label: 'Retailer' },
+    { id: 'orderNum', label: 'Order #' },
+    { id: 'tracking', label: 'Tracking #' },
+    { id: 'status', label: 'Status' },
+    { id: 'total', label: 'Total' },
+    { id: 'items', label: 'Items' },
+    { id: 'orderDate', label: 'Order Date' },
+    { id: 'actions', label: 'Actions' },
+  ];
+
+  const handleCSVDownload = () => {
+    const headers = columnOptions
+      .filter(col => visibleColumns.includes(col.id))
+      .map(col => col.label)
+      .join(',');
+
+    const rows = filteredOrders.map(order => {
+      const values = [];
+      columnOptions.forEach(col => {
+        if (!visibleColumns.includes(col.id)) return;
+        switch (col.id) {
+          case 'retailer':
+            values.push(`"${order.retailer || 'Unknown'}"`);
+            break;
+          case 'orderNum':
+            values.push(`"${order.order_number}"`);
+            break;
+          case 'tracking':
+            values.push(`"${order.tracking_number || '—'}"`);
+            break;
+          case 'status':
+            values.push(`"${order.status}"`);
+            break;
+          case 'total':
+            values.push((order.final_cost || order.total_cost || 0).toFixed(2));
+            break;
+          case 'items':
+            values.push(order.items?.reduce((sum, item) => sum + (item.quantity_ordered || 0), 0) || 0);
+            break;
+          case 'orderDate':
+            values.push(`"${order.order_date ? new Date(order.order_date).toLocaleDateString() : ''}"`);
+            break;
+        }
+      });
+      return values.join(',');
+    }).join('\n');
+
+    const csv = [headers, rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `purchase-orders-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const toggleColumn = (colId) => {
+    setVisibleColumns(prev =>
+      prev.includes(colId) ? prev.filter(c => c !== colId) : [...prev, colId]
+    );
+  };
+
+  const showAllColumns = () => {
+    setVisibleColumns(columnOptions.map(c => c.id));
+  };
+
   return (
     <div>
       <PageHeader
@@ -368,9 +438,24 @@ export default function PurchaseOrders() {
         description="Track and manage your purchases by mode"
         actions={
           <div className="flex items-center gap-3">
-            <Button variant="outline">Columns</Button>
-            <Button variant="outline">PRO</Button>
-            <Button variant="outline">CSV</Button>
+            <div className="relative group">
+              <Button variant="outline">Columns</Button>
+              <div className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg p-2 hidden group-hover:block z-50">
+                {columnOptions.map(col => (
+                  <label key={col.id} className="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns.includes(col.id)}
+                      onChange={() => toggleColumn(col.id)}
+                      className="rounded"
+                    />
+                    {col.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <Button variant="outline" onClick={showAllColumns} title="Show all columns">PRO</Button>
+            <Button variant="outline" onClick={handleCSVDownload}>CSV</Button>
             <Button onClick={openCreateDialog} className="bg-black hover:bg-gray-800 text-white">
               <Plus className="h-4 w-4 mr-2" /> New Order
             </Button>
@@ -384,10 +469,10 @@ export default function PurchaseOrders() {
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+            className={`px-4 py-2 rounded-full font-medium text-sm transition border ${
               mode === m.id
-                ? 'bg-purple-200 text-purple-900'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'border-slate-300 text-slate-700 hover:border-slate-400'
             }`}
           >
             {m.icon} {m.label}
