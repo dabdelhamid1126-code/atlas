@@ -143,6 +143,33 @@ export default function Dashboard() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredOrders]);
 
+  function toMonthly(amount, frequency) {
+    if (!amount) return 0;
+    const a = parseFloat(amount);
+    switch (frequency) {
+      case 'Daily': return a * 30;
+      case 'Weekly': return a * 4.33;
+      case 'Monthly': return a;
+      case 'Quarterly': return a / 3;
+      case 'Annual': return a / 12;
+      default: return 0;
+    }
+  }
+
+  const activeExpenses = useMemo(() => allExpenses.filter(e => e.is_active), [allExpenses]);
+  const expenseMonthlyCost = useMemo(() => activeExpenses.reduce((s, e) => s + toMonthly(e.amount, e.frequency), 0), [activeExpenses]);
+  const expenseAnnualCost = useMemo(() => expenseMonthlyCost * 12, [expenseMonthlyCost]);
+  const topExpenses = useMemo(() => activeExpenses.slice(0, 5), [activeExpenses]);
+
+  const EXPENSE_CATEGORY_COLORS = {
+    'Credit Card Fee': '#f472b6',
+    'Membership': '#f59e0b',
+    'Platform Fee': '#60a5fa',
+    'Shipping': '#34d399',
+    'Software / Tools': '#a78bfa',
+    'Other': '#9ca3af',
+  };
+
   const firstName = user?.full_name?.split(' ')[0] || 'there';
 
   if (loading) {
