@@ -114,18 +114,7 @@ export default function Transactions() {
         <h1 className="text-3xl font-bold mb-1" style={{ color: styles.TEXT_PRIMARY }}>Transactions</h1>
         <p style={{ color: styles.MUTED, fontSize: 14 }}>Track and manage all your orders</p>
       </div>
-        <div className="flex items-center gap-2">
-          <button style={{ ...selectStyle, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px' }}>
-            <Columns size={14} /> <span>Columns</span>
-          </button>
-          <button style={{ ...selectStyle, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px' }}>
-            <BarChart2 size={14} /> <span className="font-bold text-purple-400">PRO</span>
-          </button>
-          <button style={{ ...selectStyle, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px' }}>
-            <Download size={14} /> <span>CSV</span>
-          </button>
         </div>
-      </div>
 
       {/* Mode Tabs */}
       <div className="flex items-center gap-2 mb-5">
