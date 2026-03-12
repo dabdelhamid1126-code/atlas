@@ -96,8 +96,7 @@ export default function Settings() {
         </div>
 
         {/* Right Content Area */}
-        <div className="flex-1 p-8"
-
+        <div className="flex-1 p-8">
           {/* Profile Tab */}
           {activeTab === 'profile' && (
             <div className="bg-white rounded-lg border border-slate-200 p-8 space-y-8">
