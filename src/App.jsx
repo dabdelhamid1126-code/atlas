@@ -73,9 +73,9 @@ const AuthenticatedApp = () => {
         </Layout>
       } />
       <Route path="/Transactions" element={
-        <Layout currentPageName="Transactions">
+        <LayoutWrapper currentPageName="Transactions">
           <Transactions />
-        </Layout>
+        </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
