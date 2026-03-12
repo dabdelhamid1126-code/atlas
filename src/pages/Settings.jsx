@@ -50,6 +50,8 @@ export default function Settings() {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'goals', label: 'Goals', icon: Target },
+    { id: 'data', label: 'Data', icon: SettingsIcon },
+    { id: 'email', label: 'Email Setup', icon: SettingsIcon },
   ];
 
   return (
@@ -142,11 +144,40 @@ export default function Settings() {
       {activeTab === 'goals' && (
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle>Goal Tracking</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Goal Tracking
+            </CardTitle>
             <CardDescription>Set profit, revenue, cashback, or transaction targets. Active goals appear on your Dashboard.</CardDescription>
           </CardHeader>
           <CardContent>
             <Goals isEmbedded={true} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Data Tab */}
+      {activeTab === 'data' && (
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle>Data Management</CardTitle>
+            <CardDescription>Export, import, or manage your data</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">Data management features coming soon.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Email Setup Tab */}
+      {activeTab === 'email' && (
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle>Email Setup</CardTitle>
+            <CardDescription>Configure email integrations and notifications</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">Email setup features coming soon.</p>
           </CardContent>
         </Card>
       )}
