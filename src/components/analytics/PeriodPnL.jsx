@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveCo
 
 export default function PeriodPnL({ data }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-white/10 p-5" style={{ background: '#12122a' }}>
       <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">Period P&amp;L</p>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>

@@ -11,7 +11,7 @@ export default function CumulativeProfit({ data }) {
   }, [data]);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-white/10 p-5" style={{ background: '#12122a' }}>
       <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">Cumulative Profit</p>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={cumulative} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>

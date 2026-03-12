@@ -8,7 +8,7 @@ export default function ExpenseBreakdown({ data }) {
   const display = data.length ? data : [{ name: 'COGS', value: 1 }];
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-white/10 p-5" style={{ background: '#12122a' }}>
       <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">Expense Breakdown</p>
       <ResponsiveContainer width="100%" height={200}>
         <PieChart>

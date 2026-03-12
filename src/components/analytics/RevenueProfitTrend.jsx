@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 export default function RevenueProfitTrend({ data }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-white/10 p-5" style={{ background: '#12122a' }}>
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase">Revenue &amp; Profit Trend</p>
         <span className="text-xs bg-secondary text-foreground px-2 py-0.5 rounded">Monthly</span>
