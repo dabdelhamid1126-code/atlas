@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { initTheme } from '@/components/ThemeProvider';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
@@ -9,6 +8,8 @@ import {
   Package,
   ShoppingCart,
   PackageCheck,
+  AlertTriangle,
+  Hash,
   CreditCard,
   TrendingUp,
   FileText,
@@ -18,12 +19,7 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronRight,
-  Settings,
-  ArrowLeftRight,
-  PlusCircle,
-  Receipt,
-  Store
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -35,14 +31,7 @@ const navigationGroups = [
     label: 'OVERVIEW',
     items: [
       { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
-      { name: 'Analytics & Insights', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
-    ]
-  },
-  {
-    label: 'TRANSACTIONS',
-    items: [
-      { name: 'Transactions', page: 'Transactions', icon: ArrowLeftRight },
-      { name: 'Add Transaction', page: 'AddTransaction', icon: PlusCircle },
+      { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
     ]
   },
   {
@@ -51,28 +40,22 @@ const navigationGroups = [
       { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
       { name: 'Import from Email', page: 'EmailImport', icon: Search },
       { name: 'Order Lookup', page: 'OrderLookup', icon: HelpCircle },
+    ]
+  },
+  {
+    label: 'INVENTORY',
+    items: [
+      { name: 'Inventory', page: 'Inventory', icon: Package },
       { name: 'Products', page: 'Products', icon: ShoppingCart },
+      { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp },
     ]
   },
   {
     label: 'FINANCE',
     items: [
-      { name: 'Expenses', page: 'Expenses', icon: Receipt },
       { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
       { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
       { name: 'Invoices', page: 'Invoices', icon: FileText },
-    ]
-  },
-  {
-    label: 'OPERATIONS',
-    items: [
-      { name: 'Stores', page: 'Stores', icon: Store },
-    ]
-  },
-  {
-    label: 'ACCOUNT',
-    items: [
-      { name: 'Settings', page: 'Settings', icon: Settings },
     ]
   },
 ];
@@ -82,7 +65,6 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    initTheme();
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
@@ -98,9 +80,9 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between" style={{ background: 'var(--bg-primary)', borderBottom: `1px solid var(--border-color)` }}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -132,20 +114,19 @@ export default function Layout({ children, currentPageName }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 transition-transform duration-300 lg:translate-x-0 shadow-xl",
+          "fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border transition-transform duration-300 lg:translate-x-0 shadow-xl",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ background: 'var(--sidebar-bg)', borderRight: `1px solid var(--border-color)` }}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center justify-between px-5" style={{ borderBottom: `1px solid var(--border-color)` }}>
+          <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">DD</span>
               </div>
               <div>
-                <span className="font-bold tracking-tight block text-sm" style={{ color: 'var(--text-primary)' }}>Dalia Distro LLC</span>
+                <span className="font-bold text-white tracking-tight block text-sm">Dalia Distro LLC</span>
               </div>
             </div>
             <Button
@@ -163,7 +144,7 @@ export default function Layout({ children, currentPageName }) {
             <nav className="px-3 space-y-4">
               {filteredGroups.map((group) => (
                 <div key={group.label}>
-                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest uppercase" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
+                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase">
                     {group.label}
                   </p>
                   <div className="space-y-0.5">
@@ -174,19 +155,14 @@ export default function Layout({ children, currentPageName }) {
                           key={item.page}
                           to={createPageUrl(item.page)}
                           onClick={() => setSidebarOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
-                          style={{
-                            background: isActive ? 'var(--accent-primary)' : 'transparent',
-                            color: isActive ? 'white' : 'var(--text-muted)',
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)';
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isActive) e.currentTarget.style.background = 'transparent';
-                          }}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                            isActive
+                              ? "bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-lg shadow-purple-900/40"
+                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          )}
                         >
-                          <item.icon className="h-4 w-4 shrink-0" />
+                          <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "text-slate-400")} />
                           {item.name}
                           {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
                         </Link>
@@ -200,26 +176,25 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User Section */}
           {user && (
-            <div className="p-4" style={{ borderTop: `1px solid var(--border-color)` }}>
-              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
+            <div className="border-t border-border p-4">
+              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-secondary">
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback style={{ background: 'var(--accent-primary)', color: 'white' }} className="text-sm font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-violet-700 text-white text-sm font-semibold">
                     {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                  <p className="text-sm font-semibold text-foreground truncate">
                     {user.full_name || 'User'}
                   </p>
-                  <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{user.email}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="w-full justify-start rounded-xl transition-colors"
-                style={{ color: 'var(--accent-danger)' }}
+                className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign out
@@ -230,7 +205,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
         <div className="p-4 lg:p-8">
           {children}
         </div>

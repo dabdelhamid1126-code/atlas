@@ -1,279 +1,337 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, Download, ChevronRight, BarChart2, Layers, CreditCard, Table2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsCard from '@/components/shared/StatsCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  format, subMonths, startOfMonth, endOfMonth, parseISO,
-  startOfQuarter, endOfQuarter, startOfYear, endOfYear
-} from 'date-fns';
-import AnalyticsMetricCards from '@/components/analytics/AnalyticsMetricCards';
-import RevenueProfitTrend from '@/components/analytics/RevenueProfitTrend';
-import ExpenseBreakdown from '@/components/analytics/ExpenseBreakdown';
-import CumulativeProfit from '@/components/analytics/CumulativeProfit';
-import PeriodPnL from '@/components/analytics/PeriodPnL';
-import BreakdownsTab from '@/components/analytics/BreakdownsTab';
-import PaymentsTab from '@/components/analytics/PaymentsTab';
-import DetailTablesTab from '@/components/analytics/DetailTablesTab';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Package, Upload, FileText, DollarSign, TrendingUp, ShoppingCart } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 
-const TYPE_FILTERS = ['All', 'Churning', 'Marketplace'];
-const PERIOD_FILTERS = ['Monthly', 'Quarterly', 'Yearly'];
-const TABS = [
-  { label: 'Overview', icon: BarChart2 },
-  { label: 'Breakdowns', icon: Layers },
-  { label: 'Payments', icon: CreditCard },
-  { label: 'Detail Tables', icon: Table2 },
-];
-
-function getPeriodBuckets(period, orders, invoices, rewards) {
-  const now = new Date();
-  let buckets = [];
-
-  if (period === 'Monthly') {
-    buckets = Array.from({ length: 6 }, (_, i) => {
-      const d = subMonths(now, 5 - i);
-      return { label: format(d, 'MMM'), start: startOfMonth(d), end: endOfMonth(d) };
-    });
-  } else if (period === 'Quarterly') {
-    buckets = Array.from({ length: 4 }, (_, i) => {
-      const d = subMonths(now, (3 - i) * 3);
-      return { label: `Q${Math.ceil((d.getMonth() + 1) / 3)} ${format(d, 'yy')}`, start: startOfQuarter(d), end: endOfQuarter(d) };
-    });
-  } else {
-    buckets = Array.from({ length: 3 }, (_, i) => {
-      const d = new Date(now.getFullYear() - (2 - i), 0, 1);
-      return { label: format(d, 'yyyy'), start: startOfYear(d), end: endOfYear(d) };
-    });
-  }
-
-  const paidInvoices = invoices.filter(i => i.status === 'paid');
-
-  return buckets.map(({ label, start, end }) => {
-    const bOrders = orders.filter(o => { const d = o.order_date ? parseISO(o.order_date) : null; return d && d >= start && d <= end; });
-    const bInvoices = paidInvoices.filter(i => { const d = i.invoice_date ? parseISO(i.invoice_date) : null; return d && d >= start && d <= end; });
-    const bRewards = rewards.filter(r => { const d = r.date_earned ? parseISO(r.date_earned) : null; return d && d >= start && d <= end; });
-    const cost = bOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
-    const revenue = bInvoices.reduce((s, i) => s + (i.total || 0), 0);
-    const cashback = bRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
-    const commission = bInvoices.reduce((s, i) => s + ((i.items || []).reduce((ss, it) => ss + ((it.unit_price - it.unit_cost) * it.quantity || 0), 0)), 0);
-    const profit = revenue - cost;
-    return { month: label, revenue, cost, profit, cashback, commission };
-  });
-}
+const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
 
 export default function Analytics() {
   const [loading, setLoading] = useState(true);
-  const [allOrders, setAllOrders] = useState([]);
-  const [allInvoices, setAllInvoices] = useState([]);
-  const [allRewards, setAllRewards] = useState([]);
-  const [allCreditCards, setAllCreditCards] = useState([]);
-  const [typeFilter, setTypeFilter] = useState('All');
-  const [period, setPeriod] = useState('Monthly');
-  const [activeTab, setActiveTab] = useState('Overview');
-  const [dateFrom, setDateFrom] = useState(format(subMonths(new Date(), 6), 'yyyy-MM-dd'));
-  const [dateTo, setDateTo] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [period, setPeriod] = useState('30');
+  const [data, setData] = useState({
+    totalInventory: 0,
+    itemsOnWay: 0,
+    inventoryValue: 0,
+    totalExports: 0,
+    totalRevenue: 0,
+    totalInvoices: 0,
+    exportsByDay: [],
+    categoryBreakdown: [],
+    topProducts: []
+  });
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadAnalytics();
+  }, [period]);
 
-  const loadData = async () => {
+  const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const [orders, invoices, rewards, creditCards] = await Promise.all([
-        base44.entities.PurchaseOrder.list(),
+      const [inventory, exports, invoices, products, purchaseOrders] = await Promise.all([
+        base44.entities.InventoryItem.list(),
+        base44.entities.Export.list('-created_date'),
         base44.entities.Invoice.list(),
-        base44.entities.Reward.list(),
-        base44.entities.CreditCard.list(),
+        base44.entities.Product.list(),
+        base44.entities.PurchaseOrder.list()
       ]);
-      setAllOrders(orders);
-      setAllInvoices(invoices);
-      setAllRewards(rewards);
-      setAllCreditCards(creditCards);
+
+      const daysAgo = parseInt(period);
+      const startDate = subDays(new Date(), daysAgo);
+
+      // Filter exports by period
+      const recentExports = exports.filter(e => new Date(e.created_date) >= startDate);
+
+      // Calculate items on the way
+      const pendingOrders = purchaseOrders.filter(po => ['ordered', 'shipped', 'partially_received'].includes(po.status));
+      const itemsOnWay = pendingOrders.reduce((sum, po) => {
+        const ordered = po.items?.reduce((s, i) => s + (i.quantity_ordered || 0), 0) || 0;
+        const received = po.items?.reduce((s, i) => s + (i.quantity_received || 0), 0) || 0;
+        return sum + (ordered - received);
+      }, 0);
+
+      // Calculate totals
+      const totalInventory = inventory.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      const totalRevenue = recentExports.reduce((sum, e) => sum + (e.total_value || 0), 0);
+      const paidInvoices = invoices.filter(i => i.status === 'paid');
+      const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+      
+      // Calculate total inventory value
+      const inventoryValue = inventory.reduce((sum, item) => {
+        const product = products.find(p => p.id === item.product_id);
+        const price = product?.price || item.unit_cost || 0;
+        return sum + (price * (item.quantity || 0));
+      }, 0);
+
+      // Exports by day
+      const days = eachDayOfInterval({ start: startDate, end: new Date() });
+      const exportsByDay = days.map(day => {
+        const dayStr = format(day, 'yyyy-MM-dd');
+        const dayExports = recentExports.filter(e => 
+          format(new Date(e.created_date), 'yyyy-MM-dd') === dayStr
+        );
+        return {
+          date: format(day, 'MMM d'),
+          exports: dayExports.length,
+          value: dayExports.reduce((sum, e) => sum + (e.total_value || 0), 0)
+        };
+      });
+
+      // Category breakdown
+      const categoryMap = {};
+      inventory.forEach(item => {
+        const product = products.find(p => p.id === item.product_id);
+        const category = product?.category || 'other';
+        categoryMap[category] = (categoryMap[category] || 0) + (item.quantity || 0);
+      });
+      const categoryBreakdown = Object.entries(categoryMap).map(([name, value]) => ({
+        name: name.replace(/_/g, ' '),
+        value
+      }));
+
+      // Top products
+      const productMap = {};
+      inventory.forEach(item => {
+        const name = item.product_name || 'Unknown';
+        productMap[name] = (productMap[name] || 0) + (item.quantity || 0);
+      });
+      const topProducts = Object.entries(productMap)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([name, quantity]) => ({ name, quantity }));
+
+      setData({
+        totalInventory,
+        itemsOnWay,
+        inventoryValue,
+        totalExports: recentExports.length,
+        totalRevenue,
+        totalInvoices: totalPaid,
+        exportsByDay,
+        categoryBreakdown,
+        topProducts
+      });
+    } catch (error) {
+      console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredOrders = useMemo(() => {
-    let orders = allOrders;
-    if (typeFilter === 'Churning') orders = orders.filter(o => o.is_pickup);
-    if (typeFilter === 'Marketplace') orders = orders.filter(o => o.is_dropship);
-    return orders.filter(o => {
-      if (!o.order_date) return true;
-      return o.order_date >= dateFrom && o.order_date <= dateTo;
-    });
-  }, [allOrders, typeFilter, dateFrom, dateTo]);
-
-  const filteredInvoices = useMemo(() => {
-    return allInvoices.filter(i => {
-      if (!i.invoice_date) return true;
-      return i.invoice_date >= dateFrom && i.invoice_date <= dateTo;
-    });
-  }, [allInvoices, dateFrom, dateTo]);
-
-  const metrics = useMemo(() => {
-    const paidInvoices = filteredInvoices.filter(i => i.status === 'paid');
-    const revenue = paidInvoices.reduce((s, i) => s + (i.total || 0), 0);
-    const cost = filteredOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
-    const cashback = allRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
-    const commission = 0; // extend if commission entity exists
-    const profit = revenue - cost - commission;
-    const roi = cost > 0 ? (profit / cost) * 100 : 0;
-
-    const storeCounts = {};
-    filteredOrders.forEach(o => { if (o.retailer) storeCounts[o.retailer] = (storeCounts[o.retailer] || 0) + 1; });
-    const topStore = Object.entries(storeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
-    const storeCount = Object.keys(storeCounts).length;
-
-    return { revenue, cost, profit, roi, cashback, commission, topStore, storeCount };
-  }, [filteredOrders, filteredInvoices, allRewards]);
-
-  const trendData = useMemo(() => {
-    return getPeriodBuckets(period, filteredOrders, filteredInvoices, allRewards);
-  }, [period, filteredOrders, filteredInvoices, allRewards]);
-
-  const expenseData = useMemo(() => {
-    return [{ name: 'COGS', value: metrics.cost }];
-  }, [metrics]);
-
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-4 lg:grid-cols-8 gap-3">
-          {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+      <div>
+        <PageHeader title="Analytics" description="Business intelligence and metrics" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">Analytics &amp; Insights</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Combined overview</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {TYPE_FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => setTypeFilter(f)}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all"
-              style={typeFilter === f
-                ? { background: '#6366f1', color: '#fff', border: '1px solid #6366f1' }
-                : { background: '#1a1d2e', color: '#6b7280', border: '1px solid #2a2d3e' }
-              }
-            >
-              {f}
-            </button>
-          ))}
-          <Button variant="outline" size="sm" className="text-xs gap-1.5">
-            <Download className="h-3.5 w-3.5" /> Export All
-          </Button>
-          <Button size="sm" className="text-xs gap-1.5 bg-primary hover:bg-primary/90" onClick={loadData}>
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader 
+        title="Analytics" 
+        description="Business intelligence and metrics"
+        actions={
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
 
-      {/* Filters Bar */}
-      <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl" style={{ background: '#1a1d2e', border: '1px solid #2a2d3e' }}>
-        {/* Period toggle */}
-        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid #2a2d3e' }}>
-          {PERIOD_FILTERS.map(p => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className="px-3 py-1.5 text-xs font-medium transition-colors"
-              style={period === p
-                ? { background: '#6366f1', color: '#fff' }
-                : { color: '#6b7280', background: 'transparent' }
-              }
-            >
-              {p}
-            </button>
-          ))}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="card-modern p-6 animate-slide-up">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Inventory On Hand</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">{data.totalInventory.toLocaleString()}</p>
+              <p className="text-sm text-emerald-600 font-semibold mt-1">${(data.inventoryValue || 0).toLocaleString()}</p>
+            </div>
+            <div className="h-14 w-14 gradient-success rounded-2xl flex items-center justify-center">
+              <Package className="h-7 w-7 text-white" />
+            </div>
+          </div>
         </div>
 
-        {/* Date range */}
-        <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            className="text-xs rounded-lg px-2 py-1.5 focus:outline-none"
-            style={{ background: '#0d0f1e', border: '1px solid #2a2d3e', color: '#e5e7eb' }}
-          />
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            className="text-xs rounded-lg px-2 py-1.5 focus:outline-none"
-            style={{ background: '#0d0f1e', border: '1px solid #2a2d3e', color: '#e5e7eb' }}
-          />
+        <div className="card-modern p-6 animate-slide-up" style={{animationDelay: '0.1s'}}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Items On The Way</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">{data.itemsOnWay.toLocaleString()}</p>
+              <p className="text-xs text-slate-500 mt-1">From pending orders</p>
+            </div>
+            <div className="h-14 w-14 gradient-primary rounded-2xl flex items-center justify-center">
+              <ShoppingCart className="h-7 w-7 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="card-modern p-6 animate-slide-up" style={{animationDelay: '0.2s'}}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600">Export Value</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">${data.totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-slate-500 mt-1">{data.totalExports} exports</p>
+            </div>
+            <div className="h-14 w-14 gradient-warning rounded-2xl flex items-center justify-center">
+              <TrendingUp className="h-7 w-7 text-white" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <AnalyticsMetricCards metrics={metrics} trendData={trendData} />
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Export Value Over Time */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Export Value Over Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data.exportsByDay}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => `$${v}`}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`$${value}`, 'Value']}
+                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-1.5 p-1.5 rounded-xl" style={{ background: '#1a1d2e', border: '1px solid #2a2d3e' }}>
-        {TABS.map(({ label, icon: Icon }) => {
-          const isActive = activeTab === label;
-          return (
-            <button
-              key={label}
-              onClick={() => setActiveTab(label)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={isActive
-                ? { background: 'linear-gradient(135deg, #6366f1, #7c3aed)', color: '#fff', boxShadow: '0 2px 12px rgba(99,102,241,0.35)' }
-                : { color: '#6b7280', background: 'transparent' }
-              }
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </button>
-          );
-        })}
+        {/* Category Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Inventory by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.categoryBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {data.categoryBreakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 mt-4">
+              {data.categoryBreakdown.map((entry, index) => (
+                <div key={entry.name} className="flex items-center gap-2">
+                  <div 
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  />
+                  <span className="text-sm text-slate-600 capitalize">{entry.name}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Overview Tab */}
-      {activeTab === 'Overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RevenueProfitTrend data={trendData} />
-          <ExpenseBreakdown data={expenseData} />
-          <CumulativeProfit data={trendData} />
-          <PeriodPnL data={trendData} />
-        </div>
-      )}
-
-      {/* Breakdowns Tab */}
-      {activeTab === 'Breakdowns' && (
-        <BreakdownsTab orders={filteredOrders} invoices={filteredInvoices} rewards={allRewards} />
-      )}
-
-      {/* Payments Tab */}
-      {activeTab === 'Payments' && (
-        <PaymentsTab orders={filteredOrders} rewards={allRewards} creditCards={allCreditCards} />
-      )}
-
-      {/* Detail Tables Tab */}
-      {activeTab === 'Detail Tables' && (
-        <DetailTablesTab orders={filteredOrders} invoices={filteredInvoices} rewards={allRewards} />
-      )}
-
-      {/* Placeholder tabs */}
-      {activeTab !== 'Overview' && activeTab !== 'Breakdowns' && activeTab !== 'Payments' && activeTab !== 'Detail Tables' && (
-        <div className="flex items-center justify-center h-48 rounded-xl border border-border bg-card text-muted-foreground text-sm">
-          {activeTab} — coming soon
-        </div>
-      )}
+      {/* Top Products */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Top Products by Quantity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.topProducts} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={120}
+                  tick={{ fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="quantity" fill="#10b981" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

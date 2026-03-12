@@ -83,8 +83,6 @@ export default function Rewards() {
     }
   });
 
-  const cardLabel = (card) => card.last_four ? `${card.card_name} (${card.last_four})` : card.card_name;
-
 
 
   const createRewardMutation = useMutation({
@@ -180,7 +178,6 @@ export default function Rewards() {
       setCardFormData({
         card_name: card.card_name || '',
         issuer: card.issuer || '',
-        last_four: card.last_four || '',
         cashback_rate: card.cashback_rate || '',
         points_rate: card.points_rate || '',
         dining_points_rate: card.dining_points_rate || '',
@@ -198,7 +195,6 @@ export default function Rewards() {
       setCardFormData({
         card_name: '',
         issuer: '',
-        last_four: '',
         cashback_rate: '',
         points_rate: '',
         dining_points_rate: '',
@@ -338,11 +334,9 @@ export default function Rewards() {
   });
 
   const rewardColumns = [
-    { header: 'Source', accessor: 'source', cell: (row) => {
-      const card = creditCards.find(c => c.id === row.credit_card_id);
-      const label = card ? cardLabel(card) : (row.source || '-');
-      return <span className="font-medium">{label}</span>;
-    }},
+    { header: 'Source', accessor: 'source', cell: (row) => (
+      <span className="font-medium">{row.source}</span>
+    )},
     { header: 'Type', accessor: 'type', cell: (row) => (
       <div className="flex items-center gap-2">
         {row.type === 'cashback' && <DollarSign className="h-4 w-4 text-green-600" />}
@@ -392,7 +386,7 @@ export default function Rewards() {
 
   const cardColumns = [
     { header: 'Card Name', accessor: 'card_name', cell: (row) => (
-      <span className="font-medium">{cardLabel(row)}</span>
+      <span className="font-medium">{row.card_name}</span>
     )},
     { header: 'Issuer', accessor: 'issuer', cell: (row) => (
       <span className="text-sm">{row.issuer || '-'}</span>
@@ -696,7 +690,9 @@ export default function Rewards() {
                 <SelectContent>
                   {creditCards.filter(c => c.active).map(card => (
                     <SelectItem key={card.id} value={card.card_name}>
-                      {cardLabel(card)}
+                      {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}% cashback`}
+                      {card.reward_type === 'points' && `${card.points_rate}x points`}
+                      {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -863,24 +859,13 @@ export default function Rewards() {
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Issuer</Label>
-                <Input
-                  value={cardFormData.issuer}
-                  onChange={(e) => setCardFormData({ ...cardFormData, issuer: e.target.value })}
-                  placeholder="e.g., Chase, Amex"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Last 4 Digits</Label>
-                <Input
-                  value={cardFormData.last_four || ''}
-                  onChange={(e) => setCardFormData({ ...cardFormData, last_four: e.target.value })}
-                  placeholder="e.g., 1234"
-                  maxLength={4}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Issuer</Label>
+              <Input
+                value={cardFormData.issuer}
+                onChange={(e) => setCardFormData({ ...cardFormData, issuer: e.target.value })}
+                placeholder="e.g., Chase, Amex"
+              />
             </div>
             <div className="space-y-2">
               <Label>Reward Type *</Label>
