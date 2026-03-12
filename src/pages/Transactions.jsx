@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import {
   Grid3X3, Tag, Globe, Columns, BarChart2, Download,
   Package, CheckCircle, DollarSign, Search, Filter,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Edit2, ExternalLink, Trash2
 } from 'lucide-react';
 
 const BG = '#0d0f1e';
