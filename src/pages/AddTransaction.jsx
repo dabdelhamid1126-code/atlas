@@ -3,20 +3,12 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-  Flame, Globe, RefreshCw, Package, ShoppingCart, Tag,
-  CreditCard, DollarSign, Plus, Minus, ChevronDown
+  Flame, Globe, Package, ShoppingCart, Tag, CreditCard, DollarSign, Plus, Minus, ChevronDown, ChevronUp
 } from 'lucide-react';
 
-const BG = '#0d0f1e';
-const CARD_BG = '#1a1d2e';
-const BORDER = '#2a2d3e';
-const MUTED = '#6b7280';
-const INPUT_STYLE = {
-  background: BG, border: `1px solid ${BORDER}`, borderRadius: 8,
-  color: '#e5e7eb', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%'
-};
-const LABEL_STYLE = { color: MUTED, fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', marginBottom: 4, display: 'block' };
-const SECTION_CARD = { background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '18px 20px', marginBottom: 14 };
+const LABEL_STYLE = { fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', marginBottom: 6, display: 'block', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' };
+const INPUT_STYLE = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', padding: '10px 12px', fontSize: 13, outline: 'none', width: '100%' };
+const SECTION_STYLE = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '20px', marginBottom: 16, backdropFilter: 'blur(12px)' };
 
 const CATEGORIES = ['Electronics', 'Phones', 'Tablets', 'Laptops', 'Gaming', 'Accessories', 'Wearables', 'Audio', 'Other'];
 const STATUSES = ['Purchased', 'Ordered', 'Shipped', 'Received', 'Cancelled'];
