@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DollarSign, TrendingUp, CreditCard, Percent, ShoppingCart, Tag } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, subMonths, parseISO, startOfWeek, startOfYear, isAfter, subDays } from 'date-fns';
-import MetricCard from '@/components/dashboard/MetricCard';
+import { format, startOfMonth, endOfMonth, subMonths, parseISO, startOfYear, isAfter, subDays } from 'date-fns';
 import StatusPipeline from '@/components/dashboard/StatusPipeline';
 import ProfitRevenueChart from '@/components/dashboard/ProfitRevenueChart';
 import ByStatusChart from '@/components/dashboard/ByStatusChart';
-import TopCards from '@/components/dashboard/TopCards';
-import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import GoalTracker from '@/components/dashboard/GoalTracker';
 
 const TIME_FILTERS = ['Today', '7 Days', '30 Days', 'YTD', 'All Time'];
@@ -28,13 +25,55 @@ function filterByDate(orders, filter) {
   return orders;
 }
 
+const metricDefs = [
+  {
+    key: 'totalCost',
+    label: 'Total Cost',
+    format: v => `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    color: '#22d3ee',
+    icon: ShoppingCart,
+    sub: orders => `${orders.length} transaction${orders.length !== 1 ? 's' : ''}`,
+  },
+  {
+    key: 'saleRevenue',
+    label: 'Sale Revenue',
+    format: v => `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    color: '#4ade80',
+    icon: DollarSign,
+    sub: () => 'from paid invoices',
+  },
+  {
+    key: 'cashback',
+    label: 'Cashback',
+    format: v => `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    color: '#f472b6',
+    icon: Tag,
+    sub: (_, m) => `${((m.cashback / (m.totalCost || 1)) * 100).toFixed(1)}% avg rate`,
+  },
+  {
+    key: 'netProfit',
+    label: 'Net Profit',
+    format: v => `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    color: '#4ade80',
+    icon: TrendingUp,
+    sub: (_, m) => m.netProfit >= 0 ? 'profitable' : 'loss',
+  },
+  {
+    key: 'avgRoi',
+    label: 'Avg ROI',
+    format: v => `${v.toFixed(2)}%`,
+    color: '#e2e8f0',
+    icon: Percent,
+    sub: () => 'return on investment',
+  },
+];
+
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
   const [allRewards, setAllRewards] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
-  const [creditCards, setCreditCards] = useState([]);
   const [timeFilter, setTimeFilter] = useState('30 Days');
   const [typeFilter, setTypeFilter] = useState('All');
   const [goals, setGoals] = useState({});
@@ -47,16 +86,14 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
-      const [orders, rewards, invoices, cards] = await Promise.all([
+      const [orders, rewards, invoices] = await Promise.all([
         base44.entities.PurchaseOrder.list(),
         base44.entities.Reward.list(),
         base44.entities.Invoice.list(),
-        base44.entities.CreditCard.list(),
       ]);
       setAllOrders(orders);
       setAllRewards(rewards);
       setAllInvoices(invoices);
-      setCreditCards(cards);
     } catch (e) {
       console.error(e);
     } finally {
@@ -78,8 +115,7 @@ export default function Dashboard() {
     const cashback = allRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
     const netProfit = saleRevenue - totalCost;
     const avgRoi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
-    const totalOrders = filteredOrders.length;
-    return { totalCost, saleRevenue, cashback, netProfit, avgRoi, totalOrders };
+    return { totalCost, saleRevenue, cashback, netProfit, avgRoi };
   }, [filteredOrders, allInvoices, allRewards]);
 
   const trendData = useMemo(() => {
@@ -103,21 +139,6 @@ export default function Dashboard() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredOrders]);
 
-  const topCardsData = useMemo(() => {
-    const map = {};
-    filteredOrders.forEach(o => {
-      if (o.credit_card_id) {
-        if (!map[o.credit_card_id]) {
-          const card = creditCards.find(c => c.id === o.credit_card_id);
-          map[o.credit_card_id] = { name: card?.card_name || o.card_name || 'Unknown', spent: 0, orders: 0 };
-        }
-        map[o.credit_card_id].spent += (o.final_cost || o.total_cost || 0);
-        map[o.credit_card_id].orders += 1;
-      }
-    });
-    return Object.values(map).sort((a, b) => b.spent - a.spent).slice(0, 5);
-  }, [filteredOrders, creditCards]);
-
   const firstName = user?.full_name?.split(' ')[0] || 'there';
 
   if (loading) {
@@ -134,14 +155,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
-      {/* Header row */}
+      {/* Header + Filters */}
       <div className="flex flex-col md:flex-row md:items-center gap-4">
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">Welcome back, {firstName}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Here's how your numbers are looking.</p>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap gap-2">
           {/* Type filters */}
           <div className="flex rounded-xl overflow-hidden border border-border bg-card">
@@ -149,14 +169,11 @@ export default function Dashboard() {
               <button
                 key={f}
                 onClick={() => setTypeFilter(f)}
-                className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                   typeFilter === f ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {f === 'All' && <span>⚡</span>}
-                {f === 'Churning' && <span>♻️</span>}
-                {f === 'Resell' && <span>🏷️</span>}
-                {f}
+                {f === 'All' && '⚡ '}{f === 'Churning' && '♻️ '}{f === 'Resell' && '🏷️ '}{f}
               </button>
             ))}
           </div>
@@ -168,9 +185,7 @@ export default function Dashboard() {
                 key={f}
                 onClick={() => setTimeFilter(f)}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  timeFilter === f
-                    ? 'bg-purple-600 text-white'
-                    : 'text-muted-foreground hover:text-foreground'
+                  timeFilter === f ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {f}
@@ -180,43 +195,24 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* Metric Cards - 5 across */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <MetricCard
-          label="Total Cost"
-          value={`$${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub={`${metrics.totalOrders} transaction${metrics.totalOrders !== 1 ? 's' : ''}`}
-          color="blue"
-          icon={<ShoppingCart className="h-4 w-4" />}
-        />
-        <MetricCard
-          label="Sale Revenue"
-          value={`$${metrics.saleRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub="from paid invoices"
-          color="green"
-          icon={<DollarSign className="h-4 w-4" />}
-        />
-        <MetricCard
-          label="Cashback"
-          value={`$${metrics.cashback.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub={`${((metrics.cashback / (metrics.totalCost || 1)) * 100).toFixed(1)}% avg rate`}
-          color="pink"
-          icon={<Tag className="h-4 w-4" />}
-        />
-        <MetricCard
-          label="Net Profit"
-          value={`$${metrics.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub={metrics.netProfit >= 0 ? 'profitable' : 'loss'}
-          color="teal"
-          icon={<TrendingUp className="h-4 w-4" />}
-        />
-        <MetricCard
-          label="Avg ROI"
-          value={`${metrics.avgRoi.toFixed(2)}%`}
-          sub="return on investment"
-          color="purple"
-          icon={<Percent className="h-4 w-4" />}
-        />
+        {metricDefs.map(({ key, label, format: fmt, color, icon: Icon, sub }) => (
+          <div
+            key={key}
+            className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3"
+            style={{ borderColor: `${color}22` }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">{label}</p>
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: `${color}22`, color }}>
+                <Icon className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold" style={{ color }}>{fmt(metrics[key])}</p>
+            <p className="text-xs text-muted-foreground">{sub(filteredOrders, metrics)}</p>
+          </div>
+        ))}
       </div>
 
       {/* Goal Tracker */}
@@ -230,18 +226,10 @@ export default function Dashboard() {
         <div className="lg:col-span-2">
           <ProfitRevenueChart data={trendData} />
         </div>
-        <div className="space-y-4">
+        <div>
           <ByStatusChart data={byStatusData} />
-          <TopCards cards={topCardsData} />
         </div>
       </div>
-
-      {/* Recent Transactions */}
-      <RecentTransactions
-        orders={[...filteredOrders].sort((a, b) =>
-          new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date)
-        )}
-      />
     </div>
   );
 }
