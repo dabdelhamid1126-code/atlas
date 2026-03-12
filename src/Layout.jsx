@@ -19,7 +19,8 @@ import {
   X,
   LogOut,
   ChevronRight,
-  Settings
+  Settings,
+  ArrowLeftRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
