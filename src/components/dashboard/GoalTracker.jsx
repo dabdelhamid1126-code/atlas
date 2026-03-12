@@ -40,7 +40,7 @@ export default function GoalTracker({ metrics }) {
       case 'cashback':
         return metrics.cashback || 0;
       case 'transactions':
-        return 0; // Would need transaction count from data
+        return 0;
       default:
         return 0;
     }
