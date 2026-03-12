@@ -392,7 +392,7 @@ export default function Rewards() {
 
   const cardColumns = [
     { header: 'Card Name', accessor: 'card_name', cell: (row) => (
-      <span className="font-medium">{row.card_name}</span>
+      <span className="font-medium">{cardLabel(row)}</span>
     )},
     { header: 'Issuer', accessor: 'issuer', cell: (row) => (
       <span className="text-sm">{row.issuer || '-'}</span>
