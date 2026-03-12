@@ -248,19 +248,38 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Goal Tracker and Status Pipeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <GoalTracker />
-        <StatusPipeline orders={filteredOrders} />
-      </div>
+      {/* Goal Tracker */}
+      <GoalTracker />
 
-      {/* Charts */}
+      {/* Status Pipeline */}
+      <StatusPipeline orders={filteredOrders} />
+
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <ProfitRevenueChart data={trendData} />
         </div>
         <div>
           <ByStatusChart data={byStatusData} />
+        </div>
+      </div>
+
+      {/* Top Cards Section */}
+      <div className="rounded-xl p-6" style={{ background: 'var(--bg-card)', border: `1px solid var(--border-color)` }}>
+        <h2 className="text-sm font-semibold uppercase mb-4" style={{ color: 'var(--text-muted)' }}>Top Cards</h2>
+        <div className="space-y-3">
+          {topExpenses.map((exp, idx) => (
+            <div key={idx} className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--bg-hover)' }}>
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-4 w-4" style={{ color: EXPENSE_CATEGORY_COLORS[exp.category] }} />
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{exp.name}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>0 Cards</p>
+                </div>
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>${exp.amount.toFixed(2)}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
