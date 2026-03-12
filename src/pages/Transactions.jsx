@@ -375,7 +375,7 @@ function EditTransactionModal({ order, creditCards, onClose, onSave }) {
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6" style={{ background: 'var(--bg-primary)' }}>
           {/* SECTION 1: TOP INFO */}
           <div>
             <div className="grid grid-cols-2 gap-4 mb-4">
