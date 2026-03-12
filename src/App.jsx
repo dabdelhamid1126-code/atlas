@@ -136,7 +136,7 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   useEffect(() => {
-    const savedTheme = getActiveTheme();
+    const savedTheme = getActiveTheme() || 'midnight';
     initTheme(savedTheme);
     
     const handleThemeChange = (e) => {
