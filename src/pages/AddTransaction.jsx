@@ -171,54 +171,97 @@ export default function AddTransaction() {
         <label className="text-sm text-white font-medium cursor-pointer">Multi-Item Order</label>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* LEFT COLUMN */}
-        <div className="lg:col-span-2 flex flex-col gap-0">
+      {/* 2-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
+        {/* LEFT: MAIN FORM */}
+        <div className="flex flex-col gap-6">
 
-          {/* Section 1: Product Information */}
-          <div style={SECTION_CARD}>
-            <SectionTitle icon={<Package size={14} />} label="Product Information" color="#60a5fa" />
-            <div className="flex flex-col gap-3">
-              <Field label="Product Name" required>
-                <InputEl value={form.productName} onChange={e => set('productName', e.target.value)} placeholder="e.g. Apple AirPods Pro 2nd Gen" />
-              </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Category">
-                  <SelectEl value={form.category} onChange={e => set('category', e.target.value)}>
-                    <option value="">Select category</option>
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          {/* SECTION 1: ORDER DETAILS */}
+          <div style={SECTION_STYLE}>
+            <SectionTitle icon={<ShoppingCart size={16} />} label="Order Details" />
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Order Number *" required>
+                  <InputEl value={form.orderNumber} onChange={e => set('orderNumber', e.target.value)} placeholder="e.g. 114-1234567-8901234" />
+                </Field>
+                <Field label="Tracking Number">
+                  <InputEl value={form.trackingNumber} onChange={e => set('trackingNumber', e.target.value)} placeholder="e.g. 1Z999AA101234567" />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Retailer/Vendor *" required>
+                  <SelectEl value={form.vendor} onChange={e => set('vendor', e.target.value)}>
+                    <option value="">Select vendor</option>
+                    {vendors.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
                   </SelectEl>
                 </Field>
-                <Field label="SKU / UPC (optional)">
-                  <InputEl value={form.sku} onChange={e => set('sku', e.target.value)} placeholder="Barcode or SKU" />
+                <Field label="Status *">
+                  <SelectEl value={form.status} onChange={e => set('status', e.target.value)}>
+                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </SelectEl>
                 </Field>
               </div>
             </div>
           </div>
 
-          {/* Section 2: Purchase Details */}
-          <div style={SECTION_CARD}>
-            <SectionTitle icon={<ShoppingCart size={14} />} label="Purchase Details" color="#818cf8" />
-            <div className="flex flex-col gap-3">
+          {/* SECTION 2: PRODUCT INFORMATION */}
+          <div style={SECTION_STYLE}>
+            <SectionTitle icon={<Package size={16} />} label="Product Information" />
+            <div className="flex flex-col gap-4">
+              <Field label="Product Name *" required>
+                <InputEl value={form.productName} onChange={e => set('productName', e.target.value)} placeholder="e.g. Apple AirPods Pro 2nd Gen" />
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Category *" required>
+                  <SelectEl value={form.category} onChange={e => set('category', e.target.value)}>
+                    <option value="">Select category</option>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </SelectEl>
+                </Field>
+                <Field label="SKU / UPC">
+                  <InputEl value={form.sku} onChange={e => set('sku', e.target.value)} placeholder="Optional barcode or SKU" />
+                </Field>
+              </div>
+              <p className="text-xs text-purple-400">Category determines reward points rate</p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.pickup} onChange={e => set('pickup', e.target.checked)} className="w-4 h-4 accent-purple-500" />
+                  <span className="text-sm text-white">Pickup Order</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.dropship} onChange={e => set('dropship', e.target.checked)} className="w-4 h-4 accent-purple-500" />
+                  <span className="text-sm text-white">Dropship Order</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: PURCHASE DETAILS */}
+          <div style={SECTION_STYLE}>
+            <SectionTitle icon={<CreditCard size={16} />} label="Purchase Details" />
+            <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Field label="Unit Price *">
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: BG }}>
-                    <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>$</span>
-                    <input style={{ background: 'transparent', outline: 'none', color: '#e5e7eb', fontSize: 13, flex: 1, padding: '8px 8px 8px 0' }}
-                      type="number" value={form.unitPrice} onChange={e => set('unitPrice', e.target.value)} placeholder="0.00" />
+                <Field label="Unit Price *" required>
+                  <div className="flex items-center rounded-[10px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)]">
+                    <span className="px-3 text-[rgba(255,255,255,0.4)] text-sm">$</span>
+                    <input type="number" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0 10px 0' }} value={form.unitPrice} onChange={e => set('unitPrice', e.target.value)} placeholder="0.00" />
                   </div>
                 </Field>
                 <Field label="Quantity">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => set('quantity', Math.max(1, form.quantity - 1))} style={{ background: '#2a2d3e', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '7px 9px', color: '#e5e7eb', cursor: 'pointer' }}><Minus size={12} /></button>
-                    <input style={{ ...INPUT_STYLE, textAlign: 'center', width: 52 }} type="number" value={form.quantity} onChange={e => set('quantity', parseInt(e.target.value) || 1)} min={1} />
-                    <button onClick={() => set('quantity', form.quantity + 1)} style={{ background: '#2a2d3e', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '7px 9px', color: '#e5e7eb', cursor: 'pointer' }}><Plus size={12} /></button>
+                    <button onClick={() => set('quantity', Math.max(1, form.quantity - 1))} className="p-2 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.08)] text-white">
+                      <Minus size={14} />
+                    </button>
+                    <input type="number" style={{ ...INPUT_STYLE, textAlign: 'center', flex: 1 }} value={form.quantity} onChange={e => set('quantity', Math.max(1, parseInt(e.target.value) || 1))} min={1} />
+                    <button onClick={() => set('quantity', form.quantity + 1)} className="p-2 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.08)] text-white">
+                      <Plus size={14} />
+                    </button>
                   </div>
                 </Field>
                 <Field label="Total Price">
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: '#12152a' }}>
-                    <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>$</span>
-                    <input style={{ background: 'transparent', outline: 'none', color: MUTED, fontSize: 13, flex: 1, padding: '8px 8px 8px 0' }} value={totalPrice} disabled />
+                  <div className="flex items-center rounded-[10px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)]">
+                    <span className="px-3 text-[rgba(255,255,255,0.4)] text-sm">$</span>
+                    <input type="text" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0 10px 0' }} value={totalPrice} disabled />
                   </div>
                 </Field>
                 <Field label="Date">
@@ -228,10 +271,9 @@ export default function AddTransaction() {
               <div className="grid grid-cols-3 gap-3">
                 {[['Tax', 'tax'], ['Shipping', 'shipping'], ['Fees', 'fees']].map(([lbl, key]) => (
                   <Field key={key} label={`${lbl} ($)`}>
-                    <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: BG }}>
-                      <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>$</span>
-                      <input style={{ background: 'transparent', outline: 'none', color: '#e5e7eb', fontSize: 13, flex: 1, padding: '8px 8px 8px 0' }}
-                        type="number" value={form[key]} onChange={e => set(key, e.target.value)} placeholder="0.00" />
+                    <div className="flex items-center rounded-[10px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)]">
+                      <span className="px-3 text-[rgba(255,255,255,0.4)] text-sm">$</span>
+                      <input type="number" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0 10px 0' }} value={form[key]} onChange={e => set(key, e.target.value)} placeholder="0.00" />
                     </div>
                   </Field>
                 ))}
@@ -239,202 +281,181 @@ export default function AddTransaction() {
             </div>
           </div>
 
-          {/* Section 3: Vendor & Buyer */}
-          <div style={SECTION_CARD}>
-            <SectionTitle icon={<Tag size={14} />} label="Vendor & Buyer" color="#f59e0b" />
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="Vendor / Store" required>
-                  <SelectEl value={form.vendor} onChange={e => set('vendor', e.target.value)}>
-                    <option value="">Select vendor</option>
-                    {sellers.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                    <option value="Amazon">Amazon</option>
-                    <option value="Walmart">Walmart</option>
-                    <option value="BestBuy">Best Buy</option>
-                    <option value="Target">Target</option>
-                    <option value="Costco">Costco</option>
-                  </SelectEl>
-                </Field>
-                <Field label="Buyer" required>
-                  <InputEl value={form.buyer} onChange={e => set('buyer', e.target.value)} placeholder="Buyer name / platform" />
-                </Field>
-                <Field label="Status">
-                  <SelectEl value={form.status} onChange={e => set('status', e.target.value)}>
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </SelectEl>
-                </Field>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Order Number">
-                  <InputEl value={form.orderNumber} onChange={e => set('orderNumber', e.target.value)} placeholder="e.g. 114-1234567-8901234" />
-                </Field>
-                <Field label="Tracking Number(s)">
-                  <InputEl value={form.tracking} onChange={e => set('tracking', e.target.value)} placeholder="e.g. 1Z999AA101234567" />
-                </Field>
-              </div>
-              <button style={{ background: 'transparent', border: 'none', color: '#6366f1', fontSize: 12, cursor: 'pointer', textAlign: 'left', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Plus size={12} /> Add tracking number
-              </button>
-            </div>
-          </div>
-
-          {/* Section 4: Payment & Cashback */}
-          <div style={SECTION_CARD}>
-            <SectionTitle icon={<CreditCard size={14} />} label="Payment & Cashback" color="#f472b6" />
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="Payment Method">
-                  <SelectEl value={form.paymentMethod} onChange={e => set('paymentMethod', e.target.value)}>
-                    <option value="">Select card...</option>
-                    {creditCards.map(c => <option key={c.id} value={c.id}>{c.card_name}</option>)}
-                  </SelectEl>
-                </Field>
-                <Field label="Cashback Rate %">
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: BG }}>
-                    <input style={{ background: 'transparent', outline: 'none', color: '#e5e7eb', fontSize: 13, flex: 1, padding: '8px 0 8px 12px' }}
-                      type="number" value={form.cashbackRate} onChange={e => set('cashbackRate', e.target.value)} placeholder="0.0" />
-                    <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>%</span>
-                  </div>
-                </Field>
-                <Field label="Cashback Amount (auto)">
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: '#12152a' }}>
-                    <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>$</span>
-                    <input style={{ background: 'transparent', outline: 'none', color: MUTED, fontSize: 13, flex: 1, padding: '8px 8px 8px 0' }} value={cashbackAmount} disabled />
-                  </div>
-                </Field>
-              </div>
-              <Field label="Gift Card Used ($)">
-                <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: BG }}>
-                  <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>$</span>
-                  <input style={{ background: 'transparent', outline: 'none', color: '#e5e7eb', fontSize: 13, flex: 1, padding: '8px 8px 8px 0' }}
-                    type="number" value={form.giftCard} onChange={e => set('giftCard', e.target.value)} placeholder="0.00" />
+          {/* SECTION 4: PAYMENT & CASHBACK */}
+          <div style={SECTION_STYLE}>
+            <SectionTitle icon={<CreditCard size={16} />} label="Payment & Cashback" />
+            <div className="flex flex-col gap-4">
+              <Field label="Credit Card">
+                <SelectEl value={form.creditCard} onChange={e => set('creditCard', e.target.value)}>
+                  <option value="">Select card (optional)</option>
+                  {creditCards.map(c => <option key={c.id} value={c.id}>{c.card_name}</option>)}
+                </SelectEl>
+              </Field>
+              
+              {/* Gift Cards Multi-select */}
+              <Field label="Gift Cards">
+                <div className="space-y-2 max-h-40 overflow-y-auto p-3 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-[10px]">
+                  {giftCards.length === 0 ? (
+                    <p className="text-xs text-[rgba(255,255,255,0.3)]">No available gift cards</p>
+                  ) : (
+                    giftCards.map(gc => (
+                      <label key={gc.id} className="flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.04)] p-2 rounded">
+                        <input type="checkbox" checked={form.selectedGiftCards.includes(gc.id)} onChange={e => {
+                          if (e.target.checked) {
+                            set('selectedGiftCards', [...form.selectedGiftCards, gc.id]);
+                          } else {
+                            set('selectedGiftCards', form.selectedGiftCards.filter(id => id !== gc.id));
+                          }
+                        }} className="w-4 h-4 accent-purple-500" />
+                        <div className="flex-1 text-sm text-white">{gc.brand}</div>
+                        <span className="text-xs text-[rgba(255,255,255,0.4)]">${gc.value} ****{gc.code.slice(-3)}</span>
+                      </label>
+                    ))
+                  )}
                 </div>
               </Field>
-              <div className="flex gap-5">
-                {[['includeTaxCashback', 'Include tax in cashback'], ['includeShippingCashback', 'Include shipping in cashback']].map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2 cursor-pointer" style={{ fontSize: 13, color: '#e5e7eb' }}>
-                    <input type="checkbox" checked={form[key]} onChange={e => set(key, e.target.checked)} style={{ accentColor: '#6366f1', width: 14, height: 14 }} />
-                    {label}
-                  </label>
-                ))}
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Cashback Rate %">
+                  <div className="flex items-center rounded-[10px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)]">
+                    <input type="number" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0 10px 12px' }} value={form.cashbackRate} onChange={e => set('cashbackRate', e.target.value)} placeholder="0.0" />
+                    <span className="px-3 text-[rgba(255,255,255,0.4)] text-sm">%</span>
+                  </div>
+                </Field>
+                <Field label="Cashback Amount">
+                  <div className="flex items-center rounded-[10px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)]">
+                    <span className="px-3 text-[rgba(255,255,255,0.4)] text-sm">$</span>
+                    <input type="text" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0 10px 0' }} value={cashbackAmount} disabled />
+                  </div>
+                </Field>
+              </div>
+
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.includeTax} onChange={e => set('includeTax', e.target.checked)} className="w-4 h-4 accent-purple-500" />
+                  <span className="text-sm text-white">Include tax</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.includeShipping} onChange={e => set('includeShipping', e.target.checked)} className="w-4 h-4 accent-purple-500" />
+                  <span className="text-sm text-white">Include shipping</span>
+                </label>
               </div>
             </div>
           </div>
 
-          {/* Section 5: Sale Details */}
-          <div style={SECTION_CARD}>
-            <SectionTitle icon={<DollarSign size={14} />} label="Sale Details (Optional)" color="#4ade80" />
-            <p style={{ color: MUTED, fontSize: 12, marginBottom: 12, marginTop: -8 }}>
-              Fill these in if you already have sale info. You can always update later from the Transactions page.
-            </p>
-            <div className="flex flex-col gap-3">
-              <label className="flex items-center gap-2 cursor-pointer" style={{ fontSize: 13, color: '#e5e7eb' }}>
-                <input type="checkbox" checked={form.salePerUnit} onChange={e => set('salePerUnit', e.target.checked)} style={{ accentColor: '#6366f1', width: 14, height: 14 }} />
-                Sale price is per unit
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Field label="Sale Price per unit ($)">
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: BG }}>
-                    <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>$</span>
-                    <input style={{ background: 'transparent', outline: 'none', color: '#e5e7eb', fontSize: 13, flex: 1, padding: '8px 8px 8px 0' }}
-                      type="number" value={form.salePrice} onChange={e => set('salePrice', e.target.value)} placeholder="0.00" />
-                  </div>
+          {/* SECTION 5: BUYER (Churning only) */}
+          {mode === 'churning' && (
+            <div style={SECTION_STYLE}>
+              <SectionTitle icon={<Flame size={16} />} label="Buyer" />
+              <div className="flex flex-col gap-4">
+                <Field label="Buyer *" required>
+                  <SelectEl value={form.buyer} onChange={e => set('buyer', e.target.value)}>
+                    <option value="">Select buyer</option>
+                    {buyers.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                  </SelectEl>
                 </Field>
-                <Field label="Commission (auto $)">
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: '#12152a' }}>
-                    <span style={{ padding: '8px 10px', color: MUTED, fontSize: 13 }}>$</span>
-                    <input style={{ background: 'transparent', outline: 'none', color: MUTED, fontSize: 13, flex: 1, padding: '8px 8px 8px 0' }} value={commission} disabled />
-                  </div>
-                </Field>
-                <Field label="Sale Date">
-                  <InputEl type="date" value={form.saleDate} onChange={e => set('saleDate', e.target.value)} />
-                </Field>
-                <Field label="Payout Date">
-                  <InputEl type="date" value={form.payoutDate} onChange={e => set('payoutDate', e.target.value)} />
-                </Field>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Order Number">
+                    <InputEl value={form.buyerOrderNumber} onChange={e => set('buyerOrderNumber', e.target.value)} placeholder="Order ref" />
+                  </Field>
+                  <Field label="Tracking Numbers">
+                    <InputEl value={form.buyerTrackingNumbers.join(', ')} onChange={e => set('buyerTrackingNumbers', e.target.value.split(',').map(s => s.trim()))} placeholder="Comma-separated" />
+                  </Field>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* SECTION 6: SALE DETAILS (Collapsible) */}
+          <div style={SECTION_STYLE}>
+            <button onClick={() => setExpandSale(!expandSale)} className="flex items-center gap-2 w-full text-left mb-4 pb-4 border-b border-[rgba(255,255,255,0.05)]">
+              <span className="text-xs uppercase font-bold tracking-wider text-white flex items-center gap-2">
+                <DollarSign size={16} className="text-purple-400" />
+                Sale Details (Optional)
+              </span>
+              <div className="ml-auto">{expandSale ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</div>
+            </button>
+            {expandSale && (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <Field label="Sale Price">
+                    <div className="flex items-center rounded-[10px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)]">
+                      <span className="px-3 text-[rgba(255,255,255,0.4)] text-sm">$</span>
+                      <input type="number" style={{ background: 'transparent', outline: 'none', color: '#fff', flex: 1, padding: '10px 0 10px 0' }} value={form.salePrice} onChange={e => set('salePrice', e.target.value)} placeholder="0.00" />
+                    </div>
+                  </Field>
+                  <Field label="Sale Date">
+                    <InputEl type="date" value={form.saleDate} onChange={e => set('saleDate', e.target.value)} />
+                  </Field>
+                  <Field label="Payout Date">
+                    <InputEl type="date" value={form.payoutDate} onChange={e => set('payoutDate', e.target.value)} />
+                  </Field>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Notes */}
-          <div style={SECTION_CARD}>
-            <label style={{ ...LABEL_STYLE, marginBottom: 8 }}>Notes</label>
-            <textarea
-              value={form.notes}
-              onChange={e => set('notes', e.target.value)}
-              placeholder="Any additional notes..."
-              rows={4}
-              style={{ ...INPUT_STYLE, resize: 'vertical', fontFamily: 'inherit' }}
-            />
+          {/* SECTION 7: NOTES */}
+          <div style={SECTION_STYLE}>
+            <label style={LABEL_STYLE}>Notes</label>
+            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Any additional notes..." rows={4} style={{ ...INPUT_STYLE, resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
         </div>
 
-        {/* RIGHT SIDEBAR */}
-        <div className="flex flex-col gap-4">
-          {/* Transaction Summary */}
-          <div style={SECTION_CARD}>
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign size={14} color="#a855f7" />
-              <span style={{ color: '#a855f7', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Transaction Summary</span>
-            </div>
-            <div className="flex flex-col gap-2">
+        {/* RIGHT: SUMMARY SIDEBAR */}
+        <div className="flex flex-col gap-6 lg:sticky lg:top-8 lg:h-fit">
+          {/* Transaction Summary Card */}
+          <div style={SECTION_STYLE}>
+            <h3 className="text-xs uppercase font-bold tracking-wider text-white mb-5 pb-4 border-b border-[rgba(255,255,255,0.05)]">Transaction Summary</h3>
+            <div className="space-y-3">
               {[
                 ['Subtotal', `$${parseFloat(totalPrice || 0).toFixed(2)}`],
                 ['Tax', `$${parseFloat(form.tax || 0).toFixed(2)}`],
                 ['Shipping', `$${parseFloat(form.shipping || 0).toFixed(2)}`],
                 ['Fees', `$${parseFloat(form.fees || 0).toFixed(2)}`],
-                ['Gift Card', form.giftCard ? `-$${parseFloat(form.giftCard).toFixed(2)}` : '$0.00'],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between items-center">
-                  <span style={{ color: MUTED, fontSize: 13 }}>{label}</span>
-                  <span style={{ color: '#e5e7eb', fontSize: 13 }}>{value}</span>
+                [giftCardTotal > 0 ? 'Gift Card' : null, giftCardTotal > 0 ? `-$${giftCardTotal}` : null],
+              ].filter(([l]) => l).map(([label, value]) => (
+                <div key={label} className="flex justify-between items-center text-sm">
+                  <span className="text-[rgba(255,255,255,0.5)]">{label}</span>
+                  <span className="text-white">{value}</span>
                 </div>
               ))}
-              <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 6, paddingTop: 8 }} className="flex justify-between items-center">
-                <span style={{ color: '#e5e7eb', fontSize: 14, fontWeight: 700 }}>Total Cost</span>
-                <span style={{ color: '#f87171', fontSize: 15, fontWeight: 700 }}>${(subtotal - (parseFloat(form.giftCard) || 0)).toFixed(2)}</span>
+              <div className="border-t border-[rgba(255,255,255,0.05)] mt-4 pt-4 flex justify-between items-center">
+                <span className="text-sm font-semibold text-white">Total Cost</span>
+                <span className="text-lg font-bold text-purple-300">${totalCost}</span>
               </div>
               {parseFloat(cashbackAmount) > 0 && (
-                <div className="flex justify-between items-center">
-                  <span style={{ color: '#4ade80', fontSize: 13 }}>Cashback</span>
-                  <span style={{ color: '#4ade80', fontSize: 13 }}>+${cashbackAmount}</span>
+                <div className="flex justify-between items-center text-sm text-green-400 mt-2">
+                  <span>Cashback</span>
+                  <span>+${cashbackAmount}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Mode Card */}
-          <div style={SECTION_CARD}>
-            <div className="flex items-center gap-2 mb-2">
-              {mode === 'churning' ? <Flame size={14} color="#f59e0b" /> : <Globe size={14} color="#60a5fa" />}
-              <span style={{ color: mode === 'churning' ? '#f59e0b' : '#60a5fa', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          {/* Mode Info Card */}
+          <div style={SECTION_STYLE}>
+            <div className="flex items-center gap-2 mb-3">
+              {mode === 'churning' ? <Flame size={16} className="text-amber-400" /> : <Globe size={16} className="text-blue-400" />}
+              <span className={`text-xs uppercase font-bold tracking-wider ${mode === 'churning' ? 'text-amber-400' : 'text-blue-400'}`}>
                 {mode === 'churning' ? 'Churning Mode' : 'Marketplace Mode'}
               </span>
             </div>
-            <p style={{ color: MUTED, fontSize: 12 }}>
-              {form.buyer ? `Buyer: ${form.buyer}` : 'No buyer selected.'}
-            </p>
-            {form.vendor && <p style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>Vendor: {form.vendor}</p>}
-            {form.paymentMethod && creditCards.find(c => c.id === form.paymentMethod) && (
-              <p style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>
-                Card: {creditCards.find(c => c.id === form.paymentMethod)?.card_name}
-              </p>
-            )}
+            <div className="space-y-2 text-sm">
+              {form.buyer && <p className="text-[rgba(255,255,255,0.5)]">Buyer: <span className="text-white">{form.buyer}</span></p>}
+              {!form.buyer && <p className="text-[rgba(255,255,255,0.3)]">No buyer selected</p>}
+              {form.vendor && <p className="text-[rgba(255,255,255,0.5)]">Vendor: <span className="text-white">{form.vendor}</span></p>}
+              {form.creditCard && creditCards.find(c => c.id === form.creditCard) && (
+                <p className="text-[rgba(255,255,255,0.5)]">Card: <span className="text-white">{creditCards.find(c => c.id === form.creditCard)?.card_name}</span></p>
+              )}
+            </div>
           </div>
 
-          {/* Submit */}
-          <button
-            onClick={handleSubmit}
-            className="w-full py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)', border: 'none', cursor: 'pointer' }}
-          >
-            <Plus size={15} /> Add Transaction
+          {/* Action Buttons */}
+          <button onClick={handleSubmit} className="btn-primary-premium w-full py-3 flex items-center justify-center gap-2 text-white font-semibold">
+            <Plus size={16} /> Add Transaction
           </button>
-          <Link
-            to={createPageUrl('Transactions')}
-            className="text-center text-sm block"
-            style={{ color: MUTED, textDecoration: 'none' }}
-          >
+          <Link to={createPageUrl('Transactions')} className="text-center text-sm text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.6)] transition-colors">
             Cancel — Back to Transactions
           </Link>
         </div>
