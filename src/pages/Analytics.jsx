@@ -205,7 +205,7 @@ export default function Analytics() {
       </div>
 
       {/* Metric Cards */}
-      <AnalyticsMetricCards metrics={metrics} />
+      <AnalyticsMetricCards metrics={metrics} trendData={trendData} />
 
       {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-border">
