@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 
 const STORAGE_KEY = 'dd_goals';
 
@@ -45,10 +44,8 @@ export default function GoalsTab() {
           const g = get(key);
           return (
             <div key={key} className="flex items-center gap-6 px-6 py-5">
-              {/* Label */}
               <span className={`w-28 text-sm font-semibold ${color}`}>{label}</span>
 
-              {/* Period toggle */}
               <div className="flex rounded-lg overflow-hidden border border-border">
                 {['weekly', 'monthly'].map(p => (
                   <button
@@ -65,7 +62,6 @@ export default function GoalsTab() {
                 ))}
               </div>
 
-              {/* Target input */}
               <div className="flex items-center bg-secondary border border-border rounded-xl px-3 py-2 flex-1 max-w-[160px]">
                 {!noPrefix && <span className="text-muted-foreground mr-1 text-sm">$</span>}
                 <input
@@ -79,7 +75,6 @@ export default function GoalsTab() {
                 />
               </div>
 
-              {/* Toggle */}
               <Switch
                 checked={!!g.enabled}
                 onCheckedChange={v => update(key, { enabled: v })}

@@ -4,13 +4,13 @@ import { Download, Upload, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const exportItems = [
-  { key: 'creditCards',    label: 'Payment Methods',    sub: 'Credit cards & payment info' },
-  { key: 'purchaseOrders', label: 'Transactions',        sub: 'All purchase & sale records' },
-  { key: 'inventoryItems', label: 'Inventory',           sub: 'Current inventory items' },
-  { key: 'giftCards',      label: 'Gift Cards',          sub: 'Gift card records' },
-  { key: 'rewards',        label: 'Rewards',             sub: 'Cashback & reward records' },
-  { key: 'invoices',       label: 'Invoices',            sub: 'Invoice records' },
-  { key: 'exports',        label: 'Exports',             sub: 'Export records' },
+  { key: 'CreditCard',    label: 'Payment Methods', sub: 'Credit cards & payment info' },
+  { key: 'PurchaseOrder', label: 'Transactions',    sub: 'All purchase & sale records' },
+  { key: 'InventoryItem', label: 'Inventory',       sub: 'Current inventory items' },
+  { key: 'GiftCard',      label: 'Gift Cards',      sub: 'Gift card records' },
+  { key: 'Reward',        label: 'Rewards',         sub: 'Cashback & reward records' },
+  { key: 'Invoice',       label: 'Invoices',        sub: 'Invoice records' },
+  { key: 'Export',        label: 'Exports',         sub: 'Export records' },
 ];
 
 export default function DataTab() {
@@ -27,16 +27,13 @@ export default function DataTab() {
     });
   };
 
-  const selectAll = () => setSelected(new Set(exportItems.map(i => i.key)));
-  const deselectAll = () => setSelected(new Set());
-
   const handleExport = async () => {
     setExporting(true);
     try {
       const result = {};
       await Promise.all(
         exportItems.filter(i => selected.has(i.key)).map(async (item) => {
-          const data = await base44.entities[item.key.charAt(0).toUpperCase() + item.key.slice(1)]?.list?.() || [];
+          const data = await base44.entities[item.key].list();
           result[item.key] = data;
         })
       );
@@ -52,6 +49,19 @@ export default function DataTab() {
     }
   };
 
+  const handleReset = async () => {
+    setResetting(true);
+    const entities = ['PurchaseOrder', 'InventoryItem', 'GiftCard', 'Reward', 'Invoice', 'Export'];
+    await Promise.all(
+      entities.map(async (entity) => {
+        const items = await base44.entities[entity].list();
+        await Promise.all(items.map(i => base44.entities[entity].delete(i.id)));
+      })
+    );
+    setResetting(false);
+    setConfirmReset(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Export */}
@@ -63,27 +73,24 @@ export default function DataTab() {
         <p className="text-sm text-muted-foreground mb-4">Select which data to include in your export file.</p>
 
         <div className="flex gap-4 mb-4 text-sm">
-          <button onClick={selectAll} className="text-purple-400 hover:underline">Select all</button>
-          <span className="text-border">|</span>
-          <button onClick={deselectAll} className="text-purple-400 hover:underline">Deselect all</button>
+          <button onClick={() => setSelected(new Set(exportItems.map(i => i.key)))} className="text-purple-400 hover:underline">Select all</button>
+          <span className="text-muted-foreground">|</span>
+          <button onClick={() => setSelected(new Set())} className="text-purple-400 hover:underline">Deselect all</button>
         </div>
 
         <div className="space-y-3 mb-6">
           {exportItems.map(item => (
-            <label key={item.key} className="flex items-start gap-3 cursor-pointer group">
-              <div
-                onClick={() => toggle(item.key)}
-                className={`mt-0.5 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
-                  selected.has(item.key) ? 'bg-purple-600 border-purple-600' : 'border-border group-hover:border-purple-400'
-                }`}
-              >
+            <label key={item.key} className="flex items-start gap-3 cursor-pointer group" onClick={() => toggle(item.key)}>
+              <div className={`mt-0.5 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
+                selected.has(item.key) ? 'bg-purple-600 border-purple-600' : 'border-border group-hover:border-purple-400'
+              }`}>
                 {selected.has(item.key) && (
                   <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 )}
               </div>
-              <div onClick={() => toggle(item.key)}>
+              <div>
                 <p className="text-sm font-medium text-foreground">{item.label}</p>
                 <p className="text-xs text-muted-foreground">{item.sub}</p>
               </div>
@@ -125,26 +132,10 @@ export default function DataTab() {
             Reset All Data
           </Button>
         ) : (
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-center">
             <p className="text-sm text-red-400 font-medium">Are you sure? This cannot be undone.</p>
             <Button onClick={() => setConfirmReset(false)} variant="outline" className="rounded-xl text-sm">Cancel</Button>
-            <Button
-              onClick={async () => {
-                setResetting(true);
-                await Promise.all([
-                  base44.entities.PurchaseOrder.list().then(items => Promise.all(items.map(i => base44.entities.PurchaseOrder.delete(i.id)))),
-                  base44.entities.InventoryItem.list().then(items => Promise.all(items.map(i => base44.entities.InventoryItem.delete(i.id)))),
-                  base44.entities.GiftCard.list().then(items => Promise.all(items.map(i => base44.entities.GiftCard.delete(i.id)))),
-                  base44.entities.Reward.list().then(items => Promise.all(items.map(i => base44.entities.Reward.delete(i.id)))),
-                  base44.entities.Invoice.list().then(items => Promise.all(items.map(i => base44.entities.Invoice.delete(i.id)))),
-                  base44.entities.Export.list().then(items => Promise.all(items.map(i => base44.entities.Export.delete(i.id)))),
-                ]);
-                setResetting(false);
-                setConfirmReset(false);
-              }}
-              disabled={resetting}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-xl gap-2"
-            >
+            <Button onClick={handleReset} disabled={resetting} className="bg-red-600 hover:bg-red-700 text-white rounded-xl gap-2">
               <Trash2 className="h-4 w-4" />
               {resetting ? 'Deleting...' : 'Yes, Delete Everything'}
             </Button>
