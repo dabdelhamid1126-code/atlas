@@ -314,7 +314,7 @@ export default function POFormModal({
               const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
               return selectedCard ? (
                 <div className="text-sm text-slate-600">
-                  Selected: {selectedCard.card_name} ({selectedCard.id?.slice(-4)})
+                  {selectedCard.card_name} ({selectedCard.id?.slice(-4)})
                 </div>
               ) : null;
             })()}
