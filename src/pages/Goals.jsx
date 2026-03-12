@@ -106,70 +106,81 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
 
   if (isEmbedded) {
     return (
-      <div className="space-y-6">
-        {goalTypes.map(({ key, label, color }) => (
-          <div key={key} className="pb-6 border-b border-border last:border-0 last:pb-0">
-            <div className={`text-sm font-semibold ${color} mb-4`}>{label}</div>
-            
-            <div className="flex items-center justify-between gap-4">
-              {/* Timeframe & Input */}
-              <div className="flex items-center gap-3">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleValueChange(key, 'weekly', goals[key].weekly)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                      goals[key].weeklyActive
-                        ? 'bg-purple-600 text-white border border-purple-600'
-                        : 'bg-transparent text-muted-foreground border border-border hover:text-foreground'
-                    }`}
-                  >
-                    Weekly
-                  </button>
-                  <button
-                    onClick={() => handleValueChange(key, 'monthly', goals[key].monthly)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                      goals[key].monthlyActive
-                        ? 'bg-purple-600 text-white border border-purple-600'
-                        : 'bg-transparent text-muted-foreground border border-border hover:text-foreground'
-                    }`}
-                  >
-                    Monthly
-                  </button>
-                </div>
+      <div className="space-y-0">
+        {goalTypes.map(({ key, label, color }, idx) => (
+          <div key={key} className={`py-5 flex items-center gap-4 ${idx !== goalTypes.length - 1 ? 'border-b border-slate-100' : ''}`}>
+            {/* Goal Name */}
+            <div className={`w-24 text-sm font-semibold ${color}`}>{label}</div>
 
-                <div className="flex items-center gap-1">
-                  {key !== 'transactions' && <span className="text-muted-foreground text-sm">$</span>}
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    value={goals[key].weekly || goals[key].monthly || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (goals[key].weeklyActive) handleValueChange(key, 'weekly', val);
-                      else handleValueChange(key, 'monthly', val);
-                    }}
-                    className="bg-secondary border-border w-24 h-8 text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Toggle */}
-              <Switch
-                checked={goals[key].weeklyActive || goals[key].monthlyActive}
-                onCheckedChange={(checked) => {
-                  handleActiveChange(key, 'weekly', checked);
-                  handleActiveChange(key, 'monthly', checked);
+            {/* Weekly/Monthly Pills */}
+            <div className="flex gap-1">
+              <button
+                onClick={() => {
+                  handleActiveChange(key, 'weekly', !goals[key].weeklyActive);
+                  handleActiveChange(key, 'monthly', false);
                 }}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  goals[key].weeklyActive
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-slate-600 border border-slate-200'
+                }`}
+              >
+                Weekly
+              </button>
+              <button
+                onClick={() => {
+                  handleActiveChange(key, 'monthly', !goals[key].monthlyActive);
+                  handleActiveChange(key, 'weekly', false);
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  goals[key].monthlyActive
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-slate-600 border border-slate-200'
+                }`}
+              >
+                Monthly
+              </button>
+            </div>
+
+            {/* Input Field */}
+            <div className="relative w-40">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                {key !== 'transactions' ? '$' : ''}
+              </span>
+              <Input
+                type="number"
+                placeholder={key === 'transactions' ? '0' : '0.00'}
+                value={goals[key].weekly || goals[key].monthly || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (goals[key].weeklyActive) handleValueChange(key, 'weekly', val);
+                  else handleValueChange(key, 'monthly', val);
+                }}
+                className={`bg-white border border-slate-200 rounded-lg h-9 text-sm w-full ${
+                  key !== 'transactions' ? 'pl-7 pr-3' : 'px-3'
+                }`}
               />
             </div>
+
+            {/* Toggle Switch */}
+            <Switch
+              checked={goals[key].weeklyActive || goals[key].monthlyActive}
+              onCheckedChange={(checked) => {
+                handleActiveChange(key, 'weekly', checked);
+                handleActiveChange(key, 'monthly', checked);
+              }}
+              className={`${
+                (goals[key].weeklyActive || goals[key].monthlyActive) ? 'bg-green-500' : 'bg-slate-300'
+              }`}
+            />
           </div>
         ))}
 
-        <div className="pt-4">
+        <div className="pt-6 mt-2">
           <Button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
-            className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-6"
+            className="bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg px-6 py-2 font-semibold transition-colors"
           >
             {saveMutation.isPending ? 'Saving...' : 'Save Goals'}
           </Button>
