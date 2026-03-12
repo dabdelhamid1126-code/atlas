@@ -1,58 +1,92 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Settings, Eye, EyeOff, Download, Pencil, ArrowUpRight, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Settings, Eye, Download, Pencil, ArrowUpRight, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 
-const DEFAULT_COLUMNS = [
-  { id: 'date', label: 'DATE', visible: true },
-  { id: 'product', label: 'PRODUCT', visible: true },
-  { id: 'vendor', label: 'VENDOR', visible: true },
-  { id: 'platform', label: 'PLATFORM', visible: true },
-  { id: 'qty', label: 'QTY', visible: true },
-  { id: 'cost', label: 'COST', visible: true },
-  { id: 'sale', label: 'SALE', visible: true },
-  { id: 'profit', label: 'PROFIT', visible: true },
-  { id: 'cashback', label: 'CASHBACK', visible: true },
-  { id: 'orderNum', label: 'ORDER #', visible: true },
-  { id: 'tracking', label: 'TRACKING #', visible: true },
-  { id: 'payment', label: 'PAYMENT', visible: true },
-  { id: 'status', label: 'STATUS', visible: true },
+const COLUMNS = [
+  { id: 'date', label: 'DATE', width: '90px', sortable: true },
+  { id: 'product', label: 'PRODUCT', width: '120px' },
+  { id: 'vendor', label: 'VENDOR', width: '100px' },
+  { id: 'platform', label: 'PLATFORM', width: '90px' },
+  { id: 'qty', label: 'QTY', width: '50px' },
+  { id: 'cost', label: 'COST', width: '90px' },
+  { id: 'sale', label: 'SALE', width: '90px' },
+  { id: 'profit', label: 'PROFIT', width: '80px' },
+  { id: 'cashback', label: 'CASHBACK', width: '90px' },
+  { id: 'orderNum', label: 'ORDER #', width: '100px' },
+  { id: 'tracking', label: 'TRACKING #', width: '100px' },
+  { id: 'payment', label: 'PAYMENT', width: '150px' },
+  { id: 'status', label: 'STATUS', width: '100px' },
 ];
 
 const ROWS_PER_PAGE = 10;
 
 export default function TransactionsTable({ data = [], onEdit, onDelete, onExpand }) {
-  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState('date');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [visibleColumns, setVisibleColumns] = useState(COLUMNS.map(c => c.id));
 
-  const visibleColumns = useMemo(() => columns.filter(col => col.visible), [columns]);
+  const sortedData = useMemo(() => {
+    const sorted = [...data].sort((a, b) => {
+      let aVal = a[sortColumn];
+      let bVal = b[sortColumn];
 
-  const toggleColumn = useCallback((columnId) => {
-    setColumns(prev =>
-      prev.map(col =>
-        col.id === columnId ? { ...col, visible: !col.visible } : col
-      )
+      if (sortColumn === 'date') {
+        aVal = new Date(a.order_date || a.created_date);
+        bVal = new Date(b.order_date || b.created_date);
+      } else if (sortColumn === 'product') {
+        aVal = a.product_name || '';
+        bVal = b.product_name || '';
+      } else if (sortColumn === 'vendor') {
+        aVal = a.retailer || '';
+        bVal = b.retailer || '';
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [data, sortColumn, sortDirection]);
+
+  const totalPages = Math.ceil(sortedData.length / ROWS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
+  const paginatedData = sortedData.slice(startIdx, startIdx + ROWS_PER_PAGE);
+
+  const handleSort = (columnId) => {
+    if (sortColumn === columnId) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(columnId);
+      setSortDirection('asc');
+    }
+  };
+
+  const toggleColumn = (colId) => {
+    setVisibleColumns(prev =>
+      prev.includes(colId) ? prev.filter(c => c !== colId) : [...prev, colId]
     );
-  }, []);
+  };
 
-  const showAllColumns = useCallback(() => {
-    setColumns(prev => prev.map(col => ({ ...col, visible: true })));
-  }, []);
+  const showAllColumns = () => {
+    setVisibleColumns(COLUMNS.map(c => c.id));
+  };
+
+  const displayColumns = COLUMNS.filter(c => visibleColumns.includes(c.id));
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedRows(new Set(data.map((_, i) => i)));
+      setSelectedRows(new Set(sortedData.map((_, i) => i)));
     } else {
       setSelectedRows(new Set());
     }
@@ -68,38 +102,38 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
     setSelectedRows(newSelected);
   };
 
-  const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
-  const paginatedData = data.slice(startIdx, startIdx + ROWS_PER_PAGE);
-
   const formatCurrency = (value) => {
     if (value === null || value === undefined) return '—';
-    return `$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${Math.abs(value).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return format(new Date(dateStr), 'MM/dd/yyyy');
+    return format(new Date(dateStr), 'M/d/yyyy');
   };
 
-  const truncateText = (text, maxLength = 15) => {
+  const truncateText = (text, length = 20) => {
     if (!text) return '—';
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    return text.length > length ? text.substring(0, length) + '...' : text;
   };
 
-  const getStatusColor = (status) => {
+  const getStatusStyles = (status) => {
     const statusLower = status?.toLowerCase() || '';
-    if (statusLower === 'purchased' || statusLower === 'ordered') return 'bg-blue-100 text-blue-700';
-    if (statusLower === 'shipped') return 'bg-purple-100 text-purple-700';
-    if (statusLower === 'received') return 'bg-green-100 text-green-700';
-    if (statusLower === 'cancelled') return 'bg-red-100 text-red-700';
-    return 'bg-slate-100 text-slate-700';
+    if (statusLower === 'purchased') return { bg: '#dbeafe', text: '#1d4ed8' };
+    if (statusLower === 'shipped') return { bg: '#fef3c7', text: '#d97706' };
+    if (statusLower === 'received') return { bg: '#dcfce7', text: '#16a34a' };
+    if (statusLower === 'ordered') return { bg: '#e0e7ff', text: '#4338ca' };
+    if (statusLower === 'cancelled') return { bg: '#fee2e2', text: '#dc2626' };
+    return { bg: '#f3f4f6', text: '#374151' };
   };
 
   const downloadCSV = () => {
-    const headers = visibleColumns.map(col => col.label).join(',');
-    const rows = data.map(row => {
-      return visibleColumns.map(col => {
+    const headers = displayColumns.map(c => c.label).join(',');
+    const rows = sortedData.map(row => {
+      return displayColumns.map(col => {
         let value = '';
         switch (col.id) {
           case 'date':
@@ -115,7 +149,7 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
             value = row.platform || '';
             break;
           case 'qty':
-            value = row.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || '';
+            value = row.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || '0';
             break;
           case 'cost':
             value = row.total_cost || row.original_price || '';
@@ -124,7 +158,7 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
             value = row.final_cost || row.total_cost || '';
             break;
           case 'profit':
-            value = (row.final_cost || row.total_cost) - (row.total_cost || 0) || '';
+            value = (row.final_cost || row.total_cost || 0) - (row.total_cost || 0);
             break;
           case 'cashback':
             value = row.bonus_amount || '';
@@ -141,8 +175,6 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
           case 'status':
             value = row.status || '';
             break;
-          default:
-            value = '';
         }
         return `"${String(value).replace(/"/g, '""')}"`;
       }).join(',');
@@ -172,20 +204,23 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            {columns.map(col => (
+            {COLUMNS.map(col => (
               <DropdownMenuCheckboxItem
                 key={col.id}
-                checked={col.visible}
+                checked={visibleColumns.includes(col.id)}
                 onCheckedChange={() => toggleColumn(col.id)}
               >
                 {col.label}
               </DropdownMenuCheckboxItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={showAllColumns}>
-              <Eye className="h-4 w-4 mr-2" />
+            <button
+              onClick={showAllColumns}
+              className="w-full px-2 py-1.5 text-sm hover:bg-slate-100 flex items-center gap-2"
+            >
+              <Eye className="h-4 w-4" />
               Show All
-            </DropdownMenuItem>
+            </button>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -210,27 +245,38 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
       <div className="border rounded-lg overflow-hidden bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 py-3 w-10 text-center">
                   <input
                     type="checkbox"
-                    checked={selectedRows.size === data.length && data.length > 0}
+                    checked={selectedRows.size === sortedData.length && sortedData.length > 0}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="rounded"
                   />
                 </th>
-                {visibleColumns.map(col => (
+                {displayColumns.map(col => (
                   <th
                     key={col.id}
-                    className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 whitespace-nowrap ${
-                      ['qty', 'cost', 'sale', 'profit', 'cashback'].includes(col.id) ? 'text-right' : ''
+                    onClick={() => col.sortable && handleSort(col.id)}
+                    style={{ width: col.width }}
+                    className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-gray-700 ${
+                      col.id === 'qty' ? 'text-center' : ''
                     }`}
                   >
-                    {col.label}
+                    <div className="flex items-center gap-1">
+                      {col.label}
+                      {col.sortable && (
+                        <span className="text-gray-400 text-xs">
+                          {sortColumn === col.id && (sortDirection === 'asc' ? '↑' : '↓')}
+                        </span>
+                      )}
+                    </div>
                   </th>
                 ))}
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-700">Actions</th>
+                <th style={{ width: '80px' }} className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -240,8 +286,8 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
                 return (
                   <tr
                     key={row.id || idx}
-                    className={`border-b hover:bg-slate-50 transition ${
-                      isSelected ? 'bg-blue-50' : ''
+                    className={`border-b border-slate-100 hover:bg-slate-50 transition group ${
+                      isSelected ? 'bg-blue-50' : 'bg-white'
                     }`}
                   >
                     <td className="px-4 py-3 text-center">
@@ -253,59 +299,61 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
                       />
                     </td>
 
-                    {visibleColumns.map(col => {
-                      let cellContent = '—';
-                      let cellClass = 'px-4 py-3 text-slate-900';
+                    {displayColumns.map(col => {
+                      let content = '—';
+                      let cellClass = 'px-4 py-3';
 
                       switch (col.id) {
                         case 'date':
-                          cellContent = formatDate(row.order_date || row.created_date);
-                          cellClass += ' text-slate-500';
+                          content = formatDate(row.order_date || row.created_date);
+                          cellClass += ' text-gray-600';
                           break;
                         case 'product':
-                          cellContent = row.product_name || row.items?.[0]?.product_name || '';
-                          cellClass += ' font-semibold';
+                          content = row.product_name || row.items?.[0]?.product_name || '—';
+                          cellClass += ' font-semibold text-gray-900';
                           break;
                         case 'vendor':
-                          cellContent = row.retailer || '—';
+                          content = row.retailer || '—';
+                          cellClass += ' text-gray-700';
                           break;
                         case 'platform':
-                          cellContent = row.platform || '—';
+                          content = row.platform || '—';
+                          cellClass += ' text-gray-700 text-center';
                           break;
                         case 'qty':
-                          cellContent = row.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || '0';
-                          cellClass += ' text-right';
+                          content = row.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || '0';
+                          cellClass += ' text-center text-gray-700';
                           break;
                         case 'cost':
-                          cellContent = formatCurrency(row.total_cost || row.original_price);
-                          cellClass += ' text-right text-purple-600 font-semibold';
+                          content = formatCurrency(row.total_cost || row.original_price);
+                          cellClass += ' text-purple-700 font-semibold';
                           break;
                         case 'sale':
-                          cellContent = formatCurrency(row.final_cost || row.total_cost);
-                          cellClass += ' text-right text-green-600 font-semibold';
+                          content = formatCurrency(row.final_cost || row.total_cost);
+                          cellClass += ' text-green-600 font-semibold';
                           break;
                         case 'profit':
                           {
-                            const profit = (row.final_cost || row.total_cost) - (row.total_cost || 0);
-                            cellContent = formatCurrency(profit);
-                            cellClass += ' text-right text-green-600 font-semibold';
+                            const profit = (row.final_cost || row.total_cost || 0) - (row.total_cost || 0);
+                            content = formatCurrency(profit);
+                            cellClass += ' text-green-600 font-semibold';
                           }
                           break;
                         case 'cashback':
-                          cellContent = formatCurrency(row.bonus_amount);
-                          cellClass += ' text-right text-blue-600 font-semibold';
+                          content = formatCurrency(row.bonus_amount);
+                          cellClass += ' text-green-600 font-semibold';
                           break;
                         case 'orderNum':
                           {
                             const orderNum = row.order_number || '—';
-                            const truncated = truncateText(orderNum, 12);
-                            cellContent = (
+                            const truncated = truncateText(orderNum, 10);
+                            content = (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="cursor-help">{truncated}</span>
                                   </TooltipTrigger>
-                                  <TooltipContent>{orderNum}</TooltipContent>
+                                  {orderNum !== '—' && <TooltipContent>{orderNum}</TooltipContent>}
                                 </Tooltip>
                               </TooltipProvider>
                             );
@@ -314,49 +362,54 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
                         case 'tracking':
                           {
                             const tracking = row.tracking_number || '—';
-                            const truncated = truncateText(tracking, 15);
-                            cellContent = (
+                            const truncated = truncateText(tracking, 12);
+                            content = (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="cursor-help">{truncated}</span>
                                   </TooltipTrigger>
-                                  <TooltipContent>{tracking}</TooltipContent>
+                                  {tracking !== '—' && <TooltipContent>{tracking}</TooltipContent>}
                                 </Tooltip>
                               </TooltipProvider>
                             );
                           }
                           break;
                         case 'payment':
-                          cellContent = truncateText(row.card_name || '—', 20);
+                          content = truncateText(row.card_name || '—', 24);
                           break;
                         case 'status':
-                          cellContent = (
-                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(row.status)}`}>
-                              {(row.status || 'UNKNOWN').toUpperCase()}
-                            </span>
-                          );
-                          break;
-                        default:
+                          {
+                            const statusVal = row.status || 'unknown';
+                            const styles = getStatusStyles(statusVal);
+                            content = (
+                              <span
+                                className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                                style={{ backgroundColor: styles.bg, color: styles.text }}
+                              >
+                                {statusVal.toUpperCase()}
+                              </span>
+                            );
+                          }
                           break;
                       }
 
                       return (
-                        <td key={col.id} className={cellClass}>
-                          {cellContent}
+                        <td key={col.id} className={cellClass} style={{ width: col.width }}>
+                          {content}
                         </td>
                       );
                     })}
 
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="px-4 py-3 text-right" style={{ width: '80px' }}>
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 hover:opacity-100">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-slate-500 hover:text-slate-700"
+                                className="h-8 w-8 text-gray-500"
                                 onClick={() => onEdit?.(row)}
                               >
                                 <Pencil className="h-4 w-4" />
@@ -370,7 +423,7 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-slate-500 hover:text-slate-700"
+                                className="h-8 w-8 text-gray-500"
                                 onClick={() => onExpand?.(row)}
                               >
                                 <ArrowUpRight className="h-4 w-4" />
@@ -384,7 +437,7 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-red-500 hover:text-red-700"
+                                className="h-8 w-8 text-red-500"
                                 onClick={() => onDelete?.(row)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -402,17 +455,17 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
           </table>
         </div>
 
-        {data.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
+        {sortedData.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
             <p>No transactions found</p>
           </div>
         )}
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-slate-600">
+      <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          Showing {data.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + ROWS_PER_PAGE, data.length)} of {data.length}
+          Showing {sortedData.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + ROWS_PER_PAGE, sortedData.length)} of {sortedData.length}
         </span>
         <div className="flex items-center gap-2">
           <Button
@@ -423,14 +476,14 @@ export default function TransactionsTable({ data = [], onEdit, onDelete, onExpan
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="px-3">
-            Page {data.length === 0 ? 0 : currentPage} of {totalPages || 1}
+          <span className="px-3 text-sm">
+            Page {sortedData.length === 0 ? 0 : currentPage} of {totalPages || 1}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages || data.length === 0}
+            disabled={currentPage === totalPages || sortedData.length === 0}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
