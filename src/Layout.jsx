@@ -40,7 +40,6 @@ const navigationGroups = [
   {
     label: 'ORDERS',
     items: [
-      { name: 'Transactions', page: 'Transactions', icon: ArrowLeftRight },
       { name: 'Purchase Orders', page: 'PurchaseOrders', icon: PackageCheck },
       { name: 'Import from Email', page: 'EmailImport', icon: Search },
       { name: 'Order Lookup', page: 'OrderLookup', icon: HelpCircle },
