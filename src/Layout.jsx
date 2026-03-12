@@ -69,11 +69,11 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   const userRole = user?.role || 'user';
-  
-  const filteredNav = navigation.filter(item => {
-    if (!item.roles) return true;
-    return item.roles.includes(userRole);
-  });
+
+  const filteredGroups = navigationGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => !item.roles || item.roles.includes(userRole))
+  })).filter(group => group.items.length > 0);
 
   const handleLogout = () => {
     base44.auth.logout();
