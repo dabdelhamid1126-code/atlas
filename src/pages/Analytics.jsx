@@ -250,8 +250,13 @@ export default function Analytics() {
         <PaymentsTab orders={filteredOrders} rewards={allRewards} creditCards={allCreditCards} />
       )}
 
+      {/* Detail Tables Tab */}
+      {activeTab === 'Detail Tables' && (
+        <DetailTablesTab orders={filteredOrders} invoices={filteredInvoices} rewards={allRewards} />
+      )}
+
       {/* Placeholder tabs */}
-      {activeTab !== 'Overview' && activeTab !== 'Breakdowns' && activeTab !== 'Payments' && (
+      {activeTab !== 'Overview' && activeTab !== 'Breakdowns' && activeTab !== 'Payments' && activeTab !== 'Detail Tables' && (
         <div className="flex items-center justify-center h-48 rounded-xl border border-border bg-card text-muted-foreground text-sm">
           {activeTab} — coming soon
         </div>
