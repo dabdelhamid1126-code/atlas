@@ -205,14 +205,16 @@ export default function Analytics() {
             type="date"
             value={dateFrom}
             onChange={e => setDateFrom(e.target.value)}
-            className="bg-secondary border border-border text-foreground text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+            className="text-xs rounded-lg px-2 py-1.5 focus:outline-none"
+            style={{ background: '#0d0f1e', border: '1px solid #2a2d3e', color: '#e5e7eb' }}
           />
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           <input
             type="date"
             value={dateTo}
             onChange={e => setDateTo(e.target.value)}
-            className="bg-secondary border border-border text-foreground text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+            className="text-xs rounded-lg px-2 py-1.5 focus:outline-none"
+            style={{ background: '#0d0f1e', border: '1px solid #2a2d3e', color: '#e5e7eb' }}
           />
         </div>
       </div>
