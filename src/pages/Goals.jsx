@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Target } from 'lucide-react';
+import GoalToggle from '@/components/GoalToggle';
 
 export default function Goals({ isEmbedded = false, onSave = null }) {
   const queryClient = useQueryClient();
@@ -98,10 +99,10 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
   if (isLoading) return <div>Loading...</div>;
 
   const goalTypes = [
-    { key: 'profit', label: 'Profit', color: 'text-teal-400' },
-    { key: 'revenue', label: 'Revenue', color: 'text-green-400' },
-    { key: 'cashback', label: 'Cashback', color: 'text-pink-400' },
-    { key: 'transactions', label: 'Transactions', color: 'text-purple-400' },
+    { key: 'profit', label: 'Profit', color: 'text-green-600' },
+    { key: 'revenue', label: 'Revenue', color: 'text-indigo-600' },
+    { key: 'cashback', label: 'Cashback', color: 'text-pink-600' },
+    { key: 'transactions', label: 'Transactions', color: 'text-amber-600' },
   ];
 
   if (isEmbedded) {
