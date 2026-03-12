@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Analytics from './pages/Analytics';
+import Dashboard from './pages/Dashboard';
 import EmailImport from './pages/EmailImport';
 import GiftCards from './pages/GiftCards';
 import Inventory from './pages/Inventory';
@@ -58,13 +59,13 @@ import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
 import Rewards from './pages/Rewards';
-import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Analytics": Analytics,
+    "Dashboard": Dashboard,
     "EmailImport": EmailImport,
     "GiftCards": GiftCards,
     "Inventory": Inventory,
@@ -75,7 +76,6 @@ export const PAGES = {
     "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,
     "Rewards": Rewards,
-    "Dashboard": Dashboard,
     "Settings": Settings,
 }
 
