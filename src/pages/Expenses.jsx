@@ -99,10 +99,16 @@ export default function Expenses() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
 
+  const [creditCards, setCreditCards] = useState([]);
+
   const load = async () => {
     setLoading(true);
-    const data = await base44.entities.Expense.list('-created_date');
+    const [data, cards] = await Promise.all([
+      base44.entities.Expense.list('-created_date'),
+      base44.entities.CreditCard.list(),
+    ]);
     setExpenses(data);
+    setCreditCards(cards.filter(c => c.active !== false));
     setLoading(false);
   };
 

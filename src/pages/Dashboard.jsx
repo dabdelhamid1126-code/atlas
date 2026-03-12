@@ -75,6 +75,7 @@ export default function Dashboard() {
   const [allOrders, setAllOrders] = useState([]);
   const [allRewards, setAllRewards] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
+  const [allExpenses, setAllExpenses] = useState([]);
   const [timeFilter, setTimeFilter] = useState('30 Days');
   const [typeFilter, setTypeFilter] = useState('All');
   const [goals, setGoals] = useState({});
