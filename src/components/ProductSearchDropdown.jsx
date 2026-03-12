@@ -84,9 +84,7 @@ export default function ProductSearchDropdown({
                     <p className="text-xs text-slate-500">{selectedProduct.upc}</p>
                   )}
                 </div>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded whitespace-nowrap flex-shrink-0">
-                  ✓ From inventory
-                </span>
+
                 <button
                   onClick={handleClear}
                   className="p-1 hover:bg-slate-100 rounded flex-shrink-0"
