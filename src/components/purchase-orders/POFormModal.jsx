@@ -301,8 +301,13 @@ export default function POFormModal({
                   );
                 })}
               </SelectContent>
-            </Select>
-          </div>
+              </Select>
+              {formData.credit_card_id && (
+              <div className="text-sm text-slate-600">
+                Selected: {creditCards.find(c => c.id === formData.credit_card_id)?.card_name || 'Unnamed Card'} ({creditCards.find(c => c.id === formData.credit_card_id)?.id.slice(-4)})
+              </div>
+              )}
+              </div>
 
           {/* Gift Cards */}
           <div className="space-y-2">
