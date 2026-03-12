@@ -25,6 +25,7 @@ import {
 import { Plus, Search, Eye, Trash2, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
+import ProductSearchDropdown from '@/components/ProductSearchDropdown';
 
 const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'received', 'cancelled'];
 
@@ -555,15 +556,17 @@ export default function PurchaseOrders() {
       newItems[index][field] = value;
     }
     
-    if (field === 'product_id') {
-      const product = products.find(p => p.id === value);
-      if (product) {
-        newItems[index].product_id = value;
-        newItems[index].product_name = product.name;
-        newItems[index].upc = product.upc;
-      }
-    }
-    
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const handleProductSelect = (index, product) => {
+    const newItems = [...formData.items];
+    newItems[index].product_id = product.id;
+    newItems[index].product_name = product.name;
+    newItems[index].upc = product.upc;
+    newItems[index].unit_cost = parseFloat(product.price) || 0;
+    newItems[index].quantity_ordered = 1;
+    newItems[index].quantity_received = 0;
     setFormData({ ...formData, items: newItems });
   };
 
@@ -1267,44 +1270,21 @@ export default function PurchaseOrders() {
                 </Button>
               </div>
               <div className="space-y-3">
-                {formData.items.map((item, index) => {
-                  const searchValue = productSearches[index] || '';
-                  const filteredProducts = products.filter(p => 
-                    !searchValue || 
-                    p.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-                    p.upc?.includes(searchValue)
-                  );
-                  return (
-                  <div key={index} className="flex gap-2 items-end p-3 bg-slate-50 rounded-lg">
-                    <div className="flex-1">
-                      <Label className="text-xs">Product</Label>
-                      <div className="relative mb-2">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                          value={searchValue}
-                          onChange={(e) => setProductSearches({...productSearches, [index]: e.target.value})}
-                          placeholder="Search products..."
-                          className="pl-9"
-                        />
-                      </div>
-                      <Select
-                        value={item.product_name}
-                        onValueChange={(v) => {
-                          const product = products.find(p => p.name === v);
-                          updateItem(index, 'product_id', product?.id || '');
-                          setProductSearches({...productSearches, [index]: ''});
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {filteredProducts.map(p => (
-                            <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                {formData.items.map((item, index) => (
+                   <div key={index} className="flex gap-2 items-end p-3 bg-slate-50 rounded-lg">
+                     <div className="flex-1">
+                       <Label className="text-xs">Product</Label>
+                       <div className="mb-2">
+                         <ProductSearchDropdown
+                           products={products}
+                           value={item.product_id}
+                           onChange={(productId) => updateItem(index, 'product_id', productId)}
+                           onSelect={(product) => handleProductSelect(index, product)}
+                           searchValue={productSearches[index] || ''}
+                           onSearchChange={(value) => setProductSearches({...productSearches, [index]: value})}
+                         />
+                       </div>
+                     </div>
                     <div className="w-24">
                       <Label className="text-xs">Qty Ordered</Label>
                       <Input
@@ -1335,9 +1315,8 @@ export default function PurchaseOrders() {
                     <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
                       <X className="h-4 w-4" />
                     </Button>
-                  </div>
-                );
-                })}
+                    </div>
+                    ))}
                 {formData.items.length === 0 && (
                   <p className="text-sm text-slate-500 text-center py-4">No items added</p>
                 )}
