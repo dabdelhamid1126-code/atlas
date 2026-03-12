@@ -37,9 +37,11 @@ export default function Transactions() {
     Promise.all([
       base44.entities.PurchaseOrder.list('-order_date', 500),
       base44.entities.Reward.list('-created_date', 500),
-    ]).then(([o, r]) => {
+      base44.entities.CreditCard.list(),
+    ]).then(([o, r, cc]) => {
       setOrders(o);
       setRewards(r);
+      setCreditCards(cc);
     }).finally(() => setLoading(false));
   }, []);
 
