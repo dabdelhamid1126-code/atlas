@@ -133,44 +133,42 @@ export default function AddTransaction() {
   };
 
   return (
-    <div style={{ background: BG, minHeight: '100vh', color: '#e5e7eb' }}>
+    <div className="min-h-screen p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Add Transaction</h1>
-        <p style={{ color: MUTED, fontSize: 14, marginTop: 2 }}>Record a new purchase — pick your mode and fill in the details</p>
+      <div className="mb-8">
+        <h1 className="text-page-title mb-2">Add Transaction</h1>
+        <p className="text-page-subtitle">Record a new purchase — pick your mode</p>
       </div>
 
       {/* Mode Selector */}
-      <div style={SECTION_CARD}>
-        <div className="flex flex-wrap items-center gap-4 mb-3">
-          {[
-            { key: 'churning', label: 'Churning', icon: <Flame size={14} /> },
-            { key: 'marketplace', label: 'Marketplace', icon: <Globe size={14} /> },
-          ].map(tab => (
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[
+          { key: 'churning', label: 'Churning', icon: Flame, desc: 'Buy → Ship → Scan → Get Paid', sub: 'Wholesale buyer transactions' },
+          { key: 'marketplace', label: 'Marketplace', icon: Globe, desc: 'List → Sell → Get Paid', sub: 'eBay, Amazon, Facebook etc.' },
+        ].map(m => {
+          const Icon = m.icon;
+          return (
             <button
-              key={tab.key}
-              onClick={() => setMode(tab.key)}
-              className="flex items-center gap-2 pb-2 text-sm font-semibold transition-all"
-              style={mode === tab.key
-                ? { color: '#fff', borderBottom: '2px solid #6366f1' }
-                : { color: MUTED, borderBottom: '2px solid transparent' }
-              }
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className={`p-6 rounded-[16px] border-2 transition-all text-left ${mode === m.key ? 'border-purple-400 bg-[rgba(124,58,237,0.2)] shadow-lg shadow-purple-500/30' : 'border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.1)]'}`}
+              style={{ backdropFilter: 'blur(12px)' }}
             >
-              {tab.icon} {tab.label}
+              <div className="flex items-center gap-3 mb-3">
+                <Icon size={20} className={mode === m.key ? 'text-purple-400' : 'text-[rgba(255,255,255,0.4)]'} />
+                <span className="font-bold text-white text-lg">{m.label}</span>
+              </div>
+              <p className="text-sm text-white mb-1">{m.desc}</p>
+              <p className="text-xs text-[rgba(255,255,255,0.4)]">{m.sub}</p>
             </button>
-          ))}
-          <span style={{ color: MUTED, fontSize: 12, marginLeft: 4 }}>
-            {mode === 'churning'
-              ? 'For credit card churning transactions (buy → earn cashback)'
-              : 'For wholesale buyer transactions (buy → ship → scan → get paid)'}
-          </span>
-        </div>
-        <button
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm"
-          style={{ background: '#12152a', border: `1px solid ${BORDER}`, color: '#e5e7eb' }}
-        >
-          <RefreshCw size={13} /> Multi-Item Order
-        </button>
+          );
+        })}
+      </div>
+
+      {/* Multi-Item Toggle */}
+      <div className="mb-8 flex items-center gap-3">
+        <input type="checkbox" checked={multiItem} onChange={e => setMultiItem(e.target.checked)} className="w-4 h-4 accent-purple-500 cursor-pointer" />
+        <label className="text-sm text-white font-medium cursor-pointer">Multi-Item Order</label>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
