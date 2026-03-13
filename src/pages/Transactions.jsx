@@ -424,7 +424,7 @@ export default function Transactions() {
     { id: 'date', label: 'Date' },
     { id: 'product', label: 'Product' },
     { id: 'vendor', label: 'Vendor' },
-    { id: 'platform', label: 'Platform' },
+
     { id: 'qty', label: 'Qty' },
     { id: 'cost', label: 'Cost' },
     { id: 'sale', label: 'Sale' },
