@@ -11,7 +11,7 @@ const COLUMN_WIDTHS = {
   date: '90px',
   product: '150px',
   vendor: '100px',
-  platform: '90px',
+
   qty: '50px',
   cost: '90px',
   sale: '90px',
