@@ -75,7 +75,7 @@ export default function TransactionsFilters({
 
         <Select value={accountFilter} onValueChange={onAccountChange}>
           <SelectTrigger className="w-36 bg-slate-50 border-slate-200 text-sm rounded-lg">
-            <SelectValue />
+            <SelectValue placeholder="All Platforms">{accountFilter === 'all' ? 'All Platforms' : accountFilter}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Platforms</SelectItem>
