@@ -110,7 +110,7 @@ export default function TransactionsFilters({
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Payment Method</label>
             <Select value={paymentMethodFilter} onValueChange={onPaymentMethodChange}>
               <SelectTrigger className="bg-slate-50 border-slate-200 text-sm">
-                <SelectValue />
+                <SelectValue placeholder="All Payment Methods">{paymentMethodFilter === 'all' ? 'All Payment Methods' : (creditCards.find(c => c.id === paymentMethodFilter)?.card_name || paymentMethodFilter)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Cards</SelectItem>
