@@ -498,8 +498,7 @@ export default function Transactions() {
         onStatusChange={setStatusFilter}
         vendorFilter={vendorFilter}
         onVendorChange={setVendorFilter}
-        platformFilter={platformFilter}
-        onPlatformChange={setPlatformFilter}
+
         fromDate={fromDate}
         onFromDateChange={setFromDate}
         toDate={toDate}
