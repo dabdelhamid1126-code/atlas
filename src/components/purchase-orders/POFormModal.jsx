@@ -37,9 +37,7 @@ export default function POFormModal({
   sellers,
   isPending
 }) {
-  const [formData, setFormData] = useState(() => getInitialForm(order));
-
-  const getInitialForm = (order) => order ? {
+  const getInitialForm = (o) => o ? {
     order_number: order.order_number || '',
     tracking_number: order.tracking_number || '',
     retailer: order.retailer || '',
