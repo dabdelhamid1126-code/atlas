@@ -129,7 +129,7 @@ export default function TransactionsFilters({
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {CATEGORIES.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
