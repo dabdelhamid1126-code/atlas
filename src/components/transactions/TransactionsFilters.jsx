@@ -63,7 +63,7 @@ export default function TransactionsFilters({
 
         <Select value={vendorFilter} onValueChange={onVendorChange}>
           <SelectTrigger className="w-36 bg-slate-50 border-slate-200 text-sm rounded-lg">
-            <SelectValue />
+            <SelectValue placeholder="All Vendors">{vendorFilter === 'all' ? 'All Vendors' : vendorFilter}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Vendors</SelectItem>
