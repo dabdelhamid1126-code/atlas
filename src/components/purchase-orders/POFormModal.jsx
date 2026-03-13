@@ -264,12 +264,6 @@ export default function POFormModal({
           <div className="flex gap-0">
             {/* Left: Form */}
             <div className="flex-1 p-6 space-y-5 overflow-y-auto">
-              {/* Multi-item toggle */}
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
-                <input type="checkbox" checked={formData.multi_item} onChange={e => set('multi_item', e.target.checked)} className="rounded" />
-                <ShoppingCart className="h-4 w-4" /> Multi-Item Order
-              </label>
-
               {/* PRODUCT INFORMATION */}
               {!formData.multi_item ? (
                 <div className="border rounded-xl p-4 space-y-3">
