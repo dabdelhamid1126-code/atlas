@@ -199,6 +199,35 @@ export default function POFormModal({
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-5">
 
+          {/* ORDER TYPE */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => set('order_type', 'churning')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition ${
+                formData.order_type === 'churning'
+                  ? 'bg-amber-50 border-amber-400 text-amber-700'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              <Tag className="h-4 w-4" /> Churning
+            </button>
+            <button
+              type="button"
+              onClick={() => set('order_type', 'marketplace')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition ${
+                formData.order_type === 'marketplace'
+                  ? 'bg-blue-50 border-blue-400 text-blue-700'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              <Globe className="h-4 w-4" /> Marketplace
+            </button>
+            {formData.order_type === 'marketplace' && (
+              <span className="text-xs text-slate-400 ml-1">Wholesale buyer transaction</span>
+            )}
+          </div>
+
           {/* VENDOR & BUYER */}
           <div className="bg-orange-50 rounded-xl p-4">
             <SectionHeader icon={Truck} label="Vendor & Buyer" color="text-orange-500" />
