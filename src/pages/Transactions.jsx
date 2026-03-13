@@ -410,10 +410,6 @@ export default function Transactions() {
     return [...new Set(orders.map(o => o.retailer).filter(Boolean))].sort();
   }, [orders]);
 
-  const platforms = useMemo(() => {
-    return [...new Set(orders.map(o => o.platform).filter(Boolean))].sort();
-  }, [orders]);
-
   const modes = [
     { id: 'all', label: 'All' },
     { id: 'churning', label: '🔄 Churning' },
