@@ -29,8 +29,9 @@ const Select = ({ value, onValueChange, defaultValue, children }) => {
 
 const SelectGroup = ({ children }) => <div>{children}</div>
 
-const SelectValue = ({ placeholder }) => {
+const SelectValue = ({ placeholder, children }) => {
   const context = React.useContext(SelectContext)
+  if (children) return <span>{children}</span>
   return <span>{context?.value || placeholder}</span>
 }
 
