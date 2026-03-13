@@ -371,7 +371,7 @@ export default function POFormModal({
                 <div className="flex items-center gap-1">
                   <Button type="button" variant="outline" size="icon" className="h-9 w-9 bg-white shrink-0"
                     onClick={() => set('quantity', Math.max(1, quantity - 1))}>−</Button>
-                  <Input className="bg-white text-center text-base font-medium h-10" type="number" min="1"
+                  <Input className="bg-white text-center" type="number" min="1"
                     value={formData.quantity}
                     onChange={(e) => set('quantity', parseInt(e.target.value) || 1)}
                   />
