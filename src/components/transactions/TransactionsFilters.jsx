@@ -63,7 +63,7 @@ export default function TransactionsFilters({
         </Select>
       </div>
 
-      {/* Row 2: Vendor + Platform */}
+      {/* Row 2: Vendor */}
       <div className="grid grid-cols-2 gap-4">
         <Select value={vendorFilter} onValueChange={onVendorChange}>
           <SelectTrigger className="bg-gray-100 border-0 rounded-full text-gray-700">
@@ -73,18 +73,6 @@ export default function TransactionsFilters({
             <SelectItem value="all">All Vendors</SelectItem>
             {vendors.map(v => (
               <SelectItem key={v} value={v}>{v}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={platformFilter} onValueChange={onPlatformChange}>
-          <SelectTrigger className="bg-gray-100 border-0 rounded-full text-gray-700">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Platforms</SelectItem>
-            {platforms.map(p => (
-              <SelectItem key={p} value={p}>{p}</SelectItem>
             ))}
           </SelectContent>
         </Select>
