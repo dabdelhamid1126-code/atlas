@@ -10,8 +10,10 @@ export default defineConfig({
     }),
     react()
   ],
-  server: {
-    allowedHosts: "all",
-    cors: true
-  }
-})
+server: {
+  allowedHosts: [
+    "all",
+    ".modal.host",
+    ".w.modal.host"
+  ]
+}
