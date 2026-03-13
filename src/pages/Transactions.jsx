@@ -527,6 +527,7 @@ export default function Transactions() {
           }
         }}
         creditCards={creditCards}
+        rewards={rewards}
         isLoading={isLoading}
       />
 
