@@ -26,7 +26,7 @@ export default function Transactions() {
   const [sortColumn, setSortColumn] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
   const [visibleColumns, setVisibleColumns] = useState([
-    'date', 'product', 'vendor', 'platform', 'qty', 'cost', 'sale',
+    'date', 'product', 'vendor', 'qty', 'cost', 'sale',
     'profit', 'cashback', 'orderNum', 'tracking', 'payment', 'status', 'actions'
   ]);
   const [formOpen, setFormOpen] = useState(false);
