@@ -473,43 +473,21 @@ export default function Transactions() {
 
   return (
     <div>
-      <PageHeader
-        title="Transactions"
-        description="All purchase orders and transactions"
-        actions={
-          <div className="flex items-center gap-2">
-            <div className="relative group">
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Columns
-              </Button>
-              <div className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg p-2 hidden group-hover:block z-50 min-w-48">
-                {columnOptions.map(col => (
-                  <label key={col.id} className="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={visibleColumns.includes(col.id)}
-                      onChange={() => toggleColumn(col.id)}
-                      className="rounded"
-                    />
-                    {col.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={showAllColumns} title="Show all columns">
-              ▦ PRO
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleCSVDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              CSV
-            </Button>
-            <Button onClick={() => { setEditingOrder(null); setFormOpen(true); }} className="bg-black hover:bg-gray-800 text-white">
-              <Plus className="h-4 w-4 mr-2" /> New Order
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Track and manage your purchases by mode</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCSVDownload}>
+            <Download className="h-4 w-4 mr-2" />
+            CSV
+          </Button>
+          <Button onClick={() => { setEditingOrder(null); setFormOpen(true); }} className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Plus className="h-4 w-4 mr-2" /> New Order
+          </Button>
+        </div>
+      </div>
 
       {/* Mode Tabs */}
       <div className="flex items-center gap-2 mb-6">
