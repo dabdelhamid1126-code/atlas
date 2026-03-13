@@ -327,7 +327,7 @@ export default function Transactions() {
       date: 'DATE',
       product: 'PRODUCT',
       vendor: 'VENDOR',
-      platform: 'PLATFORM',
+
       qty: 'QTY',
       cost: 'COST',
       sale: 'SALE',
