@@ -276,9 +276,28 @@ export default function POFormModal({
                   <div className="flex items-center gap-2 text-purple-600 font-semibold text-xs uppercase tracking-wider">
                     <ShoppingCart className="h-4 w-4" /> Product Information
                   </div>
-                  <div>
+                  <div className="relative">
                     <Label className="text-xs text-gray-600">Product Name *</Label>
-                    <Input className="mt-1 bg-gray-50" value={formData.product_name} onChange={e => set('product_name', e.target.value)} placeholder="e.g. Apple AirPods Pro 2nd Gen" />
+                    <ProductSearchDropdown
+                      products={products}
+                      value={singleProductId}
+                      onChange={v => setSingleProductId(v)}
+                      onSelect={p => {
+                        setSingleProductId(p.id);
+                        setSingleProductSearch(p.name);
+                        set('product_name', p.name);
+                        set('upc', p.upc || '');
+                        set('product_category', p.category || formData.product_category);
+                        set('unit_cost', p.price ? parseFloat(p.price) : formData.unit_cost);
+                      }}
+                      searchValue={singleProductSearch}
+                      onSearchChange={v => {
+                        setSingleProductSearch(v);
+                        set('product_name', v);
+                        if (!v) setSingleProductId('');
+                      }}
+                      placeholder="e.g. Apple AirPods Pro 2nd Gen"
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
