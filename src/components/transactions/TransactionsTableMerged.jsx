@@ -218,11 +218,6 @@ export default function TransactionsTableMerged({
                       </td>
                     )}
 
-                    {visibleColumns.includes('platform') && (
-                      <td style={{ width: COLUMN_WIDTHS.platform }} className="px-3 py-3 text-gray-700">
-                        {order.platform || '—'}
-                      </td>
-                    )}
 
                     {visibleColumns.includes('qty') && (
                       <td style={{ width: COLUMN_WIDTHS.qty }} className="px-3 py-3 text-center text-gray-700">
