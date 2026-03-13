@@ -77,6 +77,7 @@ export default function POFormModal({
     amazon_yacb: o.bonus_notes?.toLowerCase().includes('prime young adult') || false,
     cashback_rate_override: '',
   } : {
+    order_type: 'churning',
     order_number: '',
     tracking_number: '',
     retailer: '',
