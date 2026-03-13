@@ -176,7 +176,12 @@ export default function Transactions() {
   const createRewardForOrder = async (order) => {
     const card = creditCards.find(c => c.id === order.credit_card_id);
     if (!card) return;
-    const amount = order.final_cost || order.total_cost;
+
+    // Use original price for % calculation if flag is set (e.g. Amazon promos)
+    const baseAmount = order.rewards_on_original_price
+      ? (order.original_price || order.total_cost)
+      : (order.final_cost || order.total_cost);
+
     const category = order.category || 'other';
     let pointsMultiplier = card.points_rate || 1;
     let cashbackRate = card.cashback_rate || 0;
@@ -196,43 +201,77 @@ export default function Transactions() {
       if (card.streaming_points_rate) pointsMultiplier = card.streaming_points_rate;
       if (card.streaming_cashback_rate) cashbackRate = card.streaming_cashback_rate;
     }
-    let rewardAmount = 0, rewardType = 'cashback', currency = 'USD';
+
+    const rewardsToCreate = [];
+
+    // Base card reward
     if (card.reward_type === 'cashback' && cashbackRate > 0) {
-      rewardAmount = (amount * cashbackRate / 100).toFixed(2);
-      rewardType = 'cashback';
-      currency = 'USD';
-    } else if (card.reward_type === 'points' && pointsMultiplier > 0) {
-      rewardAmount = Math.round(amount * pointsMultiplier);
-      rewardType = 'points';
-      currency = 'points';
-    } else if (card.reward_type === 'both') {
-      if (cashbackRate > 0) {
-        rewardAmount = (amount * cashbackRate / 100).toFixed(2);
-        rewardType = 'cashback';
-        currency = 'USD';
-      } else if (pointsMultiplier > 0) {
-        rewardAmount = Math.round(amount * pointsMultiplier);
-        rewardType = 'points';
-        currency = 'points';
-      }
-    }
-    if (rewardAmount > 0) {
-      await base44.entities.Reward.create({
-        credit_card_id: order.credit_card_id,
-        card_name: card.card_name,
-        source: card.card_name,
-        type: rewardType,
-        purchase_amount: amount,
-        amount: parseFloat(rewardAmount),
-        currency: currency,
-        purchase_order_id: order.id,
-        order_number: order.order_number,
-        date_earned: order.order_date,
-        status: order.status === 'received' ? 'earned' : 'pending',
+      rewardsToCreate.push({
+        type: 'cashback', currency: 'USD',
+        amount: parseFloat((baseAmount * cashbackRate / 100).toFixed(2)),
         notes: `Auto-generated from order ${order.order_number}`
       });
-      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+    } else if (card.reward_type === 'points' && pointsMultiplier > 0) {
+      rewardsToCreate.push({
+        type: 'points', currency: 'points',
+        amount: Math.round(baseAmount * pointsMultiplier),
+        notes: `Auto-generated from order ${order.order_number}`
+      });
+    } else if (card.reward_type === 'both') {
+      if (cashbackRate > 0) {
+        rewardsToCreate.push({
+          type: 'cashback', currency: 'USD',
+          amount: parseFloat((baseAmount * cashbackRate / 100).toFixed(2)),
+          notes: `Auto-generated from order ${order.order_number}`
+        });
+      } else if (pointsMultiplier > 0) {
+        rewardsToCreate.push({
+          type: 'points', currency: 'points',
+          amount: Math.round(baseAmount * pointsMultiplier),
+          notes: `Auto-generated from order ${order.order_number}`
+        });
+      }
     }
+
+    // Extra cashback % (e.g. 5% Amazon extra)
+    if (order.extra_cashback_percent > 0) {
+      rewardsToCreate.push({
+        type: 'cashback', currency: 'USD',
+        amount: parseFloat((baseAmount * order.extra_cashback_percent / 100).toFixed(2)),
+        notes: `Extra ${order.extra_cashback_percent}% cashback on order ${order.order_number}`
+      });
+    }
+
+    // Bonus amount (e.g. Prime Young Adult cashback, flat bonus points)
+    if (order.bonus_amount > 0) {
+      const isPrimeYoungAdult = order.bonus_notes?.toLowerCase().includes('prime young adult');
+      rewardsToCreate.push({
+        type: isPrimeYoungAdult ? 'cashback' : 'loyalty_rewards',
+        currency: isPrimeYoungAdult ? 'USD' : 'points',
+        amount: order.bonus_amount,
+        notes: order.bonus_notes || `Bonus from order ${order.order_number}`
+      });
+    }
+
+    for (const r of rewardsToCreate) {
+      if (r.amount > 0) {
+        await base44.entities.Reward.create({
+          credit_card_id: order.credit_card_id,
+          card_name: card.card_name,
+          source: card.card_name,
+          type: r.type,
+          purchase_amount: baseAmount,
+          amount: r.amount,
+          currency: r.currency,
+          purchase_order_id: order.id,
+          order_number: order.order_number,
+          date_earned: order.order_date,
+          status: order.status === 'received' ? 'earned' : 'pending',
+          notes: r.notes
+        });
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['rewards'] });
   };
 
   // Filter logic
