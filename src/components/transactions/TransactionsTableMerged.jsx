@@ -252,7 +252,15 @@ export default function TransactionsTableMerged({
 
                     {visibleColumns.includes('cashback') && (
                       <td style={{ width: COLUMN_WIDTHS.cashback }} className="px-3 py-3 text-green-600 font-semibold">
-                        ${(order.bonus_amount || 0).toFixed(2)}
+                        {(() => {
+                          const orderRewards = rewards.filter(r => r.purchase_order_id === order.id);
+                          if (!orderRewards.length) return '—';
+                          const cashbackReward = orderRewards.find(r => r.currency === 'USD');
+                          const pointsReward = orderRewards.find(r => r.currency === 'points');
+                          if (cashbackReward) return `$${parseFloat(cashbackReward.amount).toFixed(2)}`;
+                          if (pointsReward) return `${Math.round(pointsReward.amount)} pts`;
+                          return '—';
+                        })()}
                       </td>
                     )}
 
