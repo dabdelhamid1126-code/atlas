@@ -101,6 +101,8 @@ export default function POFormModal({
   useEffect(() => {
     setFormData(getInitialForm(order));
     setProductSearches({});
+    setSingleProductSearch('');
+    setSingleProductId('');
   }, [order, open]);
 
   const set = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
