@@ -34,6 +34,7 @@ export default function TransactionsTableMerged({
   onView,
   onDelete,
   creditCards = [],
+  rewards = [],
   isLoading = false,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
