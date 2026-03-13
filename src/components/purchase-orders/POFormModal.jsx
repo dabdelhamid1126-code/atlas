@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, X, CreditCard, Package, ShoppingCart, Truck } from 'lucide-react';
+import { CreditCard, Package, ShoppingCart, Truck, Tag, Globe } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
