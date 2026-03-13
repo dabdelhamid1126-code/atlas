@@ -296,13 +296,20 @@ export default function POFormModal({
             <SectionHeader icon={Package} label="Product Information" color="text-purple-600" />
             <div className="space-y-1 mb-3">
               <Label className="text-xs text-slate-600">Product Name *</Label>
-              <Input
-                className="bg-white"
-                value={formData.items?.[0]?.product_name || ''}
-                onChange={(e) => {
+              <ProductAutocomplete
+                products={products}
+                nameValue={formData.items?.[0]?.product_name || ''}
+                upcValue={formData.items?.[0]?.upc || ''}
+                searchField="name"
+                onSelect={(p) => {
+                  const base = { product_id: p.id, product_name: p.name, upc: p.upc || '', quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice };
+                  const items = formData.items.length > 0 ? formData.items.map((it, i) => i === 0 ? { ...it, ...base } : it) : [base];
+                  setFormData(prev => ({ ...prev, items, product_category: p.category || prev.product_category }));
+                }}
+                onChangeName={(val) => {
                   const items = formData.items.length > 0
-                    ? formData.items.map((it, i) => i === 0 ? { ...it, product_name: e.target.value } : it)
-                    : [{ product_id: '', product_name: e.target.value, upc: '', quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice }];
+                    ? formData.items.map((it, i) => i === 0 ? { ...it, product_name: val } : it)
+                    : [{ product_id: '', product_name: val, upc: '', quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice }];
                   setFormData(prev => ({ ...prev, items }));
                 }}
                 placeholder="e.g. Apple AirPods Pro 2nd Gen"
@@ -322,13 +329,20 @@ export default function POFormModal({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-slate-600">SKU / UPC</Label>
-                <Input
-                  className="bg-white"
-                  value={formData.items?.[0]?.upc || ''}
-                  onChange={(e) => {
+                <ProductAutocomplete
+                  products={products}
+                  nameValue={formData.items?.[0]?.product_name || ''}
+                  upcValue={formData.items?.[0]?.upc || ''}
+                  searchField="upc"
+                  onSelect={(p) => {
+                    const base = { product_id: p.id, product_name: p.name, upc: p.upc || '', quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice };
+                    const items = formData.items.length > 0 ? formData.items.map((it, i) => i === 0 ? { ...it, ...base } : it) : [base];
+                    setFormData(prev => ({ ...prev, items, product_category: p.category || prev.product_category }));
+                  }}
+                  onChangeUpc={(val) => {
                     const items = formData.items.length > 0
-                      ? formData.items.map((it, i) => i === 0 ? { ...it, upc: e.target.value } : it)
-                      : [{ product_id: '', product_name: '', upc: e.target.value, quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice }];
+                      ? formData.items.map((it, i) => i === 0 ? { ...it, upc: val } : it)
+                      : [{ product_id: '', product_name: '', upc: val, quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice }];
                     setFormData(prev => ({ ...prev, items }));
                   }}
                   placeholder="Optional"
