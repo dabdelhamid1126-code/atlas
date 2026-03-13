@@ -273,7 +273,7 @@ export default function Transactions() {
       return matchesMode && matchesSearch && matchesStatus && matchesVendor && 
              matchesPayment && matchesCategory && matchesDateRange;
     });
-  }, [orders, mode, search, statusFilter, vendorFilter, platformFilter, 
+  }, [orders, mode, search, statusFilter, vendorFilter,
       paymentMethodFilter, categoryFilter, fromDate, toDate]);
 
   // Sorting
