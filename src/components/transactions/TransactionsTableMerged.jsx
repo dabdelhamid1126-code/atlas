@@ -135,9 +135,7 @@ export default function TransactionsTableMerged({
                 {visibleColumns.includes('vendor') && (
                   <th style={{ width: COLUMN_WIDTHS.vendor }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Vendor</th>
                 )}
-                {visibleColumns.includes('platform') && (
-                  <th style={{ width: COLUMN_WIDTHS.platform }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Platform</th>
-                )}
+
                 {visibleColumns.includes('qty') && (
                   <th style={{ width: COLUMN_WIDTHS.qty }} className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
                 )}
