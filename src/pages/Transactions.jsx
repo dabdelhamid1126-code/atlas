@@ -490,15 +490,15 @@ export default function Transactions() {
       </div>
 
       {/* Mode Tabs */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-1 mb-6 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
         {modes.map(m => (
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition border ${
+            className={`px-5 py-2 rounded-lg font-medium text-sm transition ${
               mode === m.id
-                ? 'bg-purple-600 text-white border-purple-600'
-                : 'border-slate-300 text-slate-700 hover:border-slate-400'
+                ? 'bg-purple-600 text-white shadow'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             {m.label}
