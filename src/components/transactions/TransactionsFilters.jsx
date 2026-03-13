@@ -10,7 +10,7 @@ import {
 import { Search, Filter } from 'lucide-react';
 
 const STATUSES = ['pending', 'ordered', 'shipped', 'delivered', 'received', 'cancelled'];
-const CATEGORIES = ['dining', 'travel', 'groceries', 'gas', 'streaming', 'other'];
+const CATEGORIES = ['Electronics', 'Home & Garden', 'Toys & Games', 'Health & Beauty', 'Sports', 'Clothing', 'Tools', 'Gift Cards', 'Grocery', 'Other'];
 
 export default function TransactionsFilters({
   search,
