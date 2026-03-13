@@ -17,7 +17,7 @@ export default function Transactions() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
-  const [platformFilter, setPlatformFilter] = useState('all');
+
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');

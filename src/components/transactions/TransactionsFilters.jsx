@@ -19,8 +19,7 @@ export default function TransactionsFilters({
   onStatusChange,
   vendorFilter,
   onVendorChange,
-  platformFilter,
-  onPlatformChange,
+
   fromDate,
   onFromDateChange,
   toDate,
