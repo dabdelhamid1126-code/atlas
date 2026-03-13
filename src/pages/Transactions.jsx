@@ -254,7 +254,6 @@ export default function Transactions() {
 
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       const matchesVendor = vendorFilter === 'all' || order.retailer === vendorFilter;
-      const matchesPlatform = platformFilter === 'all' || order.platform === platformFilter;
       const matchesPayment = paymentMethodFilter === 'all' || order.credit_card_id === paymentMethodFilter;
       const matchesCategory = categoryFilter === 'all' || order.category === categoryFilter;
 
