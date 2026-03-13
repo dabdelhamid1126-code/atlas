@@ -45,6 +45,7 @@ export default function POFormModal({
   isPending
 }) {
   const getInitialForm = (o) => o ? {
+    order_type: o.order_type || 'churning',
     order_number: o.order_number || '',
     tracking_number: o.tracking_number || '',
     retailer: o.retailer || '',
