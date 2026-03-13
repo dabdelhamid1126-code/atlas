@@ -71,7 +71,46 @@ export default function POFormModal({
     items: [],
   });
 
+  const getInitialForm = (order) => order ? {
+    order_number: order.order_number || '',
+    tracking_number: order.tracking_number || '',
+    retailer: order.retailer || '',
+    status: order.status || 'pending',
+    category: order.category || 'other',
+    credit_card_id: order.credit_card_id || '',
+    gift_card_ids: order.gift_card_ids || [],
+    is_pickup: order.is_pickup || false,
+    pickup_location: order.pickup_location || '',
+    is_dropship: order.is_dropship || false,
+    dropship_to: order.dropship_to || '',
+    order_date: order.order_date || '',
+    expected_date: order.expected_date || '',
+    notes: order.notes || '',
+    items: order.items || [],
+  } : {
+    order_number: '',
+    tracking_number: '',
+    retailer: '',
+    status: 'pending',
+    category: 'other',
+    credit_card_id: '',
+    gift_card_ids: [],
+    is_pickup: false,
+    pickup_location: '',
+    is_dropship: false,
+    dropship_to: '',
+    order_date: format(new Date(), 'yyyy-MM-dd'),
+    expected_date: '',
+    notes: '',
+    items: [],
+  };
+
   const [productSearches, setProductSearches] = useState({});
+
+  useEffect(() => {
+    setFormData(getInitialForm(order));
+    setProductSearches({});
+  }, [order, open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
