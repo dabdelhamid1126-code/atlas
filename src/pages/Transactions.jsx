@@ -359,9 +359,7 @@ export default function Transactions() {
           case 'vendor':
             val = order.retailer || '';
             break;
-          case 'platform':
-            val = order.platform || '';
-            break;
+
           case 'qty':
             val = order.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || '0';
             break;
