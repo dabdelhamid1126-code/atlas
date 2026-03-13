@@ -248,10 +248,13 @@ export default function TransactionsTableMerged({
                         {(() => {
                           const orderRewards = rewards.filter(r => r.purchase_order_id === order.id);
                           if (!orderRewards.length) return '—';
-                          const cashbackReward = orderRewards.find(r => r.currency === 'USD');
-                          const pointsReward = orderRewards.find(r => r.currency === 'points');
-                          if (cashbackReward) return `$${parseFloat(cashbackReward.amount).toFixed(2)}`;
-                          if (pointsReward) return `${Math.round(pointsReward.amount)} pts`;
+                          const usdRewards = orderRewards.filter(r => r.currency === 'USD');
+                          const ptsRewards = orderRewards.filter(r => r.currency === 'points');
+                          const totalUSD = usdRewards.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+                          const totalPts = ptsRewards.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+                          if (totalUSD > 0 && totalPts > 0) return `$${totalUSD.toFixed(2)} + ${Math.round(totalPts)} pts`;
+                          if (totalUSD > 0) return `$${totalUSD.toFixed(2)}`;
+                          if (totalPts > 0) return `${Math.round(totalPts)} pts`;
                           return '—';
                         })()}
                       </td>
