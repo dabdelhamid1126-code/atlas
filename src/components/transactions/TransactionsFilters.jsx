@@ -124,7 +124,7 @@ export default function TransactionsFilters({
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Category</label>
             <Select value={categoryFilter} onValueChange={onCategoryChange}>
               <SelectTrigger className="bg-slate-50 border-slate-200 text-sm">
-                <SelectValue placeholder="All Categories">{categoryFilter === 'all' ? 'All Categories' : categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)}</SelectValue>
+                <SelectValue placeholder="All Categories">{categoryFilter === 'all' ? 'All Categories' : categoryFilter}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
