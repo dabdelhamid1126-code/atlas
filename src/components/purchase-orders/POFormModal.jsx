@@ -71,6 +71,7 @@ export default function POFormModal({
     items: [],
   };
 
+  const [formData, setFormData] = useState(() => getInitialForm(order));
   const [productSearches, setProductSearches] = useState({});
 
   useEffect(() => {
