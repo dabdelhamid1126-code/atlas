@@ -317,7 +317,7 @@ export default function Transactions() {
 
   const showAllColumns = () => {
     setVisibleColumns([
-      'date', 'product', 'vendor', 'platform', 'qty', 'cost', 'sale',
+      'date', 'product', 'vendor', 'qty', 'cost', 'sale',
       'profit', 'cashback', 'orderNum', 'tracking', 'payment', 'status', 'actions'
     ]);
   };
