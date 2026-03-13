@@ -51,7 +51,7 @@ export default function TransactionsFilters({
 
         <Select value={statusFilter} onValueChange={onStatusChange}>
           <SelectTrigger className="w-36 bg-slate-50 border-slate-200 text-sm rounded-lg">
-            <SelectValue />
+            <SelectValue placeholder="All Statuses">{statusFilter === 'all' ? 'All Statuses' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
