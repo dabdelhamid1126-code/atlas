@@ -31,7 +31,6 @@ export default function TransactionsFilters({
   accountFilter,
   onAccountChange,
   vendors = [],
-  platforms = [],
   creditCards = [],
 }) {
   const [expanded, setExpanded] = useState(false);
