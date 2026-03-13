@@ -510,7 +510,6 @@ export default function Transactions() {
         accountFilter={accountFilter}
         onAccountChange={setAccountFilter}
         vendors={vendors}
-        platforms={platforms}
         creditCards={creditCards}
       />
 
