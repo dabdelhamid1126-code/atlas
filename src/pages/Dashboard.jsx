@@ -54,14 +54,9 @@ export default function Dashboard() {
 
   const filterByMode = (orders) => {
     if (modeFilter === 'All') return orders;
-    
     return orders.filter(order => {
-      if (modeFilter === 'Churning') {
-        return order.type === 'Churning' || order.buyer_type === 'Wholesale / Churning';
-      }
-      if (modeFilter === 'Resell') {
-        return order.type === 'Marketplace' || order.buyer_type === 'Marketplace';
-      }
+      if (modeFilter === 'Churning') return order.order_type === 'churning';
+      if (modeFilter === 'Resell') return order.order_type === 'marketplace';
       return true;
     });
   };
