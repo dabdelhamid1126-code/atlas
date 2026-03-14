@@ -49,6 +49,8 @@ export default function POFormModal({
     order_number: o.order_number || '',
     tracking_number: o.tracking_number || '',
     retailer: o.retailer || '',
+    buyer: o.buyer || '',
+    marketplace_platform: o.marketplace_platform || '',
     account: o.account || '',
     status: o.status || 'pending',
     category: o.category || 'other',
