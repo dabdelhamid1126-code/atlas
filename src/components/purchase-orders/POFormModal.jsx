@@ -486,34 +486,17 @@ export default function POFormModal({
             <SectionHeader icon={ShoppingCart} label="Purchase Details" color="text-blue-600" />
             <div className="grid grid-cols-4 gap-3 mb-3 items-end">
               <div className="space-y-1">
-                <Label className="text-xs text-slate-600">Unit Price *</Label>
+                <Label className="text-xs text-slate-600">Subtotal (items)</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                  <Input className="bg-white pl-7" type="number" step="0.01" min="0"
-                    value={formData.unit_price}
-                    onChange={(e) => set('unit_price', e.target.value)}
-                    placeholder="0.00"
-                  />
+                  <Input className="bg-slate-100 pl-7" readOnly value={itemsSubtotal.toFixed(2)} />
                 </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-600">Quantity</Label>
-                <div className="flex items-center gap-1">
-                  <Button type="button" variant="outline" size="icon" className="h-9 w-9 bg-white shrink-0"
-                    onClick={() => set('quantity', Math.max(1, quantity - 1))}>−</Button>
-                  <Input className="bg-white text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" type="number" min="1"
-                    value={formData.quantity}
-                    onChange={(e) => set('quantity', parseInt(e.target.value) || 1)}
-                  />
-                  <Button type="button" variant="outline" size="icon" className="h-9 w-9 bg-white shrink-0"
-                    onClick={() => set('quantity', quantity + 1)}>+</Button>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-600">Total Price</Label>
+              <div className="col-span-2 space-y-1">
+                <Label className="text-xs text-slate-600">Total Cost (incl. tax/shipping)</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                  <Input className="bg-slate-100 pl-7" readOnly value={totalPrice.toFixed(2)} placeholder="Auto-calc" />
+                  <Input className="bg-slate-100 pl-7 font-semibold" readOnly value={totalPrice.toFixed(2)} placeholder="Auto-calc" />
                 </div>
               </div>
               <div className="space-y-1">
