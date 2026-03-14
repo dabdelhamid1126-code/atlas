@@ -359,35 +359,20 @@ export default function POFormModal({
             </div>
           </div>
 
-          {/* PRODUCT INFORMATION */}
+          {/* ORDER ITEMS */}
           <div className="bg-purple-50 rounded-xl p-4">
-            <SectionHeader icon={Package} label="Product Information" color="text-purple-600" />
-            <div className="space-y-1 mb-3">
-              <Label className="text-xs text-slate-600">Product Name *</Label>
-              <ProductAutocomplete
-                products={products}
-                nameValue={formData.items?.[0]?.product_name || ''}
-                upcValue={formData.items?.[0]?.upc || ''}
-                searchField="name"
-                onSelect={(p) => {
-                  const base = { product_id: p.id, product_name: p.name, upc: p.upc || '', quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice };
-                  const items = formData.items.length > 0 ? formData.items.map((it, i) => i === 0 ? { ...it, ...base } : it) : [base];
-                  setFormData(prev => ({ ...prev, items, product_category: p.category || prev.product_category }));
-                }}
-                onChangeName={(val) => {
-                  const items = formData.items.length > 0
-                    ? formData.items.map((it, i) => i === 0 ? { ...it, product_name: val } : it)
-                    : [{ product_id: '', product_name: val, upc: '', quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice }];
-                  setFormData(prev => ({ ...prev, items }));
-                }}
-                placeholder="e.g. Apple AirPods Pro 2nd Gen"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-purple-600" />
+                <span className="text-xs font-bold tracking-widest uppercase text-purple-600">Order Items</span>
+                {formData.items.length > 1 && (
+                  <span className="text-[10px] bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full font-bold">{formData.items.length} items</span>
+                )}
+              </div>
               <div className="space-y-1">
                 <Label className="text-xs text-slate-600">Category</Label>
                 <Select value={formData.product_category} onValueChange={(v) => set('product_category', v)}>
-                  <SelectTrigger className="bg-white">
+                  <SelectTrigger className="bg-white h-8 text-xs w-36">
                     <SelectValue placeholder="Select category..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -395,28 +380,105 @@ export default function POFormModal({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-600">SKU / UPC</Label>
-                <ProductAutocomplete
-                  products={products}
-                  nameValue={formData.items?.[0]?.product_name || ''}
-                  upcValue={formData.items?.[0]?.upc || ''}
-                  searchField="upc"
-                  onSelect={(p) => {
-                    const base = { product_id: p.id, product_name: p.name, upc: p.upc || '', quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice };
-                    const items = formData.items.length > 0 ? formData.items.map((it, i) => i === 0 ? { ...it, ...base } : it) : [base];
-                    setFormData(prev => ({ ...prev, items, product_category: p.category || prev.product_category }));
-                  }}
-                  onChangeUpc={(val) => {
-                    const items = formData.items.length > 0
-                      ? formData.items.map((it, i) => i === 0 ? { ...it, upc: val } : it)
-                      : [{ product_id: '', product_name: '', upc: val, quantity_ordered: quantity, quantity_received: 0, unit_cost: unitPrice }];
-                    setFormData(prev => ({ ...prev, items }));
-                  }}
-                  placeholder="Optional"
-                />
-              </div>
             </div>
+
+            <div className="space-y-3">
+              {formData.items.map((item, idx) => (
+                <div key={idx} className="bg-white rounded-lg border border-purple-100 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-purple-500">Item {idx + 1}</span>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => duplicateItem(idx)} title="Duplicate"
+                        className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                      {formData.items.length > 1 && (
+                        <button type="button" onClick={() => removeItem(idx)} title="Remove"
+                          className="p-1 rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 mb-2">
+                    <div className="col-span-2 space-y-1">
+                      <Label className="text-xs text-slate-600">Product Name *</Label>
+                      <ProductAutocomplete
+                        products={products}
+                        nameValue={item.product_name || ''}
+                        upcValue={item.upc || ''}
+                        searchField="name"
+                        onSelect={(p) => {
+                          updateItem(idx, 'product_id', p.id);
+                          updateItem(idx, 'product_name', p.name);
+                          updateItem(idx, 'upc', p.upc || '');
+                          if (idx === 0) set('product_category', p.category || formData.product_category);
+                        }}
+                        onChangeName={(val) => updateItem(idx, 'product_name', val)}
+                        placeholder="e.g. iPad Air"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">Unit Price *</Label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                        <Input className="bg-white pl-5 h-9 text-sm" type="number" step="0.01" min="0"
+                          value={item.unit_cost || ''}
+                          onChange={(e) => updateItem(idx, 'unit_cost', e.target.value)}
+                          placeholder="0.00" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">Qty</Label>
+                      <Input className="bg-white h-9 text-sm text-center" type="number" min="1"
+                        value={item.quantity_ordered || 1}
+                        onChange={(e) => updateItem(idx, 'quantity_ordered', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">SKU / UPC</Label>
+                      <ProductAutocomplete
+                        products={products}
+                        nameValue={item.product_name || ''}
+                        upcValue={item.upc || ''}
+                        searchField="upc"
+                        onSelect={(p) => {
+                          updateItem(idx, 'product_id', p.id);
+                          updateItem(idx, 'product_name', p.name);
+                          updateItem(idx, 'upc', p.upc || '');
+                        }}
+                        onChangeUpc={(val) => updateItem(idx, 'upc', val)}
+                        placeholder="Optional"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">Sale Price (per unit)</Label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                        <Input className="bg-white pl-5 h-9 text-sm" type="number" step="0.01" min="0"
+                          value={item.sale_price || ''}
+                          onChange={(e) => updateItem(idx, 'sale_price', e.target.value)}
+                          placeholder="0.00" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">Total</Label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                        <Input className="bg-slate-100 pl-5 h-9 text-sm" readOnly
+                          value={((parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity_ordered) || 1)).toFixed(2)} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button type="button" onClick={addItem}
+              className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border-2 border-dashed border-purple-200 text-purple-600 text-sm font-medium hover:border-purple-400 hover:bg-purple-50 transition">
+              <Plus className="h-4 w-4" /> Add Another Item
+            </button>
           </div>
 
           {/* PURCHASE DETAILS */}
