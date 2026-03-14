@@ -250,13 +250,14 @@ function CreditCardsTab({ queryClient }) {
             </div>
 
             <div className="space-y-1">
-              <Label>Benefits</Label>
-              <Textarea value={formData.benefits} onChange={e => set('benefits', e.target.value)} placeholder="Travel insurance, lounge access..." rows={2} />
-            </div>
-            <div className="space-y-1">
               <Label>Notes</Label>
               <Input value={formData.notes} onChange={e => set('notes', e.target.value)} placeholder="Additional notes..." />
             </div>
+
+            <CardBenefitsEditor
+              benefits={formData.annual_credits || []}
+              onChange={(benefits) => set('annual_credits', benefits)}
+            />
             <div className="flex items-center gap-2">
               <input type="checkbox" id="active" checked={formData.active} onChange={e => set('active', e.target.checked)} className="rounded" />
               <Label htmlFor="active" className="cursor-pointer">Card is active</Label>
