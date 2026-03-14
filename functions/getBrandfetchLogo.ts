@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Company name required' }, { status: 400 });
     }
 
-    const apiKey = Deno.env.get('BRANDFETCH_API_KEY');
+    const apiKey = Deno.env.get('BRANDFETCH');
     if (!apiKey) {
       return Response.json({ error: 'Brandfetch API key not configured' }, { status: 500 });
     }
