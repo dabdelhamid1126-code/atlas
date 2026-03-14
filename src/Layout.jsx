@@ -167,7 +167,7 @@ export default function Layout({ children, currentPageName }) {
                               : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                           )}
                         >
-                          <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "text-slate-400")} />
+                          <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-violet-600" : "text-slate-400")} />
                           {item.name}
                           {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
                         </Link>
