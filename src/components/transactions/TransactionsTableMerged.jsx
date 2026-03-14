@@ -112,7 +112,7 @@ export default function TransactionsTableMerged({
                 <th style={{ width: COLUMN_WIDTHS.checkbox }} className="px-3 py-3 text-center">
                   <input
                     type="checkbox"
-                    checked={selectedRows.size === data.length && data.length > 0}
+                    checked={data.length > 0 && data.every(o => selectedRows.has(o.id))}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="rounded"
                   />
