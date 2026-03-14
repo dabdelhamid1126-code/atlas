@@ -449,7 +449,7 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
                 }`}>
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.id ? 'bg-violet-500/20 text-violet-400' : 'bg-muted text-muted-foreground'}`}>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.id ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-500'}`}>
                     {tab.count}
                   </span>
                 )}
