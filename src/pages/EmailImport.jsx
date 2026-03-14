@@ -658,35 +658,6 @@ If there are two emails for the same order, merge the data (e.g. get the trackin
                 )}
               </TabsContent>
 
-              <TabsContent value="paste" className="space-y-4">
-                <Textarea
-                  placeholder="Paste your order confirmation email here..."
-                  value={emailContent}
-                  onChange={(e) => setEmailContent(e.target.value)}
-                  rows={12}
-                  className="font-mono text-xs"
-                />
-                
-                <Button
-                  onClick={handleParse}
-                  disabled={processing || !emailContent.trim()}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                  size="lg"
-                >
-                  {processing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import Order
-                    </>
-                  )}
-                </Button>
-              </TabsContent>
-
               <TabsContent value="pdf" className="space-y-4">
                 <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
                   <FileText className="h-12 w-12 mx-auto text-slate-400 mb-4" />
