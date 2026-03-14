@@ -92,36 +92,36 @@ function EmailRow({ group, onImport, onReject, processing, isImported, isRejecte
 
       {/* Expanded detail row */}
       {expanded && !isImported && !isRejected && (
-        <div className="border-t border-[#2e2560]/60 px-5 py-4 flex items-center gap-4">
+        <div className="border-t border-slate-100 bg-slate-50 px-5 py-4 flex items-center gap-4">
           {/* Checkbox */}
-          <input type="checkbox" className="rounded border-slate-600 h-4 w-4 accent-violet-500 flex-shrink-0" />
+          <input type="checkbox" className="rounded border-slate-300 h-4 w-4 accent-violet-600 flex-shrink-0" />
 
           {/* "Order Placed" label */}
-          <span className="text-xs font-bold text-violet-400 uppercase tracking-wider whitespace-nowrap">Order Placed</span>
+          <span className="text-xs font-bold text-violet-600 uppercase tracking-wider whitespace-nowrap">Order Placed</span>
 
           {/* Retailer logo/icon + name */}
           <div className="flex items-center gap-2.5 min-w-0">
             {logo ? (
-              <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center p-1 flex-shrink-0">
+              <div className="h-9 w-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center p-1 flex-shrink-0">
                 <img src={logo} alt={group.retailer} className="h-7 w-7 object-contain" />
               </div>
             ) : (
-              <div className="h-9 w-9 rounded-lg bg-[#1e1b3a] border border-[#3a3560] flex items-center justify-center flex-shrink-0">
+              <div className="h-9 w-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
                 <Package className="h-4 w-4 text-slate-400" />
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white">{group.retailer || 'Unknown'}</p>
-              {group.orderNumber && <p className="text-[11px] text-slate-400">Order: {group.orderNumber}</p>}
-              {group.totalCost != null && <p className="text-[11px] text-slate-300">$ {group.totalCost.toFixed(2)}</p>}
+              <p className="text-sm font-bold text-slate-800">{group.retailer || 'Unknown'}</p>
+              {group.orderNumber && <p className="text-[11px] text-slate-500">Order: {group.orderNumber}</p>}
+              {group.totalCost != null && <p className="text-[11px] text-slate-600">$ {group.totalCost.toFixed(2)}</p>}
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] text-amber-400 font-semibold">Confidence: {group.confidence || 95}%</span>
-                <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded font-bold">PENDING</span>
+                <span className="text-[10px] text-amber-600 font-semibold">Confidence: {group.confidence || 95}%</span>
+                <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">PENDING</span>
               </div>
               {group.productName && (
                 <div className="flex items-center gap-1 mt-0.5">
-                  <Link className="h-3 w-3 text-violet-400" />
-                  <span className="text-[11px] text-violet-400">Linked: {group.productName}</span>
+                  <Link className="h-3 w-3 text-violet-500" />
+                  <span className="text-[11px] text-violet-600">Linked: {group.productName}</span>
                 </div>
               )}
             </div>
@@ -132,7 +132,7 @@ function EmailRow({ group, onImport, onReject, processing, isImported, isRejecte
             <button
               onClick={() => onImport(group)}
               disabled={processing}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-violet-500/50 bg-transparent text-violet-300 text-xs font-semibold hover:bg-violet-600/20 transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-violet-300 bg-white text-violet-700 text-xs font-semibold hover:bg-violet-50 transition disabled:opacity-50"
             >
               {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShoppingCart className="h-3.5 w-3.5" />}
               Import
@@ -140,7 +140,7 @@ function EmailRow({ group, onImport, onReject, processing, isImported, isRejecte
             <button
               onClick={() => onReject(group.id)}
               disabled={processing}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-red-500/40 bg-transparent text-red-400 text-xs font-semibold hover:bg-red-600/10 transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-red-200 bg-white text-red-500 text-xs font-semibold hover:bg-red-50 transition disabled:opacity-50"
             >
               <X className="h-3.5 w-3.5" /> Reject
             </button>
