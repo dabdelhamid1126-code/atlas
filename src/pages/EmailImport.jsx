@@ -402,7 +402,7 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-bold text-foreground">Inbox</h1>
             {pendingCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold border border-amber-500/30">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200">
                 {pendingCount} needs review
               </span>
             )}
