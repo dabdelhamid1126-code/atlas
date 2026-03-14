@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import React, { useState } from 'react';
+import { Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const CATEGORY_EMOJI = {
   Travel: '✈️',
@@ -9,6 +8,22 @@ const CATEGORY_EMOJI = {
   Shopping: '🛍️',
   Entertainment: '🎭',
   Other: '⭐',
+};
+
+const ISSUER_DOMAINS = {
+  'american express': 'americanexpress.com',
+  'amex': 'americanexpress.com',
+  'chase': 'chase.com',
+  'discover': 'discover.com',
+  'barclays': 'barclays.com',
+  'capital one': 'capitalone.com',
+  'citi': 'citi.com',
+  'citibank': 'citi.com',
+  'wells fargo': 'wellsfargo.com',
+  'bank of america': 'bankofamerica.com',
+  'us bank': 'usbank.com',
+  'u.s. bank': 'usbank.com',
+  'jetblue': 'jetblue.com',
 };
 
 const CATEGORY_ICONS = {
@@ -20,44 +35,37 @@ const CATEGORY_ICONS = {
 };
 
 function IssuerLogo({ issuer, cardName }) {
-  const [logoUrl, setLogoUrl] = useState(null);
   const [imgError, setImgError] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchLogo = async () => {
-      try {
-        const company = issuer || cardName;
-        if (!company) {
-          setLoading(false);
-          return;
-        }
-        const response = await base44.functions.invoke('getBrandfetchLogo', { company });
-        setLogoUrl(response.data.logoUrl);
-      } catch (error) {
-        console.error('Failed to fetch logo:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const getDomain = () => {
+    const searchName = (issuer || cardName || '').toLowerCase();
+    return Object.entries(ISSUER_DOMAINS).find(([key]) => searchName.includes(key))?.[1] || null;
+  };
 
-    fetchLogo();
-  }, [issuer, cardName]);
+  const domain = getDomain();
+  const logoUrl = domain ? `https://cdn.brandfetch.io/domain/${domain}` : null;
+
+  const getInitials = () => {
+    const name = issuer || cardName || '?';
+    const words = name.split(' ').filter(Boolean);
+    if (words.length === 1) return name.slice(0, 2).toUpperCase();
+    return words.slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  };
 
   if (imgError || !logoUrl) {
     return (
-      <div className="h-10 w-10 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
-        <CreditCard className="h-6 w-6 text-slate-600" />
+      <div className="h-12 w-12 rounded-lg bg-blue-700 flex items-center justify-center shrink-0 shadow-sm border border-blue-800">
+        <span className="text-white font-bold text-xs">{getInitials()}</span>
       </div>
     );
   }
 
   return (
-    <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm overflow-hidden shrink-0">
+    <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-md overflow-hidden shrink-0">
       <img
         src={logoUrl}
         alt={issuer || cardName}
-        className="h-9 w-9 object-contain"
+        className="h-11 w-11 object-contain p-1"
         onError={() => setImgError(true)}
       />
     </div>
