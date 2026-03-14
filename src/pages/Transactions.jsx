@@ -446,6 +446,25 @@ export default function Transactions() {
     window.URL.revokeObjectURL(url);
   };
 
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedIds.size} selected order(s)?`)) return;
+    const toDelete = orders.filter(o => selectedIds.has(o.id));
+    for (const order of toDelete) {
+      await deleteMutation.mutateAsync(order);
+    }
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkSetType = async (orderType) => {
+    const toUpdate = orders.filter(o => selectedIds.has(o.id));
+    for (const order of toUpdate) {
+      await base44.entities.PurchaseOrder.update(order.id, { order_type: orderType });
+    }
+    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+    toast.success(`Updated ${toUpdate.length} order(s) to ${orderType}`);
+    setSelectedIds(new Set());
+  };
+
   const vendors = useMemo(() => {
     return [...new Set(orders.map(o => o.retailer).filter(Boolean))].sort();
   }, [orders]);
