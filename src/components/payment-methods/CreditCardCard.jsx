@@ -23,7 +23,7 @@ const ISSUER_LOGOS = {
   barclays: 'https://logo.clearbit.com/barclays.com',
   usaa: 'https://logo.clearbit.com/usaa.com',
   pnc: 'https://logo.clearbit.com/pnc.com',
-  us bank: 'https://logo.clearbit.com/usbank.com',
+  'us bank': 'https://logo.clearbit.com/usbank.com',
   'u.s. bank': 'https://logo.clearbit.com/usbank.com',
   synchrony: 'https://logo.clearbit.com/synchrony.com',
   td bank: 'https://logo.clearbit.com/td.com',
