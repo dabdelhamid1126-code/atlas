@@ -65,7 +65,7 @@ function CreditCardsTab({ queryClient }) {
     groceries_cashback_rate: '', groceries_points_rate: '',
     gas_cashback_rate: '', gas_points_rate: '',
     streaming_cashback_rate: '', streaming_points_rate: '',
-    benefits: '', notes: '', active: true,
+    annual_credits: [], benefits: '', notes: '', active: true,
   };
   const [formData, setFormData] = useState(emptyForm);
 
