@@ -169,7 +169,7 @@ export default function Layout({ children, currentPageName }) {
                         >
                           <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-violet-600" : "text-slate-400")} />
                           {item.name}
-                          {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                          {isActive && <ChevronRight className="h-4 w-4 ml-auto text-violet-500" />}
                         </Link>
                       );
                     })}
