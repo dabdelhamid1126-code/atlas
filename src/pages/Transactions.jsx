@@ -583,6 +583,7 @@ export default function Transactions() {
         }}
         creditCards={creditCards}
         rewards={rewards}
+        products={products}
         isLoading={isLoading}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
