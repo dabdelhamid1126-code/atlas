@@ -19,7 +19,7 @@ const ISSUER_LOGOS = {
   'bank of america': 'https://logo.clearbit.com/bankofamerica.com',
   'capital one': 'https://logo.clearbit.com/capitalone.com',
   discover: 'https://logo.clearbit.com/discover.com',
-  wells fargo: 'https://logo.clearbit.com/wellsfargo.com',
+  'wells fargo': 'https://logo.clearbit.com/wellsfargo.com',
   barclays: 'https://logo.clearbit.com/barclays.com',
   usaa: 'https://logo.clearbit.com/usaa.com',
   pnc: 'https://logo.clearbit.com/pnc.com',
