@@ -582,7 +582,11 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
                       className="absolute top-3 right-3 text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1">
                       <Trash2 className="h-3.5 w-3.5" /> Remove
                     </button>
-                    <div className="flex justify-between items-start pr-20 mb-3">
+                    <div className="flex gap-3 items-start mb-3">
+                      {match.selectedProduct?.image && (
+                        <img src={match.selectedProduct.image} alt={match.selectedProduct.name} className="h-16 w-16 object-contain rounded-lg border border-border flex-shrink-0 bg-white" />
+                      )}
+                    <div className="flex-1 flex justify-between items-start pr-20">
                       <div>
                         <p className="text-sm font-semibold text-foreground">{match.invoiceName}</p>
                         {match.sku && (
