@@ -192,10 +192,10 @@ export default function Layout({ children, currentPageName }) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-semibold text-foreground truncate">
+                      <p className="text-sm font-semibold text-slate-800 truncate">
                         {user.full_name || 'User'}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
                     </div>
                     <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                   </button>
