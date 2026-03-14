@@ -586,22 +586,22 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
                       {match.selectedProduct?.image && (
                         <img src={match.selectedProduct.image} alt={match.selectedProduct.name} className="h-16 w-16 object-contain rounded-lg border border-border flex-shrink-0 bg-white" />
                       )}
-                    <div className="flex-1 flex justify-between items-start pr-20">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{match.invoiceName}</p>
-                        {match.sku && (
-                          <a href={`https://www.google.com/search?q=${encodeURIComponent(match.sku)}`}
-                            target="_blank" rel="noopener noreferrer"
-                            className="text-[11px] text-violet-400 hover:underline flex items-center gap-1">
-                            <ExternalLink className="h-3 w-3" /> UPC: {match.sku}
-                          </a>
-                        )}
+                      <div className="flex-1 flex justify-between items-start pr-20">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{match.invoiceName}</p>
+                          {match.sku && (
+                            <a href={`https://www.google.com/search?q=${encodeURIComponent(match.sku)}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="text-[11px] text-violet-400 hover:underline flex items-center gap-1">
+                              <ExternalLink className="h-3 w-3" /> UPC: {match.sku}
+                            </a>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">Qty: {match.quantity}</p>
+                          <p className="text-sm font-bold text-foreground">${match.unit_cost?.toFixed(2)}</p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Qty: {match.quantity}</p>
-                        <p className="text-sm font-bold text-foreground">${match.unit_cost?.toFixed(2)}</p>
-                      </div>
-                    </div>
                     </div>
                     <Select
                       value={match.selectedProduct?.name || ''}
