@@ -11,9 +11,9 @@ const CATEGORY_EMOJI = {
 };
 
 const ISSUER_LOGOS = {
-  chase: 'https://www.google.com/s2/favicons?domain=chase.com&sz=128',
-  amex: 'https://www.google.com/s2/favicons?domain=americanexpress.com&sz=128',
-  'american express': 'https://www.google.com/s2/favicons?domain=americanexpress.com&sz=128',
+  chase: 'https://cdn.brandfetch.io/chase.com/w/256/logo',
+  amex: 'https://cdn.brandfetch.io/americanexpress.com/w/256/logo',
+  'american express': 'https://cdn.brandfetch.io/americanexpress.com/w/256/logo',
   citi: 'https://www.google.com/s2/favicons?domain=citi.com&sz=128',
   citibank: 'https://www.google.com/s2/favicons?domain=citi.com&sz=128',
   'bank of america': 'https://www.google.com/s2/favicons?domain=bankofamerica.com&sz=128',
