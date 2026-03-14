@@ -598,6 +598,8 @@ export default function Transactions() {
         creditCards={creditCards}
         rewards={rewards}
         isLoading={isLoading}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
       />
 
       <POFormModal
