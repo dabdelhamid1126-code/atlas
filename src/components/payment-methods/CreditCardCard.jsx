@@ -26,7 +26,7 @@ const ISSUER_LOGOS = {
   'us bank': 'https://logo.clearbit.com/usbank.com',
   'u.s. bank': 'https://logo.clearbit.com/usbank.com',
   synchrony: 'https://logo.clearbit.com/synchrony.com',
-  td bank: 'https://logo.clearbit.com/td.com',
+  'td bank': 'https://logo.clearbit.com/td.com',
   apple: 'https://logo.clearbit.com/apple.com',
   amazon: 'https://logo.clearbit.com/amazon.com',
 };
