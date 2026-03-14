@@ -58,7 +58,7 @@ const navigationGroups = [
   {
     label: 'FINANCE',
     items: [
-      { name: 'Gift Cards', page: 'GiftCards', icon: CreditCard },
+      { name: 'Payment Methods', page: 'PaymentMethods', icon: CreditCard },
       { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
       { name: 'Invoices', page: 'Invoices', icon: FileText },
     ]
