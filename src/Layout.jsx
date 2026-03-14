@@ -149,7 +149,7 @@ export default function Layout({ children, currentPageName }) {
             <nav className="px-3 space-y-4">
               {filteredGroups.map((group) => (
                 <div key={group.label}>
-                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase">
+                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest text-slate-400 uppercase">
                     {group.label}
                   </p>
                   <div className="space-y-0.5">
