@@ -60,6 +60,7 @@ import ReceiveItems from './pages/ReceiveItems';
 import Rewards from './pages/Rewards';
 import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
+import PaymentMethods from './pages/PaymentMethods';
 import __Layout from './Layout.jsx';
 
 
@@ -77,6 +78,7 @@ export const PAGES = {
     "Rewards": Rewards,
     "Settings": Settings,
     "Transactions": Transactions,
+    "PaymentMethods": PaymentMethods,
 }
 
 export const pagesConfig = {
