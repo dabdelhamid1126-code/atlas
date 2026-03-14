@@ -106,7 +106,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
         </div>
 
         {/* Order # + Date */}
-        <div className="min-w-0 flex-shrink-0 w-36">
+        <div className="min-w-0 flex-shrink-0 w-48">
           <p className="font-bold text-slate-900 text-sm truncate">
             {order.order_number ? `#${order.order_number}` : '—'}
           </p>
