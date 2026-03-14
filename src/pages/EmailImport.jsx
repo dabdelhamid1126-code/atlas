@@ -602,6 +602,7 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
                         <p className="text-sm font-bold text-foreground">${match.unit_cost?.toFixed(2)}</p>
                       </div>
                     </div>
+                    </div>
                     <Select
                       value={match.selectedProduct?.name || ''}
                       onValueChange={(value) => {
