@@ -135,7 +135,10 @@ export default function CreditCardCard({ card, orders = [], rewards = [], onEdit
           <div className="flex items-center gap-3">
             <IssuerLogo issuer={card.issuer} cardName={card.card_name} />
             <div>
-              <p className="font-bold text-slate-900 text-sm">{card.card_name}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-slate-900 text-sm">{card.card_name}</p>
+                {card.last_4_digits && <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">•••• {card.last_4_digits}</span>}
+              </div>
               <p className="text-xs text-slate-500">{card.issuer || '—'}</p>
             </div>
           </div>
