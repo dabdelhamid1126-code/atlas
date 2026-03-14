@@ -36,9 +36,11 @@ export default function TransactionsTableMerged({
   creditCards = [],
   rewards = [],
   isLoading = false,
+  selectedIds = new Set(),
+  onSelectionChange,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedRows, setSelectedRows] = useState(new Set());
+  const selectedRows = selectedIds;
 
   const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
   const paginatedData = data.slice(startIdx, startIdx + ROWS_PER_PAGE);
