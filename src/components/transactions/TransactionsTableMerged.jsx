@@ -178,9 +178,18 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
               const itemProfit = (itemSale - itemCost) * itemQty;
               const hasSale = itemSale > 0;
               const trackingUrl = getTrackingUrl(order.tracking_number, order.carrier);
+              const productObj = products?.find(p => p.id === item.product_id);
+              const imgUrl = productObj?.image || null;
 
               return (
                 <div key={idx} className="bg-white rounded-lg border border-slate-200 px-4 py-3 flex items-center gap-4">
+                  {/* Thumbnail */}
+                  <div className="h-10 w-10 flex-shrink-0 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+                    {imgUrl
+                      ? <img src={imgUrl} alt={item.product_name} className="h-10 w-10 object-contain" />
+                      : <Package className="h-5 w-5 text-slate-400" />
+                    }
+                  </div>
                   {/* Product name + tracking */}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-slate-900 text-sm truncate">{item.product_name || '—'}</p>
