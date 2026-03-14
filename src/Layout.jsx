@@ -125,7 +125,7 @@ export default function Layout({ children, currentPageName }) {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
+          <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">DD</span>
