@@ -62,7 +62,9 @@ export default function TransactionsTableMerged({
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return format(new Date(dateStr), 'M/d/yyyy');
+    // Parse YYYY-MM-DD directly to avoid UTC timezone offset shifting the date back
+    const [year, month, day] = dateStr.split('T')[0].split('-');
+    return `${parseInt(month)}/${parseInt(day)}/${year}`;
   };
 
   const truncate = (text, len = 40) => {
