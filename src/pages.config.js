@@ -47,7 +47,6 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Analytics from './pages/Analytics';
 import Dashboard from './pages/Dashboard';
 import EmailImport from './pages/EmailImport';
 import GiftCards from './pages/GiftCards';
@@ -65,7 +64,6 @@ import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Analytics": Analytics,
     "Dashboard": Dashboard,
     "EmailImport": EmailImport,
     "GiftCards": GiftCards,
@@ -82,7 +80,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Analytics",
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };
