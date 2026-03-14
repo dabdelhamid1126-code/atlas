@@ -240,13 +240,40 @@ export default function POFormModal({
                 <Label className="text-xs text-slate-600">Vendor / Store *</Label>
                 <Select value={formData.retailer} onValueChange={(v) => set('retailer', v)}>
                   <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Select vendor" />
+                    <SelectValue placeholder="Select vendor..." />
                   </SelectTrigger>
                   <SelectContent>
                     {RETAILERS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+              {formData.order_type === 'churning' ? (
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Buyer *</Label>
+                  <Select value={formData.buyer} onValueChange={(v) => set('buyer', v)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select buyer..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Marketplace *</Label>
+                  <Select value={formData.marketplace_platform} onValueChange={(v) => set('marketplace_platform', v)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select platform..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp', 'Craigslist', 'Other'].map(p => (
+                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-1">
                 <Label className="text-xs text-slate-600">Status</Label>
                 <Select value={formData.status} onValueChange={(v) => {
