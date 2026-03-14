@@ -101,7 +101,7 @@ function CreditCardsTab({ queryClient }) {
         groceries_cashback_rate: card.groceries_cashback_rate || '', groceries_points_rate: card.groceries_points_rate || '',
         gas_cashback_rate: card.gas_cashback_rate || '', gas_points_rate: card.gas_points_rate || '',
         streaming_cashback_rate: card.streaming_cashback_rate || '', streaming_points_rate: card.streaming_points_rate || '',
-        benefits: card.benefits || '', notes: card.notes || '', active: card.active !== false,
+        annual_credits: card.annual_credits || [], benefits: card.benefits || '', notes: card.notes || '', active: card.active !== false,
       });
     } else {
       setEditingCard(null);
