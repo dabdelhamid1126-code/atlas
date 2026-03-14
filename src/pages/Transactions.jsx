@@ -33,6 +33,7 @@ export default function Transactions() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   // Data queries
   const { data: orders = [], isLoading } = useQuery({
