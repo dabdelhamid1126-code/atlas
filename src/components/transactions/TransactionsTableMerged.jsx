@@ -169,8 +169,7 @@ export default function TransactionsTableMerged({
             </thead>
             <tbody>
               {paginatedData.map((order, idx) => {
-                const globalIdx = startIdx + idx;
-                const isSelected = selectedRows.has(globalIdx);
+                const isSelected = selectedRows.has(order.id);
                 const totalQty = order.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || 0;
                 const profit = (order.final_cost || 0) - (order.total_cost || 0);
 
