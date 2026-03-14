@@ -17,7 +17,7 @@ const ISSUER_LOGOS = {
   citi: 'https://www.google.com/s2/favicons?domain=citi.com&sz=128',
   citibank: 'https://www.google.com/s2/favicons?domain=citi.com&sz=128',
   'bank of america': 'https://www.google.com/s2/favicons?domain=bankofamerica.com&sz=128',
-  'capital one': 'https://www.google.com/s2/favicons?domain=capitalone.com&sz=128',
+  'capital one': 'https://logo.clearbit.com/capitalone.com',
   'credit one': 'https://www.google.com/s2/favicons?domain=creditonebank.com&sz=128',
   discover: 'https://www.google.com/s2/favicons?domain=discover.com&sz=128',
   'wells fargo': 'https://www.google.com/s2/favicons?domain=wellsfargo.com&sz=128',
