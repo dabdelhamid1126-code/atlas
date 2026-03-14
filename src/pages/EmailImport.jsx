@@ -422,15 +422,11 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="paste" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs defaultValue="gmail" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="gmail" onClick={fetchGmailEmails}>
                   <Inbox className="h-4 w-4 mr-2" />
                   Gmail
-                </TabsTrigger>
-                <TabsTrigger value="paste">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Paste Email
                 </TabsTrigger>
                 <TabsTrigger value="pdf">
                   <FileText className="h-4 w-4 mr-2" />
