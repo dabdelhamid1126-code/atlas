@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, X } from 'lucide-react';
 
 const BENEFIT_CATEGORIES = ['Travel', 'Dining', 'Ride-share', 'Shopping', 'Entertainment', 'Other'];
-const RESET_FREQUENCIES = ['Monthly', 'Quarterly', 'Annually'];
+const RESET_FREQUENCIES = ['Monthly', 'Quarterly', 'Annually', 'None'];
 
 const emptyBenefit = () => ({ category: 'Travel', benefit_name: '', credit_amount: 0, reset_frequency: 'Annually', notes: '' });
 
