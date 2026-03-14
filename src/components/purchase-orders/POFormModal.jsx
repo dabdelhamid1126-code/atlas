@@ -83,6 +83,8 @@ export default function POFormModal({
     order_number: '',
     tracking_number: '',
     retailer: '',
+    buyer: '',
+    marketplace_platform: '',
     account: '',
     status: 'pending',
     category: 'other',
