@@ -10,6 +10,32 @@ const CATEGORY_EMOJI = {
   Other: '⭐',
 };
 
+const ISSUER_LOGOS = {
+  chase: 'https://logo.clearbit.com/chase.com',
+  amex: 'https://logo.clearbit.com/americanexpress.com',
+  'american express': 'https://logo.clearbit.com/americanexpress.com',
+  citi: 'https://logo.clearbit.com/citi.com',
+  citibank: 'https://logo.clearbit.com/citi.com',
+  'bank of america': 'https://logo.clearbit.com/bankofamerica.com',
+  'capital one': 'https://logo.clearbit.com/capitalone.com',
+  discover: 'https://logo.clearbit.com/discover.com',
+  wells fargo: 'https://logo.clearbit.com/wellsfargo.com',
+  barclays: 'https://logo.clearbit.com/barclays.com',
+  usaa: 'https://logo.clearbit.com/usaa.com',
+  pnc: 'https://logo.clearbit.com/pnc.com',
+  us bank: 'https://logo.clearbit.com/usbank.com',
+  'u.s. bank': 'https://logo.clearbit.com/usbank.com',
+  synchrony: 'https://logo.clearbit.com/synchrony.com',
+  td bank: 'https://logo.clearbit.com/td.com',
+  apple: 'https://logo.clearbit.com/apple.com',
+  amazon: 'https://logo.clearbit.com/amazon.com',
+};
+
+function getIssuerLogo(issuer, cardName) {
+  const key = (issuer || cardName || '').toLowerCase();
+  return Object.entries(ISSUER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
+}
+
 const CATEGORY_ICONS = {
   Dining: '🍽️',
   Travel: '✈️',
