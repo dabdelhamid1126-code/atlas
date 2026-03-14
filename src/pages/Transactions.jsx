@@ -281,9 +281,9 @@ export default function Transactions() {
       // Tab filter
       let matchesMode = true;
       if (mode === 'churning') {
-        matchesMode = order.delivery_type === 'Dropship' || order.order_type === 'Churning';
+        matchesMode = order.order_type === 'churning';
       } else if (mode === 'marketplace') {
-        matchesMode = order.order_type === 'Marketplace' || order.delivery_type === 'Pickup';
+        matchesMode = order.order_type === 'marketplace';
       }
 
       // Other filters
