@@ -44,6 +44,30 @@ const CATEGORY_ICONS = {
   Streaming: '📺',
 };
 
+function IssuerLogo({ issuer, cardName }) {
+  const [imgError, setImgError] = useState(false);
+  const logo = getIssuerLogo(issuer, cardName);
+
+  if (!logo || imgError) {
+    return (
+      <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+        {(issuer || cardName || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow overflow-hidden shrink-0">
+      <img
+        src={logo}
+        alt={issuer}
+        className="h-8 w-8 object-contain"
+        onError={() => setImgError(true)}
+      />
+    </div>
+  );
+}
+
 function getAbbreviation(name) {
   if (!name) return '?';
   const words = name.split(' ').filter(Boolean);
