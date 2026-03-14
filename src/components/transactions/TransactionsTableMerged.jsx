@@ -81,20 +81,17 @@ export default function TransactionsTableMerged({
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedRows(new Set(data.map((_, i) => i)));
+      onSelectionChange?.(new Set(data.map(o => o.id)));
     } else {
-      setSelectedRows(new Set());
+      onSelectionChange?.(new Set());
     }
   };
 
-  const handleSelectRow = (idx, checked) => {
+  const handleSelectRow = (orderId, checked) => {
     const newSelected = new Set(selectedRows);
-    if (checked) {
-      newSelected.add(idx);
-    } else {
-      newSelected.delete(idx);
-    }
-    setSelectedRows(newSelected);
+    if (checked) newSelected.add(orderId);
+    else newSelected.delete(orderId);
+    onSelectionChange?.(newSelected);
   };
 
   if (isLoading) {
