@@ -64,7 +64,7 @@ function getTrackingUrl(trackingNumber, carrier) {
   return `https://www.google.com/search?q=${encodeURIComponent(trackingNumber)}+package+tracking`;
 }
 
-function OrderRow({ order, creditCards, rewards, onEdit, onDelete, isSelected, onSelectChange }) {
+function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isSelected, onSelectChange }) {
   const [expanded, setExpanded] = useState(false);
 
   const logo = getRetailerLogo(order.retailer);
