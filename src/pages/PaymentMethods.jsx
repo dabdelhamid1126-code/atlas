@@ -136,40 +136,18 @@ function CreditCardsTab({ queryClient }) {
   const isCashback = formData.reward_type === 'cashback' || formData.reward_type === 'both';
   const isPoints = formData.reward_type === 'points' || formData.reward_type === 'both';
 
-  const columns = [
-    { header: 'Card Name', accessor: 'card_name', cell: r => <span className="font-semibold text-slate-900">{r.card_name}</span> },
-    { header: 'Issuer', accessor: 'issuer', cell: r => <span className="text-slate-600">{r.issuer || '—'}</span> },
-    { header: 'Type', accessor: 'reward_type', cell: r => (
-      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${r.reward_type === 'cashback' ? 'bg-green-100 text-green-700' : r.reward_type === 'points' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-        {r.reward_type}
-      </span>
-    )},
-    { header: 'Rate', cell: r => (
-      <span className="font-semibold text-slate-700">
-        {r.reward_type === 'cashback' && `${r.cashback_rate || 0}%`}
-        {r.reward_type === 'points' && `${r.points_rate || 0}x pts`}
-        {r.reward_type === 'both' && `${r.cashback_rate || 0}% / ${r.points_rate || 0}x`}
-      </span>
-    )},
-    { header: 'Status', cell: r => (
-      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${r.active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-        {r.active !== false ? 'Active' : 'Inactive'}
-      </span>
-    )},
-    { header: 'Benefits', accessor: 'benefits', cell: r => <span className="text-xs text-slate-500 truncate max-w-[200px] block">{r.benefits || '—'}</span> },
-    { header: '', cell: r => (
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" onClick={() => openDialog(r)}><Pencil className="h-4 w-4" /></Button>
-        <Button variant="ghost" size="icon" onClick={() => { if (confirm('Delete card?')) deleteMutation.mutate(r.id); }}>
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </Button>
-      </div>
-    )},
-  ];
+  const { data: orders = [] } = useQuery({
+    queryKey: ['purchaseOrders'],
+    queryFn: () => base44.entities.PurchaseOrder.list(),
+  });
+  const { data: rewards = [] } = useQuery({
+    queryKey: ['rewards'],
+    queryFn: () => base44.entities.Reward.list(),
+  });
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <p className="text-xs text-slate-500">Total Cards</p>
@@ -182,7 +160,7 @@ function CreditCardsTab({ queryClient }) {
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <p className="text-xs text-slate-500">Avg Cashback</p>
             <p className="text-2xl font-bold text-purple-600">
-              {cards.length ? (cards.filter(c => c.cashback_rate).reduce((s, c) => s + (c.cashback_rate || 0), 0) / cards.filter(c => c.cashback_rate).length || 0).toFixed(1) : 0}%
+              {cards.length ? (cards.filter(c => c.cashback_rate).reduce((s, c) => s + (c.cashback_rate || 0), 0) / (cards.filter(c => c.cashback_rate).length || 1)).toFixed(1) : 0}%
             </p>
           </div>
         </div>
@@ -191,7 +169,22 @@ function CreditCardsTab({ queryClient }) {
         </Button>
       </div>
 
-      <DataTable columns={columns} data={cards} loading={isLoading} emptyMessage="No credit cards yet" />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {isLoading ? (
+          <p className="text-sm text-slate-400 col-span-3">Loading...</p>
+        ) : cards.length === 0 ? (
+          <p className="text-sm text-slate-400 col-span-3">No credit cards yet</p>
+        ) : cards.map(card => (
+          <CreditCardCard
+            key={card.id}
+            card={card}
+            orders={orders}
+            rewards={rewards}
+            onEdit={openDialog}
+            onDelete={(c) => { if (confirm('Delete card?')) deleteMutation.mutate(c.id); }}
+          />
+        ))}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
