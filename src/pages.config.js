@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Analytics from './pages/Analytics';
 import Dashboard from './pages/Dashboard';
 import EmailImport from './pages/EmailImport';
 import GiftCards from './pages/GiftCards';
@@ -54,18 +55,18 @@ import Goals from './pages/Goals';
 import Inventory from './pages/Inventory';
 import InventoryValue from './pages/InventoryValue';
 import Invoices from './pages/Invoices';
+import PaymentMethods from './pages/PaymentMethods';
 import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
 import Rewards from './pages/Rewards';
 import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
-import PaymentMethods from './pages/PaymentMethods';
-import Analytics from './pages/Analytics';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "Analytics": Analytics,
     "Dashboard": Dashboard,
     "EmailImport": EmailImport,
     "GiftCards": GiftCards,
@@ -73,14 +74,13 @@ export const PAGES = {
     "Inventory": Inventory,
     "InventoryValue": InventoryValue,
     "Invoices": Invoices,
+    "PaymentMethods": PaymentMethods,
     "Products": Products,
     "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,
     "Rewards": Rewards,
     "Settings": Settings,
     "Transactions": Transactions,
-    "PaymentMethods": PaymentMethods,
-    "Analytics": Analytics,
 }
 
 export const pagesConfig = {

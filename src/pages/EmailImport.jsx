@@ -1,30 +1,190 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
-import PageHeader from '../components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-// Inner tabs for import methods still used below
-import { Mail, Upload, CheckCircle, XCircle, Loader2, FileText, Inbox, RefreshCw } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { format } from 'date-fns';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Upload, CheckCircle, XCircle, Loader2, FileText, Inbox,
+  RefreshCw, ChevronDown, ChevronUp, ShoppingCart, AlertTriangle,
+  Mail, X, Package
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import { format } from 'date-fns';
 
+// ─── Retailer logo helper ────────────────────────────────────────────────────
+const RETAILER_LOGOS = {
+  amazon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png',
+  bestbuy: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/200px-Best_Buy_Logo.svg.png',
+  walmart: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Walmart_Spark.svg/200px-Walmart_Spark.svg.png',
+  target: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Target_Corporation_logo_%28vector%29.svg/200px-Target_Corporation_logo_%28vector%29.svg.png',
+  woot: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b6/Woot_logo.svg/200px-Woot_logo.svg.png',
+};
+const getRetailerLogo = (name) => {
+  if (!name) return null;
+  const key = name.toLowerCase().replace(/[^a-z]/g, '');
+  return Object.entries(RETAILER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
+};
+
+// ─── Product matching helper (shared) ────────────────────────────────────────
+const matchProducts = (items, allProducts) =>
+  items.map(item => {
+    const suggestions = allProducts
+      .map(p => {
+        let score = 0;
+        const iName = item.product_name?.toLowerCase() || '';
+        const pName = p.name?.toLowerCase() || '';
+        if (item.sku && p.upc === item.sku) score = 100;
+        else if (pName === iName) score = 95;
+        else if (pName.includes(iName) || iName.includes(pName)) score = 80;
+        else {
+          const iWords = iName.split(/\s+/).filter(w => w.length > 2);
+          const pWords = pName.split(/\s+/).filter(w => w.length > 2);
+          const matching = iWords.filter(iw => pWords.some(pw =>
+            pw.includes(iw) || iw.includes(pw) ||
+            (Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3))))
+          )).length;
+          if (matching > 0) score = (matching / Math.max(iWords.length, pWords.length)) * 75;
+          if (Math.abs(iName.length - pName.length) < 5) score += 5;
+          const iNums = iName.match(/\d+/g) || [];
+          const pNums = pName.match(/\d+/g) || [];
+          score += iNums.filter(n => pNums.includes(n)).length * 10;
+        }
+        return { product: p, score };
+      })
+      .filter(m => m.score > 20)
+      .sort((a, b) => b.score !== a.score ? b.score - a.score : a.product.name.localeCompare(b.product.name))
+      .slice(0, 8);
+    return {
+      invoiceName: item.product_name,
+      sku: item.sku,
+      quantity: item.quantity || 1,
+      unit_cost: item.unit_cost || 0,
+      suggestions,
+      selectedProduct: suggestions[0]?.product || null,
+    };
+  });
+
+// ─── Inbox Card ───────────────────────────────────────────────────────────────
+function InboxCard({ group, onImport, onReject, processing }) {
+  const [expanded, setExpanded] = useState(false);
+  const logo = getRetailerLogo(group.retailer);
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header row */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-slate-50 transition"
+      >
+        {/* Icon */}
+        <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+          <AlertTriangle className="h-5 w-5 text-amber-500" />
+        </div>
+
+        {/* Subject / title */}
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-900 text-sm truncate">{group.subject}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{group.from}</p>
+        </div>
+
+        {/* Meta */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {group.emailCount > 1 && (
+            <span className="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-semibold">
+              {group.emailCount} emails
+            </span>
+          )}
+          {group.hasTracking && (
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+              + tracking
+            </span>
+          )}
+          {group.date && (
+            <span className="text-xs text-slate-400">
+              {new Date(group.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+          {expanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+        </div>
+      </button>
+
+      {/* Expanded sub-row */}
+      {expanded && (
+        <div className="border-t border-slate-100 px-5 py-4 bg-slate-50">
+          <div className="flex items-center gap-4">
+            {/* Checkbox placeholder */}
+            <input type="checkbox" className="rounded border-slate-300 h-4 w-4 accent-violet-600" defaultChecked />
+
+            {/* Order Placed label */}
+            <span className="text-xs font-bold text-violet-600 uppercase tracking-wider whitespace-nowrap">Order Placed</span>
+
+            {/* Retailer */}
+            <div className="flex items-center gap-2 min-w-0">
+              {logo ? (
+                <img src={logo} alt={group.retailer} className="h-6 w-12 object-contain rounded" />
+              ) : (
+                <div className="h-6 w-6 rounded-md bg-slate-200 flex items-center justify-center">
+                  <Package className="h-3.5 w-3.5 text-slate-400" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-800 truncate">{group.retailer || 'Unknown Retailer'}</p>
+                {group.orderNumber && <p className="text-xs text-slate-400 truncate">#{group.orderNumber}</p>}
+              </div>
+            </div>
+
+            {/* Price */}
+            {group.totalCost != null && (
+              <span className="text-sm font-bold text-slate-700 ml-2">${group.totalCost.toFixed(2)}</span>
+            )}
+
+            {/* Badges */}
+            <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
+                ~{group.confidence || 85}% match
+              </span>
+              <span className="text-xs bg-yellow-100 text-yellow-700 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                Pending
+              </span>
+              {group.productName && (
+                <span className="text-xs text-violet-600 font-semibold truncate max-w-[140px]">{group.productName}</span>
+              )}
+              {/* Import button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onImport(group); }}
+                disabled={processing}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-300 bg-white text-violet-700 text-xs font-semibold hover:bg-violet-50 transition disabled:opacity-50"
+              >
+                {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShoppingCart className="h-3.5 w-3.5" />}
+                Import
+              </button>
+              {/* Reject button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onReject(group.id); }}
+                disabled={processing}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-500 text-xs font-semibold hover:bg-red-50 transition disabled:opacity-50"
+              >
+                <X className="h-3.5 w-3.5" /> Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function EmailImport() {
-  const [emailContent, setEmailContent] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [processingId, setProcessingId] = useState(null);
   const [result, setResult] = useState(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
@@ -35,6 +195,9 @@ export default function EmailImport() {
   const [batchResults, setBatchResults] = useState([]);
   const [gmailAfterDate, setGmailAfterDate] = useState('');
   const [gmailBeforeDate, setGmailBeforeDate] = useState('');
+  const [rejectedIds, setRejectedIds] = useState(new Set());
+  const [importedIds, setImportedIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState('all');
   const queryClient = useQueryClient();
 
   const fetchGmailEmails = async () => {
@@ -52,28 +215,27 @@ export default function EmailImport() {
     }
   };
 
-  const toggleGmailSelection = (id) => {
-    setSelectedGmailIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+  const handleReject = (id) => {
+    setRejectedIds(prev => new Set([...prev, id]));
+    toast.success('Email rejected');
   };
 
-  const handleParse = async () => {
-    if (!emailContent.trim()) {
-      toast.error('Please paste email content');
-      return;
-    }
-
+  const handleImportGroup = async (group) => {
+    setProcessingId(group.id);
     setProcessing(true);
-    setResult(null);
-
     try {
-      // Use the same LLM extraction flow as PDF/Gmail
+      const idsToFetch = group?.ids || [group.id];
+      const res = idsToFetch.length > 1
+        ? await base44.functions.invoke('fetchGmailEmails', { messageIds: idsToFetch })
+        : await base44.functions.invoke('fetchGmailEmails', { messageId: group.id });
+      const { subject, body } = res.data || {};
+      const content = `Subject: ${subject}\n\n${body}`;
+
       const extracted = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract order information from this email content from one of these retailers: Amazon, Best Buy, Woot, Walmart, or Target.
-The content may contain both an order confirmation and a shipping/tracking email for the same order combined together.
-Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number (look in both emails if present), last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.
-If there are two emails for the same order, merge the data.\n\n${emailContent}`,
+The content may contain both an order confirmation email AND a shipping/tracking email for the same order combined together.
+Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number (look in both emails), last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.
+If there are two emails for the same order, merge the data.\n\n${content}`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -89,26 +251,15 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
         }
       });
 
-      if (!extracted.order_number) {
-        toast.error('Could not extract order number from email');
-        setResult({ success: false, message: 'Could not extract order information' });
-        return;
-      }
-
       const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
       if (existing.length > 0) {
         const existingOrder = existing[0];
         if (extracted.tracking_number && !existingOrder.tracking_number) {
-          await base44.entities.PurchaseOrder.update(existingOrder.id, {
-            tracking_number: extracted.tracking_number,
-            status: 'shipped'
-          });
+          await base44.entities.PurchaseOrder.update(existingOrder.id, { tracking_number: extracted.tracking_number, status: 'shipped' });
           toast.success(`Tracking updated for order ${extracted.order_number}`);
-          setEmailContent('');
-          setResult({ success: true, message: `Tracking updated for existing order ${extracted.order_number}` });
+          setImportedIds(prev => new Set([...prev, group.id]));
         } else {
           toast.error(`Order ${extracted.order_number} already exists`);
-          setResult({ success: false, message: `Order ${extracted.order_number} already exists` });
         }
         return;
       }
@@ -120,79 +271,32 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
       ]);
 
       let matchedCard = null;
-      if (extracted.card_last_4) {
-        matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
-      }
+      if (extracted.card_last_4) matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
       const matchedGiftCards = [];
       for (const code of extracted.gift_card_codes || []) {
         const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
         if (gc) matchedGiftCards.push(gc);
       }
 
-      const matches = [];
-      for (const item of extracted.items || []) {
-        const suggestions = allProducts
-          .map(p => {
-            let score = 0;
-            const itemName = item.product_name?.toLowerCase() || '';
-            const prodName = p.name?.toLowerCase() || '';
-            if (item.sku && p.upc === item.sku) score = 100;
-            else if (prodName === itemName) score = 95;
-            else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
-            else {
-              const itemWords = itemName.split(/\s+/).filter(w => w.length > 2);
-              const prodWords = prodName.split(/\s+/).filter(w => w.length > 2);
-              const matchingWords = itemWords.filter(iw => prodWords.some(pw => pw.includes(iw) || iw.includes(pw) || (Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3)))))).length;
-              if (matchingWords > 0) score = (matchingWords / Math.max(itemWords.length, prodWords.length)) * 75;
-              if (Math.abs(itemName.length - prodName.length) < 5) score += 5;
-              const itemNumbers = itemName.match(/\d+/g) || [];
-              const prodNumbers = prodName.match(/\d+/g) || [];
-              score += itemNumbers.filter(num => prodNumbers.includes(num)).length * 10;
-            }
-            return { product: p, score };
-          })
-          .filter(m => m.score > 20)
-          .sort((a, b) => b.score !== a.score ? b.score - a.score : a.product.name.localeCompare(b.product.name))
-          .slice(0, 8);
-
-        matches.push({
-          invoiceName: item.product_name,
-          sku: item.sku,
-          quantity: item.quantity || 1,
-          unit_cost: item.unit_cost || 0,
-          suggestions,
-          selectedProduct: suggestions[0]?.product || null
-        });
-      }
-
-      setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'Email' });
-      setProductMatches(matches);
+      setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'Gmail', _groupId: group.id });
+      setProductMatches(matchProducts(extracted.items || [], allProducts));
       setConfirmDialogOpen(true);
-      setEmailContent('');
-    } catch (error) {
-      toast.error('Error parsing email: ' + error.message);
-      setResult({ success: false, message: error.message });
+    } catch (err) {
+      toast.error('Failed to process email: ' + err.message);
     } finally {
       setProcessing(false);
+      setProcessingId(null);
     }
   };
 
   const handlePdfUpload = async () => {
-    if (!pdfFile) {
-      toast.error('Please select a PDF file');
-      return;
-    }
-
+    if (!pdfFile) { toast.error('Please select a PDF file'); return; }
     setProcessing(true);
     setResult(null);
-
     try {
-      // Upload the PDF
       const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
-
-      // Extract order data from PDF using LLM
-      const extractedData = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities. Return the exact order number as shown in the document.`,
+      const extracted = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -203,144 +307,31 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
             order_date: { type: "string" },
             tracking_number: { type: "string" },
             card_last_4: { type: "string" },
-            gift_card_codes: { 
-              type: "array",
-              items: { type: "string" }
-            },
-            items: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  product_name: { type: "string" },
-                  sku: { type: "string" },
-                  unit_cost: { type: "number" },
-                  quantity: { type: "number" }
-                }
-              }
-            }
+            gift_card_codes: { type: "array", items: { type: "string" } },
+            items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
           }
         }
       });
 
-      // Check if order already exists
-      const existing = await base44.entities.PurchaseOrder.filter({ 
-        order_number: extractedData.order_number 
-      });
-      
-      if (existing.length > 0) {
-        setResult({ success: false, message: 'Order already exists', order_number: extractedData.order_number });
-        toast.error('Order already exists');
-        return;
-      }
+      const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
+      if (existing.length > 0) { setResult({ success: false, message: 'Order already exists' }); toast.error('Order already exists'); return; }
 
-      // Get all products, credit cards, and gift cards to match
-      const allProducts = await base44.entities.Product.list();
-      const allCards = await base44.entities.CreditCard.list();
-      const allGiftCards = await base44.entities.GiftCard.list();
+      const [allProducts, allCards, allGiftCards] = await Promise.all([
+        base44.entities.Product.list(), base44.entities.CreditCard.list(), base44.entities.GiftCard.list()
+      ]);
 
-      // Match credit card by last 4 digits
       let matchedCard = null;
-      if (extractedData.card_last_4) {
-        matchedCard = allCards.find(card => 
-          card.card_name?.includes(extractedData.card_last_4)
-        );
-      }
-
-      // Match gift cards by code
+      if (extracted.card_last_4) matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
       const matchedGiftCards = [];
-      if (extractedData.gift_card_codes && extractedData.gift_card_codes.length > 0) {
-        for (const giftCardCode of extractedData.gift_card_codes) {
-          const matched = allGiftCards.find(gc => 
-            gc.code && gc.code.includes(giftCardCode.replace(/\s+/g, ''))
-          );
-          if (matched) {
-            matchedGiftCards.push(matched);
-          }
-        }
+      for (const code of extracted.gift_card_codes || []) {
+        const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
+        if (gc) matchedGiftCards.push(gc);
       }
 
-      // Find product matches and suggestions
-      const matches = [];
-      
-      for (const item of extractedData.items || []) {
-        // Find top 8 suggestions for each item with better fuzzy matching
-        const suggestions = allProducts
-          .map(p => {
-            let score = 0;
-            const itemName = item.product_name?.toLowerCase() || '';
-            const prodName = p.name?.toLowerCase() || '';
-            
-            // SKU/UPC exact match gets highest priority
-            if (item.sku && p.upc === item.sku) score = 100;
-            // Exact name match
-            else if (prodName === itemName) score = 95;
-            // Contains match
-            else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
-            // Partial word matching and fuzzy logic
-            else {
-              const itemWords = itemName.split(/\s+/).filter(w => w.length > 2);
-              const prodWords = prodName.split(/\s+/).filter(w => w.length > 2);
-              
-              // Count matching words
-              const matchingWords = itemWords.filter(iw => 
-                prodWords.some(pw => 
-                  pw.includes(iw) || iw.includes(pw) || 
-                  // Levenshtein-like: check if words are similar
-                  Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3)))
-                )
-              ).length;
-              
-              // Score based on matching words ratio
-              if (matchingWords > 0) {
-                score = (matchingWords / Math.max(itemWords.length, prodWords.length)) * 75;
-              }
-              
-              // Bonus for similar length names
-              if (Math.abs(itemName.length - prodName.length) < 5) {
-                score += 5;
-              }
-              
-              // Check for common product identifiers (GB, inch, etc.)
-              const itemNumbers = itemName.match(/\d+/g) || [];
-              const prodNumbers = prodName.match(/\d+/g) || [];
-              const matchingNumbers = itemNumbers.filter(num => prodNumbers.includes(num)).length;
-              if (matchingNumbers > 0) {
-                score += matchingNumbers * 10;
-              }
-            }
-            
-            return { product: p, score };
-          })
-          .filter(m => m.score > 20) // Lower threshold to show more options
-          .sort((a, b) => {
-            // First sort by score
-            if (b.score !== a.score) return b.score - a.score;
-            // Then alphabetically by name
-            return a.product.name.localeCompare(b.product.name);
-          })
-          .slice(0, 8); // Show top 8 matches
-        
-        matches.push({
-          invoiceName: item.product_name,
-          sku: item.sku,
-          quantity: item.quantity || 1,
-          unit_cost: item.unit_cost || 0,
-          suggestions,
-          selectedProduct: suggestions[0]?.product || null
-        });
-      }
-      
-      // Show confirmation dialog
-      setExtractedData({
-        ...extractedData,
-        matchedCard,
-        matchedGiftCards
-      });
-      setProductMatches(matches);
+      setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'PDF' });
+      setProductMatches(matchProducts(extracted.items || [], allProducts));
       setConfirmDialogOpen(true);
       setPdfFile(null);
-
     } catch (error) {
       toast.error('Error processing PDF: ' + error.message);
       setResult({ success: false, message: error.message });
@@ -349,643 +340,386 @@ If there are two emails for the same order, merge the data.\n\n${emailContent}`,
     }
   };
 
+  const handleConfirmImport = async () => {
+    setProcessing(true);
+    try {
+      const orderItems = productMatches.map(match => ({
+        product_id: match.selectedProduct?.id || '',
+        product_name: match.selectedProduct?.name || '',
+        upc: match.selectedProduct?.upc || match.sku || '',
+        quantity_ordered: match.quantity,
+        quantity_received: 0,
+        unit_cost: match.unit_cost
+      }));
+
+      const giftCardIds = extractedData.matchedGiftCards?.map(gc => gc.id) || [];
+      const giftCardValue = extractedData.matchedGiftCards?.reduce((sum, gc) => sum + (gc.value || 0), 0) || 0;
+
+      const orderData = {
+        order_number: extractedData.order_number,
+        retailer: extractedData.retailer || 'Unknown',
+        tracking_number: extractedData.tracking_number || '',
+        credit_card_id: extractedData.matchedCard?.id || null,
+        card_name: extractedData.matchedCard?.card_name || null,
+        gift_card_ids: giftCardIds,
+        gift_card_value: giftCardValue,
+        status: extractedData.tracking_number ? 'shipped' : 'ordered',
+        order_date: extractedData.order_date || format(new Date(), 'yyyy-MM-dd'),
+        items: orderItems,
+        total_cost: extractedData.total_cost || 0,
+        final_cost: (extractedData.total_cost || 0) - giftCardValue,
+        category: 'other',
+        notes: `Imported from ${extractedData.importSource || 'PDF'}`
+      };
+
+      const created = await base44.entities.PurchaseOrder.create(orderData);
+
+      for (const cardId of giftCardIds) {
+        await base44.entities.GiftCard.update(cardId, { status: 'used', used_order_number: extractedData.order_number });
+      }
+
+      if (extractedData.matchedCard?.id && orderData.total_cost) {
+        const card = extractedData.matchedCard;
+        const amount = orderData.final_cost;
+        let rewardAmount = 0, rewardType = 'cashback', currency = 'USD';
+        if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
+          rewardAmount = parseFloat((amount * card.cashback_rate / 100).toFixed(2));
+        } else if (card.reward_type === 'points' && card.points_rate > 0) {
+          rewardAmount = Math.round(amount * card.points_rate);
+          rewardType = 'points'; currency = 'points';
+        } else if (card.reward_type === 'both') {
+          if (card.cashback_rate > 0) rewardAmount = parseFloat((amount * card.cashback_rate / 100).toFixed(2));
+          else if (card.points_rate > 0) { rewardAmount = Math.round(amount * card.points_rate); rewardType = 'points'; currency = 'points'; }
+        }
+        if (rewardAmount > 0) {
+          await base44.entities.Reward.create({
+            credit_card_id: card.id, card_name: card.card_name, source: card.card_name,
+            type: rewardType, purchase_amount: amount, amount: rewardAmount, currency,
+            purchase_order_id: created.id, order_number: extractedData.order_number,
+            date_earned: orderData.order_date, status: 'pending',
+            notes: `Auto-generated from imported order ${extractedData.order_number}`
+          });
+        }
+      }
+
+      if (extractedData._groupId) setImportedIds(prev => new Set([...prev, extractedData._groupId]));
+      setResult({ success: true, message: 'Order imported successfully', order: created });
+      toast.success('Order imported with rewards calculated!');
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      setConfirmDialogOpen(false);
+      setExtractedData(null);
+      setProductMatches([]);
+    } catch (error) {
+      setResult({ success: false, message: error.message || 'Failed to import order' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Filtered emails by tab
+  const visibleEmails = gmailEmails.filter(g => {
+    if (rejectedIds.has(g.id)) return activeTab === 'failed';
+    if (importedIds.has(g.id)) return activeTab === 'processed' || activeTab === 'all';
+    return activeTab === 'all' || activeTab === 'needs_review';
+  });
+
+  const pendingCount = gmailEmails.filter(g => !rejectedIds.has(g.id) && !importedIds.has(g.id)).length;
+
   return (
-    <div>
-      <PageHeader
-        title="Import Orders from Email"
-        description="Paste order confirmation emails from any retailer to automatically create purchase orders"
-      />
+    <div className="min-h-screen bg-[#f6f7fb] px-4 py-6 lg:px-8">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900">Import Orders</h1>
+            {pendingCount > 0 && (
+              <span className="px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-xs font-bold">
+                {pendingCount} needs review
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Forwarded order emails — review and import as transactions
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-[130px]">
+            <input type="date" value={gmailAfterDate} onChange={e => setGmailAfterDate(e.target.value)}
+              className="h-8 px-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 w-full"
+              placeholder="From date" />
+          </div>
+          <div className="flex-1 min-w-[130px]">
+            <input type="date" value={gmailBeforeDate} onChange={e => setGmailBeforeDate(e.target.value)}
+              className="h-8 px-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 w-full"
+              placeholder="To date" />
+          </div>
+          <button
+            onClick={fetchGmailEmails}
+            disabled={loadingGmail}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${loadingGmail ? 'animate-spin' : ''}`} />
+            {loadingGmail ? 'Fetching...' : 'Fetch Gmail'}
+          </button>
+        </div>
+      </div>
 
-      <div className="max-w-4xl grid gap-6">
-        {/* Instructions Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              How to Import Orders
-            </CardTitle>
-            <CardDescription>
-              Follow these steps to import your orders
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* ── Two-column layout ── */}
+      <div className="flex gap-6">
+        {/* ── Left: Inbox ── */}
+        <div className="flex-1 min-w-0">
+          {/* Tabs */}
+          <div className="flex items-center gap-0 border-b border-slate-200 mb-4">
+            {[
+              { id: 'all', label: 'All', count: gmailEmails.length },
+              { id: 'needs_review', label: 'Needs Review', count: pendingCount },
+              { id: 'processed', label: 'Processed', count: importedIds.size },
+              { id: 'failed', label: 'Rejected', count: rejectedIds.size },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition -mb-px ${
+                  activeTab === tab.id
+                    ? 'border-violet-600 text-violet-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    activeTab === tab.id ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Select All Pending */}
+          {pendingCount > 0 && activeTab !== 'processed' && activeTab !== 'failed' && (
+            <div className="flex items-center gap-2 mb-4 px-1">
+              <input type="checkbox" className="rounded border-slate-300 h-4 w-4 accent-violet-600"
+                onChange={(e) => {
+                  if (e.target.checked) setSelectedGmailIds(gmailEmails.filter(g => !rejectedIds.has(g.id) && !importedIds.has(g.id)).map(g => g.id));
+                  else setSelectedGmailIds([]);
+                }}
+              />
+              <span className="text-xs text-slate-500 font-medium">Select All Pending</span>
+            </div>
+          )}
+
+          {/* Email list */}
+          {loadingGmail ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <Loader2 className="h-8 w-8 animate-spin mb-3" />
+              <p className="text-sm">Fetching emails from Gmail…</p>
+            </div>
+          ) : gmailEmails.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <Inbox className="h-12 w-12 mb-3 opacity-40" />
+              <p className="text-sm font-medium text-slate-500">No order emails found</p>
+              <p className="text-xs text-slate-400 mt-1">Click "Fetch Gmail" to load your inbox</p>
+            </div>
+          ) : visibleEmails.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <Mail className="h-12 w-12 mb-3 opacity-40" />
+              <p className="text-sm font-medium text-slate-500">Nothing here</p>
+            </div>
+          ) : (
             <div className="space-y-3">
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-semibold">
-                  1
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">Open your order confirmation email</p>
-                  <p className="text-sm text-slate-600">From any retailer in your inbox</p>
-                </div>
+              {visibleEmails.map(group => (
+                <InboxCard
+                  key={group.id}
+                  group={group}
+                  onImport={handleImportGroup}
+                  onReject={handleReject}
+                  processing={processingId === group.id}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Right: PDF Upload panel ── */}
+        <div className="w-72 flex-shrink-0">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-8 w-8 rounded-xl bg-violet-100 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-violet-600" />
               </div>
-              
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-semibold">
-                  2
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">Copy the entire email</p>
-                  <p className="text-sm text-slate-600">Select all text (Ctrl+A or Cmd+A) and copy (Ctrl+C or Cmd+C)</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-semibold">
-                  3
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">Paste below and click Import</p>
-                  <p className="text-sm text-slate-600">The system will automatically extract order details</p>
-                </div>
+              <div>
+                <p className="text-sm font-bold text-slate-800">Upload PDF</p>
+                <p className="text-[11px] text-slate-400">Order confirmation PDF</p>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-              <p className="text-sm text-blue-900">
-                <strong>Supported retailers:</strong> Amazon, Best Buy, Woot, Walmart, Target
-                <br />
-                <strong>Extracted data:</strong> Order number, total, items, tracking number, order date, credit card (last 4), SKU codes
-                <br />
-                <strong>Smart grouping:</strong> Order + shipping emails for the same order are automatically combined
+            <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition ${pdfFile ? 'border-violet-400 bg-violet-50' : 'border-slate-200 hover:border-violet-300 hover:bg-slate-50'}`}>
+              <FileText className={`h-8 w-8 mb-2 ${pdfFile ? 'text-violet-500' : 'text-slate-300'}`} />
+              <p className="text-xs text-center text-slate-500">
+                {pdfFile ? <span className="font-semibold text-violet-700">{pdfFile.name}</span> : 'Click to upload PDF'}
               </p>
-            </div>
-          </CardContent>
-        </Card>
+              <input type="file" accept=".pdf" className="hidden"
+                onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
+            </label>
 
-        {/* Import Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Import Method</CardTitle>
-            <CardDescription>
-              Choose to paste email text or upload a PDF
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="gmail" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="gmail" onClick={fetchGmailEmails}>
-                  <Inbox className="h-4 w-4 mr-2" />
-                  Gmail
-                </TabsTrigger>
-                <TabsTrigger value="pdf">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Upload PDF
-                </TabsTrigger>
-              </TabsList>
+            {pdfFile && (
+              <button
+                onClick={handlePdfUpload}
+                disabled={processing}
+                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-60"
+              >
+                {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {processing ? 'Processing…' : 'Import PDF'}
+              </button>
+            )}
 
-              <TabsContent value="gmail" className="space-y-3 pt-3">
-                <div className="flex flex-wrap gap-2 items-end">
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="text-xs text-slate-500 mb-1 block">From date</label>
-                    <Input
-                      type="date"
-                      value={gmailAfterDate}
-                      onChange={e => setGmailAfterDate(e.target.value)}
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="text-xs text-slate-500 mb-1 block">To date</label>
-                    <Input
-                      type="date"
-                      value={gmailBeforeDate}
-                      onChange={e => setGmailBeforeDate(e.target.value)}
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <Button size="sm" onClick={fetchGmailEmails} disabled={loadingGmail} className="h-8">
-                    <RefreshCw className={`h-4 w-4 mr-1 ${loadingGmail ? 'animate-spin' : ''}`} />
-                    Search
-                  </Button>
-                  {(gmailAfterDate || gmailBeforeDate) && (
-                    <Button size="sm" variant="ghost" className="h-8 text-slate-500" onClick={() => { setGmailAfterDate(''); setGmailBeforeDate(''); }}>
-                      Clear
-                    </Button>
-                  )}
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-xs text-slate-500">
-                    Order + tracking emails grouped automatically
-                    {selectedGmailIds.length > 0 && (
-                      <span className="ml-2 font-semibold text-indigo-600">({selectedGmailIds.length} selected)</span>
-                    )}
-                  </p>
-                </div>
-                {loadingGmail ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                  </div>
-                ) : gmailEmails.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">
-                    No order emails found. Click Refresh to load from Gmail.
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {gmailEmails.map(group => {
-                      const isSelected = selectedGmailIds.includes(group.id);
-                      return (
-                        <div
-                          key={group.id}
-                          onClick={() => toggleGmailSelection(group.id)}
-                          className={`border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors flex items-start gap-3 ${isSelected ? 'border-indigo-400 bg-indigo-50' : ''}`}
-                        >
-                          <div className={`mt-0.5 w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}`}>
-                            {isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-medium text-sm text-slate-900 truncate">{group.subject}</p>
-                              {group.emailCount > 1 && (
-                                <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                                  {group.emailCount} emails
-                                </span>
-                              )}
-                              {group.hasTracking && (
-                                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                                  + tracking
-                                </span>
-                              )}
-                              {group.date && (
-                                <span className="text-xs text-slate-400 flex-shrink-0 ml-auto">
-                                  {new Date(group.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-500 truncate">{group.from}</p>
-                            <p className="text-xs text-slate-400 mt-1 truncate">{group.snippet}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+            {result && (
+              <div className={`mt-3 p-3 rounded-xl text-xs flex items-start gap-2 ${result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                {result.success ? <CheckCircle className="h-4 w-4 flex-shrink-0 mt-0.5" /> : <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />}
+                <span>{result.message}</span>
+              </div>
+            )}
+          </div>
 
-                {batchResults.length > 0 && (
-                  <div className="space-y-1">
-                    {batchResults.map((r, i) => (
-                      <div key={i} className={`text-xs px-3 py-1.5 rounded flex items-center gap-2 ${r.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                        {r.success ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                        {r.subject}: {r.message}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {selectedGmailIds.length > 0 && (
-                  <Button
-                    onClick={async () => {
-                      if (selectedGmailIds.length === 0) return;
-                      setProcessing(true);
-                      const id = selectedGmailIds[0];
-                      const group = gmailEmails.find(e => e.id === id);
-                      try {
-                        // Fetch all emails in the group (order + tracking) together
-                        const idsToFetch = group?.ids || [id];
-                        const res = idsToFetch.length > 1
-                          ? await base44.functions.invoke('fetchGmailEmails', { messageIds: idsToFetch })
-                          : await base44.functions.invoke('fetchGmailEmails', { messageId: id });
-                        const { subject, body } = res.data || {};
-                        const content = `Subject: ${subject}\n\n${body}`;
-
-                        const extracted = await base44.integrations.Core.InvokeLLM({
-                          prompt: `Extract order information from this email content from one of these retailers: Amazon, Best Buy, Woot, Walmart, or Target. 
-The content may contain both an order confirmation email AND a shipping/tracking email for the same order combined together.
-Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number (look in both emails), last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.
-If there are two emails for the same order, merge the data (e.g. get the tracking number from the shipping email and the items/total from the order confirmation).\n\n${content}`,
-                          response_json_schema: {
-                            type: "object",
-                            properties: {
-                              retailer: { type: "string" },
-                              order_number: { type: "string" },
-                              total_cost: { type: "number" },
-                              order_date: { type: "string" },
-                              tracking_number: { type: "string" },
-                              card_last_4: { type: "string" },
-                              gift_card_codes: { type: "array", items: { type: "string" } },
-                              items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
-                            }
-                          }
-                        });
-
-                        const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
-                        if (existing.length > 0) {
-                          const existingOrder = existing[0];
-                          if (extracted.tracking_number && !existingOrder.tracking_number) {
-                            await base44.entities.PurchaseOrder.update(existingOrder.id, {
-                              tracking_number: extracted.tracking_number,
-                              status: 'shipped'
-                            });
-                            toast.success(`Tracking updated for order ${extracted.order_number}`);
-                          } else {
-                            toast.error(`Order ${extracted.order_number} already exists`);
-                          }
-                          setProcessing(false);
-                          return;
-                        }
-
-                        const [allProducts, allCards, allGiftCards] = await Promise.all([
-                          base44.entities.Product.list(),
-                          base44.entities.CreditCard.list(),
-                          base44.entities.GiftCard.list()
-                        ]);
-
-                        let matchedCard = null;
-                        if (extracted.card_last_4) {
-                          matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
-                        }
-                        const matchedGiftCards = [];
-                        for (const code of extracted.gift_card_codes || []) {
-                          const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
-                          if (gc) matchedGiftCards.push(gc);
-                        }
-
-                        const matches = [];
-                        for (const item of extracted.items || []) {
-                          const suggestions = allProducts
-                            .map(p => {
-                              let score = 0;
-                              const itemName = item.product_name?.toLowerCase() || '';
-                              const prodName = p.name?.toLowerCase() || '';
-                              if (item.sku && p.upc === item.sku) score = 100;
-                              else if (prodName === itemName) score = 95;
-                              else if (prodName.includes(itemName) || itemName.includes(prodName)) score = 80;
-                              else {
-                                const itemWords = itemName.split(/\s+/).filter(w => w.length > 2);
-                                const prodWords = prodName.split(/\s+/).filter(w => w.length > 2);
-                                const matchingWords = itemWords.filter(iw => prodWords.some(pw => pw.includes(iw) || iw.includes(pw) || (Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3)))))).length;
-                                if (matchingWords > 0) score = (matchingWords / Math.max(itemWords.length, prodWords.length)) * 75;
-                                if (Math.abs(itemName.length - prodName.length) < 5) score += 5;
-                                const itemNumbers = itemName.match(/\d+/g) || [];
-                                const prodNumbers = prodName.match(/\d+/g) || [];
-                                score += itemNumbers.filter(num => prodNumbers.includes(num)).length * 10;
-                              }
-                              return { product: p, score };
-                            })
-                            .filter(m => m.score > 20)
-                            .sort((a, b) => b.score !== a.score ? b.score - a.score : a.product.name.localeCompare(b.product.name))
-                            .slice(0, 8);
-
-                          matches.push({
-                            invoiceName: item.product_name,
-                            sku: item.sku,
-                            quantity: item.quantity || 1,
-                            unit_cost: item.unit_cost || 0,
-                            suggestions,
-                            selectedProduct: suggestions[0]?.product || null
-                          });
-                        }
-
-                        setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'Gmail' });
-                        setProductMatches(matches);
-                        setConfirmDialogOpen(true);
-                        setSelectedGmailIds([]);
-                      } catch (err) {
-                        toast.error('Failed to process email: ' + err.message);
-                      } finally {
-                        setProcessing(false);
-                      }
-                    }}
-                    disabled={processing}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                    size="lg"
-                  >
-                    {processing
-                      ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
-                      : <><Upload className="h-4 w-4 mr-2" />Review & Import Selected</>
-                    }
-                  </Button>
-                )}
-              </TabsContent>
-
-              <TabsContent value="pdf" className="space-y-4">
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
-                  <FileText className="h-12 w-12 mx-auto text-slate-400 mb-4" />
-                  <p className="text-sm text-slate-600 mb-4">
-                    Upload your order confirmation PDF
-                  </p>
-                  <Input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                    className="max-w-xs mx-auto"
-                  />
-                  {pdfFile && (
-                    <p className="text-sm text-slate-700 mt-3 font-medium">
-                      Selected: {pdfFile.name}
-                    </p>
-                  )}
-                </div>
-
-                <Button
-                  onClick={handlePdfUpload}
-                  disabled={processing || !pdfFile}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                  size="lg"
-                >
-                  {processing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing PDF...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import from PDF
-                    </>
-                  )}
-                </Button>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        {/* Result Card */}
-        {result && (
-          <Card className={result.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                {result.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p className={`font-medium ${result.success ? 'text-green-900' : 'text-red-900'}`}>
-                    {result.message}
-                  </p>
-                  {result.order && (
-                    <div className="mt-2 text-sm text-green-800">
-                      <p>Order #{result.order.order_number}</p>
-                      <p>Total: ${result.order.total_cost}</p>
-                      <p>Items: {result.order.items?.length || 0}</p>
-                    </div>
-                  )}
+          {/* How it works */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mt-4">
+            <p className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">How it works</p>
+            {[
+              { num: '1', title: 'Connect Gmail', desc: 'Orders are auto-fetched from your inbox' },
+              { num: '2', title: 'Review matches', desc: 'Confirm extracted order details and products' },
+              { num: '3', title: 'Import', desc: 'Creates transaction + calculates rewards' },
+            ].map(s => (
+              <div key={s.num} className="flex gap-3 mb-3 last:mb-0">
+                <div className="h-5 w-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{s.num}</div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-700">{s.title}</p>
+                  <p className="text-[11px] text-slate-400">{s.desc}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>  {/* end max-w-4xl */}
+            ))}
+          </div>
+        </div>
+      </div>
 
-      {/* Product Matching Confirmation Dialog */}
+      {/* ── Confirm Product Matches Modal ── */}
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Confirm Product Matches</DialogTitle>
-            <p className="text-sm text-slate-600">
-              Review and confirm the product matches before importing order {extractedData?.order_number}
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border-0 shadow-2xl p-0">
+          <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+            <DialogTitle className="text-lg font-bold text-slate-900">Confirm Product Matches</DialogTitle>
+            <p className="text-sm text-slate-500 mt-1">
+              Review and confirm before importing order <span className="font-semibold text-violet-600">#{extractedData?.order_number}</span>
             </p>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-slate-600">Retailer:</span>
-                  <span className="ml-2 font-semibold">{extractedData?.retailer}</span>
-                </div>
-                <div>
-                  <span className="text-slate-600">Total:</span>
-                  <span className="ml-2 font-semibold">${extractedData?.total_cost?.toFixed(2)}</span>
-                </div>
-                <div>
-                  <span className="text-slate-600">Order Date:</span>
-                  <span className="ml-2 font-semibold">{extractedData?.order_date}</span>
-                </div>
-                <div>
-                  <span className="text-slate-600">Credit Card:</span>
-                  <span className="ml-2 font-semibold">{extractedData?.matchedCard?.card_name || 'None matched'}</span>
-                </div>
-                {extractedData?.matchedGiftCards && extractedData.matchedGiftCards.length > 0 && (
-                  <div className="col-span-2">
-                    <span className="text-slate-600">Gift Cards Found:</span>
-                    <div className="ml-2 font-semibold text-green-700">
-                      {extractedData.matchedGiftCards.map((gc, i) => (
-                        <div key={i}>
-                          {gc.brand} - ${gc.value} ({gc.code.slice(0, 8)}...)
-                        </div>
-                      ))}
-                      <div className="text-xs text-slate-600 mt-1">
-                        Total: ${extractedData.matchedGiftCards.reduce((sum, gc) => sum + (gc.value || 0), 0).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+          </div>
 
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Products ({productMatches.length})</Label>
-              {productMatches.map((match, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3 bg-white relative">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const newMatches = productMatches.filter((_, i) => i !== index);
-                      setProductMatches(newMatches);
-                      toast.success('Item removed');
-                    }}
-                    className="absolute top-2 right-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    Remove
-                  </Button>
-                  
-                  <div className="flex justify-between items-start pr-20">
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-900">From Invoice: {match.invoiceName}</p>
-                      {match.sku && (
-                        <a 
-                          href={`https://www.google.com/search?q=${encodeURIComponent(match.sku)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          UPC: {match.sku} (Search online)
-                        </a>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-slate-600">Qty: {match.quantity}</p>
-                      <p className="text-sm font-semibold">${match.unit_cost?.toFixed(2)}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-slate-600">Match to your product:</Label>
-                    <Select
-                      value={match.selectedProduct?.name || ''}
-                      onValueChange={(value) => {
-                        const newMatches = [...productMatches];
-                        const allProducts = match.suggestions.map(s => s.product);
-                        newMatches[index].selectedProduct = allProducts.find(p => p.name === value) || null;
-                        setProductMatches(newMatches);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a product" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {match.suggestions
-                          .sort((a, b) => a.product.name.localeCompare(b.product.name))
-                          .map((suggestion) => (
-                            <SelectItem key={suggestion.product.id} value={suggestion.product.name}>
-                              {suggestion.product.name} {suggestion.score > 90 ? '✓' : ''}
-                              {suggestion.product.upc && ` (${suggestion.product.upc})`}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    {match.suggestions.length === 0 && (
-                      <p className="text-xs text-amber-600">⚠️ No matching products found - please add this product first</p>
-                    )}
-                  </div>
+          <div className="px-6 py-4 space-y-5">
+            {/* Order summary grid */}
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 rounded-xl p-4">
+              {[
+                { label: 'Retailer', value: extractedData?.retailer },
+                { label: 'Total', value: extractedData?.total_cost != null ? `$${extractedData.total_cost.toFixed(2)}` : '—' },
+                { label: 'Order Date', value: extractedData?.order_date || '—' },
+                { label: 'Credit Card', value: extractedData?.matchedCard?.card_name || 'None matched' },
+              ].map(f => (
+                <div key={f.label}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{f.label}</p>
+                  <p className="text-sm font-semibold text-slate-800 mt-0.5">{f.value}</p>
                 </div>
               ))}
-              
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const newMatches = [...productMatches];
-                  newMatches.push({
-                    invoiceName: 'New Item',
-                    sku: '',
-                    quantity: 1,
-                    unit_cost: 0,
-                    suggestions: [],
-                    selectedProduct: null
-                  });
-                  setProductMatches(newMatches);
-                }}
-                className="w-full border-dashed"
+              {extractedData?.matchedGiftCards?.length > 0 && (
+                <div className="col-span-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gift Cards</p>
+                  {extractedData.matchedGiftCards.map((gc, i) => (
+                    <p key={i} className="text-sm font-semibold text-green-700">{gc.brand} — ${gc.value} (…{gc.code?.slice(-4)})</p>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Products */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Products ({productMatches.length})</p>
+              <div className="space-y-3">
+                {productMatches.map((match, index) => (
+                  <div key={index} className="bg-white border border-slate-200 rounded-xl p-4 relative">
+                    <button
+                      onClick={() => setProductMatches(productMatches.filter((_, i) => i !== index))}
+                      className="absolute top-3 right-3 text-xs text-red-500 hover:text-red-700 font-semibold"
+                    >
+                      Remove
+                    </button>
+                    <div className="flex justify-between items-start pr-16 mb-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{match.invoiceName}</p>
+                        {match.sku && (
+                          <a href={`https://www.google.com/search?q=${encodeURIComponent(match.sku)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="text-[11px] text-violet-500 hover:underline">
+                            UPC: {match.sku}
+                          </a>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-slate-500">Qty: {match.quantity}</p>
+                        <p className="text-sm font-bold text-slate-800">${match.unit_cost?.toFixed(2)}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-medium mb-1">Match to your product</p>
+                      <Select
+                        value={match.selectedProduct?.name || ''}
+                        onValueChange={(value) => {
+                          const newMatches = [...productMatches];
+                          newMatches[index].selectedProduct = match.suggestions.map(s => s.product).find(p => p.name === value) || null;
+                          setProductMatches(newMatches);
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-slate-50 border-slate-200">
+                          <SelectValue placeholder="Select a product…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {match.suggestions.sort((a, b) => a.product.name.localeCompare(b.product.name)).map(s => (
+                            <SelectItem key={s.product.id} value={s.product.name}>
+                              {s.product.name} {s.score > 90 ? '✓' : ''}{s.product.upc ? ` (${s.product.upc})` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {match.suggestions.length === 0 && (
+                        <p className="text-[11px] text-amber-600 mt-1">⚠️ No matching products found</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setProductMatches([...productMatches, { invoiceName: 'New Item', sku: '', quantity: 1, unit_cost: 0, suggestions: [], selectedProduct: null }])}
+                className="mt-3 text-sm text-violet-600 hover:text-violet-800 font-medium"
               >
                 + Add Item
-              </Button>
+              </button>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setConfirmDialogOpen(false);
-              setExtractedData(null);
-              setProductMatches([]);
-            }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={async () => {
-                setProcessing(true);
-                try {
-                  // Prepare order items - always use the product name from your list
-                  const orderItems = productMatches.map(match => ({
-                    product_id: match.selectedProduct?.id || '',
-                    product_name: match.selectedProduct?.name || '',
-                    upc: match.selectedProduct?.upc || match.sku || '',
-                    quantity_ordered: match.quantity,
-                    quantity_received: 0,
-                    unit_cost: match.unit_cost
-                  }));
-                  
-                  // Calculate gift card value and final cost
-                  const giftCardIds = extractedData.matchedGiftCards?.map(gc => gc.id) || [];
-                  const giftCardValue = extractedData.matchedGiftCards?.reduce((sum, gc) => sum + (gc.value || 0), 0) || 0;
-                  
-                  const orderData = {
-                    order_number: extractedData.order_number,
-                    retailer: extractedData.retailer || 'Unknown',
-                    tracking_number: extractedData.tracking_number || '',
-                    credit_card_id: extractedData.matchedCard?.id || null,
-                    card_name: extractedData.matchedCard?.card_name || null,
-                    gift_card_ids: giftCardIds,
-                    gift_card_value: giftCardValue,
-                    status: extractedData.tracking_number ? 'shipped' : 'ordered',
-                    order_date: extractedData.order_date || format(new Date(), 'yyyy-MM-dd'),
-                    items: orderItems,
-                    total_cost: extractedData.total_cost || 0,
-                    final_cost: (extractedData.total_cost || 0) - giftCardValue,
-                    category: 'other',
-                    notes: `Imported from ${extractedData.importSource || 'PDF'}`
-                  };
-                  
-                  const created = await base44.entities.PurchaseOrder.create(orderData);
-                  
-                  // Mark gift cards as used
-                  for (const cardId of giftCardIds) {
-                    await base44.entities.GiftCard.update(cardId, {
-                      status: 'used',
-                      used_order_number: extractedData.order_number
-                    });
-                  }
-                  
-                  // Auto-create reward if card is selected
-                  if (extractedData.matchedCard?.id && orderData.total_cost) {
-                    const card = extractedData.matchedCard;
-                    const amount = orderData.final_cost;
-                    
-                    let rewardAmount = 0;
-                    let rewardType = 'cashback';
-                    let currency = 'USD';
-                    
-                    if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
-                      rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
-                      rewardType = 'cashback';
-                      currency = 'USD';
-                    } else if (card.reward_type === 'points' && card.points_rate > 0) {
-                      rewardAmount = Math.round(amount * card.points_rate);
-                      rewardType = 'points';
-                      currency = 'points';
-                    } else if (card.reward_type === 'both') {
-                      if (card.cashback_rate > 0) {
-                        rewardAmount = (amount * card.cashback_rate / 100).toFixed(2);
-                        rewardType = 'cashback';
-                        currency = 'USD';
-                      } else if (card.points_rate > 0) {
-                        rewardAmount = Math.round(amount * card.points_rate);
-                        rewardType = 'points';
-                        currency = 'points';
-                      }
-                    }
-                    
-                    if (rewardAmount > 0) {
-                      await base44.entities.Reward.create({
-                        credit_card_id: card.id,
-                        card_name: card.card_name,
-                        source: card.card_name,
-                        type: rewardType,
-                        purchase_amount: amount,
-                        amount: parseFloat(rewardAmount),
-                        currency: currency,
-                        purchase_order_id: created.id,
-                        order_number: extractedData.order_number,
-                        date_earned: orderData.order_date,
-                        status: 'pending',
-                        notes: `Auto-generated from imported order ${extractedData.order_number}`
-                      });
-                    }
-                  }
-                  
-                  setResult({ success: true, message: 'Order imported successfully', order: created });
-                  toast.success('Order imported with rewards calculated!');
-                  queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-                  queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-                  queryClient.invalidateQueries({ queryKey: ['rewards'] });
-                  setConfirmDialogOpen(false);
-                  setExtractedData(null);
-                  setProductMatches([]);
-                } catch (error) {
-                  console.error('Import error:', error);
-                  setResult({ success: false, message: error.message || 'Failed to import order' });
-                } finally {
-                  setProcessing(false);
-                }
-              }}
-              disabled={processing || productMatches.some(m => !m.selectedProduct)}
-              className="bg-black hover:bg-gray-800 text-white"
+          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
+            <button
+              onClick={() => { setConfirmDialogOpen(false); setExtractedData(null); setProductMatches([]); }}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
             >
-              {processing ? 'Importing...' : 'Confirm & Import'}
-            </Button>
-          </DialogFooter>
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmImport}
+              disabled={processing || productMatches.some(m => !m.selectedProduct)}
+              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-50"
+            >
+              {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
+              {processing ? 'Importing…' : 'Confirm & Import'}
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
