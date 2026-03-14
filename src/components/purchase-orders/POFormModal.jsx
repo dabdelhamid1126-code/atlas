@@ -171,15 +171,13 @@ export default function POFormModal({
     if (!formData.order_number?.trim()) { toast.error('Order number is required'); return; }
     if (!formData.retailer?.trim()) { toast.error('Retailer is required'); return; }
 
-    const totalCost = unitPrice * quantity + tax + shippingCost + fees;
-    const items = formData.items.length > 0 ? formData.items : [{
-      product_id: '',
-      product_name: '',
-      upc: '',
-      quantity_ordered: quantity,
-      quantity_received: 0,
-      unit_cost: unitPrice,
-    }];
+    const items = formData.items.map(it => ({
+      ...it,
+      quantity_ordered: parseInt(it.quantity_ordered) || 1,
+      quantity_received: parseInt(it.quantity_received) || 0,
+      unit_cost: parseFloat(it.unit_cost) || 0,
+      sale_price: parseFloat(it.sale_price) || 0,
+    }));
 
     const dataToSubmit = {
       ...formData,
@@ -187,17 +185,15 @@ export default function POFormModal({
       tax,
       shipping_cost: shippingCost,
       fees,
-      total_cost: totalCost,
+      total_cost: totalPrice,
       gift_card_value: giftCardTotal,
-      final_cost: totalCost - giftCardTotal,
+      final_cost: totalPrice - giftCardTotal,
       credit_card_id: formData.credit_card_id || null,
       extra_cashback_percent: formData.amazon_yacb ? 5 : (parseFloat(formData.extra_cashback_percent) || 0),
       bonus_notes: formData.amazon_yacb ? 'Prime Young Adult' : formData.bonus_notes,
     };
-    // remove UI-only fields
     delete dataToSubmit.amazon_yacb;
     delete dataToSubmit.cashback_rate_override;
-    delete dataToSubmit.unit_price;
 
     onSubmit(dataToSubmit);
   };
