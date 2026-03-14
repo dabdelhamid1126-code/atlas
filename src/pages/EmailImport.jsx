@@ -78,10 +78,10 @@ function EmailRow({ group, onImport, onReject, processing, isImported, isRejecte
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left"
       >
         <AlertCircle className={`h-4 w-4 flex-shrink-0 ${isImported ? 'text-green-500' : isRejected ? 'text-red-500' : 'text-amber-400'}`} />
-        <span className={`flex-1 text-sm font-semibold truncate ${isImported ? 'text-slate-400 line-through' : isRejected ? 'text-slate-500 line-through' : 'text-white'}`}>
+        <span className={`flex-1 text-sm font-semibold truncate ${isImported ? 'text-slate-400 line-through' : isRejected ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
           {group.subject}
         </span>
-        <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-400">
+        <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-500">
           <span>{group.emailCount > 1 ? `${group.emailCount} events` : '1 event'}</span>
           {dateStr && <span>{dateStr}</span>}
           {isImported && <span className="text-green-400 font-semibold text-[11px]">IMPORTED</span>}
