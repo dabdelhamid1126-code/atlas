@@ -14,8 +14,6 @@ import {
   TrendingUp,
   FileText,
   BarChart3,
-  Search,
-  HelpCircle,
   Menu,
   X,
   LogOut,
