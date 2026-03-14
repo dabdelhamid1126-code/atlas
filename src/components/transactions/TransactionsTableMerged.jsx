@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink, Package } from 'lucide-react';
 
 const ROWS_PER_PAGE = 15;
 
