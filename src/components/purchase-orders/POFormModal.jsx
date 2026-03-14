@@ -125,13 +125,23 @@ export default function POFormModal({
 
   const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
 
+  // Item helpers
+  const updateItem = (idx, field, value) => {
+    setFormData(prev => {
+      const items = prev.items.map((it, i) => i === idx ? { ...it, [field]: value } : it);
+      return { ...prev, items };
+    });
+  };
+  const addItem = () => setFormData(prev => ({ ...prev, items: [...prev.items, defaultItem()] }));
+  const removeItem = (idx) => setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== idx) }));
+  const duplicateItem = (idx) => setFormData(prev => ({ ...prev, items: [...prev.items.slice(0, idx + 1), { ...prev.items[idx] }, ...prev.items.slice(idx + 1)] }));
+
   // Auto-calc total price
-  const unitPrice = parseFloat(formData.unit_price) || 0;
-  const quantity = parseInt(formData.quantity) || 1;
   const tax = parseFloat(formData.tax) || 0;
   const shippingCost = parseFloat(formData.shipping_cost) || 0;
   const fees = parseFloat(formData.fees) || 0;
-  const totalPrice = unitPrice * quantity + tax + shippingCost + fees;
+  const itemsSubtotal = formData.items.reduce((s, it) => s + (parseFloat(it.unit_cost) || 0) * (parseInt(it.quantity_ordered) || 1), 0);
+  const totalPrice = itemsSubtotal + tax + shippingCost + fees;
 
   const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
     const gc = giftCards.find(g => g.id === id);
