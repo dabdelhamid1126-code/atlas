@@ -526,6 +526,38 @@ export default function Transactions() {
         ))}
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 mb-4 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl">
+          <span className="font-semibold text-purple-800 text-sm">{selectedIds.size} selected</span>
+          <span className="text-slate-400 text-sm">|</span>
+          <span className="text-xs text-slate-500 font-medium">Move to:</span>
+          <button
+            onClick={() => handleBulkSetType('churning')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 transition"
+          >
+            <Tag className="h-3.5 w-3.5" /> Churning
+          </button>
+          <button
+            onClick={() => handleBulkSetType('marketplace')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
+          >
+            <Globe className="h-3.5 w-3.5" /> Marketplace
+          </button>
+          <button
+            onClick={handleBulkDelete}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 transition"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-auto text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+          >
+            <X className="h-3.5 w-3.5" /> Clear
+          </button>
+        </div>
+      )}
+
       <TransactionsStatsBar orders={filteredOrders} />
 
       <TransactionsFilters
