@@ -608,6 +608,7 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
                       onValueChange={(value) => {
                         const newMatches = [...productMatches];
                         newMatches[index].selectedProduct = match.suggestions.map(s => s.product).find(p => p.name === value) || null;
+                        
                         setProductMatches(newMatches);
                       }}
                     >
