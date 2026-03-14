@@ -58,7 +58,7 @@ function CreditCardsTab({ queryClient }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const emptyForm = {
-    card_name: '', issuer: '', reward_type: 'cashback',
+    card_name: '', last_4_digits: '', issuer: '', reward_type: 'cashback',
     cashback_rate: '', points_rate: '',
     dining_cashback_rate: '', dining_points_rate: '',
     travel_cashback_rate: '', travel_points_rate: '',
@@ -93,7 +93,7 @@ function CreditCardsTab({ queryClient }) {
     if (card) {
       setEditingCard(card);
       setFormData({
-        card_name: card.card_name || '', issuer: card.issuer || '',
+        card_name: card.card_name || '', last_4_digits: card.last_4_digits || '', issuer: card.issuer || '',
         reward_type: card.reward_type || 'cashback',
         cashback_rate: card.cashback_rate || '', points_rate: card.points_rate || '',
         dining_cashback_rate: card.dining_cashback_rate || '', dining_points_rate: card.dining_points_rate || '',
@@ -192,10 +192,14 @@ function CreditCardsTab({ queryClient }) {
             <DialogTitle>{editingCard ? 'Edit Credit Card' : 'Add Credit Card'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1">
                 <Label>Card Name *</Label>
                 <Input value={formData.card_name} onChange={e => set('card_name', e.target.value)} required placeholder="e.g. Amex Blue Cash" />
+              </div>
+              <div className="space-y-1">
+                <Label>Last 4 Digits</Label>
+                <Input value={formData.last_4_digits} onChange={e => set('last_4_digits', e.target.value.slice(0, 4))} placeholder="e.g. 1234" maxLength="4" />
               </div>
               <div className="space-y-1">
                 <Label>Issuer</Label>
