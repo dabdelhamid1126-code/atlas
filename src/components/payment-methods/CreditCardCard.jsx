@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Pencil, Trash2, ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
 
 const CATEGORY_EMOJI = {
   Travel: '✈️',
@@ -57,8 +57,8 @@ function IssuerLogo({ issuer, cardName }) {
 
   if (!logo || imgError) {
     return (
-      <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-        {(issuer || cardName || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+      <div className="h-10 w-10 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
+        <CreditCard className="h-6 w-6 text-slate-600" />
       </div>
     );
   }
