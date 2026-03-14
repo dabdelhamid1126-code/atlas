@@ -7,8 +7,6 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  PackageCheck,
-  AlertTriangle,
   Hash,
   CreditCard,
   TrendingUp,
