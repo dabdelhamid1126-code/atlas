@@ -24,6 +24,8 @@ const ISSUER_DOMAINS = {
   'us bank': 'usbank.com',
   'u.s. bank': 'usbank.com',
   'jetblue': 'jetblue.com',
+  'synchrony': 'synchrony.com',
+  'goldman sachs': 'goldmansachs.com',
 };
 
 const CATEGORY_ICONS = {
@@ -43,7 +45,8 @@ function IssuerLogo({ issuer, cardName }) {
   };
 
   const domain = getDomain();
-  const logoUrl = domain ? `https://cdn.brandfetch.io/domain/${domain}` : null;
+  const apiKey = process.env.REACT_APP_BRANDFETCH_API_KEY || '';
+  const logoUrl = domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${apiKey}` : null;
 
   const getInitials = () => {
     const name = issuer || cardName || '?';
