@@ -289,6 +289,7 @@ export default function TransactionsTableMerged({
   data = [],
   creditCards = [],
   rewards = [],
+  products = [],
   isLoading = false,
   selectedIds = new Set(),
   onSelectionChange,
