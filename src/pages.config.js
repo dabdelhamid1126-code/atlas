@@ -61,6 +61,7 @@ import Rewards from './pages/Rewards';
 import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
 import PaymentMethods from './pages/PaymentMethods';
+import Analytics from './pages/Analytics';
 import __Layout from './Layout.jsx';
 
 
@@ -79,6 +80,7 @@ export const PAGES = {
     "Settings": Settings,
     "Transactions": Transactions,
     "PaymentMethods": PaymentMethods,
+    "Analytics": Analytics,
 }
 
 export const pagesConfig = {
