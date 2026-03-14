@@ -1,382 +1,374 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Pencil, Eye, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { Pencil, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 
-const ROWS_PER_PAGE = 10;
+const ROWS_PER_PAGE = 15;
 
-const COLUMN_WIDTHS = {
-  checkbox: '40px',
-  date: '90px',
-  product: '150px',
-  vendor: '100px',
-
-  qty: '50px',
-  cost: '90px',
-  sale: '90px',
-  profit: '80px',
-  cashback: '90px',
-  orderNum: '110px',
-  tracking: '110px',
-  payment: '150px',
-  status: '110px',
-  actions: '80px',
+const RETAILER_LOGOS = {
+  amazon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png',
+  bestbuy: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/200px-Best_Buy_Logo.svg.png',
+  walmart: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Walmart_Spark.svg/200px-Walmart_Spark.svg.png',
+  target: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Target_Corporation_logo_%28vector%29.svg/200px-Target_Corporation_logo_%28vector%29.svg.png',
 };
+
+function getRetailerLogo(name) {
+  if (!name) return null;
+  const key = (name || '').toLowerCase().replace(/[^a-z]/g, '');
+  return Object.entries(RETAILER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
+}
+
+function getVendorInitials(name) {
+  if (!name) return '?';
+  const words = name.split(' ').filter(Boolean);
+  if (words.length === 1) return name.slice(0, 2).toUpperCase();
+  return words.slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+function getStatusStyles(status) {
+  const s = status?.toLowerCase() || '';
+  const map = {
+    received: { bg: 'bg-green-100', text: 'text-green-700', label: 'Received' },
+    shipped: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Shipped' },
+    ordered: { bg: 'bg-indigo-100', text: 'text-indigo-700', label: 'Ordered' },
+    pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Pending' },
+    cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'Cancelled' },
+    partially_received: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Partial' },
+  };
+  return map[s] || { bg: 'bg-slate-100', text: 'text-slate-600', label: status || '—' };
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const [year, month, day] = dateStr.split('T')[0].split('-');
+  return `${parseInt(month)}/${parseInt(day)}/${year}`;
+}
+
+function getCashbackDisplay(rewards, orderId) {
+  const orderRewards = rewards.filter(r => r.purchase_order_id === orderId);
+  if (!orderRewards.length) return null;
+  const usdTotal = orderRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+  const ptsTotal = orderRewards.filter(r => r.currency === 'points').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+  if (usdTotal > 0 && ptsTotal > 0) return `$${usdTotal.toFixed(2)} + ${Math.round(ptsTotal)} pts`;
+  if (usdTotal > 0) return `$${usdTotal.toFixed(2)}`;
+  if (ptsTotal > 0) return `${Math.round(ptsTotal)} pts`;
+  return null;
+}
+
+function getTrackingUrl(trackingNumber, carrier) {
+  if (!trackingNumber) return null;
+  const t = trackingNumber.toUpperCase();
+  const c = (carrier || '').toUpperCase();
+  if (c.includes('FEDEX') || /^[0-9]{20}/.test(t)) return `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`;
+  if (c.includes('UPS') || t.startsWith('1Z')) return `https://www.ups.com/track?tracknum=${trackingNumber}`;
+  if (c.includes('USPS')) return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${trackingNumber}`;
+  return `https://www.google.com/search?q=${encodeURIComponent(trackingNumber)}+package+tracking`;
+}
+
+function OrderRow({ order, creditCards, rewards, onEdit, onDelete, isSelected, onSelectChange }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const logo = getRetailerLogo(order.retailer);
+  const itemCount = order.items?.length || 0;
+  const totalQty = order.items?.reduce((s, i) => s + (parseInt(i.quantity_ordered) || 0), 0) || 0;
+  const totalCost = order.total_cost || 0;
+  const totalSale = order.items?.reduce((s, i) => s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0) || 0;
+  const profit = totalSale - totalCost;
+  const isLoss = profit < 0 && totalSale > 0;
+
+  const cashback = getCashbackDisplay(rewards, order.id);
+  const card = creditCards.find(c => c.id === order.credit_card_id);
+  const cardName = card?.card_name || order.card_name || '—';
+  const statusStyle = getStatusStyles(order.status);
+
+  return (
+    <div className={`rounded-xl border mb-2 overflow-hidden transition-all ${isLoss ? 'border-red-200 bg-red-50/30' : 'border-slate-200 bg-white'} ${isSelected ? 'ring-2 ring-purple-400' : ''}`}>
+      {/* Main Row */}
+      <div
+        className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition select-none ${expanded ? 'border-b border-slate-100' : ''}`}
+        onClick={() => setExpanded(!expanded)}
+      >
+        {/* Checkbox */}
+        <div onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={e => onSelectChange?.(order.id, e.target.checked)}
+            className="rounded border-slate-300 accent-purple-600 h-4 w-4"
+          />
+        </div>
+
+        {/* Vendor Logo / Icon */}
+        <div className="h-9 w-9 rounded-lg flex-shrink-0 overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+          {logo
+            ? <img src={logo} alt={order.retailer} className="h-7 w-7 object-contain" />
+            : <span className="text-[11px] font-bold text-slate-600">{getVendorInitials(order.retailer)}</span>
+          }
+        </div>
+
+        {/* Order # + Date */}
+        <div className="min-w-0 flex-shrink-0 w-36">
+          <p className="font-bold text-slate-900 text-sm truncate">#{order.order_number || '—'}</p>
+          <p className="text-xs text-slate-400">{formatDate(order.order_date || order.created_date)}</p>
+        </div>
+
+        {/* Items badge */}
+        <span className="flex-shrink-0 px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[11px] font-bold whitespace-nowrap">
+          {totalQty} {totalQty === 1 ? 'item' : 'items'}
+        </span>
+
+        {/* Spacer */}
+        <div className="flex-1 min-w-0" />
+
+        {/* Metrics row */}
+        <div className="hidden sm:flex items-center gap-6 flex-shrink-0 text-sm">
+          {/* Total Cost */}
+          <div className="text-right min-w-[70px]">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Cost</p>
+            <p className="font-semibold text-slate-800">${totalCost.toFixed(2)}</p>
+          </div>
+
+          {/* Profit */}
+          <div className="text-right min-w-[70px]">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Profit</p>
+            <p className={`font-bold ${totalSale === 0 ? 'text-slate-400' : profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {totalSale === 0 ? '—' : `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`}
+            </p>
+          </div>
+
+          {/* Cashback */}
+          <div className="text-right min-w-[70px]">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Cashback</p>
+            <p className="font-semibold text-blue-600">{cashback || '—'}</p>
+          </div>
+
+          {/* Payment */}
+          <div className="text-right min-w-[110px]">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Payment</p>
+            <p className="font-medium text-slate-700 text-xs truncate max-w-[110px]">{cardName}</p>
+          </div>
+
+          {/* Status */}
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusStyle.bg} ${statusStyle.text}`}>
+            {statusStyle.label}
+          </span>
+        </div>
+
+        {/* Chevron */}
+        <div className="flex-shrink-0 ml-2 text-slate-400">
+          {expanded
+            ? <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+            : <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+          }
+        </div>
+      </div>
+
+      {/* Expanded Section */}
+      {expanded && (
+        <div className="bg-slate-50 px-4 py-3">
+          {/* Items */}
+          <div className="space-y-2 mb-3">
+            {(order.items || []).length === 0 ? (
+              <p className="text-xs text-slate-400 italic">No items recorded</p>
+            ) : (order.items || []).map((item, idx) => {
+              const itemCost = parseFloat(item.unit_cost) || 0;
+              const itemSale = parseFloat(item.sale_price) || 0;
+              const itemQty = parseInt(item.quantity_ordered) || 1;
+              const itemProfit = (itemSale - itemCost) * itemQty;
+              const hasSale = itemSale > 0;
+              const trackingUrl = getTrackingUrl(order.tracking_number, order.carrier);
+
+              return (
+                <div key={idx} className="bg-white rounded-lg border border-slate-200 px-4 py-3 flex items-center gap-4">
+                  {/* Product name + tracking */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 text-sm truncate">{item.product_name || '—'}</p>
+                    {order.tracking_number && (
+                      <a
+                        href={trackingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 text-[11px] text-blue-500 hover:text-blue-700 hover:underline mt-0.5"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {order.tracking_number}
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex items-center gap-5 flex-shrink-0 text-xs">
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400 uppercase">Qty</p>
+                      <p className="font-semibold text-slate-700">{itemQty}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400 uppercase">Cost/unit</p>
+                      <p className="font-semibold text-slate-700">${itemCost.toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400 uppercase">Sale/unit</p>
+                      <p className="font-semibold text-slate-700">{hasSale ? `$${itemSale.toFixed(2)}` : '—'}</p>
+                    </div>
+                    <div className="text-right min-w-[60px]">
+                      <p className="text-[10px] text-slate-400 uppercase">Profit</p>
+                      <p className={`font-bold ${!hasSale ? 'text-slate-400' : itemProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {!hasSale ? '—' : `${itemProfit >= 0 ? '+' : ''}$${itemProfit.toFixed(2)}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Summary Bar + Actions */}
+          <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-200 mt-1">
+            {/* Mini Summary */}
+            <div className="flex items-center gap-5 text-xs">
+              <div>
+                <span className="text-slate-400">Total Cost: </span>
+                <span className="font-bold text-slate-800">${totalCost.toFixed(2)}</span>
+              </div>
+              {totalSale > 0 && (
+                <div>
+                  <span className="text-slate-400">Total Sale: </span>
+                  <span className="font-bold text-slate-800">${totalSale.toFixed(2)}</span>
+                </div>
+              )}
+              {totalSale > 0 && (
+                <div>
+                  <span className="text-slate-400">Profit: </span>
+                  <span className={`font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                  </span>
+                </div>
+              )}
+              {cashback && (
+                <div>
+                  <span className="text-slate-400">Cashback: </span>
+                  <span className="font-bold text-blue-600">{cashback}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => onEdit?.(order)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 text-xs font-medium transition"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </button>
+              <button
+                onClick={() => onDelete?.(order)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-500 hover:bg-red-50 text-xs font-medium transition"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function TransactionsTableMerged({
   data = [],
-  visibleColumns = [],
-  sortColumn = 'date',
-  sortDirection = 'desc',
-  onSort,
-  onEdit,
-  onView,
-  onDelete,
   creditCards = [],
   rewards = [],
   isLoading = false,
   selectedIds = new Set(),
   onSelectionChange,
+  onEdit,
+  onDelete,
+  // kept for API compatibility but not used in new design
+  visibleColumns,
+  sortColumn,
+  sortDirection,
+  onSort,
+  onView,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const selectedRows = selectedIds;
 
   const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
   const paginatedData = data.slice(startIdx, startIdx + ROWS_PER_PAGE);
   const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
 
-  const getStatusBadgeStyles = (status) => {
-    const statusLower = status?.toLowerCase() || '';
-    const styles = {
-      'pending': { bg: '#dbeafe', text: '#1d4ed8' },
-      'purchased': { bg: '#dbeafe', text: '#1d4ed8' },
-      'ordered': { bg: '#e0e7ff', text: '#4338ca' },
-      'shipped': { bg: '#fef3c7', text: '#d97706' },
-      'delivered': { bg: '#f3e8ff', text: '#7c3aed' },
-      'received': { bg: '#dcfce7', text: '#16a34a' },
-      'cancelled': { bg: '#fee2e2', text: '#dc2626' },
-    };
-    return styles[statusLower] || { bg: '#f3f4f6', text: '#374151' };
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    // Parse YYYY-MM-DD directly to avoid UTC timezone offset shifting the date back
-    const [year, month, day] = dateStr.split('T')[0].split('-');
-    return `${parseInt(month)}/${parseInt(day)}/${year}`;
-  };
-
-  const truncate = (text, len = 40) => {
-    if (!text) return '—';
-    return text.length > len ? text.substring(0, len) + '...' : text;
-  };
-
-  const formatPaymentMethod = (cardId) => {
-    if (!cardId) return '—';
-    const card = creditCards.find(c => c.id === cardId);
-    if (card) {
-      return `${card.card_name} (${card.id?.slice(-4) || 'XXXX'})`;
-    }
-    return cardId;
-  };
-
   const handleSelectAll = (checked) => {
-    if (checked) {
-      onSelectionChange?.(new Set(data.map(o => o.id)));
-    } else {
-      onSelectionChange?.(new Set());
-    }
+    onSelectionChange?.(checked ? new Set(data.map(o => o.id)) : new Set());
   };
 
-  const handleSelectRow = (orderId, checked) => {
-    const newSelected = new Set(selectedRows);
-    if (checked) newSelected.add(orderId);
-    else newSelected.delete(orderId);
-    onSelectionChange?.(newSelected);
+  const handleSelectRow = (id, checked) => {
+    const next = new Set(selectedIds);
+    if (checked) next.add(id); else next.delete(id);
+    onSelectionChange?.(next);
   };
 
   if (isLoading) {
-    return <div className="text-center py-12 text-gray-500">Loading...</div>;
+    return (
+      <div className="space-y-2">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-16 rounded-xl bg-slate-100 animate-pulse" />
+        ))}
+      </div>
+    );
   }
 
   if (data.length === 0) {
-    return <div className="text-center py-12 text-gray-500">No transactions found</div>;
+    return <div className="text-center py-16 text-slate-400 text-sm">No transactions found</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="border rounded-lg overflow-hidden bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th style={{ width: COLUMN_WIDTHS.checkbox }} className="px-3 py-3 text-center">
-                  <input
-                    type="checkbox"
-                    checked={data.length > 0 && data.every(o => selectedRows.has(o.id))}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="rounded"
-                  />
-                </th>
-                {visibleColumns.includes('date') && (
-                  <th
-                    style={{ width: COLUMN_WIDTHS.date }}
-                    onClick={() => onSort?.('date')}
-                    className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-gray-900"
-                  >
-                    <div className="flex items-center gap-1">
-                      Date {sortColumn === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
-                    </div>
-                  </th>
-                )}
-                {visibleColumns.includes('product') && (
-                  <th style={{ width: COLUMN_WIDTHS.product }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
-                )}
-                {visibleColumns.includes('vendor') && (
-                  <th style={{ width: COLUMN_WIDTHS.vendor }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Vendor</th>
-                )}
-
-                {visibleColumns.includes('qty') && (
-                  <th style={{ width: COLUMN_WIDTHS.qty }} className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
-                )}
-                {visibleColumns.includes('cost') && (
-                  <th style={{ width: COLUMN_WIDTHS.cost }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cost</th>
-                )}
-                {visibleColumns.includes('sale') && (
-                  <th style={{ width: COLUMN_WIDTHS.sale }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Sale</th>
-                )}
-                {visibleColumns.includes('profit') && (
-                  <th style={{ width: COLUMN_WIDTHS.profit }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Profit</th>
-                )}
-                {visibleColumns.includes('cashback') && (
-                  <th style={{ width: COLUMN_WIDTHS.cashback }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cashback</th>
-                )}
-                {visibleColumns.includes('orderNum') && (
-                  <th style={{ width: COLUMN_WIDTHS.orderNum }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order #</th>
-                )}
-                {visibleColumns.includes('tracking') && (
-                  <th style={{ width: COLUMN_WIDTHS.tracking }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tracking #</th>
-                )}
-                {visibleColumns.includes('payment') && (
-                  <th style={{ width: COLUMN_WIDTHS.payment }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment</th>
-                )}
-                {visibleColumns.includes('status') && (
-                  <th style={{ width: COLUMN_WIDTHS.status }} className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                )}
-                {visibleColumns.includes('actions') && (
-                  <th style={{ width: COLUMN_WIDTHS.actions }} className="px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((order, idx) => {
-                const isSelected = selectedRows.has(order.id);
-                const totalQty = order.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || 0;
-                const profit = (order.final_cost || 0) - (order.total_cost || 0);
-
-                return (
-                  <tr
-                    key={order.id || idx}
-                    className={`border-b border-gray-100 hover:bg-gray-50 transition group ${isSelected ? 'bg-blue-50' : 'bg-white'}`}
-                  >
-                    <td className="px-3 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => handleSelectRow(order.id, e.target.checked)}
-                        className="rounded"
-                      />
-                    </td>
-
-                    {visibleColumns.includes('date') && (
-                      <td style={{ width: COLUMN_WIDTHS.date }} className="px-3 py-3 text-gray-600">
-                        {formatDate(order.order_date || order.created_date)}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('product') && (
-                      <td style={{ width: COLUMN_WIDTHS.product }} className="px-3 py-3">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="font-bold text-gray-900 cursor-help">
-                                {truncate(order.product_name || order.items?.[0]?.product_name, 40)}
-                              </span>
-                            </TooltipTrigger>
-                            {(order.product_name || order.items?.[0]?.product_name) && (
-                              <TooltipContent>{order.product_name || order.items?.[0]?.product_name}</TooltipContent>
-                            )}
-                          </Tooltip>
-                        </TooltipProvider>
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('vendor') && (
-                      <td style={{ width: COLUMN_WIDTHS.vendor }} className="px-3 py-3 text-gray-700">
-                        {order.retailer || '—'}
-                      </td>
-                    )}
-
-
-                    {visibleColumns.includes('qty') && (
-                      <td style={{ width: COLUMN_WIDTHS.qty }} className="px-3 py-3 text-center text-gray-700">
-                        {totalQty}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('cost') && (
-                      <td style={{ width: COLUMN_WIDTHS.cost }} className="px-3 py-3 text-purple-700 font-semibold">
-                        ${(order.total_cost || 0).toFixed(2)}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('sale') && (
-                      <td style={{ width: COLUMN_WIDTHS.sale }} className="px-3 py-3 text-green-600 font-semibold">
-                        ${(order.final_cost || order.total_cost || 0).toFixed(2)}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('profit') && (
-                      <td style={{ width: COLUMN_WIDTHS.profit }} className={`px-3 py-3 font-semibold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${profit.toFixed(2)}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('cashback') && (
-                      <td style={{ width: COLUMN_WIDTHS.cashback }} className="px-3 py-3 text-green-600 font-semibold">
-                        {(() => {
-                          const orderRewards = rewards.filter(r => r.purchase_order_id === order.id);
-                          if (!orderRewards.length) return '—';
-                          const usdRewards = orderRewards.filter(r => r.currency === 'USD');
-                          const ptsRewards = orderRewards.filter(r => r.currency === 'points');
-                          const totalUSD = usdRewards.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
-                          const totalPts = ptsRewards.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
-                          if (totalUSD > 0 && totalPts > 0) return `$${totalUSD.toFixed(2)} + ${Math.round(totalPts)} pts`;
-                          if (totalUSD > 0) return `$${totalUSD.toFixed(2)}`;
-                          if (totalPts > 0) return `${Math.round(totalPts)} pts`;
-                          return '—';
-                        })()}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('orderNum') && (
-                      <td style={{ width: COLUMN_WIDTHS.orderNum }} className="px-3 py-3">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-help">{truncate(order.order_number, 20)}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>{order.order_number}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('tracking') && (
-                      <td style={{ width: COLUMN_WIDTHS.tracking }} className="px-3 py-3">
-                        {order.tracking_number ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-help">{truncate(order.tracking_number, 20)}</span>
-                              </TooltipTrigger>
-                              <TooltipContent>{order.tracking_number}</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('payment') && (
-                      <td style={{ width: COLUMN_WIDTHS.payment }} className="px-3 py-3">
-                        {truncate(formatPaymentMethod(order.credit_card_id), 40)}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('status') && (
-                      <td style={{ width: COLUMN_WIDTHS.status }} className="px-3 py-3">
-                        {order.status && (
-                          <span
-                            className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-                            style={{
-                              backgroundColor: getStatusBadgeStyles(order.status).bg,
-                              color: getStatusBadgeStyles(order.status).text,
-                            }}
-                          >
-                            {order.status.toUpperCase()}
-                          </span>
-                        )}
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('actions') && (
-                      <td style={{ width: COLUMN_WIDTHS.actions }} className="px-3 py-3">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-gray-600"
-                                  onClick={() => onEdit?.(order)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit</TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-gray-600"
-                                  onClick={() => onView?.(order)}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>View</TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-red-500"
-                                  onClick={() => onDelete?.(order)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+    <div className="space-y-3">
+      {/* Header row */}
+      <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <div onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={data.length > 0 && data.every(o => selectedIds.has(o.id))}
+            onChange={e => handleSelectAll(e.target.checked)}
+            className="rounded border-slate-300 accent-purple-600 h-4 w-4"
+          />
         </div>
+        <div className="w-9 flex-shrink-0" />
+        <div className="w-36 flex-shrink-0">Order</div>
+        <div className="flex-1" />
+        <div className="hidden sm:flex items-center gap-6 flex-shrink-0">
+          <div className="text-right w-[70px]">Cost</div>
+          <div className="text-right w-[70px]">Profit</div>
+          <div className="text-right w-[70px]">Cashback</div>
+          <div className="text-right w-[110px]">Payment</div>
+          <div className="w-[70px]">Status</div>
+        </div>
+        <div className="w-4 flex-shrink-0" />
       </div>
 
+      {/* Order rows */}
+      {paginatedData.map(order => (
+        <OrderRow
+          key={order.id}
+          order={order}
+          creditCards={creditCards}
+          rewards={rewards}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          isSelected={selectedIds.has(order.id)}
+          onSelectChange={handleSelectRow}
+        />
+      ))}
+
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-gray-600">
-        <span>Showing {data.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + ROWS_PER_PAGE, data.length)} of {data.length}</span>
+      <div className="flex items-center justify-between text-sm text-gray-600 pt-2">
+        <span>
+          Showing {data.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + ROWS_PER_PAGE, data.length)} of {data.length}
+        </span>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -385,8 +377,8 @@ export default function TransactionsTableMerged({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages || data.length === 0}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages || data.length === 0}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
