@@ -55,7 +55,6 @@ import Goals from './pages/Goals';
 import Inventory from './pages/Inventory';
 import InventoryValue from './pages/InventoryValue';
 import Invoices from './pages/Invoices';
-import OrderLookup from './pages/OrderLookup';
 import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
@@ -74,7 +73,6 @@ export const PAGES = {
     "Inventory": Inventory,
     "InventoryValue": InventoryValue,
     "Invoices": Invoices,
-    "OrderLookup": OrderLookup,
     "Products": Products,
     "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,

@@ -47,8 +47,7 @@ const navigationGroups = [
     label: 'ORDERS',
     items: [
       { name: 'Transactions', page: 'Transactions', icon: Hash },
-      { name: 'Import from Email', page: 'EmailImport', icon: Search },
-      { name: 'Order Lookup', page: 'OrderLookup', icon: HelpCircle },
+
     ]
   },
   {
