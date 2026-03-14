@@ -51,7 +51,7 @@ function IssuerLogo({ issuer, cardName }) {
 
   const domain = getDomainFromIssuer(issuer || cardName);
   const apiKey = process.env.REACT_APP_BRANDFETCH_API_KEY || '';
-  const logoUrl = domain ? `https://cdn.brandfetch.io/${domain}/w/48/h/48?c=${apiKey}` : null;
+  const logoUrl = domain ? `https://cdn.brandfetch.io/${domain}/w/56/h/56?c=${apiKey}` : null;
 
   const getInitials = () => {
     const name = issuer || cardName || '?';
@@ -62,18 +62,18 @@ function IssuerLogo({ issuer, cardName }) {
 
   if (imgError || !logoUrl) {
     return (
-      <div className="h-12 w-12 rounded-lg bg-blue-700 flex items-center justify-center shrink-0 shadow-sm border border-blue-800">
-        <span className="text-white font-bold text-xs">{getInitials()}</span>
+      <div className="h-14 w-14 rounded-2xl bg-blue-900 flex items-center justify-center shrink-0 shadow-lg">
+        <span className="text-white font-bold text-sm">{getInitials()}</span>
       </div>
     );
   }
 
   return (
-    <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-md overflow-hidden shrink-0">
+    <div className="h-14 w-14 rounded-2xl bg-blue-900 flex items-center justify-center overflow-hidden shrink-0 shadow-lg">
       <img
         src={logoUrl}
         alt={issuer || cardName}
-        className="h-11 w-11 object-contain p-1"
+        className="h-14 w-14 object-contain"
         onError={() => setImgError(true)}
       />
     </div>
