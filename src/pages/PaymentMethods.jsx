@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Filter, Barcode, CreditCard, Gift } from 'lucide-react';
+import CardBenefitsEditor from '@/components/payment-methods/CardBenefitsEditor';
+import CreditCardCard from '@/components/payment-methods/CreditCardCard';
 import StatusBadge from '@/components/shared/StatusBadge';
 import DataTable from '@/components/shared/DataTable';
 import { toast } from 'sonner';
