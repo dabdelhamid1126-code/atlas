@@ -10,23 +10,33 @@ const CATEGORY_EMOJI = {
   Other: '⭐',
 };
 
-const ISSUER_DOMAINS = {
-  'american express': 'americanexpress.com',
-  'amex': 'americanexpress.com',
-  'chase': 'chase.com',
-  'discover': 'discover.com',
-  'barclays': 'barclays.com',
-  'capital one': 'capitalone.com',
-  'citi': 'citi.com',
-  'citibank': 'citi.com',
-  'wells fargo': 'wellsfargo.com',
-  'bank of america': 'bankofamerica.com',
-  'us bank': 'usbank.com',
-  'u.s. bank': 'usbank.com',
-  'jetblue': 'jetblue.com',
-  'synchrony': 'synchrony.com',
-  'goldman sachs': 'goldmansachs.com',
-};
+// Smart domain converter handles common variations automatically
+function getDomainFromIssuer(issuer) {
+  if (!issuer) return null;
+  
+  const name = issuer.toLowerCase().trim();
+  
+  // Handle common multi-word variations
+  const variations = {
+    'american express': 'americanexpress.com',
+    'bank of america': 'bankofamerica.com',
+    'capital one': 'capitalone.com',
+    'wells fargo': 'wellsfargo.com',
+    'us bank': 'usbank.com',
+    'u.s. bank': 'usbank.com',
+    'goldman sachs': 'goldmansachs.com',
+  };
+  
+  if (variations[name]) return variations[name];
+  
+  // Auto-convert: remove spaces and special chars, add .com
+  const domain = name
+    .replace(/\s+/g, '')           // Remove spaces
+    .replace(/[^a-z0-9]/g, '')     // Remove special chars
+    .concat('.com');
+  
+  return domain;
+}
 
 const CATEGORY_ICONS = {
   Dining: '🍽️',
@@ -39,14 +49,9 @@ const CATEGORY_ICONS = {
 function IssuerLogo({ issuer, cardName }) {
   const [imgError, setImgError] = useState(false);
 
-  const getDomain = () => {
-    const searchName = (issuer || cardName || '').toLowerCase();
-    return Object.entries(ISSUER_DOMAINS).find(([key]) => searchName.includes(key))?.[1] || null;
-  };
-
-  const domain = getDomain();
+  const domain = getDomainFromIssuer(issuer || cardName);
   const apiKey = process.env.REACT_APP_BRANDFETCH_API_KEY || '';
-  const logoUrl = domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${apiKey}` : null;
+  const logoUrl = domain ? `https://cdn.brandfetch.io/${domain}/w/48/h/48?c=${apiKey}` : null;
 
   const getInitials = () => {
     const name = issuer || cardName || '?';
