@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 const CATEGORY_EMOJI = {
   Travel: '✈️',
@@ -10,39 +11,6 @@ const CATEGORY_EMOJI = {
   Other: '⭐',
 };
 
-const ISSUER_LOGOS = {
-  chase: 'https://cdn.brandfetch.io/domain/chase.com',
-  amex: 'https://cdn.brandfetch.io/domain/americanexpress.com',
-  'american express': 'https://cdn.brandfetch.io/domain/americanexpress.com',
-  citi: 'https://cdn.brandfetch.io/domain/citi.com',
-  citibank: 'https://cdn.brandfetch.io/domain/citi.com',
-  'bank of america': 'https://cdn.brandfetch.io/domain/bankofamerica.com',
-  'capital one': 'https://cdn.brandfetch.io/domain/capitalone.com',
-  'credit one': 'https://cdn.brandfetch.io/domain/creditonebank.com',
-  discover: 'https://cdn.brandfetch.io/domain/discover.com',
-  'wells fargo': 'https://cdn.brandfetch.io/domain/wellsfargo.com',
-  barclays: 'https://cdn.brandfetch.io/domain/barclays.com',
-  usaa: 'https://cdn.brandfetch.io/domain/usaa.com',
-  pnc: 'https://cdn.brandfetch.io/domain/pnc.com',
-  'us bank': 'https://cdn.brandfetch.io/domain/usbank.com',
-  'u.s. bank': 'https://cdn.brandfetch.io/domain/usbank.com',
-  synchrony: 'https://cdn.brandfetch.io/domain/synchronybank.com',
-  'td bank': 'https://cdn.brandfetch.io/domain/td.com',
-  apple: 'https://cdn.brandfetch.io/domain/apple.com',
-  amazon: 'https://cdn.brandfetch.io/domain/amazon.com',
-  paypal: 'https://cdn.brandfetch.io/domain/paypal.com',
-  robinhood: 'https://cdn.brandfetch.io/domain/robinhood.com',
-  jetblue: 'https://cdn.brandfetch.io/domain/jetblue.com',
-  southwest: 'https://cdn.brandfetch.io/domain/southwest.com',
-  marriott: 'https://cdn.brandfetch.io/domain/marriott.com',
-  hilton: 'https://cdn.brandfetch.io/domain/hilton.com',
-};
-
-function getIssuerLogo(issuer, cardName) {
-  const key = (issuer || cardName || '').toLowerCase();
-  return Object.entries(ISSUER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
-}
-
 const CATEGORY_ICONS = {
   Dining: '🍽️',
   Travel: '✈️',
@@ -52,10 +20,31 @@ const CATEGORY_ICONS = {
 };
 
 function IssuerLogo({ issuer, cardName }) {
+  const [logoUrl, setLogoUrl] = useState(null);
   const [imgError, setImgError] = useState(false);
-  const logo = getIssuerLogo(issuer, cardName);
+  const [loading, setLoading] = useState(true);
 
-  if (!logo || imgError) {
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const company = issuer || cardName;
+        if (!company) {
+          setLoading(false);
+          return;
+        }
+        const response = await base44.functions.invoke('getBrandfetchLogo', { company });
+        setLogoUrl(response.data.logoUrl);
+      } catch (error) {
+        console.error('Failed to fetch logo:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLogo();
+  }, [issuer, cardName]);
+
+  if (imgError || !logoUrl) {
     return (
       <div className="h-10 w-10 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
         <CreditCard className="h-6 w-6 text-slate-600" />
@@ -66,8 +55,8 @@ function IssuerLogo({ issuer, cardName }) {
   return (
     <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm overflow-hidden shrink-0">
       <img
-        src={logo}
-        alt={issuer}
+        src={logoUrl}
+        alt={issuer || cardName}
         className="h-9 w-9 object-contain"
         onError={() => setImgError(true)}
       />
