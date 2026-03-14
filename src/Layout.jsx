@@ -45,6 +45,7 @@ const navigationGroups = [
     label: 'ORDERS',
     items: [
       { name: 'Transactions', page: 'Transactions', icon: Hash },
+      { name: 'Import Orders', page: 'EmailImport', icon: FileText },
 
     ]
   },
