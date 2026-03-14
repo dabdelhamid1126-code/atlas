@@ -102,8 +102,13 @@ export default function CreditCardCard({ card, orders = [], rewards = [], onEdit
       <div className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow">
-              {getAbbreviation(card.issuer || card.card_name)}
+            <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow overflow-hidden">
+              {getIssuerLogo(card.issuer, card.card_name)
+                ? <img src={getIssuerLogo(card.issuer, card.card_name)} alt={card.issuer} className="h-8 w-8 object-contain" onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
+                : null}
+              <div className={`h-10 w-10 rounded-xl bg-blue-600 items-center justify-center text-white text-xs font-bold ${getIssuerLogo(card.issuer, card.card_name) ? 'hidden' : 'flex'}`}>
+                {getAbbreviation(card.issuer || card.card_name)}
+              </div>
             </div>
             <div>
               <p className="font-bold text-slate-900 text-sm">{card.card_name}</p>
