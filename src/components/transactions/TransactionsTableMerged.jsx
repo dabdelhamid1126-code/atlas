@@ -108,7 +108,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
         {/* Order # + Date */}
         <div className="min-w-0 flex-shrink-0 w-36">
           <p className="font-bold text-slate-900 text-sm truncate">
-            {order.order_number ? `...${order.order_number.slice(-5)}` : '—'}
+            {order.order_number ? `#${order.order_number}` : '—'}
           </p>
           <p className="text-xs text-slate-400">{formatDate(order.order_date || order.created_date)}</p>
         </div>
