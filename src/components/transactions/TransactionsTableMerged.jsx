@@ -364,6 +364,7 @@ export default function TransactionsTableMerged({
           order={order}
           creditCards={creditCards}
           rewards={rewards}
+          products={products}
           onEdit={onEdit}
           onDelete={onDelete}
           isSelected={selectedIds.has(order.id)}
