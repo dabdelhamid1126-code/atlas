@@ -445,7 +445,7 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
             ].map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition -mb-px ${
-                  activeTab === tab.id ? 'border-violet-500 text-violet-400' : 'border-transparent text-muted-foreground hover:text-foreground'
+                  activeTab === tab.id ? 'border-violet-600 text-violet-700' : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}>
                 {tab.label}
                 {tab.count > 0 && (
