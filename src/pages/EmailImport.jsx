@@ -71,7 +71,7 @@ function EmailRow({ group, onImport, onReject, processing, isImported, isRejecte
   const dateStr = group.date ? new Date(group.date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }) : '';
 
   return (
-    <div className={`rounded-xl border transition-all ${isImported ? 'border-green-700/40 bg-[#0f1f13]' : isRejected ? 'border-red-800/40 bg-[#1a0f0f]' : 'border-[#2e2560] bg-[#13112a]'}`}>
+    <div className={`rounded-xl border transition-all ${isImported ? 'border-green-200 bg-green-50' : isRejected ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-white'}`}>
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
