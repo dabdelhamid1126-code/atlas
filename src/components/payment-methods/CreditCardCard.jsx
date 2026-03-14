@@ -61,7 +61,7 @@ function IssuerLogo({ issuer, cardName }) {
   }
 
   return (
-    <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow overflow-hidden shrink-0">
+    <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shadow overflow-hidden shrink-0">
       <img
         src={logo}
         alt={issuer}
