@@ -181,10 +181,10 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User Section with Dropdown */}
           {user && (
-            <div className="border-t border-border p-4">
+            <div className="border-t border-slate-200 p-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors">
+                  <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-200">
                     <Avatar className="h-10 w-10">
                       {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
                       <AvatarFallback className="bg-gradient-to-br from-purple-600 to-violet-700 text-white text-sm font-semibold">
