@@ -148,7 +148,6 @@ export default function POFormModal({
     return sum + (gc?.value || 0);
   }, 0);
 
-  // Cashback calc
   const getCashbackBase = () => {
     let base = totalPrice;
     if (!formData.include_tax_in_cashback) base -= tax;
