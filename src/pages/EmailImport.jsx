@@ -1,37 +1,19 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Upload, CheckCircle, XCircle, Loader2, FileText, Inbox,
-  RefreshCw, ChevronDown, ChevronUp, ShoppingCart, AlertTriangle,
-  Mail, X, Package
+  RefreshCw, ChevronDown, ChevronUp, ShoppingCart, AlertCircle,
+  X, Package, Link, ExternalLink, Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
-// ─── Retailer logo helper ────────────────────────────────────────────────────
-const RETAILER_LOGOS = {
-  amazon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png',
-  bestbuy: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/200px-Best_Buy_Logo.svg.png',
-  walmart: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Walmart_Spark.svg/200px-Walmart_Spark.svg.png',
-  target: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Target_Corporation_logo_%28vector%29.svg/200px-Target_Corporation_logo_%28vector%29.svg.png',
-  woot: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b6/Woot_logo.svg/200px-Woot_logo.svg.png',
-};
-const getRetailerLogo = (name) => {
-  if (!name) return null;
-  const key = name.toLowerCase().replace(/[^a-z]/g, '');
-  return Object.entries(RETAILER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
-};
-
-// ─── Product matching helper (shared) ────────────────────────────────────────
+// ─── Product matching helper ──────────────────────────────────────────────────
 const matchProducts = (items, allProducts) =>
   items.map(item => {
     const suggestions = allProducts
@@ -70,109 +52,98 @@ const matchProducts = (items, allProducts) =>
     };
   });
 
-// ─── Inbox Card ───────────────────────────────────────────────────────────────
-function InboxCard({ group, onImport, onReject, processing }) {
-  const [expanded, setExpanded] = useState(false);
+const RETAILER_LOGOS = {
+  amazon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png',
+  bestbuy: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/200px-Best_Buy_Logo.svg.png',
+  walmart: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Walmart_Spark.svg/200px-Walmart_Spark.svg.png',
+  target: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Target_Corporation_logo_%28vector%29.svg/200px-Target_Corporation_logo_%28vector%29.svg.png',
+};
+const getRetailerLogo = (name) => {
+  if (!name) return null;
+  const key = name.toLowerCase().replace(/[^a-z]/g, '');
+  return Object.entries(RETAILER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
+};
+
+// ─── Inbox Email Row ──────────────────────────────────────────────────────────
+function EmailRow({ group, onImport, onReject, processing, isImported, isRejected }) {
+  const [expanded, setExpanded] = useState(true);
   const logo = getRetailerLogo(group.retailer);
+  const dateStr = group.date ? new Date(group.date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }) : '';
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      {/* Header row */}
+    <div className={`rounded-xl border transition-all ${isImported ? 'border-green-700/40 bg-[#0f1f13]' : isRejected ? 'border-red-800/40 bg-[#1a0f0f]' : 'border-[#2e2560] bg-[#13112a]'}`}>
+      {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-slate-50 transition"
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left"
       >
-        {/* Icon */}
-        <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
-        </div>
-
-        {/* Subject / title */}
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-900 text-sm truncate">{group.subject}</p>
-          <p className="text-xs text-slate-400 mt-0.5">{group.from}</p>
-        </div>
-
-        {/* Meta */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {group.emailCount > 1 && (
-            <span className="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-semibold">
-              {group.emailCount} emails
-            </span>
-          )}
-          {group.hasTracking && (
-            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
-              + tracking
-            </span>
-          )}
-          {group.date && (
-            <span className="text-xs text-slate-400">
-              {new Date(group.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </span>
-          )}
-          {expanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+        <AlertCircle className={`h-4 w-4 flex-shrink-0 ${isImported ? 'text-green-500' : isRejected ? 'text-red-500' : 'text-amber-400'}`} />
+        <span className={`flex-1 text-sm font-semibold truncate ${isImported ? 'text-slate-400 line-through' : isRejected ? 'text-slate-500 line-through' : 'text-white'}`}>
+          {group.subject}
+        </span>
+        <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-400">
+          <span>{group.emailCount > 1 ? `${group.emailCount} events` : '1 event'}</span>
+          {dateStr && <span>{dateStr}</span>}
+          {isImported && <span className="text-green-400 font-semibold text-[11px]">IMPORTED</span>}
+          {isRejected && <span className="text-red-400 font-semibold text-[11px]">REJECTED</span>}
+          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </div>
       </button>
 
-      {/* Expanded sub-row */}
-      {expanded && (
-        <div className="border-t border-slate-100 px-5 py-4 bg-slate-50">
-          <div className="flex items-center gap-4">
-            {/* Checkbox placeholder */}
-            <input type="checkbox" className="rounded border-slate-300 h-4 w-4 accent-violet-600" defaultChecked />
+      {/* Expanded detail row */}
+      {expanded && !isImported && !isRejected && (
+        <div className="border-t border-[#2e2560]/60 px-5 py-4 flex items-center gap-4">
+          {/* Checkbox */}
+          <input type="checkbox" className="rounded border-slate-600 h-4 w-4 accent-violet-500 flex-shrink-0" />
 
-            {/* Order Placed label */}
-            <span className="text-xs font-bold text-violet-600 uppercase tracking-wider whitespace-nowrap">Order Placed</span>
+          {/* "Order Placed" label */}
+          <span className="text-xs font-bold text-violet-400 uppercase tracking-wider whitespace-nowrap">Order Placed</span>
 
-            {/* Retailer */}
-            <div className="flex items-center gap-2 min-w-0">
-              {logo ? (
-                <img src={logo} alt={group.retailer} className="h-6 w-12 object-contain rounded" />
-              ) : (
-                <div className="h-6 w-6 rounded-md bg-slate-200 flex items-center justify-center">
-                  <Package className="h-3.5 w-3.5 text-slate-400" />
+          {/* Retailer logo/icon + name */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            {logo ? (
+              <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center p-1 flex-shrink-0">
+                <img src={logo} alt={group.retailer} className="h-7 w-7 object-contain" />
+              </div>
+            ) : (
+              <div className="h-9 w-9 rounded-lg bg-[#1e1b3a] border border-[#3a3560] flex items-center justify-center flex-shrink-0">
+                <Package className="h-4 w-4 text-slate-400" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-white">{group.retailer || 'Unknown'}</p>
+              {group.orderNumber && <p className="text-[11px] text-slate-400">Order: {group.orderNumber}</p>}
+              {group.totalCost != null && <p className="text-[11px] text-slate-300">$ {group.totalCost.toFixed(2)}</p>}
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] text-amber-400 font-semibold">Confidence: {group.confidence || 95}%</span>
+                <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded font-bold">PENDING</span>
+              </div>
+              {group.productName && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Link className="h-3 w-3 text-violet-400" />
+                  <span className="text-[11px] text-violet-400">Linked: {group.productName}</span>
                 </div>
               )}
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-slate-800 truncate">{group.retailer || 'Unknown Retailer'}</p>
-                {group.orderNumber && <p className="text-xs text-slate-400 truncate">#{group.orderNumber}</p>}
-              </div>
             </div>
+          </div>
 
-            {/* Price */}
-            {group.totalCost != null && (
-              <span className="text-sm font-bold text-slate-700 ml-2">${group.totalCost.toFixed(2)}</span>
-            )}
-
-            {/* Badges */}
-            <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
-                ~{group.confidence || 85}% match
-              </span>
-              <span className="text-xs bg-yellow-100 text-yellow-700 px-2.5 py-0.5 rounded-full font-bold uppercase">
-                Pending
-              </span>
-              {group.productName && (
-                <span className="text-xs text-violet-600 font-semibold truncate max-w-[140px]">{group.productName}</span>
-              )}
-              {/* Import button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onImport(group); }}
-                disabled={processing}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-300 bg-white text-violet-700 text-xs font-semibold hover:bg-violet-50 transition disabled:opacity-50"
-              >
-                {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShoppingCart className="h-3.5 w-3.5" />}
-                Import
-              </button>
-              {/* Reject button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onReject(group.id); }}
-                disabled={processing}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-500 text-xs font-semibold hover:bg-red-50 transition disabled:opacity-50"
-              >
-                <X className="h-3.5 w-3.5" /> Reject
-              </button>
-            </div>
+          {/* Actions */}
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => onImport(group)}
+              disabled={processing}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-violet-500/50 bg-transparent text-violet-300 text-xs font-semibold hover:bg-violet-600/20 transition disabled:opacity-50"
+            >
+              {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShoppingCart className="h-3.5 w-3.5" />}
+              Import
+            </button>
+            <button
+              onClick={() => onReject(group.id)}
+              disabled={processing}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-red-500/40 bg-transparent text-red-400 text-xs font-semibold hover:bg-red-600/10 transition disabled:opacity-50"
+            >
+              <X className="h-3.5 w-3.5" /> Reject
+            </button>
           </div>
         </div>
       )}
@@ -191,8 +162,6 @@ export default function EmailImport() {
   const [productMatches, setProductMatches] = useState([]);
   const [gmailEmails, setGmailEmails] = useState([]);
   const [loadingGmail, setLoadingGmail] = useState(false);
-  const [selectedGmailIds, setSelectedGmailIds] = useState([]);
-  const [batchResults, setBatchResults] = useState([]);
   const [gmailAfterDate, setGmailAfterDate] = useState('');
   const [gmailBeforeDate, setGmailBeforeDate] = useState('');
   const [rejectedIds, setRejectedIds] = useState(new Set());
@@ -217,7 +186,6 @@ export default function EmailImport() {
 
   const handleReject = (id) => {
     setRejectedIds(prev => new Set([...prev, id]));
-    toast.success('Email rejected');
   };
 
   const handleImportGroup = async (group) => {
@@ -418,80 +386,70 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
     }
   };
 
-  // Filtered emails by tab
+  const pendingCount = gmailEmails.filter(g => !rejectedIds.has(g.id) && !importedIds.has(g.id)).length;
   const visibleEmails = gmailEmails.filter(g => {
-    if (rejectedIds.has(g.id)) return activeTab === 'failed';
-    if (importedIds.has(g.id)) return activeTab === 'processed' || activeTab === 'all';
-    return activeTab === 'all' || activeTab === 'needs_review';
+    if (activeTab === 'needs_review') return !rejectedIds.has(g.id) && !importedIds.has(g.id);
+    if (activeTab === 'processed') return importedIds.has(g.id);
+    if (activeTab === 'failed') return rejectedIds.has(g.id);
+    return true;
   });
 
-  const pendingCount = gmailEmails.filter(g => !rejectedIds.has(g.id) && !importedIds.has(g.id)).length;
-
   return (
-    <div className="min-h-screen bg-[#f6f7fb] px-4 py-6 lg:px-8">
+    <div className="min-h-screen">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">Import Orders</h1>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-bold text-foreground">Inbox</h1>
             {pendingCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-xs font-bold">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold border border-amber-500/30">
                 {pendingCount} needs review
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Forwarded order emails — review and import as transactions
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-[130px]">
-            <input type="date" value={gmailAfterDate} onChange={e => setGmailAfterDate(e.target.value)}
-              className="h-8 px-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 w-full"
-              placeholder="From date" />
-          </div>
-          <div className="flex-1 min-w-[130px]">
-            <input type="date" value={gmailBeforeDate} onChange={e => setGmailBeforeDate(e.target.value)}
-              className="h-8 px-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-violet-400 w-full"
-              placeholder="To date" />
-          </div>
-          <button
-            onClick={fetchGmailEmails}
-            disabled={loadingGmail}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-60"
-          >
-            <RefreshCw className={`h-4 w-4 ${loadingGmail ? 'animate-spin' : ''}`} />
-            {loadingGmail ? 'Fetching...' : 'Fetch Gmail'}
-          </button>
+          <p className="text-sm text-muted-foreground">Forwarded order emails — review and import as transactions.</p>
         </div>
       </div>
 
-      {/* ── Two-column layout ── */}
       <div className="flex gap-6">
         {/* ── Left: Inbox ── */}
         <div className="flex-1 min-w-0">
+          {/* Select All + date filters row */}
+          <div className="flex items-center justify-between mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" className="rounded border-slate-600 h-4 w-4 accent-violet-500"
+                onChange={(e) => {/* select all logic could go here */}} />
+              <span className="text-sm text-muted-foreground">Select All Pending</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input type="date" value={gmailAfterDate} onChange={e => setGmailAfterDate(e.target.value)}
+                className="h-7 px-2 text-xs border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500" />
+              <span className="text-muted-foreground text-xs">→</span>
+              <input type="date" value={gmailBeforeDate} onChange={e => setGmailBeforeDate(e.target.value)}
+                className="h-7 px-2 text-xs border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500" />
+              <button onClick={fetchGmailEmails} disabled={loadingGmail}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-semibold hover:bg-violet-700 transition disabled:opacity-60">
+                <RefreshCw className={`h-3.5 w-3.5 ${loadingGmail ? 'animate-spin' : ''}`} />
+                {loadingGmail ? 'Fetching…' : 'Fetch'}
+              </button>
+            </div>
+          </div>
+
           {/* Tabs */}
-          <div className="flex items-center gap-0 border-b border-slate-200 mb-4">
+          <div className="flex items-center gap-0 border-b border-border mb-4">
             {[
               { id: 'all', label: 'All', count: gmailEmails.length },
               { id: 'needs_review', label: 'Needs Review', count: pendingCount },
               { id: 'processed', label: 'Processed', count: importedIds.size },
-              { id: 'failed', label: 'Rejected', count: rejectedIds.size },
+              { id: 'failed', label: 'Failed', count: rejectedIds.size },
             ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition -mb-px ${
-                  activeTab === tab.id
-                    ? 'border-violet-600 text-violet-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
-              >
+                  activeTab === tab.id ? 'border-violet-500 text-violet-400' : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}>
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    activeTab === tab.id ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-500'
-                  }`}>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.id ? 'bg-violet-500/20 text-violet-400' : 'bg-muted text-muted-foreground'}`}>
                     {tab.count}
                   </span>
                 )}
@@ -499,105 +457,80 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
             ))}
           </div>
 
-          {/* Select All Pending */}
-          {pendingCount > 0 && activeTab !== 'processed' && activeTab !== 'failed' && (
-            <div className="flex items-center gap-2 mb-4 px-1">
-              <input type="checkbox" className="rounded border-slate-300 h-4 w-4 accent-violet-600"
-                onChange={(e) => {
-                  if (e.target.checked) setSelectedGmailIds(gmailEmails.filter(g => !rejectedIds.has(g.id) && !importedIds.has(g.id)).map(g => g.id));
-                  else setSelectedGmailIds([]);
-                }}
-              />
-              <span className="text-xs text-slate-500 font-medium">Select All Pending</span>
-            </div>
-          )}
-
           {/* Email list */}
           {loadingGmail ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin mb-3" />
               <p className="text-sm">Fetching emails from Gmail…</p>
             </div>
           ) : gmailEmails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <Inbox className="h-12 w-12 mb-3 opacity-40" />
-              <p className="text-sm font-medium text-slate-500">No order emails found</p>
-              <p className="text-xs text-slate-400 mt-1">Click "Fetch Gmail" to load your inbox</p>
+            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+              <Inbox className="h-12 w-12 mb-3 opacity-30" />
+              <p className="text-sm font-medium">No order emails yet</p>
+              <p className="text-xs mt-1 opacity-60">Click "Fetch" to load from Gmail</p>
             </div>
           ) : visibleEmails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <Mail className="h-12 w-12 mb-3 opacity-40" />
-              <p className="text-sm font-medium text-slate-500">Nothing here</p>
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <p className="text-sm">Nothing in this tab</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {visibleEmails.map(group => (
-                <InboxCard
+                <EmailRow
                   key={group.id}
                   group={group}
                   onImport={handleImportGroup}
                   onReject={handleReject}
                   processing={processingId === group.id}
+                  isImported={importedIds.has(group.id)}
+                  isRejected={rejectedIds.has(group.id)}
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* ── Right: PDF Upload panel ── */}
-        <div className="w-72 flex-shrink-0">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        {/* ── Right: PDF Upload ── */}
+        <div className="w-64 flex-shrink-0 space-y-4">
+          <div className="bg-card rounded-2xl border border-border p-5">
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-xl bg-violet-100 flex items-center justify-center">
-                <FileText className="h-4 w-4 text-violet-600" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-800">Upload PDF</p>
-                <p className="text-[11px] text-slate-400">Order confirmation PDF</p>
-              </div>
+              <FileText className="h-4 w-4 text-violet-400" />
+              <p className="text-sm font-bold text-foreground">Upload PDF</p>
             </div>
-
-            <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition ${pdfFile ? 'border-violet-400 bg-violet-50' : 'border-slate-200 hover:border-violet-300 hover:bg-slate-50'}`}>
-              <FileText className={`h-8 w-8 mb-2 ${pdfFile ? 'text-violet-500' : 'text-slate-300'}`} />
-              <p className="text-xs text-center text-slate-500">
-                {pdfFile ? <span className="font-semibold text-violet-700">{pdfFile.name}</span> : 'Click to upload PDF'}
+            <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 cursor-pointer transition ${pdfFile ? 'border-violet-500/60 bg-violet-500/5' : 'border-border hover:border-violet-500/40'}`}>
+              <FileText className={`h-7 w-7 mb-2 ${pdfFile ? 'text-violet-400' : 'text-muted-foreground'}`} />
+              <p className="text-xs text-center text-muted-foreground">
+                {pdfFile ? <span className="font-semibold text-violet-400">{pdfFile.name}</span> : 'Click to select PDF'}
               </p>
-              <input type="file" accept=".pdf" className="hidden"
-                onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
+              <input type="file" accept=".pdf" className="hidden" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
             </label>
-
             {pdfFile && (
-              <button
-                onClick={handlePdfUpload}
-                disabled={processing}
-                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-60"
-              >
+              <button onClick={handlePdfUpload} disabled={processing}
+                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-60">
                 {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 {processing ? 'Processing…' : 'Import PDF'}
               </button>
             )}
-
             {result && (
-              <div className={`mt-3 p-3 rounded-xl text-xs flex items-start gap-2 ${result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                {result.success ? <CheckCircle className="h-4 w-4 flex-shrink-0 mt-0.5" /> : <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />}
+              <div className={`mt-3 p-3 rounded-xl text-xs flex items-start gap-2 ${result.success ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                {result.success ? <CheckCircle className="h-4 w-4 flex-shrink-0" /> : <XCircle className="h-4 w-4 flex-shrink-0" />}
                 <span>{result.message}</span>
               </div>
             )}
           </div>
 
-          {/* How it works */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mt-4">
-            <p className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">How it works</p>
+          <div className="bg-card rounded-2xl border border-border p-5">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">How it works</p>
             {[
-              { num: '1', title: 'Connect Gmail', desc: 'Orders are auto-fetched from your inbox' },
-              { num: '2', title: 'Review matches', desc: 'Confirm extracted order details and products' },
-              { num: '3', title: 'Import', desc: 'Creates transaction + calculates rewards' },
+              { n: '1', t: 'Fetch Gmail', d: 'Auto-loads order emails from inbox' },
+              { n: '2', t: 'Review', d: 'Confirm order details and products' },
+              { n: '3', t: 'Import', d: 'Creates transaction + rewards' },
             ].map(s => (
-              <div key={s.num} className="flex gap-3 mb-3 last:mb-0">
-                <div className="h-5 w-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{s.num}</div>
+              <div key={s.n} className="flex gap-3 mb-3 last:mb-0">
+                <div className="h-5 w-5 rounded-full bg-violet-500/20 text-violet-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{s.n}</div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-700">{s.title}</p>
-                  <p className="text-[11px] text-slate-400">{s.desc}</p>
+                  <p className="text-xs font-semibold text-foreground">{s.t}</p>
+                  <p className="text-[11px] text-muted-foreground">{s.d}</p>
                 </div>
               </div>
             ))}
@@ -605,19 +538,19 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
         </div>
       </div>
 
-      {/* ── Confirm Product Matches Modal ── */}
+      {/* ── Confirm Modal ── */}
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border-0 shadow-2xl p-0">
-          <div className="px-6 pt-6 pb-4 border-b border-slate-100">
-            <DialogTitle className="text-lg font-bold text-slate-900">Confirm Product Matches</DialogTitle>
-            <p className="text-sm text-slate-500 mt-1">
-              Review and confirm before importing order <span className="font-semibold text-violet-600">#{extractedData?.order_number}</span>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Confirm Product Matches</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Review before importing order <span className="font-semibold text-violet-400">#{extractedData?.order_number}</span>
             </p>
-          </div>
+          </DialogHeader>
 
-          <div className="px-6 py-4 space-y-5">
-            {/* Order summary grid */}
-            <div className="grid grid-cols-2 gap-3 bg-slate-50 rounded-xl p-4">
+          <div className="space-y-4 mt-2">
+            {/* Order summary */}
+            <div className="grid grid-cols-2 gap-3 bg-muted/50 rounded-xl p-4">
               {[
                 { label: 'Retailer', value: extractedData?.retailer },
                 { label: 'Total', value: extractedData?.total_cost != null ? `$${extractedData.total_cost.toFixed(2)}` : '—' },
@@ -625,15 +558,15 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
                 { label: 'Credit Card', value: extractedData?.matchedCard?.card_name || 'None matched' },
               ].map(f => (
                 <div key={f.label}>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{f.label}</p>
-                  <p className="text-sm font-semibold text-slate-800 mt-0.5">{f.value}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{f.label}</p>
+                  <p className="text-sm font-semibold text-foreground mt-0.5">{f.value}</p>
                 </div>
               ))}
               {extractedData?.matchedGiftCards?.length > 0 && (
                 <div className="col-span-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gift Cards</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gift Cards</p>
                   {extractedData.matchedGiftCards.map((gc, i) => (
-                    <p key={i} className="text-sm font-semibold text-green-700">{gc.brand} — ${gc.value} (…{gc.code?.slice(-4)})</p>
+                    <p key={i} className="text-sm font-semibold text-green-400">{gc.brand} — ${gc.value} (…{gc.code?.slice(-4)})</p>
                   ))}
                 </div>
               )}
@@ -641,81 +574,69 @@ If there are two emails for the same order, merge the data.\n\n${content}`,
 
             {/* Products */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Products ({productMatches.length})</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Products ({productMatches.length})</p>
               <div className="space-y-3">
                 {productMatches.map((match, index) => (
-                  <div key={index} className="bg-white border border-slate-200 rounded-xl p-4 relative">
-                    <button
-                      onClick={() => setProductMatches(productMatches.filter((_, i) => i !== index))}
-                      className="absolute top-3 right-3 text-xs text-red-500 hover:text-red-700 font-semibold"
-                    >
-                      Remove
+                  <div key={index} className="border border-border rounded-xl p-4 relative bg-card">
+                    <button onClick={() => setProductMatches(productMatches.filter((_, i) => i !== index))}
+                      className="absolute top-3 right-3 text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1">
+                      <Trash2 className="h-3.5 w-3.5" /> Remove
                     </button>
-                    <div className="flex justify-between items-start pr-16 mb-3">
+                    <div className="flex justify-between items-start pr-20 mb-3">
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{match.invoiceName}</p>
+                        <p className="text-sm font-semibold text-foreground">{match.invoiceName}</p>
                         {match.sku && (
                           <a href={`https://www.google.com/search?q=${encodeURIComponent(match.sku)}`}
                             target="_blank" rel="noopener noreferrer"
-                            className="text-[11px] text-violet-500 hover:underline">
-                            UPC: {match.sku}
+                            className="text-[11px] text-violet-400 hover:underline flex items-center gap-1">
+                            <ExternalLink className="h-3 w-3" /> UPC: {match.sku}
                           </a>
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-slate-500">Qty: {match.quantity}</p>
-                        <p className="text-sm font-bold text-slate-800">${match.unit_cost?.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">Qty: {match.quantity}</p>
+                        <p className="text-sm font-bold text-foreground">${match.unit_cost?.toFixed(2)}</p>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-medium mb-1">Match to your product</p>
-                      <Select
-                        value={match.selectedProduct?.name || ''}
-                        onValueChange={(value) => {
-                          const newMatches = [...productMatches];
-                          newMatches[index].selectedProduct = match.suggestions.map(s => s.product).find(p => p.name === value) || null;
-                          setProductMatches(newMatches);
-                        }}
-                      >
-                        <SelectTrigger className="h-8 text-xs bg-slate-50 border-slate-200">
-                          <SelectValue placeholder="Select a product…" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {match.suggestions.sort((a, b) => a.product.name.localeCompare(b.product.name)).map(s => (
-                            <SelectItem key={s.product.id} value={s.product.name}>
-                              {s.product.name} {s.score > 90 ? '✓' : ''}{s.product.upc ? ` (${s.product.upc})` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {match.suggestions.length === 0 && (
-                        <p className="text-[11px] text-amber-600 mt-1">⚠️ No matching products found</p>
-                      )}
-                    </div>
+                    <Select
+                      value={match.selectedProduct?.name || ''}
+                      onValueChange={(value) => {
+                        const newMatches = [...productMatches];
+                        newMatches[index].selectedProduct = match.suggestions.map(s => s.product).find(p => p.name === value) || null;
+                        setProductMatches(newMatches);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Select a product…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {match.suggestions.sort((a, b) => a.product.name.localeCompare(b.product.name)).map(s => (
+                          <SelectItem key={s.product.id} value={s.product.name}>
+                            {s.product.name}{s.score > 90 ? ' ✓' : ''}{s.product.upc ? ` (${s.product.upc})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {match.suggestions.length === 0 && <p className="text-[11px] text-amber-400 mt-1">⚠️ No matching products found</p>}
                   </div>
                 ))}
               </div>
               <button
                 onClick={() => setProductMatches([...productMatches, { invoiceName: 'New Item', sku: '', quantity: 1, unit_cost: 0, suggestions: [], selectedProduct: null }])}
-                className="mt-3 text-sm text-violet-600 hover:text-violet-800 font-medium"
-              >
+                className="mt-3 text-sm text-violet-400 hover:text-violet-300 font-medium">
                 + Add Item
               </button>
             </div>
           </div>
 
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
-            <button
-              onClick={() => { setConfirmDialogOpen(false); setExtractedData(null); setProductMatches([]); }}
-              className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
-            >
+          <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-border">
+            <button onClick={() => { setConfirmDialogOpen(false); setExtractedData(null); setProductMatches([]); }}
+              className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition">
               Cancel
             </button>
-            <button
-              onClick={handleConfirmImport}
+            <button onClick={handleConfirmImport}
               disabled={processing || productMatches.some(m => !m.selectedProduct)}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-50"
-            >
+              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-50">
               {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
               {processing ? 'Importing…' : 'Confirm & Import'}
             </button>
