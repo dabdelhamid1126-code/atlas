@@ -345,7 +345,7 @@ export default function TransactionsTableMerged({
           />
         </div>
         <div className="w-9 flex-shrink-0" />
-        <div className="w-36 flex-shrink-0">Order</div>
+        <div className="w-48 flex-shrink-0">Order</div>
         <div className="flex-1" />
         <div className="hidden sm:flex items-center gap-6 flex-shrink-0">
           <div className="text-right w-[70px]">Cost</div>
