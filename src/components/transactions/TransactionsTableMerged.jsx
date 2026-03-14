@@ -182,7 +182,7 @@ export default function TransactionsTableMerged({
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={(e) => handleSelectRow(globalIdx, e.target.checked)}
+                        onChange={(e) => handleSelectRow(order.id, e.target.checked)}
                         className="rounded"
                       />
                     </td>
