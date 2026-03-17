@@ -103,7 +103,7 @@ function getBestUseCase(card, categoryRates) {
   return `Best for ${best.label}`;
 }
 
-export default function CreditCardCard({ card, orders = [], rewards = [], onEdit, onDelete }) {
+export default function CreditCardCard({ card, orders = [], rewards = [], privacyMode = false, onEdit, onDelete }) {
   const [showOptimization, setShowOptimization] = useState(false);
 
   const totalSpend = orders.filter(o => o.credit_card_id === card.id).reduce((s, o) => s + (o.total_cost || 0), 0);
