@@ -259,7 +259,7 @@ function CreditCardsTab({ queryClient }) {
             </div>
           )}
 
-          {/* QUICK ADD MODE */}
+          <>{/* QUICK ADD MODE */}
           {!editingCard && dialogMode === 'quick' && (
             <form onSubmit={handleQuickAdd} className="space-y-4">
               <p className="text-xs text-slate-500">Select your card — rates & benefits are pre-filled. Just enter your last 4 digits.</p>
