@@ -277,26 +277,89 @@ function CreditCardsTab({ queryClient }) {
 
           <>{/* QUICK ADD MODE */}
           {!editingCard && dialogMode === 'quick' && (
-            <form onSubmit={handleQuickAdd} className="space-y-4">
-              <p className="text-xs text-slate-500">Select your card — rates & benefits are pre-filled. Just enter your last 4 digits.</p>
-              <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
-                {CARD_TEMPLATES.map(t => (
-                  <button key={t.card_name} type="button"
-                    onClick={() => setSelectedTemplate(t)}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl border text-left transition ${selectedTemplate?.card_name === t.card_name ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
-                    <div>
-                      <p className="font-medium text-sm text-slate-900">{t.card_name}</p>
-                      <p className="text-xs text-slate-500">{t.issuer}</p>
-                    </div>
-                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                      {t.reward_type === 'cashback' ? `${t.cashback_rate}% back` : `${t.points_rate}x pts`}
-                    </span>
-                  </button>
-                ))}
+            <form onSubmit={handleQuickAdd} className="space-y-3">
+              {/* Search + Issuer Filter */}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search cards..."
+                    value={quickSearch}
+                    onChange={e => setQuickSearch(e.target.value)}
+                    className="pl-9 rounded-full bg-slate-100 border-slate-200"
+                  />
+                </div>
+                <Select value={quickIssuerFilter} onValueChange={setQuickIssuerFilter}>
+                  <SelectTrigger className="w-36 rounded-full bg-white border-slate-200 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Issuers</SelectItem>
+                    {[...new Set(CARD_TEMPLATES.map(t => t.issuer))].map(i => (
+                      <SelectItem key={i} value={i}>{i}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Apply Preset Store Rates toggle */}
+              <button
+                type="button"
+                onClick={() => setApplyPresetRates(p => !p)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition ${applyPresetRates ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}
+              >
+                <div className={`h-5 w-5 rounded flex items-center justify-center shrink-0 border-2 transition ${applyPresetRates ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}`}>
+                  {applyPresetRates && <Check className="h-3 w-3 text-white" />}
+                </div>
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="h-7 w-7 rounded bg-blue-100 flex items-center justify-center">
+                    <CreditCard className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-700">Apply Preset Store Rates</p>
+                    <p className="text-xs text-slate-500">Automatically add common store-specific cashback rates for each card</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Card list */}
+              <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                {CARD_TEMPLATES
+                  .filter(t => {
+                    const matchSearch = !quickSearch || t.card_name.toLowerCase().includes(quickSearch.toLowerCase()) || t.issuer.toLowerCase().includes(quickSearch.toLowerCase());
+                    const matchIssuer = quickIssuerFilter === 'all' || t.issuer === quickIssuerFilter;
+                    return matchSearch && matchIssuer;
+                  })
+                  .map(t => {
+                    const isSelected = selectedTemplate?.card_name === t.card_name;
+                    const baseRate = t.reward_type === 'cashback' ? `${t.cashback_rate}% base` : `${t.points_rate}x pts`;
+                    const annualFee = t.annual_fee ? `$${t.annual_fee}/yr` : null;
+                    const storeRates = Object.keys(t).filter(k => k.includes('_cashback_rate') || k.includes('_points_rate')).length;
+                    return (
+                      <button key={t.card_name} type="button"
+                        onClick={() => setSelectedTemplate(isSelected ? null : t)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition ${isSelected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
+                        <IssuerLogoSmall issuer={t.issuer} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-slate-900">{t.card_name}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {t.issuer}
+                            <span className="text-green-600 font-medium"> · {baseRate}</span>
+                            {storeRates > 0 && <span className="text-blue-500 font-medium"> · {storeRates} store rates</span>}
+                            {annualFee && <span className="text-slate-500"> · {annualFee}</span>}
+                          </p>
+                        </div>
+                        <div className={`h-5 w-5 rounded-full border-2 shrink-0 flex items-center justify-center transition ${isSelected ? 'border-blue-500 bg-blue-500' : 'border-slate-300'}`}>
+                          {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+
               {selectedTemplate && (
                 <div className="space-y-1">
-                  <Label>Last 4 Digits</Label>
+                  <Label className="text-sm">Last 4 Digits <span className="text-slate-400 font-normal">(optional)</span></Label>
                   <Input value={quickLast4} onChange={e => setQuickLast4(e.target.value.slice(0, 4))} placeholder="e.g. 1234" maxLength="4" />
                 </div>
               )}
