@@ -375,7 +375,7 @@ function CreditCardsTab({ queryClient }) {
               </Button>
             </DialogFooter>
           </form>
-          )}
+          )}</>
         </DialogContent>
       </Dialog>
     </>
