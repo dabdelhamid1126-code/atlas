@@ -54,8 +54,29 @@ export default function PaymentMethods() {
 
 // ─── CREDIT CARDS TAB ──────────────────────────────────────────────────────────
 
+// Known card templates for Quick Add
+const CARD_TEMPLATES = [
+  { card_name: 'Chase Sapphire Preferred', issuer: 'Chase', reward_type: 'points', points_rate: 1, dining_points_rate: 3, travel_points_rate: 2 },
+  { card_name: 'Chase Sapphire Reserve', issuer: 'Chase', reward_type: 'points', points_rate: 1, dining_points_rate: 3, travel_points_rate: 3 },
+  { card_name: 'Chase Freedom Unlimited', issuer: 'Chase', reward_type: 'cashback', cashback_rate: 1.5, dining_cashback_rate: 3, travel_cashback_rate: 5 },
+  { card_name: 'Chase Freedom Flex', issuer: 'Chase', reward_type: 'cashback', cashback_rate: 1, dining_cashback_rate: 3 },
+  { card_name: 'Amex Gold', issuer: 'American Express', reward_type: 'points', points_rate: 1, dining_points_rate: 4, groceries_points_rate: 4, travel_points_rate: 3 },
+  { card_name: 'Amex Platinum', issuer: 'American Express', reward_type: 'points', points_rate: 1, travel_points_rate: 5 },
+  { card_name: 'Amex Blue Cash Preferred', issuer: 'American Express', reward_type: 'cashback', cashback_rate: 1, groceries_cashback_rate: 6, streaming_cashback_rate: 6, gas_cashback_rate: 3 },
+  { card_name: 'Amex Blue Cash Everyday', issuer: 'American Express', reward_type: 'cashback', cashback_rate: 1, groceries_cashback_rate: 3 },
+  { card_name: 'Capital One Venture X', issuer: 'Capital One', reward_type: 'points', points_rate: 2, travel_points_rate: 10 },
+  { card_name: 'Capital One Venture', issuer: 'Capital One', reward_type: 'points', points_rate: 2 },
+  { card_name: 'Citi Double Cash', issuer: 'Citi', reward_type: 'cashback', cashback_rate: 2 },
+  { card_name: 'Discover it Cash Back', issuer: 'Discover', reward_type: 'cashback', cashback_rate: 1 },
+  { card_name: 'Wells Fargo Active Cash', issuer: 'Wells Fargo', reward_type: 'cashback', cashback_rate: 2 },
+  { card_name: 'Bank of America Customized Cash', issuer: 'Bank of America', reward_type: 'cashback', cashback_rate: 1 },
+];
+
 function CreditCardsTab({ queryClient }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState('quick'); // 'quick' | 'full'
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [quickLast4, setQuickLast4] = useState('');
   const [editingCard, setEditingCard] = useState(null);
   const [privacyMode, setPrivacyMode] = useState(false);
   const emptyForm = {
