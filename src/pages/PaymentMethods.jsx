@@ -148,6 +148,15 @@ function CreditCardsTab({ queryClient }) {
 
   return (
     <>
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setPrivacyMode(p => !p)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition ${privacyMode ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+        >
+          {privacyMode ? '🙈 Privacy On' : '👁️ Privacy Off'}
+        </button>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
