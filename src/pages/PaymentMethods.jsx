@@ -145,6 +145,8 @@ function CreditCardsTab({ queryClient }) {
       setDialogMode('quick');
       setSelectedTemplate(null);
       setQuickLast4('');
+      setQuickSearch('');
+      setQuickIssuerFilter('all');
       setFormData(emptyForm);
     }
     setDialogOpen(true);
