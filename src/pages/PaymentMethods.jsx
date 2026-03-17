@@ -256,9 +256,9 @@ function CreditCardsTab({ queryClient }) {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingCard ? 'Edit Credit Card' : 'Add Credit Card'}</DialogTitle>
+            <DialogTitle>{editingCard ? 'Edit Credit Card' : dialogMode === 'quick' ? 'Quick Add Cards' : 'Add Credit Card'}</DialogTitle>
           </DialogHeader>
 
           {/* Mode Toggle (only for new cards) */}
