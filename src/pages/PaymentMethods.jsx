@@ -114,6 +114,7 @@ function CreditCardsTab({ queryClient }) {
   const openDialog = (card = null) => {
     if (card) {
       setEditingCard(card);
+      setDialogMode('full');
       setFormData({
         card_name: card.card_name || '', last_4_digits: card.last_4_digits || '', issuer: card.issuer || '',
         reward_type: card.reward_type || 'cashback',
@@ -127,9 +128,29 @@ function CreditCardsTab({ queryClient }) {
       });
     } else {
       setEditingCard(null);
+      setDialogMode('quick');
+      setSelectedTemplate(null);
+      setQuickLast4('');
       setFormData(emptyForm);
     }
     setDialogOpen(true);
+  };
+
+  const handleQuickAdd = (e) => {
+    e.preventDefault();
+    if (!selectedTemplate) return;
+    const t = selectedTemplate;
+    createMutation.mutate({
+      card_name: t.card_name, issuer: t.issuer, last_4_digits: quickLast4,
+      reward_type: t.reward_type,
+      cashback_rate: t.cashback_rate || null, points_rate: t.points_rate || null,
+      dining_cashback_rate: t.dining_cashback_rate || null, dining_points_rate: t.dining_points_rate || null,
+      travel_cashback_rate: t.travel_cashback_rate || null, travel_points_rate: t.travel_points_rate || null,
+      groceries_cashback_rate: t.groceries_cashback_rate || null, groceries_points_rate: t.groceries_points_rate || null,
+      gas_cashback_rate: t.gas_cashback_rate || null, gas_points_rate: t.gas_points_rate || null,
+      streaming_cashback_rate: t.streaming_cashback_rate || null, streaming_points_rate: t.streaming_points_rate || null,
+      annual_credits: [], active: true,
+    });
   };
 
   const set = (k, v) => setFormData(p => ({ ...p, [k]: v }));
