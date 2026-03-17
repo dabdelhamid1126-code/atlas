@@ -136,9 +136,9 @@ export default function PODetailsModal({ open, onOpenChange, order, products, re
           </div>
 
           {/* Rewards */}
-          {(orderRewards.length > 0 || order.bonus_amount > 0 || order.extra_cashback_percent > 0) && (
+          {orderRewards.length > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <Label className="text-slate-500 text-sm mb-3 block">Rewards & Bonuses</Label>
+              <Label className="text-slate-500 text-sm mb-3 block">Reward Earned</Label>
               {totalCashback > 0 && (
                 <div>
                   <p className="text-2xl font-semibold text-green-600">${totalCashback.toFixed(2)} cashback</p>
@@ -149,20 +149,6 @@ export default function PODetailsModal({ open, onOpenChange, order, products, re
                 <div className="mt-2">
                   <p className="text-2xl font-semibold text-green-600">{Math.round(totalPoints)} pts</p>
                   <p className="text-xs text-slate-600">{cardDisplay} • {orderRewards[0]?.status || 'pending'}</p>
-                </div>
-              )}
-              {order.extra_cashback_percent > 0 && (
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Extra Cashback ({order.extra_cashback_percent}%)</span>
-                  <span className="font-semibold text-green-700">
-                    +${((order.final_cost || order.total_cost || 0) * order.extra_cashback_percent / 100).toFixed(2)}
-                  </span>
-                </div>
-              )}
-              {order.bonus_amount > 0 && (
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-slate-600">{order.bonus_notes || 'Bonus'}</span>
-                  <span className="font-semibold text-green-700">+${parseFloat(order.bonus_amount).toFixed(2)}</span>
                 </div>
               )}
             </div>
