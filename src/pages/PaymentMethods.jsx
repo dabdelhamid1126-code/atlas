@@ -57,6 +57,7 @@ export default function PaymentMethods() {
 function CreditCardsTab({ queryClient }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
+  const [privacyMode, setPrivacyMode] = useState(false);
   const emptyForm = {
     card_name: '', last_4_digits: '', issuer: '', reward_type: 'cashback',
     cashback_rate: '', points_rate: '',
