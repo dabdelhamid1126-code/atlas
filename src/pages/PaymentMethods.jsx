@@ -72,11 +72,25 @@ const CARD_TEMPLATES = [
   { card_name: 'Bank of America Customized Cash', issuer: 'Bank of America', reward_type: 'cashback', cashback_rate: 1 },
 ];
 
+function IssuerLogoSmall({ issuer }) {
+  const [err, setErr] = useState(false);
+  const domain = issuer ? issuer.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.com' : null;
+  const overrides = { 'americanexpress': 'americanexpress.com', 'bankofamerica': 'bankofamerica.com', 'capitalone': 'capitalone.com', 'wellsfargo': 'wellsfargo.com' };
+  const finalDomain = overrides[issuer?.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')] || domain;
+  const url = finalDomain ? `https://cdn.brandfetch.io/${finalDomain}/w/48/h/48` : null;
+  const initials = (issuer || '?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  if (err || !url) return <div className="h-10 w-10 rounded-lg bg-blue-700 flex items-center justify-center shrink-0"><span className="text-white font-bold text-xs">{initials}</span></div>;
+  return <div className="h-10 w-10 rounded-lg overflow-hidden shrink-0"><img src={url} alt={issuer} className="h-10 w-10 object-cover" onError={() => setErr(true)} /></div>;
+}
+
 function CreditCardsTab({ queryClient }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState('quick'); // 'quick' | 'full'
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [quickLast4, setQuickLast4] = useState('');
+  const [quickSearch, setQuickSearch] = useState('');
+  const [quickIssuerFilter, setQuickIssuerFilter] = useState('all');
+  const [applyPresetRates, setApplyPresetRates] = useState(true);
   const [editingCard, setEditingCard] = useState(null);
   const [privacyMode, setPrivacyMode] = useState(false);
   const emptyForm = {
