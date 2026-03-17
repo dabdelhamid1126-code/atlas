@@ -69,11 +69,11 @@ function IssuerLogo({ issuer, cardName }) {
   }
 
   return (
-    <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-md overflow-hidden shrink-0">
+    <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0">
       <img
         src={logoUrl}
         alt={issuer || cardName}
-        className="h-11 w-11 object-contain p-1"
+        className="h-12 w-12 object-cover"
         onError={() => setImgError(true)}
       />
     </div>
