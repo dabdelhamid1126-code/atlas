@@ -244,6 +244,55 @@ function CreditCardsTab({ queryClient }) {
           <DialogHeader>
             <DialogTitle>{editingCard ? 'Edit Credit Card' : 'Add Credit Card'}</DialogTitle>
           </DialogHeader>
+
+          {/* Mode Toggle (only for new cards) */}
+          {!editingCard && (
+            <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+              <button type="button" onClick={() => setDialogMode('quick')}
+                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${dialogMode === 'quick' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                ⚡ Quick Add
+              </button>
+              <button type="button" onClick={() => setDialogMode('full')}
+                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${dialogMode === 'full' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                ➕ Add New Card
+              </button>
+            </div>
+          )}
+
+          {/* QUICK ADD MODE */}
+          {!editingCard && dialogMode === 'quick' && (
+            <form onSubmit={handleQuickAdd} className="space-y-4">
+              <p className="text-xs text-slate-500">Select your card — rates & benefits are pre-filled. Just enter your last 4 digits.</p>
+              <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
+                {CARD_TEMPLATES.map(t => (
+                  <button key={t.card_name} type="button"
+                    onClick={() => setSelectedTemplate(t)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl border text-left transition ${selectedTemplate?.card_name === t.card_name ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
+                    <div>
+                      <p className="font-medium text-sm text-slate-900">{t.card_name}</p>
+                      <p className="text-xs text-slate-500">{t.issuer}</p>
+                    </div>
+                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      {t.reward_type === 'cashback' ? `${t.cashback_rate}% back` : `${t.points_rate}x pts`}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {selectedTemplate && (
+                <div className="space-y-1">
+                  <Label>Last 4 Digits</Label>
+                  <Input value={quickLast4} onChange={e => setQuickLast4(e.target.value.slice(0, 4))} placeholder="e.g. 1234" maxLength="4" />
+                </div>
+              )}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={!selectedTemplate} className="bg-purple-600 hover:bg-purple-700 text-white">Add Card</Button>
+              </DialogFooter>
+            </form>
+          )}
+
+          {/* FULL FORM MODE */}
+          {(editingCard || dialogMode === 'full') && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1">
