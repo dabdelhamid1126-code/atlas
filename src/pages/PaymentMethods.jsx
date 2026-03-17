@@ -190,6 +190,7 @@ function CreditCardsTab({ queryClient }) {
             card={card}
             orders={orders}
             rewards={rewards}
+            privacyMode={privacyMode}
             onEdit={openDialog}
             onDelete={(c) => { if (confirm('Delete card?')) deleteMutation.mutate(c.id); }}
           />
