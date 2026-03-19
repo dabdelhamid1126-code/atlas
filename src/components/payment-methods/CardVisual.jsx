@@ -15,6 +15,8 @@ const ISSUER_DOMAIN = {
   'PayPal': 'paypal.com',
   'Amazon': 'amazon.com',
   'Target': 'target.com',
+  'Apple': 'apple.com',
+  'Robinhood': 'robinhood.com',
 };
 
 const ISSUER_COLOR = {
