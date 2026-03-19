@@ -284,8 +284,6 @@ export default function Transactions() {
         matchesMode = order.order_type === 'churning';
       } else if (mode === 'marketplace') {
         matchesMode = order.order_type === 'marketplace';
-      } else if (mode === 'new_orders') {
-        matchesMode = order.status === 'pending' || order.status === 'ordered';
       }
 
       // Other filters
@@ -475,7 +473,6 @@ export default function Transactions() {
     { id: 'all', label: 'All' },
     { id: 'churning', label: '🔄 Churning' },
     { id: 'marketplace', label: '🏪 Marketplace' },
-    { id: 'new_orders', label: '🆕 New Orders' },
   ];
 
   const columnOptions = [
