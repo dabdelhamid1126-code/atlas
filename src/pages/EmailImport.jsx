@@ -374,7 +374,7 @@ function IntegrationsTab() {
               ) : (
                 <>
                   <span className="text-xs text-gray-400">Not connected</span>
-                  <button className="text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg transition-colors border-0">
+                  <button onClick={c.onConnect} className="text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg transition-colors border-0">
                     Connect
                   </button>
                 </>
