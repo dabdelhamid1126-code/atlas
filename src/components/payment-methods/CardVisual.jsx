@@ -40,7 +40,7 @@ function getIssuerColor(issuer) {
 function getLogoUrl(issuer) {
   if (!issuer) return null;
   const domain = ISSUER_DOMAIN[issuer] || `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
-  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
+  return `https://logo.clearbit.com/${domain}`;
 }
 
 function IssuerLogo({ issuer }) {
