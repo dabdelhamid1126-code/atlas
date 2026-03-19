@@ -48,7 +48,7 @@ function IssuerLogo({ issuer, size = 'sm' }) {
   }
   return (
     <div className={`${cls} rounded-lg overflow-hidden bg-white/10 shrink-0 flex items-center justify-center`}>
-      <img src={url} alt={issuer} className={`${cls} object-contain p-0.5`} onError={() => setErr(true)} />
+      <img src={url} alt={issuer} className={`${cls} object-contain p-0.5`} onError={(e) => e.target.style.display='none'} />
     </div>
   );
 }
