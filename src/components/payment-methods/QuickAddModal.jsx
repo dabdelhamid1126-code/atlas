@@ -151,7 +151,7 @@ export default function QuickAddModal({ open, onClose, existingCards = [], onCre
         </div>
 
         {/* Card list */}
-        <div className="flex-1 overflow-y-auto px-5 py-3 space-y-1.5">
+        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
           {filtered.length === 0 && (
             <p className="text-sm text-slate-400 text-center py-8">No cards match your search</p>
           )}
