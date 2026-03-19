@@ -58,7 +58,7 @@ function IssuerLogo({ issuer }) {
   const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   const color = getIssuerColor(issuer);
 
-  if (err || !url) {
+  if (err) {
     return (
       <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-sm"
         style={{ backgroundColor: color }}>
@@ -66,11 +66,14 @@ function IssuerLogo({ issuer }) {
       </div>
     );
   }
+  const domain = ISSUER_DOMAIN[issuer] || `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
   return (
     <img
-      src={url}
+      src={`https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`}
       alt={issuer}
-      onError={(e) => e.target.style.display = 'none'}
+      crossOrigin="anonymous"
+      referrerPolicy="no-referrer"
+      onError={() => setErr(true)}
       style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '6px' }}
     />
   );
