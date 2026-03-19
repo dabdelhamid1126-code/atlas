@@ -37,10 +37,19 @@ function getIssuerColor(issuer) {
 
 function getLogoUrl(issuer) {
   if (!issuer) return null;
-  const domain = ISSUER_DOMAIN[issuer] ||
-    ISSUER_DOMAIN[Object.keys(ISSUER_DOMAIN).find(k => k.toLowerCase() === issuer.toLowerCase())];
-  const resolvedDomain = domain || (issuer.toLowerCase().replace(/\s+/g, '') + '.com');
-  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${resolvedDomain}?fallbackName=${encodeURIComponent(issuer)}`;
+  const domainMap = {
+    'Chase': 'chase.com',
+    'American Express': 'americanexpress.com',
+    'Citi': 'citi.com',
+    'Capital One': 'capitalone.com',
+    'Discover': 'discover.com',
+    'Barclays': 'barclays.com',
+    'Bank of America': 'bankofamerica.com',
+    'Credit One Bank': 'creditonebank.com',
+  };
+  const domain = domainMap[issuer] ||
+    `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
+  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
 }
 
 function IssuerLogo({ issuer }) {
