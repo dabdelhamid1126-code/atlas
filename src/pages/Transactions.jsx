@@ -503,9 +503,6 @@ export default function Transactions() {
             <Download className="h-4 w-4 mr-2" />
             CSV
           </Button>
-          <Button onClick={() => { setEditingOrder(null); setFormOpen(true); }} className="bg-purple-600 hover:bg-purple-700 text-white">
-            <Plus className="h-4 w-4 mr-2" /> New Order
-          </Button>
         </div>
       </div>
 
