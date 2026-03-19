@@ -48,12 +48,12 @@ export default function GoalTracker({ metrics }) {
                   <span className={`text-xs font-bold uppercase ${config.color}`}>{config.label}</span>
                   <span className="text-xs bg-white/60 text-slate-500 px-2 py-0.5 rounded-full capitalize">{goal.timeframe}</span>
                 </div>
-                <div className="flex items-baseline gap-1 mb-3">
+                <div className="flex items-baseline gap-1 mb-3 flex-wrap">
                   <span className={`text-xl font-bold ${config.color}`}>
-                    {goal.type === 'transactions' ? current : `$${current.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+                    {goal.type === 'transactions' ? current : abbrevDollar(current)}
                   </span>
                   <span className="text-xs text-slate-400">
-                    / {goal.type === 'transactions' ? goal.target_value : `$${goal.target_value.toLocaleString()}`}
+                    / {goal.type === 'transactions' ? goal.target_value : abbrevDollar(goal.target_value)}
                   </span>
                 </div>
                 <div className="h-2 bg-white/60 rounded-full overflow-hidden mb-2">
