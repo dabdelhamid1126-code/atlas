@@ -240,6 +240,7 @@ function CreditCardsTab({ queryClient }) {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onUpdate={handleInlineUpdate}
+              isDuplicate={duplicateNames.has((card.card_name || '').toLowerCase().trim())}
             />
           ))}
         </div>
