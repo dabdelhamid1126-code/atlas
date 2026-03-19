@@ -121,8 +121,10 @@ export default function NewOrders() {
     return selectedCard.cashback_rate || 0;
   };
   const cardRate = parseFloat(form.cashback_rate_override) || getCardRate();
-  const cashbackBase = totalCost - (!form.include_tax_in_cashback ? tax : 0) - (!form.include_shipping_in_cashback ? shipping : 0);
-  const cardCB = cashbackBase * cardRate / 100;
+  // Cashback is earned only on what the credit card actually charges (finalCost = totalCost - giftCards)
+  const chargedOnCard = totalCost - giftCardTotal;
+  const cashbackBase = chargedOnCard - (!form.include_tax_in_cashback ? tax : 0) - (!form.include_shipping_in_cashback ? shipping : 0);
+  const cardCB = Math.max(0, cashbackBase) * cardRate / 100;
   const yaCB = form.amazon_yacb && isAmazon ? cashbackBase * 0.05 : 0;
   const totalCB = cardCB + yaCB;
 
