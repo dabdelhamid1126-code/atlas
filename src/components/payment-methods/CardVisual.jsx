@@ -8,6 +8,8 @@ const ISSUER_DOMAIN = {
   'Capital One': 'capitalone.com',
   'Discover': 'discover.com',
   'Bank of America': 'bankofamerica.com',
+  'Barclays': 'barclays.com',
+  'Credit One Bank': 'creditonebank.com',
   'US Bank': 'usbank.com',
   'Wells Fargo': 'wellsfargo.com',
   'PayPal': 'paypal.com',
