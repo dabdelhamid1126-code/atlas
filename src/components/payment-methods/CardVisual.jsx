@@ -54,7 +54,7 @@ function getLogoUrl(issuer) {
   };
   const domain = domainMap[issuer] ||
     `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
 }
 
 function IssuerLogo({ issuer }) {
