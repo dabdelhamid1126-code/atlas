@@ -248,14 +248,7 @@ export default function NewOrders() {
         </p>
       </div>
 
-      {/* Multi-item toggle */}
-      <div className="flex items-center gap-3 mb-6">
-        <button type="button" onClick={() => set('multi_item', !form.multi_item)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all ${form.multi_item ? 'bg-purple-50 border-purple-400 text-purple-700' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>
-          <Layers className="h-4 w-4" /> Multi-Item Order
-        </button>
-        {form.multi_item && <p className="text-xs text-purple-500">Add multiple products in one order</p>}
-      </div>
+
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
