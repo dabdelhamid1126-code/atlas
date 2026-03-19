@@ -493,11 +493,11 @@ export default function NewOrders() {
               {/* Gift Cards */}
               <div className="mb-3">
                 <Label className="text-xs text-slate-600 block mb-1">Gift Cards</Label>
-                {giftCards.filter(gc => gc.status === 'available' || form.gift_card_ids.includes(gc.id)).length === 0 ? (
-                  <p className="text-xs text-slate-400">No available gift cards</p>
+                {giftCards.filter(gc => (gc.status === 'available' || form.gift_card_ids.includes(gc.id)) && (!form.retailer || gc.brand?.toLowerCase() === form.retailer.toLowerCase())).length === 0 ? (
+                  <p className="text-xs text-slate-400">{form.retailer ? `No available ${form.retailer} gift cards` : 'Select a vendor to see gift cards'}</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {giftCards.filter(gc => gc.status === 'available' || form.gift_card_ids.includes(gc.id)).map(gc => (
+                    {giftCards.filter(gc => (gc.status === 'available' || form.gift_card_ids.includes(gc.id)) && (!form.retailer || gc.brand?.toLowerCase() === form.retailer.toLowerCase())).map(gc => (
                       <label key={gc.id} className="flex items-center gap-1 text-xs bg-white border rounded-lg px-2 py-1.5 cursor-pointer hover:border-amber-400 transition">
                         <input type="checkbox" checked={form.gift_card_ids.includes(gc.id)}
                           onChange={e => {
