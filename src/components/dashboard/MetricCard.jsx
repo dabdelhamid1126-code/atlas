@@ -29,15 +29,15 @@ export function abbrevDollar(val) {
 export default function MetricCard({ label, value, sub, color, icon }) {
   const c = colorConfig[color] || colorConfig.blue;
   return (
-    <div className={`rounded-2xl border ${c.border} bg-gradient-to-br ${c.bg} p-5 shadow-sm`}>
+    <div className={`rounded-2xl border ${c.border} bg-gradient-to-br ${c.bg} p-5 shadow-sm overflow-hidden`}>
       <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase leading-tight">{label}</p>
-        <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ml-2 ${c.icon}`}>
+        <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase leading-tight break-words min-w-0 mr-2">{label}</p>
+        <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${c.icon}`}>
           {icon}
         </div>
       </div>
-      <p className={`text-2xl font-bold leading-tight ${c.value}`}>{value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-1 leading-snug">{sub}</p>}
+      <p className={`text-2xl font-bold leading-tight break-words ${c.value}`}>{value}</p>
+      {sub && <p className="text-xs text-slate-400 mt-1 leading-snug break-words">{sub}</p>}
     </div>
   );
 }
