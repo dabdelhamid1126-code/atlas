@@ -284,6 +284,8 @@ export default function Transactions() {
         matchesMode = order.order_type === 'churning';
       } else if (mode === 'marketplace') {
         matchesMode = order.order_type === 'marketplace';
+      } else if (mode === 'new_orders') {
+        matchesMode = order.status === 'pending' || order.status === 'ordered';
       }
 
       // Other filters
