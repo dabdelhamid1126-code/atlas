@@ -786,6 +786,9 @@ export default function EmailImport() {
 
       {/* ── INTEGRATIONS TAB ── */}
       {activeTab === "integrations" && <IntegrationsTab />}
+
+      {/* ── PDF INVOICE TAB ── */}
+      {activeTab === "pdf" && <PDFInvoiceTab />}
     </div>
   );
 }
