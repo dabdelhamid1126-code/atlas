@@ -1,149 +1,256 @@
-import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { useQueryClient } from '@tanstack/react-query';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  Upload, CheckCircle, XCircle, Loader2, FileText, Inbox,
-  RefreshCw, ChevronDown, ChevronUp, ShoppingCart, AlertCircle,
-  X, Package, Link, ExternalLink, Trash2
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { format } from 'date-fns';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
-// ─── Product matching helper ──────────────────────────────────────────────────
-const matchProducts = (items, allProducts) =>
-  items.map(item => {
-    const suggestions = allProducts
-      .map(p => {
-        let score = 0;
-        const iName = item.product_name?.toLowerCase() || '';
-        const pName = p.name?.toLowerCase() || '';
-        if (item.sku && p.upc === item.sku) score = 100;
-        else if (pName === iName) score = 95;
-        else if (pName.includes(iName) || iName.includes(pName)) score = 80;
-        else {
-          const iWords = iName.split(/\s+/).filter(w => w.length > 2);
-          const pWords = pName.split(/\s+/).filter(w => w.length > 2);
-          const matching = iWords.filter(iw => pWords.some(pw =>
-            pw.includes(iw) || iw.includes(pw) ||
-            (Math.abs(pw.length - iw.length) <= 2 && (pw.startsWith(iw.slice(0, 3)) || iw.startsWith(pw.slice(0, 3))))
-          )).length;
-          if (matching > 0) score = (matching / Math.max(iWords.length, pWords.length)) * 75;
-          if (Math.abs(iName.length - pName.length) < 5) score += 5;
-          const iNums = iName.match(/\d+/g) || [];
-          const pNums = pName.match(/\d+/g) || [];
-          score += iNums.filter(n => pNums.includes(n)).length * 10;
-        }
-        return { product: p, score };
-      })
-      .filter(m => m.score > 20)
-      .sort((a, b) => b.score !== a.score ? b.score - a.score : a.product.name.localeCompare(b.product.name))
-      .slice(0, 8);
-    return {
-      invoiceName: item.product_name,
-      sku: item.sku,
-      quantity: item.quantity || 1,
-      unit_cost: item.unit_cost || 0,
-      suggestions,
-      selectedProduct: suggestions[0]?.product || null,
-    };
-  });
+// ─── Tiny icon wrapper ────────────────────────────────────────────────────────
+const Ic = ({ children, className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+);
+const IcInbox   = ({className}) => <Ic className={className}><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></Ic>;
+const IcPlug    = ({className}) => <Ic className={className}><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></Ic>;
+const IcRefresh = ({className}) => <Ic className={className}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.47"/></Ic>;
+const IcDl      = ({className}) => <Ic className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Ic>;
+const IcX       = ({className}) => <Ic className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Ic>;
+const IcCheck   = ({className}) => <Ic className={className}><polyline points="20 6 9 17 4 12"/></Ic>;
+const IcEdit2   = ({className}) => <Ic className={className}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></Ic>;
+const IcAlert   = ({className}) => <Ic className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></Ic>;
+const IcMail    = ({className}) => <Ic className={className}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Ic>;
+const IcCopy    = ({className}) => <Ic className={className}><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></Ic>;
+const IcPkg     = ({className}) => <Ic className={className}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></Ic>;
+const IcChev    = ({ open }) => (
+  <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+    strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+);
 
-const RETAILER_LOGOS = {
-  amazon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png',
-  bestbuy: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/200px-Best_Buy_Logo.svg.png',
-  walmart: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Walmart_Spark.svg/200px-Walmart_Spark.svg.png',
-  target: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Target_Corporation_logo_%28vector%29.svg/200px-Target_Corporation_logo_%28vector%29.svg.png',
-};
-const getRetailerLogo = (name) => {
-  if (!name) return null;
-  const key = name.toLowerCase().replace(/[^a-z]/g, '');
-  return Object.entries(RETAILER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const confStyle = (pct) => ({
+  bar:  pct >= 80 ? "bg-green-500"  : pct >= 55 ? "bg-amber-400"  : "bg-red-500",
+  text: pct >= 80 ? "text-green-600": pct >= 55 ? "text-amber-600": "text-red-600",
+  pill: pct >= 80
+    ? "bg-green-50 text-green-700 border-green-200"
+    : pct >= 55
+    ? "bg-amber-50 text-amber-700 border-amber-200"
+    : "bg-red-50 text-red-700 border-red-200",
+});
+const confMsg = (pct) =>
+  pct >= 80 ? "Ready to import" : pct >= 55 ? "Review recommended" : "Missing key data — fill manually";
+
+const STORE_STYLE = (name = "") => {
+  const n = name.toLowerCase();
+  if (n.includes("amazon"))   return "bg-orange-50 text-orange-700 border-orange-200";
+  if (n.includes("best buy")) return "bg-blue-50 text-blue-700 border-blue-200";
+  if (n.includes("walmart"))  return "bg-green-50 text-green-700 border-green-200";
+  if (n.includes("target"))   return "bg-red-50 text-red-700 border-red-200";
+  return "bg-gray-100 text-gray-600 border-gray-200";
 };
 
-// ─── Inbox Email Row ──────────────────────────────────────────────────────────
-function EmailRow({ group, onImport, onReject, processing, isImported, isRejected }) {
-  const [expanded, setExpanded] = useState(true);
-  const logo = getRetailerLogo(group.retailer);
-  const dateStr = group.date ? new Date(group.date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }) : '';
+const EMAIL_TYPE_STYLE = {
+  "Order placed":  "bg-purple-50 text-purple-700",
+  "Shipped":       "bg-blue-50 text-blue-700",
+  "Delivered":     "bg-green-50 text-green-700",
+  "Pickup ready":  "bg-amber-50 text-amber-700",
+  "Reminder":      "bg-red-50 text-red-700",
+  "Update":        "bg-gray-100 text-gray-600",
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+function ParsedField({ label, value, found }) {
+  return found ? (
+    <div className="rounded-lg p-2.5 bg-green-50 border border-green-200">
+      <p className="text-[9.5px] uppercase tracking-wider text-green-600 font-semibold mb-1">{label}</p>
+      <p className="text-xs font-semibold text-green-700 truncate">{value}</p>
+    </div>
+  ) : (
+    <div className="rounded-lg p-2.5 bg-red-50 border border-red-200">
+      <p className="text-[9.5px] uppercase tracking-wider text-red-500 font-semibold mb-1">{label}</p>
+      <p className="text-xs text-gray-400 italic">{value || "Not found"}</p>
+    </div>
+  );
+}
+
+function EmailTypeBadge({ type }) {
+  return (
+    <span className={`text-[10.5px] font-medium px-2 py-0.5 rounded-full shrink-0 ${EMAIL_TYPE_STYLE[type] || EMAIL_TYPE_STYLE["Update"]}`}>
+      {type}
+    </span>
+  );
+}
+
+function Toggle({ checked, onChange }) {
+  return (
+    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+      <input type="checkbox" className="sr-only peer" checked={checked} onChange={onChange} />
+      <div className={`w-9 h-5 rounded-full transition-colors ${checked ? "bg-purple-600" : "bg-gray-200"}`}>
+        <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${checked ? "translate-x-4" : ""}`} />
+      </div>
+    </label>
+  );
+}
+
+// ─── Order group card ─────────────────────────────────────────────────────────
+function OrderGroup({ group, checked, onCheck, existingOrders }) {
+  const [open, setOpen] = useState(false);
+  const cs = confStyle(group.confidence);
 
   return (
-    <div className={`rounded-xl border transition-all ${isImported ? 'border-green-200 bg-green-50' : isRejected ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-white'}`}>
+    <div className={`bg-white rounded-2xl border overflow-hidden transition-all ${checked ? "border-purple-300 ring-1 ring-purple-200" : "border-gray-200"}`}>
       {/* Header */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 px-5 py-3.5 text-left"
+      <div
+        className="flex items-center gap-3 px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setOpen(o => !o)}
       >
-        <AlertCircle className={`h-4 w-4 flex-shrink-0 ${isImported ? 'text-green-500' : isRejected ? 'text-red-500' : 'text-amber-400'}`} />
-        <span className={`flex-1 text-sm font-semibold truncate ${isImported ? 'text-slate-400 line-through' : isRejected ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
-          {group.subject}
-        </span>
-        <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-500">
-          <span>{group.emailCount > 1 ? `${group.emailCount} events` : '1 event'}</span>
-          {dateStr && <span>{dateStr}</span>}
-          {isImported && <span className="text-green-400 font-semibold text-[11px]">IMPORTED</span>}
-          {isRejected && <span className="text-red-400 font-semibold text-[11px]">REJECTED</span>}
-          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        <input
+          type="checkbox"
+          className="accent-purple-600 w-3.5 h-3.5 shrink-0"
+          checked={checked}
+          onChange={e => { e.stopPropagation(); onCheck(e.target.checked); }}
+          onClick={e => e.stopPropagation()}
+        />
+
+        {/* Store badge */}
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-bold shrink-0 border ${STORE_STYLE(group.store)}`}>
+          {(group.store || "?").slice(0, 3).toUpperCase()}
         </div>
-      </button>
 
-      {/* Expanded detail row */}
-      {expanded && !isImported && !isRejected && (
-        <div className="border-t border-slate-100 bg-slate-50 px-5 py-4 flex items-center gap-4">
-          {/* Checkbox */}
-          <input type="checkbox" className="rounded border-slate-300 h-4 w-4 accent-violet-600 flex-shrink-0" />
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <span className="text-[13.5px] font-semibold text-gray-900">{group.store || "Unknown store"}</span>
+            {group.orderNumber && (
+              <code className="text-[11px] text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md font-mono">
+                {group.orderNumber}
+              </code>
+            )}
+            <span className="text-[11px] text-gray-400 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
+              {group.emails.length} email{group.emails.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 truncate">
+            {group.productName
+              ? <><span className="text-gray-700 font-medium">{group.productName}</span>{group.price ? ` — ${group.price}` : ""}</>
+              : <span className="italic text-gray-400">No product parsed — status emails only</span>
+            }
+          </p>
+        </div>
 
-          {/* "Order Placed" label */}
-          <span className="text-xs font-bold text-violet-600 uppercase tracking-wider whitespace-nowrap">Order Placed</span>
+        {/* Right meta */}
+        <div className="flex items-center gap-2 shrink-0">
+          {group.price && <span className="text-sm font-bold text-gray-900">{group.price}</span>}
+          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${cs.pill}`}>
+            {group.confidence}%
+          </span>
+          <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+            Pending
+          </span>
+          <IcChev open={open} />
+        </div>
+      </div>
 
-          {/* Retailer logo/icon + name */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            {logo ? (
-              <div className="h-9 w-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center p-1 flex-shrink-0">
-                <img src={logo} alt={group.retailer} className="h-7 w-7 object-contain" />
+      {/* Body */}
+      {open && (
+        <div className="border-t border-gray-100">
+          {/* Parsed fields */}
+          <div className="px-4 py-4 bg-gray-50">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-3">Parsed order data</p>
+            <div className="grid grid-cols-5 gap-2 mb-3">
+              <ParsedField label="Order #"  value={group.orderNumber} found={!!group.orderNumber} />
+              <ParsedField label="Store"    value={group.store}       found={!!group.store} />
+              <ParsedField label="Product"  value={group.productName} found={!!group.productName} />
+              <ParsedField label="Price"    value={group.price}       found={!!group.price} />
+              <ParsedField label="Qty"      value={group.qty}         found={!!group.qty} />
+              <ParsedField label="Date"     value={group.date}        found={!!group.date} />
+              <ParsedField label="Tracking" value={group.tracking}    found={!!group.tracking} />
+              <ParsedField label="SKU"      value={group.sku}         found={!!group.sku} />
+              <ParsedField label="Buyer"    value={group.buyer}       found={!!group.buyer} />
+              <ParsedField label="Payment"  value={group.payment}     found={!!group.payment} />
+            </div>
+
+            {/* Confidence bar */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-xs text-gray-500 shrink-0">Parse confidence</span>
+              <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${cs.bar}`} style={{ width: `${group.confidence}%`, transition: "width .5s" }} />
+              </div>
+              <span className={`text-xs font-semibold shrink-0 ${cs.text}`}>
+                {group.confidence}% — {confMsg(group.confidence)}
+              </span>
+            </div>
+
+            {/* Item card or warning */}
+            {group.productName ? (
+              <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0">
+                  <IcPkg className="w-3.5 h-3.5 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{group.productName}</p>
+                  {group.sku && <p className="text-xs text-gray-400">SKU: {group.sku}</p>}
+                </div>
+                {group.qty && (
+                  <span className="text-xs text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
+                    Qty {group.qty}
+                  </span>
+                )}
+                {group.price && <span className="text-sm font-bold text-gray-900">{group.price}</span>}
               </div>
             ) : (
-              <div className="h-9 w-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
-                <Package className="h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+                <IcAlert className="w-4 h-4 shrink-0" />
+                No order confirmation found — all emails are status updates. Link to an existing order or reject.
               </div>
             )}
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-slate-800">{group.retailer || 'Unknown'}</p>
-              {group.orderNumber && <p className="text-[11px] text-slate-500">Order: {group.orderNumber}</p>}
-              {group.totalCost != null && <p className="text-[11px] text-slate-600">$ {group.totalCost.toFixed(2)}</p>}
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] text-amber-600 font-semibold">Confidence: {group.confidence || 95}%</span>
-                <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">PENDING</span>
-              </div>
-              {group.productName && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Link className="h-3 w-3 text-violet-500" />
-                  <span className="text-[11px] text-violet-600">Linked: {group.productName}</span>
+          </div>
+
+          {/* Email thread */}
+          <div className="px-4 py-3 border-t border-gray-100">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+              {group.emails.length} email{group.emails.length !== 1 ? "s" : ""} in this order thread
+            </p>
+            <div className="space-y-0">
+              {group.emails.map((em, i) => (
+                <div key={i} className="flex items-center gap-2.5 py-2 border-b border-gray-50 last:border-b-0">
+                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${i === 0 ? "bg-purple-500" : "bg-gray-300"}`} />
+                  <span className="flex-1 text-xs text-gray-600 truncate">{em.subject}</span>
+                  <EmailTypeBadge type={em.type} />
+                  <span className="text-[10.5px] text-gray-400 shrink-0">{em.date}</span>
                 </div>
-              )}
+              ))}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => onImport(group)}
-              disabled={processing}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-violet-300 bg-white text-violet-700 text-xs font-semibold hover:bg-violet-50 transition disabled:opacity-50"
-            >
-              {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShoppingCart className="h-3.5 w-3.5" />}
-              Import
-            </button>
-            <button
-              onClick={() => onReject(group.id)}
-              disabled={processing}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-red-200 bg-white text-red-500 text-xs font-semibold hover:bg-red-50 transition disabled:opacity-50"
-            >
-              <X className="h-3.5 w-3.5" /> Reject
-            </button>
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50">
+            <div className="flex items-center gap-3">
+              {group.storeMatched ? (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
+                  <IcCheck className="w-3.5 h-3.5" /> {group.store} matched to your stores
+                </span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <IcAlert className="w-3.5 h-3.5" /> No store match — link to existing:
+                  </span>
+                  <select className="select text-xs py-1 px-2 rounded-lg border border-gray-200 bg-white text-gray-700 outline-none"
+                    style={{ minWidth: 160 }}
+                    onClick={e => e.stopPropagation()}>
+                    <option value="">— match existing —</option>
+                    {existingOrders.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+                <IcEdit2 className="w-3 h-3" /> Edit parse
+              </button>
+              <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-colors">
+                <IcDl className="w-3 h-3" /> Import as transaction
+              </button>
+              <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-white border border-red-200 hover:bg-red-50 transition-colors">
+                <IcX className="w-3 h-3" /> Reject
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -151,504 +258,348 @@ function EmailRow({ group, onImport, onReject, processing, isImported, isRejecte
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-export default function EmailImport() {
-  const [pdfFile, setPdfFile] = useState(null);
-  const [processing, setProcessing] = useState(false);
-  const [processingId, setProcessingId] = useState(null);
-  const [result, setResult] = useState(null);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [extractedData, setExtractedData] = useState(null);
-  const [productMatches, setProductMatches] = useState([]);
-  const [gmailEmails, setGmailEmails] = useState([]);
-  const [loadingGmail, setLoadingGmail] = useState(false);
-  const [gmailAfterDate, setGmailAfterDate] = useState('');
-  const [gmailBeforeDate, setGmailBeforeDate] = useState('');
-  const [rejectedIds, setRejectedIds] = useState(new Set());
-  const [importedIds, setImportedIds] = useState(new Set());
-  const [activeTab, setActiveTab] = useState('all');
-  const queryClient = useQueryClient();
+// ─── Integrations tab ─────────────────────────────────────────────────────────
+function IntegrationsTab() {
+  const [copied, setCopied] = useState(false);
+  const FWD = "orders+abc123xyz@inbox.churnlytics.io";
 
-  const fetchGmailEmails = async () => {
-    setLoadingGmail(true);
-    try {
-      const params = {};
-      if (gmailAfterDate) params.afterDate = gmailAfterDate;
-      if (gmailBeforeDate) params.beforeDate = gmailBeforeDate;
-      const res = await base44.functions.invoke('fetchGmailEmails', params);
-      setGmailEmails(res.data?.emails || []);
-    } catch (e) {
-      toast.error('Failed to fetch Gmail: ' + e.message);
-    } finally {
-      setLoadingGmail(false);
-    }
-  };
+  const CARDS = [
+    { name: "Gmail", desc: "Connect your Gmail to automatically pull order confirmation emails. No forwarding needed — we scan your inbox directly.", connected: true, label: "orders@gmail.com", icBg: "bg-amber-50", icStroke: "text-amber-500" },
+    { name: "Outlook / Microsoft 365", desc: "Connect your Outlook or Microsoft 365 account to automatically import order emails without setting up forwarding rules.", connected: false, icBg: "bg-blue-50", icStroke: "text-blue-500" },
+    { name: "Email forwarding (manual)", desc: "Use the forwarding address above to forward from Yahoo, Apple Mail, iCloud, or any custom domain. Works with any email client.", connected: true, label: "Address active", icBg: "bg-green-50", icStroke: "text-green-500" },
+    { name: "Webhook / API", desc: "Send order data directly via webhook or the Churnlytics API. Useful for automating imports from custom workflows or browser extensions.", connected: false, icBg: "bg-purple-50", icStroke: "text-purple-500" },
+  ];
 
-  const handleReject = (id) => {
-    setRejectedIds(prev => new Set([...prev, id]));
-  };
-
-  const handleImportGroup = async (group) => {
-    setProcessingId(group.id);
-    setProcessing(true);
-    try {
-      const idsToFetch = group?.ids || [group.id];
-      const res = idsToFetch.length > 1
-        ? await base44.functions.invoke('fetchGmailEmails', { messageIds: idsToFetch })
-        : await base44.functions.invoke('fetchGmailEmails', { messageId: group.id });
-      const { subject, body } = res.data || {};
-      const content = `Subject: ${subject}\n\n${body}`;
-
-      const extracted = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this email content from one of these retailers: Amazon, Best Buy, Woot, Walmart, or Target.
-The content may contain both an order confirmation email AND a shipping/tracking email for the same order combined together.
-Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number (look in both emails), last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.
-If there are two emails for the same order, merge the data.\n\n${content}`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            retailer: { type: "string" },
-            order_number: { type: "string" },
-            total_cost: { type: "number" },
-            order_date: { type: "string" },
-            tracking_number: { type: "string" },
-            card_last_4: { type: "string" },
-            gift_card_codes: { type: "array", items: { type: "string" } },
-            items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
-          }
-        }
-      });
-
-      const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
-      if (existing.length > 0) {
-        const existingOrder = existing[0];
-        if (extracted.tracking_number && !existingOrder.tracking_number) {
-          await base44.entities.PurchaseOrder.update(existingOrder.id, { tracking_number: extracted.tracking_number, status: 'shipped' });
-          toast.success(`Tracking updated for order ${extracted.order_number}`);
-          setImportedIds(prev => new Set([...prev, group.id]));
-        } else {
-          toast.error(`Order ${extracted.order_number} already exists`);
-        }
-        return;
-      }
-
-      const [allProducts, allCards, allGiftCards] = await Promise.all([
-        base44.entities.Product.list(),
-        base44.entities.CreditCard.list(),
-        base44.entities.GiftCard.list()
-      ]);
-
-      let matchedCard = null;
-      if (extracted.card_last_4) matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
-      const matchedGiftCards = [];
-      for (const code of extracted.gift_card_codes || []) {
-        const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
-        if (gc) matchedGiftCards.push(gc);
-      }
-
-      setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'Gmail', _groupId: group.id });
-      setProductMatches(matchProducts(extracted.items || [], allProducts));
-      setConfirmDialogOpen(true);
-    } catch (err) {
-      toast.error('Failed to process email: ' + err.message);
-    } finally {
-      setProcessing(false);
-      setProcessingId(null);
-    }
-  };
-
-  const handlePdfUpload = async () => {
-    if (!pdfFile) { toast.error('Please select a PDF file'); return; }
-    setProcessing(true);
-    setResult(null);
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
-      const extracted = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract order information from this order confirmation (any retailer). Extract: order number, retailer name, total cost, order date (YYYY-MM-DD format), tracking number if available, last 4 digits of credit card used, gift card codes/numbers used (if any), and list of items with product names, SKU/UPC codes, prices, and quantities.`,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            retailer: { type: "string" },
-            order_number: { type: "string" },
-            total_cost: { type: "number" },
-            order_date: { type: "string" },
-            tracking_number: { type: "string" },
-            card_last_4: { type: "string" },
-            gift_card_codes: { type: "array", items: { type: "string" } },
-            items: { type: "array", items: { type: "object", properties: { product_name: { type: "string" }, sku: { type: "string" }, unit_cost: { type: "number" }, quantity: { type: "number" } } } }
-          }
-        }
-      });
-
-      const existing = await base44.entities.PurchaseOrder.filter({ order_number: extracted.order_number });
-      if (existing.length > 0) { setResult({ success: false, message: 'Order already exists' }); toast.error('Order already exists'); return; }
-
-      const [allProducts, allCards, allGiftCards] = await Promise.all([
-        base44.entities.Product.list(), base44.entities.CreditCard.list(), base44.entities.GiftCard.list()
-      ]);
-
-      let matchedCard = null;
-      if (extracted.card_last_4) matchedCard = allCards.find(c => c.card_name?.includes(extracted.card_last_4));
-      const matchedGiftCards = [];
-      for (const code of extracted.gift_card_codes || []) {
-        const gc = allGiftCards.find(g => g.code && g.code.includes(code.replace(/\s+/g, '')));
-        if (gc) matchedGiftCards.push(gc);
-      }
-
-      setExtractedData({ ...extracted, matchedCard, matchedGiftCards, importSource: 'PDF' });
-      setProductMatches(matchProducts(extracted.items || [], allProducts));
-      setConfirmDialogOpen(true);
-      setPdfFile(null);
-    } catch (error) {
-      toast.error('Error processing PDF: ' + error.message);
-      setResult({ success: false, message: error.message });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleConfirmImport = async () => {
-    setProcessing(true);
-    try {
-      const orderItems = productMatches.map(match => ({
-        product_id: match.selectedProduct?.id || '',
-        product_name: match.selectedProduct?.name || '',
-        upc: match.selectedProduct?.upc || match.sku || '',
-        quantity_ordered: match.quantity,
-        quantity_received: 0,
-        unit_cost: match.unit_cost
-      }));
-
-      const giftCardIds = extractedData.matchedGiftCards?.map(gc => gc.id) || [];
-      const giftCardValue = extractedData.matchedGiftCards?.reduce((sum, gc) => sum + (gc.value || 0), 0) || 0;
-
-      const orderData = {
-        order_number: extractedData.order_number,
-        retailer: extractedData.retailer || 'Unknown',
-        tracking_number: extractedData.tracking_number || '',
-        credit_card_id: extractedData.matchedCard?.id || null,
-        card_name: extractedData.matchedCard?.card_name || null,
-        gift_card_ids: giftCardIds,
-        gift_card_value: giftCardValue,
-        status: extractedData.tracking_number ? 'shipped' : 'ordered',
-        order_date: extractedData.order_date || format(new Date(), 'yyyy-MM-dd'),
-        items: orderItems,
-        total_cost: extractedData.total_cost || 0,
-        final_cost: (extractedData.total_cost || 0) - giftCardValue,
-        category: 'other',
-        notes: `Imported from ${extractedData.importSource || 'PDF'}`
-      };
-
-      const created = await base44.entities.PurchaseOrder.create(orderData);
-
-      for (const cardId of giftCardIds) {
-        await base44.entities.GiftCard.update(cardId, { status: 'used', used_order_number: extractedData.order_number });
-      }
-
-      if (extractedData.matchedCard?.id && orderData.total_cost) {
-        const card = extractedData.matchedCard;
-        const amount = orderData.final_cost;
-        let rewardAmount = 0, rewardType = 'cashback', currency = 'USD';
-        if (card.reward_type === 'cashback' && card.cashback_rate > 0) {
-          rewardAmount = parseFloat((amount * card.cashback_rate / 100).toFixed(2));
-        } else if (card.reward_type === 'points' && card.points_rate > 0) {
-          rewardAmount = Math.round(amount * card.points_rate);
-          rewardType = 'points'; currency = 'points';
-        } else if (card.reward_type === 'both') {
-          if (card.cashback_rate > 0) rewardAmount = parseFloat((amount * card.cashback_rate / 100).toFixed(2));
-          else if (card.points_rate > 0) { rewardAmount = Math.round(amount * card.points_rate); rewardType = 'points'; currency = 'points'; }
-        }
-        if (rewardAmount > 0) {
-          await base44.entities.Reward.create({
-            credit_card_id: card.id, card_name: card.card_name, source: card.card_name,
-            type: rewardType, purchase_amount: amount, amount: rewardAmount, currency,
-            purchase_order_id: created.id, order_number: extractedData.order_number,
-            date_earned: orderData.order_date, status: 'pending',
-            notes: `Auto-generated from imported order ${extractedData.order_number}`
-          });
-        }
-      }
-
-      if (extractedData._groupId) setImportedIds(prev => new Set([...prev, extractedData._groupId]));
-      setResult({ success: true, message: 'Order imported successfully', order: created });
-      toast.success('Order imported with rewards calculated!');
-      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      queryClient.invalidateQueries({ queryKey: ['rewards'] });
-      setConfirmDialogOpen(false);
-      setExtractedData(null);
-      setProductMatches([]);
-    } catch (error) {
-      setResult({ success: false, message: error.message || 'Failed to import order' });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const pendingCount = gmailEmails.filter(g => !rejectedIds.has(g.id) && !importedIds.has(g.id)).length;
-  const visibleEmails = gmailEmails.filter(g => {
-    if (activeTab === 'needs_review') return !rejectedIds.has(g.id) && !importedIds.has(g.id);
-    if (activeTab === 'processed') return importedIds.has(g.id);
-    if (activeTab === 'failed') return rejectedIds.has(g.id);
-    return true;
-  });
+  const PS_ITEMS = [
+    { label: "Auto-group by order number",         sub: "Collapse all emails sharing the same order # into one review card",          def: true },
+    { label: "Auto-import high-confidence (≥90%)", sub: "Skip manual review for orders that parse cleanly — imports automatically",  def: false },
+    { label: "Skip status-only emails",            sub: "Hide pickup reminders, delivery notices, and cancellation warnings",         def: true },
+    { label: "Match to existing orders",           sub: "When an order number matches a transaction, link the thread automatically",  def: true },
+  ];
+  const [ps, setPs] = useState(() => Object.fromEntries(PS_ITEMS.map((s, i) => [i, s.def])));
 
   return (
-    <div className="min-h-screen">
-      {/* ── Header ── */}
+    <div className="space-y-5">
+      {/* Forwarding address */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">Your forwarding address</h3>
+        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+          Forward any order confirmation email to this address and it'll appear in your inbox for review. Works with any email provider — no account connection required.
+        </p>
+        <div className="flex gap-2">
+          <code className="flex-1 text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 font-mono select-all">
+            {FWD}
+          </code>
+          <button
+            onClick={() => { navigator.clipboard.writeText(FWD); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-colors"
+          >
+            <IcCopy className="w-3 h-3" /> {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+      </div>
+
+      {/* Integration cards */}
+      <div className="grid grid-cols-2 gap-4">
+        {CARDS.map((c) => (
+          <div key={c.name} className={`bg-white rounded-2xl border p-5 ${c.connected ? "border-green-200" : "border-gray-200"}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${c.icBg}`}>
+              <IcMail className={`w-5 h-5 ${c.icStroke}`} />
+            </div>
+            <h4 className="text-sm font-semibold text-gray-900 mb-1.5">{c.name}</h4>
+            <p className="text-xs text-gray-500 leading-relaxed mb-4">{c.desc}</p>
+            <div className="flex items-center justify-between">
+              {c.connected ? (
+                <>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
+                    <IcCheck className="w-3.5 h-3.5" /> {c.label}
+                  </span>
+                  <button className="text-xs font-medium text-gray-500 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors">
+                    Disconnect
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-400">Not connected</span>
+                  <button className="text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg transition-colors border-0">
+                    Connect
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Parse settings */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+        <p className="text-[10.5px] font-bold uppercase tracking-wider text-gray-400 mb-4">Parse settings</p>
+        {PS_ITEMS.map((s, i) => (
+          <div key={i} className={`flex items-center justify-between py-3 ${i < PS_ITEMS.length - 1 ? "border-b border-gray-100" : ""}`}>
+            <div>
+              <p className="text-[13.5px] font-medium text-gray-900">{s.label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+            </div>
+            <Toggle checked={ps[i]} onChange={e => setPs(prev => ({ ...prev, [i]: e.target.checked }))} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+export default function EmailImport() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("inbox");
+  const [subFilter, setSubFilter] = useState("all");
+  const [selected, setSelected] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+  const [groups, setGroups] = useState([]);
+  const [existingOrders, setExistingOrders] = useState([]);
+  const [dateFrom, setDateFrom] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30);
+    return d.toISOString().slice(0, 10);
+  });
+  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const fetchInbox = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ from: dateFrom, to: dateTo });
+      const data = await fetch(`/api/inbox?${params}`).then(r => r.json()).catch(() => ({ emails: [] }));
+      const raw = data.emails || [];
+
+      // Group by orderNumber client-side
+      const map = new Map();
+      for (const email of raw) {
+        const key = email.orderNumber || `_${email.id}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            id: key,
+            store: email.store || "",
+            orderNumber: email.orderNumber || "",
+            productName: email.productName || "",
+            price: email.price ? `$${parseFloat(email.price).toFixed(2)}` : "",
+            qty: email.qty ? String(email.qty) : "",
+            date: email.date || "",
+            tracking: email.tracking || "",
+            buyer: email.buyer || "",
+            payment: email.payment || "",
+            sku: email.sku || "",
+            confidence: email.confidence || 0,
+            storeMatched: !!email.storeMatched,
+            status: email.status || "pending",
+            emails: [],
+          });
+        }
+        const g = map.get(key);
+        g.emails.push({ subject: email.subject || "", type: email.emailType || "Update", date: email.date || "" });
+        // Keep best fields across thread
+        if (!g.productName && email.productName) g.productName = email.productName;
+        if (!g.price && email.price) g.price = `$${parseFloat(email.price).toFixed(2)}`;
+        if (!g.tracking && email.tracking) g.tracking = email.tracking;
+        if (!g.sku && email.sku) g.sku = email.sku;
+        if (email.confidence > g.confidence) g.confidence = email.confidence;
+        if (email.storeMatched) g.storeMatched = true;
+      }
+      setGroups([...map.values()]);
+    } catch (e) {
+      console.error("Inbox fetch error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [dateFrom, dateTo]);
+
+  useEffect(() => {
+    fetchInbox();
+    fetch("/api/transactions?groupBy=orderNumber")
+      .then(r => r.json())
+      .then(d => setExistingOrders((d.orders || []).map(o => ({ id: o.id, name: o.orderNumber || o.id }))))
+      .catch(() => {});
+  }, [fetchInbox]);
+
+  // Counts
+  const counts = useMemo(() => ({
+    all:       groups.length,
+    review:    groups.filter(g => g.status === "pending").length,
+    processed: groups.filter(g => g.status === "processed").length,
+    failed:    groups.filter(g => g.status === "failed").length,
+  }), [groups]);
+
+  const visible = useMemo(() => {
+    if (subFilter === "review")    return groups.filter(g => g.status === "pending");
+    if (subFilter === "processed") return groups.filter(g => g.status === "processed");
+    if (subFilter === "failed")    return groups.filter(g => g.status === "failed");
+    return groups;
+  }, [groups, subFilter]);
+
+  const allSelected = visible.length > 0 && visible.every(g => selected.has(g.id));
+
+  const bulkImport = async () => {
+    const ids = [...selected];
+    await Promise.allSettled(ids.map(id => fetch(`/api/inbox/${id}/import`, { method: "POST" })));
+    setGroups(prev => prev.map(g => selected.has(g.id) ? { ...g, status: "processed" } : g));
+    setSelected(new Set());
+  };
+
+  const bulkReject = async () => {
+    await Promise.allSettled([...selected].map(id => fetch(`/api/inbox/${id}/reject`, { method: "POST" })));
+    setGroups(prev => prev.filter(g => !selected.has(g.id)));
+    setSelected(new Set());
+  };
+
+  const SUB_TABS = [
+    { key: "all",       label: "All",          count: counts.all },
+    { key: "review",    label: "Needs review", count: counts.review, countStyle: "bg-amber-100 text-amber-700" },
+    { key: "processed", label: "Processed",    count: counts.processed },
+    { key: "failed",    label: "Failed",       count: counts.failed, countStyle: "bg-red-100 text-red-600" },
+  ];
+
+  return (
+    <div className="container max-w-5xl 3xl:max-w-6xl 4xl:max-w-7xl mx-auto px-4 py-6 lg:px-8 lg:py-10">
+
+      {/* Page header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-foreground">Inbox</h1>
-            {pendingCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200">
-                {pendingCount} needs review
+            <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
+            {counts.review > 0 && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                {counts.review} need{counts.review === 1 ? "s" : ""} review
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">Forwarded order emails — review and import as transactions.</p>
+          <p className="text-sm text-gray-500">
+            Forwarded order emails — grouped by order number, review and import as transactions
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2">
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+              className="bg-transparent text-xs text-gray-600 outline-none" />
+            <span className="text-gray-300">→</span>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+              className="bg-transparent text-xs text-gray-600 outline-none" />
+          </div>
+          <button onClick={fetchInbox} disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-60 transition-colors border-0">
+            {loading
+              ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              : <IcRefresh className="w-3.5 h-3.5" />
+            }
+            {loading ? "Fetching..." : "Fetch"}
+          </button>
         </div>
       </div>
 
-      <div className="flex gap-6">
-        {/* ── Left: Inbox ── */}
-        <div className="flex-1 min-w-0">
-          {/* Select All + date filters row */}
+      {/* Main tabs */}
+      <div className="flex gap-1 p-1 bg-gray-100 border border-gray-200 rounded-xl w-fit mb-6">
+        {[
+          { key: "inbox", label: "Order inbox", Icon: IcInbox },
+          { key: "integrations", label: "Email integrations", Icon: IcPlug },
+        ].map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === key
+                ? "bg-purple-600 text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+            {key === "inbox" && counts.review > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${activeTab === key ? "bg-white/25 text-white" : "bg-amber-100 text-amber-700"}`}>
+                {counts.review}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── INBOX TAB ── */}
+      {activeTab === "inbox" && (
+        <>
           <div className="flex items-center justify-between mb-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="rounded border-slate-600 h-4 w-4 accent-violet-500"
-                onChange={(e) => {/* select all logic could go here */}} />
-              <span className="text-sm text-muted-foreground">Select All Pending</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <input type="date" value={gmailAfterDate} onChange={e => setGmailAfterDate(e.target.value)}
-                className="h-7 px-2 text-xs border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500" />
-              <span className="text-muted-foreground text-xs">→</span>
-              <input type="date" value={gmailBeforeDate} onChange={e => setGmailBeforeDate(e.target.value)}
-                className="h-7 px-2 text-xs border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500" />
-              <button onClick={fetchGmailEmails} disabled={loadingGmail}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-semibold hover:bg-violet-700 transition disabled:opacity-60">
-                <RefreshCw className={`h-3.5 w-3.5 ${loadingGmail ? 'animate-spin' : ''}`} />
-                {loadingGmail ? 'Fetching…' : 'Fetch'}
-              </button>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex items-center gap-0 border-b border-border mb-4">
-            {[
-              { id: 'all', label: 'All', count: gmailEmails.length },
-              { id: 'needs_review', label: 'Needs Review', count: pendingCount },
-              { id: 'processed', label: 'Processed', count: importedIds.size },
-              { id: 'failed', label: 'Failed', count: rejectedIds.size },
-            ].map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition -mb-px ${
-                  activeTab === tab.id ? 'border-violet-600 text-violet-700' : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}>
-                {tab.label}
-                {tab.count > 0 && (
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.id ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-500'}`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Email list */}
-          {loadingGmail ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin mb-3" />
-              <p className="text-sm">Fetching emails from Gmail…</p>
-            </div>
-          ) : gmailEmails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
-              <Inbox className="h-12 w-12 mb-3 opacity-30" />
-              <p className="text-sm font-medium">No order emails yet</p>
-              <p className="text-xs mt-1 opacity-60">Click "Fetch" to load from Gmail</p>
-            </div>
-          ) : visibleEmails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-              <p className="text-sm">Nothing in this tab</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {visibleEmails.map(group => (
-                <EmailRow
-                  key={group.id}
-                  group={group}
-                  onImport={handleImportGroup}
-                  onReject={handleReject}
-                  processing={processingId === group.id}
-                  isImported={importedIds.has(group.id)}
-                  isRejected={rejectedIds.has(group.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ── Right: PDF Upload ── */}
-        <div className="w-64 flex-shrink-0 space-y-4">
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-4 w-4 text-violet-400" />
-              <p className="text-sm font-bold text-foreground">Upload PDF</p>
-            </div>
-            <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 cursor-pointer transition ${pdfFile ? 'border-violet-500/60 bg-violet-500/5' : 'border-border hover:border-violet-500/40'}`}>
-              <FileText className={`h-7 w-7 mb-2 ${pdfFile ? 'text-violet-400' : 'text-muted-foreground'}`} />
-              <p className="text-xs text-center text-muted-foreground">
-                {pdfFile ? <span className="font-semibold text-violet-400">{pdfFile.name}</span> : 'Click to select PDF'}
-              </p>
-              <input type="file" accept=".pdf" className="hidden" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
-            </label>
-            {pdfFile && (
-              <button onClick={handlePdfUpload} disabled={processing}
-                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-60">
-                {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                {processing ? 'Processing…' : 'Import PDF'}
-              </button>
-            )}
-            {result && (
-              <div className={`mt-3 p-3 rounded-xl text-xs flex items-start gap-2 ${result.success ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                {result.success ? <CheckCircle className="h-4 w-4 flex-shrink-0" /> : <XCircle className="h-4 w-4 flex-shrink-0" />}
-                <span>{result.message}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">How it works</p>
-            {[
-              { n: '1', t: 'Fetch Gmail', d: 'Auto-loads order emails from inbox' },
-              { n: '2', t: 'Review', d: 'Confirm order details and products' },
-              { n: '3', t: 'Import', d: 'Creates transaction + rewards' },
-            ].map(s => (
-              <div key={s.n} className="flex gap-3 mb-3 last:mb-0">
-                <div className="h-5 w-5 rounded-full bg-violet-500/20 text-violet-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{s.n}</div>
-                <div>
-                  <p className="text-xs font-semibold text-foreground">{s.t}</p>
-                  <p className="text-[11px] text-muted-foreground">{s.d}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Confirm Modal ── */}
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Confirm Product Matches</DialogTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Review before importing order <span className="font-semibold text-violet-400">#{extractedData?.order_number}</span>
-            </p>
-          </DialogHeader>
-
-          <div className="space-y-4 mt-2">
-            {/* Order summary */}
-            <div className="grid grid-cols-2 gap-3 bg-muted/50 rounded-xl p-4">
-              {[
-                { label: 'Retailer', value: extractedData?.retailer },
-                { label: 'Total', value: extractedData?.total_cost != null ? `$${extractedData.total_cost.toFixed(2)}` : '—' },
-                { label: 'Order Date', value: extractedData?.order_date || '—' },
-                { label: 'Credit Card', value: extractedData?.matchedCard?.card_name || 'None matched' },
-              ].map(f => (
-                <div key={f.label}>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{f.label}</p>
-                  <p className="text-sm font-semibold text-foreground mt-0.5">{f.value}</p>
-                </div>
-              ))}
-              {extractedData?.matchedGiftCards?.length > 0 && (
-                <div className="col-span-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gift Cards</p>
-                  {extractedData.matchedGiftCards.map((gc, i) => (
-                    <p key={i} className="text-sm font-semibold text-green-400">{gc.brand} — ${gc.value} (…{gc.code?.slice(-4)})</p>
-                  ))}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
+                <input type="checkbox" className="accent-purple-600 w-3.5 h-3.5"
+                  checked={allSelected}
+                  onChange={e => {
+                    if (e.target.checked) setSelected(new Set(visible.map(g => g.id)));
+                    else setSelected(new Set());
+                  }} />
+                Select all
+              </label>
+              {selected.size > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">{selected.size} selected</span>
+                  <button onClick={bulkImport}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-colors">
+                    <IcDl className="w-3 h-3" /> Import selected
+                  </button>
+                  <button onClick={bulkReject}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors">
+                    <IcX className="w-3 h-3" /> Reject selected
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Products */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Products ({productMatches.length})</p>
-              <div className="space-y-3">
-                {productMatches.map((match, index) => (
-                  <div key={index} className="border border-border rounded-xl p-4 relative bg-card">
-                    <button onClick={() => setProductMatches(productMatches.filter((_, i) => i !== index))}
-                      className="absolute top-3 right-3 text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1">
-                      <Trash2 className="h-3.5 w-3.5" /> Remove
-                    </button>
-                    <div className="flex gap-3 items-start mb-3">
-                      {match.selectedProduct?.image && (
-                        <img src={match.selectedProduct.image} alt={match.selectedProduct.name} className="h-16 w-16 object-contain rounded-lg border border-border flex-shrink-0 bg-white" />
-                      )}
-                      <div className="flex-1 flex justify-between items-start pr-20">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{match.invoiceName}</p>
-                          {match.sku && (
-                            <a href={`https://www.google.com/search?q=${encodeURIComponent(match.sku)}`}
-                              target="_blank" rel="noopener noreferrer"
-                              className="text-[11px] text-violet-400 hover:underline flex items-center gap-1">
-                              <ExternalLink className="h-3 w-3" /> UPC: {match.sku}
-                            </a>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Qty: {match.quantity}</p>
-                          <p className="text-sm font-bold text-foreground">${match.unit_cost?.toFixed(2)}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <Select
-                      value={match.selectedProduct?.name || ''}
-                      onValueChange={(value) => {
-                        const newMatches = [...productMatches];
-                        newMatches[index].selectedProduct = match.suggestions.map(s => s.product).find(p => p.name === value) || null;
-                        
-                        setProductMatches(newMatches);
-                      }}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Select a product…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {match.suggestions.sort((a, b) => a.product.name.localeCompare(b.product.name)).map(s => (
-                          <SelectItem key={s.product.id} value={s.product.name}>
-                            {s.product.name}{s.score > 90 ? ' ✓' : ''}{s.product.upc ? ` (${s.product.upc})` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {match.suggestions.length === 0 && <p className="text-[11px] text-amber-400 mt-1">⚠️ No matching products found</p>}
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => setProductMatches([...productMatches, { invoiceName: 'New Item', sku: '', quantity: 1, unit_cost: 0, suggestions: [], selectedProduct: null }])}
-                className="mt-3 text-sm text-violet-400 hover:text-violet-300 font-medium">
-                + Add Item
-              </button>
+            <div className="flex gap-1 p-1 bg-gray-100 border border-gray-200 rounded-xl">
+              {SUB_TABS.map(({ key, label, count, countStyle }) => (
+                <button key={key} onClick={() => setSubFilter(key)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    subFilter === key ? "bg-white text-gray-900 shadow-sm border border-gray-200" : "text-gray-500 hover:text-gray-700"
+                  }`}>
+                  {label}
+                  {count > 0 && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${subFilter === key ? (countStyle || "bg-gray-100 text-gray-600") : (countStyle || "bg-gray-200 text-gray-500")}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-border">
-            <button onClick={() => { setConfirmDialogOpen(false); setExtractedData(null); setProductMatches([]); }}
-              className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition">
-              Cancel
-            </button>
-            <button onClick={handleConfirmImport}
-              disabled={processing || productMatches.some(m => !m.selectedProduct)}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition disabled:opacity-50">
-              {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
-              {processing ? 'Importing…' : 'Confirm & Import'}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-3" />
+              <p className="text-sm text-gray-400">Fetching emails...</p>
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center mb-4">
+                <IcInbox className="w-6 h-6 text-purple-500" />
+              </div>
+              <p className="text-gray-800 font-semibold mb-1">No emails found</p>
+              <p className="text-sm text-gray-400">Try adjusting the date range or click Fetch to pull new emails.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {visible.map(g => (
+                <OrderGroup
+                  key={g.id}
+                  group={g}
+                  checked={selected.has(g.id)}
+                  onCheck={v => setSelected(prev => {
+                    const next = new Set(prev);
+                    v ? next.add(g.id) : next.delete(g.id);
+                    return next;
+                  })}
+                  existingOrders={existingOrders}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── INTEGRATIONS TAB ── */}
+      {activeTab === "integrations" && <IntegrationsTab />}
     </div>
   );
 }
