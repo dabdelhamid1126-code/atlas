@@ -33,13 +33,13 @@ const TOOLTIP_STYLE = {
 // ─── KPI CARD ────────────────────────────────────────────────────────────────
 function KpiCard({ label, value, icon: Icon, bg, iconColor, subtext }) {
   return (
-    <div className={`rounded-2xl border p-4 flex flex-col gap-1 min-w-0 ${bg}`}>
+    <div className={`rounded-2xl border p-4 flex flex-col gap-1 min-w-0 overflow-hidden ${bg}`}>
       <div className="flex items-center justify-between mb-1">
-        <Icon className={`h-4 w-4 ${iconColor}`} />
+        <Icon className={`h-4 w-4 ${iconColor} shrink-0`} />
       </div>
-      <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 leading-tight">{label}</span>
-      <span className="text-lg font-bold text-slate-900 leading-tight">{value}</span>
-      {subtext && <span className="text-[10px] text-slate-400">{subtext}</span>}
+      <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 leading-tight break-words">{label}</span>
+      <span className="text-lg font-bold text-slate-900 leading-tight break-words">{value}</span>
+      {subtext && <span className="text-[10px] text-slate-400 break-words">{subtext}</span>}
     </div>
   );
 }
