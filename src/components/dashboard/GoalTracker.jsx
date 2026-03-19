@@ -43,10 +43,10 @@ export default function GoalTracker({ metrics }) {
 
             return (
               <div key={`${goal.type}-${goal.timeframe}`}
-                className={`rounded-xl border p-4 ${config.bg} ${reached ? 'ring-2 ring-amber-400 shadow-amber-100 shadow-md' : ''}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-xs font-bold uppercase ${config.color}`}>{config.label}</span>
-                  <span className="text-xs bg-white/60 text-slate-500 px-2 py-0.5 rounded-full capitalize">{goal.timeframe}</span>
+                className={`rounded-xl border p-4 overflow-hidden min-w-0 ${config.bg} ${reached ? 'ring-2 ring-amber-400 shadow-amber-100 shadow-md' : ''}`}>
+                <div className="flex items-start justify-between gap-1 mb-1 flex-wrap">
+                  <span className={`text-xs font-bold uppercase leading-tight break-words ${config.color}`}>{config.label}</span>
+                  <span className="text-xs bg-white/60 text-slate-500 px-2 py-0.5 rounded-full capitalize shrink-0">{goal.timeframe}</span>
                 </div>
                 <div className="flex items-baseline gap-1 mb-3 flex-wrap">
                   <span className={`text-xl font-bold ${config.color}`}>
