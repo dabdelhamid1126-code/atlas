@@ -261,10 +261,20 @@ function OrderGroup({ group, checked, onCheck, existingOrders }) {
 // ─── Integrations tab ─────────────────────────────────────────────────────────
 function IntegrationsTab() {
   const [copied, setCopied] = useState(false);
+  const [gmailConnected, setGmailConnected] = useState(true);
   const FWD = "orders+abc123xyz@inbox.churnlytics.io";
 
+  const handleDisconnectGmail = async () => {
+    try {
+      await fetch("/api/auth/disconnect-gmail", { method: "POST" });
+      setGmailConnected(false);
+    } catch (e) {
+      console.error("Disconnect error:", e);
+    }
+  };
+
   const CARDS = [
-    { name: "Gmail", desc: "Connect your Gmail to automatically pull order confirmation emails. No forwarding needed — we scan your inbox directly.", connected: true, label: "orders@gmail.com", icBg: "bg-amber-50", icStroke: "text-amber-500" },
+    { name: "Gmail", desc: "Connect your Gmail to automatically pull order confirmation emails. No forwarding needed — we scan your inbox directly.", connected: gmailConnected, label: "orders@gmail.com", icBg: "bg-amber-50", icStroke: "text-amber-500", onDisconnect: handleDisconnectGmail },
     { name: "Outlook / Microsoft 365", desc: "Connect your Outlook or Microsoft 365 account to automatically import order emails without setting up forwarding rules.", connected: false, icBg: "bg-blue-50", icStroke: "text-blue-500" },
     { name: "Email forwarding (manual)", desc: "Use the forwarding address above to forward from Yahoo, Apple Mail, iCloud, or any custom domain. Works with any email client.", connected: true, label: "Address active", icBg: "bg-green-50", icStroke: "text-green-500" },
     { name: "Webhook / API", desc: "Send order data directly via webhook or the Churnlytics API. Useful for automating imports from custom workflows or browser extensions.", connected: false, icBg: "bg-purple-50", icStroke: "text-purple-500" },
