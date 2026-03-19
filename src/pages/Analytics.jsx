@@ -260,7 +260,7 @@ export default function Analytics() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: '#f5f4ff' }}>
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
         {/* ── HEADER ── */}
