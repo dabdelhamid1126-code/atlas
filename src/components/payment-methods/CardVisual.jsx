@@ -72,12 +72,14 @@ function IssuerLogo({ issuer }) {
     );
   }
   return (
-    <img
-      src={getLogoUrl(issuer)}
-      alt={issuer}
-      onError={() => setErr(true)}
-      style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '6px' }}
-    />
+    <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-100 shadow-sm">
+      <img
+        src={getLogoUrl(issuer)}
+        alt={issuer}
+        onError={() => setErr(true)}
+        style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+      />
+    </div>
   );
 }
 
