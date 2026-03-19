@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 
 // ─── Tiny icon wrapper ────────────────────────────────────────────────────────
 const Ic = ({ children, className = "w-4 h-4" }) => (
