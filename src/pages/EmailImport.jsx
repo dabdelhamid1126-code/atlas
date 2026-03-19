@@ -332,7 +332,9 @@ function IntegrationsTab() {
   const [ps, setPs] = useState(() => Object.fromEntries(PS_ITEMS.map((s, i) => [i, s.def])));
 
   return (
-    <div className="space-y-5">
+    <>
+      <GmailAuthModal open={showGmailModal} onClose={() => setShowGmailModal(false)} onConnect={handleConnectGmail} />
+      <div className="space-y-5">
       {/* Forwarding address */}
       <div className="bg-white border border-gray-200 rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-gray-900 mb-1">Your forwarding address</h3>
