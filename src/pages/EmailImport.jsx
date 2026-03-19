@@ -258,10 +258,43 @@ function OrderGroup({ group, checked, onCheck, existingOrders }) {
   );
 }
 
+// ─── Gmail Auth Modal ─────────────────────────────────────────────────────────
+function GmailAuthModal({ open, onClose, onConnect }) {
+  return (
+    open && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm mx-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-gray-900">Gmail Access</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <IcX className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="space-y-3 mb-8">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Required scopes</p>
+            <div className="space-y-2 text-sm text-blue-600 font-medium">
+              <p>openid</p>
+              <p>https://www.googleapis.com/auth/gmail.readonly</p>
+              <p>https://www.googleapis.com/auth/userinfo.email</p>
+            </div>
+          </div>
+
+          <button onClick={onConnect}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors border-0">
+            Done
+          </button>
+        </div>
+      </div>
+    )
+  );
+}
+
 // ─── Integrations tab ─────────────────────────────────────────────────────────
 function IntegrationsTab() {
   const [copied, setCopied] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(true);
+  const [showGmailModal, setShowGmailModal] = useState(false);
   const FWD = "orders+abc123xyz@inbox.churnlytics.io";
 
   const handleDisconnectGmail = async () => {
@@ -273,8 +306,18 @@ function IntegrationsTab() {
     }
   };
 
+  const handleConnectGmail = async () => {
+    setShowGmailModal(false);
+    try {
+      await fetch("/api/auth/connect-gmail", { method: "POST" });
+      setGmailConnected(true);
+    } catch (e) {
+      console.error("Connect error:", e);
+    }
+  };
+
   const CARDS = [
-    { name: "Gmail", desc: "Connect your Gmail to automatically pull order confirmation emails. No forwarding needed — we scan your inbox directly.", connected: gmailConnected, label: "orders@gmail.com", icBg: "bg-amber-50", icStroke: "text-amber-500", onDisconnect: handleDisconnectGmail },
+    { name: "Gmail", desc: "Connect your Gmail to automatically pull order confirmation emails. No forwarding needed — we scan your inbox directly.", connected: gmailConnected, label: "orders@gmail.com", icBg: "bg-amber-50", icStroke: "text-amber-500", onDisconnect: handleDisconnectGmail, onConnect: () => setShowGmailModal(true) },
     { name: "Outlook / Microsoft 365", desc: "Connect your Outlook or Microsoft 365 account to automatically import order emails without setting up forwarding rules.", connected: false, icBg: "bg-blue-50", icStroke: "text-blue-500" },
     { name: "Email forwarding (manual)", desc: "Use the forwarding address above to forward from Yahoo, Apple Mail, iCloud, or any custom domain. Works with any email client.", connected: true, label: "Address active", icBg: "bg-green-50", icStroke: "text-green-500" },
     { name: "Webhook / API", desc: "Send order data directly via webhook or the Churnlytics API. Useful for automating imports from custom workflows or browser extensions.", connected: false, icBg: "bg-purple-50", icStroke: "text-purple-500" },
