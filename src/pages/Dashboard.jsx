@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DollarSign, TrendingUp, CreditCard, Percent, Star } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, subDays, startOfYear } from 'date-fns';
-import MetricCard from '@/components/dashboard/MetricCard';
+import MetricCard, { abbrevDollar } from '@/components/dashboard/MetricCard';
 import StatusPipeline from '@/components/dashboard/StatusPipeline';
 import ProfitRevenueChart from '@/components/dashboard/ProfitRevenueChart';
 import ByStatusChart from '@/components/dashboard/ByStatusChart';
