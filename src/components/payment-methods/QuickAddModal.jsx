@@ -37,7 +37,7 @@ function PresetLogo({ domain, issuer }) {
   }
   return (
     <div className="h-9 w-9 rounded-lg overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
-      <img src={url} alt={issuer} className="h-9 w-9 object-contain p-0.5" onError={() => setErr(true)} />
+      <img src={url} alt={issuer} className="h-9 w-9 object-contain p-0.5" onError={(e) => e.target.style.display='none'} />
     </div>
   );
 }
