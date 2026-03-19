@@ -45,8 +45,7 @@ function IssuerLogo({ issuer, cardName }) {
   const [imgError, setImgError] = useState(false);
 
   const domain = getDomainFromIssuer(issuer || cardName);
-  const apiKey = process.env.REACT_APP_BRANDFETCH_API_KEY || '';
-  const logoUrl = domain ? `https://cdn.brandfetch.io/${domain}/w/48/h/48?c=${apiKey}` : null;
+  const logoUrl = domain ? `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer || cardName || '')}` : null;
 
   const getInitials = () => {
     const name = issuer || cardName || '?';
