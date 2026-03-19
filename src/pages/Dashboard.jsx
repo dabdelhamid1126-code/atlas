@@ -203,13 +203,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Points badge */}
-          {metrics.points > 0 && (
-            <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-xl text-sm font-semibold shadow-sm">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              {metrics.points.toLocaleString()} pts
-            </div>
-          )}
+
         </div>
       </div>
 
