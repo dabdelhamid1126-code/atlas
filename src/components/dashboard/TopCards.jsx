@@ -1,30 +1,30 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreditCard } from 'lucide-react';
 
 export default function TopCards({ cards = [] }) {
   return (
-    <Card className="border border-border bg-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Top Cards</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {cards.length === 0 && <p className="text-sm text-muted-foreground">No card data</p>}
-        {cards.map((card, i) => (
-          <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
-                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+      <h3 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-3">Top Cards</h3>
+      {cards.length === 0 ? (
+        <p className="text-sm text-slate-400">No card data</p>
+      ) : (
+        <div className="space-y-2">
+          {cards.map((card, i) => (
+            <div key={i} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <CreditCard className="h-3.5 w-3.5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800 leading-tight">{card.name}</p>
+                  <p className="text-xs text-slate-400">{card.orders} {card.orders === 1 ? 'order' : 'orders'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{card.name}</p>
-                <p className="text-xs text-muted-foreground">{card.orders} {card.orders === 1 ? 'item' : 'items'}</p>
-              </div>
+              <p className="text-sm font-bold text-purple-600">${card.spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
-            <p className="text-sm font-bold text-purple-400">${card.spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
