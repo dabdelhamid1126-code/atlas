@@ -399,7 +399,8 @@ function IntegrationsTab() {
           </div>
         ))}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
