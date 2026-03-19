@@ -126,6 +126,14 @@ function CreditCardsTab({ queryClient }) {
   const cardsWithRate = activeCards.filter(c => c.cashback_rate);
   const avgCashback = cardsWithRate.length ? cardsWithRate.reduce((s, c) => s + (c.cashback_rate || 0), 0) / cardsWithRate.length : 0;
 
+  // Detect duplicates by card_name (normalized)
+  const nameCounts = cards.reduce((acc, c) => {
+    const key = (c.card_name || '').toLowerCase().trim();
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const duplicateNames = new Set(Object.keys(nameCounts).filter(k => nameCounts[k] > 1));
+
   // Filters
   const issuers = [...new Set(cards.map(c => c.issuer).filter(Boolean))];
   const filtered = useMemo(() => cards.filter(c => {
