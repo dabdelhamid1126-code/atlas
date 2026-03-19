@@ -37,7 +37,7 @@ const ISSUER_COLOR = {
 
 function PresetLogo({ domain, issuer }) {
   const [err, setErr] = useState(false);
-  const url = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  const url = `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
   const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   const color = ISSUER_COLOR[issuer] || ISSUER_COLOR['default'];
   if (err) {
