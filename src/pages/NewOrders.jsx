@@ -11,7 +11,7 @@ import { Tag, Globe, Package, ShoppingCart, Truck, CreditCard, DollarSign, Layer
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 
 const PRODUCT_CATEGORIES = ['Electronics', 'Home & Garden', 'Toys & Games', 'Health & Beauty', 'Sports', 'Clothing', 'Tools', 'Gift Cards', 'Grocery', 'Other'];
-const RETAILERS = ['Amazon', 'Bestbuy', 'Walmart', 'Target', 'Costco', "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other'];
+const RETAILERS = ['Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco', "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other'];
 const CHURNING_STATUSES = [{ value: 'pending', label: 'Pending' }, { value: 'ordered', label: 'Ordered' }, { value: 'shipped', label: 'Shipped' }, { value: 'received', label: 'Received' }];
 const MARKETPLACE_STATUSES = [{ value: 'pending', label: 'Pending' }, { value: 'ordered', label: 'Listed' }, { value: 'shipped', label: 'Sold' }, { value: 'received', label: 'Completed' }];
 
