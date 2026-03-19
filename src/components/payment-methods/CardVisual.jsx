@@ -31,9 +31,13 @@ function getGradient(issuer) {
 }
 
 function getLogoUrl(issuer) {
-  const domain = ISSUER_DOMAIN[issuer];
-  if (!domain) return null;
-  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
+  if (!issuer) return null;
+  // Try exact match first, then case-insensitive
+  const domain = ISSUER_DOMAIN[issuer] ||
+    ISSUER_DOMAIN[Object.keys(ISSUER_DOMAIN).find(k => k.toLowerCase() === issuer.toLowerCase())];
+  // Fall back to constructing a domain from the issuer name
+  const resolvedDomain = domain || (issuer.toLowerCase().replace(/\s+/g, '') + '.com');
+  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${resolvedDomain}?fallbackName=${encodeURIComponent(issuer)}`;
 }
 
 function IssuerLogo({ issuer, size = 'sm' }) {
