@@ -54,7 +54,7 @@ function getLogoUrl(issuer) {
   };
   const domain = domainMap[issuer] ||
     `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
-  return `https://logo.clearbit.com/${domain}`;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 }
 
 function IssuerLogo({ issuer }) {
