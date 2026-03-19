@@ -133,20 +133,13 @@ export default function QuickAddModal({ open, onClose, existingCards = [], onCre
           <button
             type="button"
             onClick={() => setApplyPresets(p => !p)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition ${applyPresets ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition ${applyPresets ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}
           >
-            <div className={`h-5 w-5 rounded flex items-center justify-center shrink-0 border-2 transition ${applyPresets ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}`}>
-              {applyPresets && <Check className="h-3 w-3 text-white" />}
+            <div className={`h-4 w-4 rounded flex items-center justify-center shrink-0 border-2 transition ${applyPresets ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}`}>
+              {applyPresets && <Check className="h-2.5 w-2.5 text-white" />}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded bg-blue-100 flex items-center justify-center shrink-0">
-                <CreditCard className="h-3.5 w-3.5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-blue-700">Apply Preset Store Rates</p>
-                <p className="text-xs text-slate-500">Automatically add store-specific cashback rates</p>
-              </div>
-            </div>
+            <CreditCard className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+            <span className="text-sm font-medium text-blue-700">Apply Preset Store Rates</span>
           </button>
         </div>
 
