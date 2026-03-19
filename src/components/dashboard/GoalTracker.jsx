@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Target } from 'lucide-react';
+import { abbrevDollar } from '@/components/dashboard/MetricCard';
 
 const goalConfig = {
   profit:       { label: 'Net Profit',    color: 'text-green-600',  bar: 'bg-green-500',  bg: 'bg-green-50  border-green-200' },
