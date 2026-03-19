@@ -34,12 +34,12 @@ export default function POStatsBar({ orders }) {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className={`${colorClasses[stat.color]} border rounded-lg p-4`}>
-              <div className="flex items-center gap-3">
+            <div key={stat.label} className={`${colorClasses[stat.color]} border rounded-lg p-4 overflow-hidden`}>
+              <div className="flex items-center gap-3 min-w-0">
                 <Icon className="h-5 w-5 flex-shrink-0 text-slate-400" />
-                <div>
-                  <p className="text-xs text-slate-600">{stat.label}</p>
-                  <p className={`text-xl font-bold mt-0.5 ${textColors[stat.color]}`}>{stat.value}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-slate-600 break-words">{stat.label}</p>
+                  <p className={`text-xl font-bold mt-0.5 break-words ${textColors[stat.color]}`}>{stat.value}</p>
                 </div>
               </div>
             </div>
