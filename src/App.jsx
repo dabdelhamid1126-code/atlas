@@ -11,6 +11,7 @@ import Settings from './pages/Settings';
 import Goals from './pages/Goals';
 import Transactions from './pages/Transactions';
 import NewOrders from './pages/NewOrders';
+import EmailImport from './pages/EmailImport';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -80,6 +81,11 @@ const AuthenticatedApp = () => {
       <Route path="/NewOrders" element={
         <LayoutWrapper currentPageName="NewOrders">
           <NewOrders />
+        </LayoutWrapper>
+      } />
+      <Route path="/EmailImport" element={
+        <LayoutWrapper currentPageName="EmailImport">
+          <EmailImport />
         </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />
