@@ -316,7 +316,8 @@ function IntegrationsTab() {
 
   const handleDisconnectGmail = async () => {
     try {
-      await fetch("/api/gmail/disconnect", { method: "POST" });
+      // For now, just clear the local state
+      // In a real implementation, you'd revoke the OAuth token on the backend
       setGmailConnected(false);
       setGmailEmail("");
     } catch (e) {
