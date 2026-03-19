@@ -293,14 +293,33 @@ function GmailAuthModal({ open, onClose, onConnect }) {
 // ─── Integrations tab ─────────────────────────────────────────────────────────
 function IntegrationsTab() {
   const [copied, setCopied] = useState(false);
-  const [gmailConnected, setGmailConnected] = useState(true);
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState("");
   const [showGmailModal, setShowGmailModal] = useState(false);
   const FWD = "orders+abc123xyz@inbox.churnlytics.io";
 
+  // Check Gmail connection status on mount
+  useEffect(() => {
+    const checkGmailStatus = async () => {
+      try {
+        const res = await fetch("/api/gmail/status");
+        if (res.ok) {
+          const data = await res.json();
+          setGmailConnected(data.connected || false);
+          setGmailEmail(data.email || "");
+        }
+      } catch (e) {
+        console.error("Gmail status check error:", e);
+      }
+    };
+    checkGmailStatus();
+  }, []);
+
   const handleDisconnectGmail = async () => {
     try {
-      await fetch("/api/auth/disconnect-gmail", { method: "POST" });
+      await fetch("/api/gmail/disconnect", { method: "POST" });
       setGmailConnected(false);
+      setGmailEmail("");
     } catch (e) {
       console.error("Disconnect error:", e);
     }
@@ -309,8 +328,8 @@ function IntegrationsTab() {
   const handleConnectGmail = async () => {
     setShowGmailModal(false);
     try {
-      await fetch("/api/auth/connect-gmail", { method: "POST" });
-      setGmailConnected(true);
+      // Request OAuth authorization from Base44
+      await base44.functions.invoke("requestGmailOAuth", {});
     } catch (e) {
       console.error("Connect error:", e);
     }
