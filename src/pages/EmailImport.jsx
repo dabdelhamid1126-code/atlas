@@ -433,6 +433,106 @@ function IntegrationsTab() {
   );
 }
 
+// ─── PDF Invoice Upload Tab ───────────────────────────────────────────────────
+function PDFInvoiceTab() {
+  const [uploading, setUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const results = await Promise.all(
+        files.map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const res = await fetch('/api/invoices/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            return { name: file.name, success: true, ...data };
+          } else {
+            return { name: file.name, success: false, error: 'Upload failed' };
+          }
+        })
+      );
+      
+      setUploadedFiles(prev => [...prev, ...results.filter(r => r.success)]);
+    } catch (e) {
+      console.error('Upload error:', e);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Upload Area */}
+      <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8">
+        <div className="flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center mb-3">
+            <IcDl className="w-6 h-6 text-purple-500" />
+          </div>
+          <p className="text-sm font-semibold text-gray-900 mb-1">Upload PDF Invoices</p>
+          <p className="text-xs text-gray-500 text-center mb-4">
+            Upload order invoices as PDF files — we'll extract order details and create transactions
+          </p>
+          <label className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold cursor-pointer transition-colors">
+            <input
+              type="file"
+              multiple
+              accept=".pdf"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              className="hidden"
+            />
+            {uploading ? 'Uploading...' : 'Select PDF Files'}
+          </label>
+        </div>
+      </div>
+
+      {/* Uploaded Files */}
+      {uploadedFiles.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <p className="text-sm font-semibold text-gray-900 mb-3">Uploaded Invoices</p>
+          <div className="space-y-2">
+            {uploadedFiles.map((file, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <IcPkg className="w-4 h-4 text-gray-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                  {file.ordersFound && (
+                    <p className="text-xs text-gray-500">{file.ordersFound} order{file.ordersFound !== 1 ? 's' : ''} found</p>
+                  )}
+                </div>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
+                  <IcCheck className="w-3.5 h-3.5" /> Processed
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+        <p className="text-sm font-semibold text-blue-900 mb-2">Supported formats</p>
+        <ul className="text-xs text-blue-700 space-y-1">
+          <li>• Amazon order confirmation PDFs</li>
+          <li>• Retailer invoices (Walmart, Best Buy, Target, etc.)</li>
+          <li>• Custom invoices with order number, date, amount, items</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function EmailImport() {
   const navigate = useNavigate();
