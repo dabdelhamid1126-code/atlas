@@ -324,7 +324,7 @@ function IntegrationsTab() {
                   <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
                     <IcCheck className="w-3.5 h-3.5" /> {c.label}
                   </span>
-                  <button className="text-xs font-medium text-gray-500 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors">
+                  <button onClick={c.onDisconnect} className="text-xs font-medium text-gray-500 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors">
                     Disconnect
                   </button>
                 </>
