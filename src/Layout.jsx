@@ -43,8 +43,8 @@ const navigationGroups = [
     label: 'ORDERS',
     items: [
       { name: 'Transactions', page: 'Transactions', icon: Hash },
+      { name: 'New Orders', page: 'Transactions', icon: Plus, params: '?tab=new_orders' },
       { name: 'Import Orders', page: 'EmailImport', icon: FileText },
-
     ]
   },
   {
