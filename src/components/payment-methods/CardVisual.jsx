@@ -154,21 +154,21 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
 
         {/* KPI metrics grid */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl p-3" style={{ backgroundColor: `${accentColor}10` }}>
+          <div className="rounded-xl p-3 overflow-hidden" style={{ backgroundColor: `${accentColor}10` }}>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Base Rate</p>
-            <p className="font-bold text-slate-900" style={{ fontSize: 20, color: accentColor }}>{rateLabel}</p>
+            <p className="font-bold text-slate-900 break-words" style={{ fontSize: 20, color: accentColor }}>{rateLabel}</p>
           </div>
-          <div className="rounded-xl bg-slate-50 p-3">
+          <div className="rounded-xl bg-slate-50 p-3 overflow-hidden">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Total Spent</p>
-            <p className="font-bold text-slate-800" style={{ fontSize: 20 }}>
+            <p className="font-bold text-slate-800 break-words" style={{ fontSize: 20 }}>
               ${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </p>
           </div>
-          <div className="rounded-xl bg-slate-50 p-3">
+          <div className="rounded-xl bg-slate-50 p-3 overflow-hidden">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Annual Fee</p>
-            <p className="text-base font-bold text-slate-800">${card.annual_fee || 0}</p>
+            <p className="text-base font-bold text-slate-800 break-words">${card.annual_fee || 0}</p>
           </div>
-          <div className="rounded-xl bg-slate-50 p-3">
+          <div className="rounded-xl bg-slate-50 p-3 overflow-hidden">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Orders</p>
             <p className="text-base font-bold text-slate-800">{txnCount}</p>
           </div>
