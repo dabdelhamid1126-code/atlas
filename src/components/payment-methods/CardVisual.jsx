@@ -71,8 +71,7 @@ function IssuerLogo({ issuer }) {
     <img
       src={`https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`}
       alt={issuer}
-      crossOrigin="anonymous"
-      referrerPolicy="no-referrer"
+
       onError={() => setErr(true)}
       style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '6px' }}
     />
