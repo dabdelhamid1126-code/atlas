@@ -683,6 +683,7 @@ export default function EmailImport() {
         {[
           { key: "inbox", label: "Order inbox", Icon: IcInbox },
           { key: "integrations", label: "Email integrations", Icon: IcPlug },
+          { key: "pdf", label: "Upload invoices", Icon: IcDl },
         ].map(({ key, label, Icon }) => (
           <button
             key={key}
