@@ -162,20 +162,20 @@ export default function QuickAddModal({ open, onClose, existingCards = [], onCre
                 key={card.name}
                 type="button"
                 onClick={() => toggle(card.name)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition ${isSelected ? 'border-green-400 bg-green-50' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'}`}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-left transition ${isSelected ? 'border-green-400 bg-green-50' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'}`}
               >
                 <PresetLogo domain={card.domain} issuer={card.issuer} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-slate-900 truncate">{card.name}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="font-medium text-sm text-slate-900 truncate leading-tight">{card.name}</p>
+                  <p className="text-xs text-slate-400 truncate">
                     {card.issuer}
-                    <span className="text-green-600 font-semibold"> · {card.cashback_rate}% {card.reward_type === 'points' ? 'pts' : 'base'}</span>
-                    {card.store_rates.length > 0 && <span className="text-blue-500"> · {card.store_rates.length} store rates</span>}
+                    <span className="text-green-600 font-semibold"> · {card.cashback_rate}{card.reward_type === 'points' ? 'x pts' : '% base'}</span>
+                    {card.store_rates.length > 0 && <span className="text-blue-500"> · {card.store_rates.length} rates</span>}
                     {card.annual_fee > 0 && <span className="text-slate-400"> · ${card.annual_fee}/yr</span>}
                   </p>
                 </div>
-                <div className={`h-5 w-5 rounded-full border-2 shrink-0 flex items-center justify-center transition ${isSelected ? 'border-green-500 bg-green-500' : 'border-slate-300'}`}>
-                  {isSelected && <Check className="h-3 w-3 text-white" />}
+                <div className={`h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center transition ${isSelected ? 'border-green-500 bg-green-500' : 'border-slate-300'}`}>
+                  {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
                 </div>
               </button>
             );
