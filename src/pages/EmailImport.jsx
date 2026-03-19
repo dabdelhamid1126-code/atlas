@@ -303,12 +303,10 @@ function IntegrationsTab() {
   useEffect(() => {
     const checkGmailStatus = async () => {
       try {
-        const res = await fetch("/api/gmail/status");
-        if (res.ok) {
-          const data = await res.json();
-          setGmailConnected(data.connected || false);
-          setGmailEmail(data.email || "");
-        }
+        const result = await base44.functions.invoke("getGmailStatus", {});
+        const data = result.data;
+        setGmailConnected(data.connected || false);
+        setGmailEmail(data.email || "");
       } catch (e) {
         console.error("Gmail status check error:", e);
       }
