@@ -37,23 +37,7 @@ function getIssuerColor(issuer) {
 
 function getLogoUrl(issuer) {
   if (!issuer) return null;
-  const domainMap = {
-    'Chase': 'chase.com',
-    'American Express': 'americanexpress.com',
-    'Citi': 'citi.com',
-    'Capital One': 'capitalone.com',
-    'Discover': 'discover.com',
-    'Bank of America': 'bankofamerica.com',
-    'Barclays': 'barclays.com',
-    'Credit One Bank': 'creditonebank.com',
-    'US Bank': 'usbank.com',
-    'Wells Fargo': 'wellsfargo.com',
-    'PayPal': 'paypal.com',
-    'Amazon': 'amazon.com',
-    'Target': 'target.com',
-  };
-  const domain = domainMap[issuer] ||
-    `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
+  const domain = ISSUER_DOMAIN[issuer] || `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
   return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
 }
 
