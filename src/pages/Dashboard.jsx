@@ -208,31 +208,31 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
           label="Total Cost"
-          value={`$${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={abbrevDollar(metrics.totalCost)}
           sub={`${filteredOrders.length} orders`}
           color="blue"
           icon={<DollarSign className="h-4 w-4" />}
         />
         <MetricCard
           label="Sale Revenue"
-          value={`$${metrics.saleRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={abbrevDollar(metrics.saleRevenue)}
           sub="from paid invoices"
           color="green"
           icon={<TrendingUp className="h-4 w-4" />}
         />
         <MetricCard
           label="Cashback + Points"
-          value={`$${metrics.cashback.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub={`${metrics.points.toLocaleString()} points earned`}
+          value={abbrevDollar(metrics.cashback)}
+          sub={`${metrics.points.toLocaleString()} pts earned`}
           color="pink"
           icon={<CreditCard className="h-4 w-4" />}
         />
         <MetricCard
           label="Net Profit"
-          value={`$${metrics.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={abbrevDollar(metrics.netProfit)}
           sub={metrics.netProfit >= 0 ? 'profitable' : 'loss'}
           color={metrics.netProfit >= 0 ? 'green' : 'red'}
           icon={<TrendingUp className="h-4 w-4" />}
