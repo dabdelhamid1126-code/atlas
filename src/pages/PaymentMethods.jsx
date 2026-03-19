@@ -147,20 +147,20 @@ function CreditCardsTab({ queryClient }) {
     <>
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Active Cards</p>
-          <p className="text-3xl font-bold text-slate-900">{activeCards.length}</p>
-          <p className="text-xs text-slate-400 mt-0.5">{cards.length} total</p>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">Active Cards</p>
+          <p className="text-3xl font-bold text-blue-700">{activeCards.length}</p>
+          <p className="text-xs text-blue-400 mt-0.5">{cards.length} total</p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Spent This Month</p>
-          <p className="text-3xl font-bold text-blue-600">${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-          <p className="text-xs text-slate-400 mt-0.5">{monthOrders.length} orders</p>
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
+          <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-1">Spent This Month</p>
+          <p className="text-3xl font-bold text-indigo-700">${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+          <p className="text-xs text-indigo-400 mt-0.5">{monthOrders.length} orders</p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Avg Cashback</p>
-          <p className="text-3xl font-bold text-purple-600">{avgCashback.toFixed(1)}%</p>
-          <p className="text-xs text-slate-400 mt-0.5">across active cards</p>
+        <div className="rounded-2xl border border-purple-100 bg-purple-50 p-5">
+          <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-1">Avg Cashback</p>
+          <p className="text-3xl font-bold text-purple-700">{avgCashback.toFixed(1)}%</p>
+          <p className="text-xs text-purple-400 mt-0.5">across active cards</p>
         </div>
       </div>
 
