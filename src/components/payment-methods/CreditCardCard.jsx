@@ -10,32 +10,27 @@ const CATEGORY_EMOJI = {
   Other: '⭐',
 };
 
-// Smart domain converter handles common variations automatically
+const ISSUER_DOMAINS = {
+  'american express': 'americanexpress.com',
+  'amex': 'americanexpress.com',
+  'chase': 'chase.com',
+  'citi': 'citi.com',
+  'citibank': 'citi.com',
+  'capital one': 'capitalone.com',
+  'discover': 'discover.com',
+  'bank of america': 'bankofamerica.com',
+  'us bank': 'usbank.com',
+  'u.s. bank': 'usbank.com',
+  'wells fargo': 'wellsfargo.com',
+  'paypal': 'paypal.com',
+  'amazon': 'amazon.com',
+  'target': 'target.com',
+  'costco': 'citi.com',
+};
+
 function getDomainFromIssuer(issuer) {
   if (!issuer) return null;
-  
-  const name = issuer.toLowerCase().trim();
-  
-  // Handle common multi-word variations
-  const variations = {
-    'american express': 'americanexpress.com',
-    'bank of america': 'bankofamerica.com',
-    'capital one': 'capitalone.com',
-    'wells fargo': 'wellsfargo.com',
-    'us bank': 'usbank.com',
-    'u.s. bank': 'usbank.com',
-    'goldman sachs': 'goldmansachs.com',
-  };
-  
-  if (variations[name]) return variations[name];
-  
-  // Auto-convert: remove spaces and special chars, add .com
-  const domain = name
-    .replace(/\s+/g, '')           // Remove spaces
-    .replace(/[^a-z0-9]/g, '')     // Remove special chars
-    .concat('.com');
-  
-  return domain;
+  return ISSUER_DOMAINS[issuer.toLowerCase().trim()] || (issuer.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '') + '.com');
 }
 
 const CATEGORY_ICONS = {
