@@ -57,18 +57,18 @@ export default function TransactionsStatsBar({ orders = [] }) {
   ];
 
   return (
-    <div className="grid grid-cols-5 gap-4 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={stat.label} className={`${stat.bg} rounded-xl p-4 border border-white shadow-sm`}>
-            <div className="flex items-center gap-3">
+          <div key={stat.label} className={`${stat.bg} rounded-xl p-4 border border-white shadow-sm overflow-hidden`}>
+            <div className="flex items-center gap-3 min-w-0">
               <div className={`${stat.iconBg} rounded-lg p-2 shrink-0`}>
                 <Icon className={`h-5 w-5 ${stat.iconColor}`} />
               </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500">{stat.label}</p>
-                <p className={`text-xl font-bold mt-0.5 ${stat.valueColor}`}>{stat.value}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-slate-500 break-words">{stat.label}</p>
+                <p className={`text-xl font-bold mt-0.5 break-words ${stat.valueColor}`}>{stat.value}</p>
               </div>
             </div>
           </div>
