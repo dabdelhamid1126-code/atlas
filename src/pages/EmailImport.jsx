@@ -329,8 +329,40 @@ function IntegrationsTab() {
   const handleConnectGmail = async () => {
     setShowGmailModal(false);
     try {
-      // Request OAuth authorization from Base44
-      await base44.functions.invoke("requestGmailOAuth", {});
+      // Request Gmail OAuth authorization via Base44
+      // This will open a popup for user consent
+      const scopes = [
+        'openid',
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/userinfo.email'
+      ];
+      
+      // Use Base44's built-in request_oauth_authorization
+      // In real implementation, this would be called via a helper function
+      // For now, we'll make a backend call that handles this
+      const response = await base44.functions.invoke("handleGmailOAuth", {
+        action: "authorize",
+        scopes: scopes
+      });
+
+      if (response?.data?.success) {
+        // Check status after successful authorization
+        setTimeout(() => {
+          const checkStatus = async () => {
+            try {
+              const res = await fetch("/api/gmail/status");
+              if (res.ok) {
+                const data = await res.json();
+                setGmailConnected(data.connected || false);
+                setGmailEmail(data.email || "");
+              }
+            } catch (e) {
+              console.error("Status check error:", e);
+            }
+          };
+          checkStatus();
+        }, 1000);
+      }
     } catch (e) {
       console.error("Connect error:", e);
     }
