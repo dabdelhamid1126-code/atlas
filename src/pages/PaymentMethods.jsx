@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Filter, Barcode, CreditCard, Gift, Check } from 'lucide-react';
-import CardBenefitsEditor from '@/components/payment-methods/CardBenefitsEditor';
-import CreditCardCard from '@/components/payment-methods/CreditCardCard';
+import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List, SlidersHorizontal } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
 import DataTable from '@/components/shared/DataTable';
+import CardVisual from '@/components/payment-methods/CardVisual';
+import QuickAddModal from '@/components/payment-methods/QuickAddModal';
+import CustomCardModal from '@/components/payment-methods/CustomCardModal';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import ReactBarcode from 'react-barcode';
 
 const GC_BRANDS = ['Amazon', 'Apple', 'Google Play', 'Target', 'Walmart', 'Best Buy', 'eBay', 'Visa', 'Mastercard', 'Other'];
@@ -24,13 +25,11 @@ export default function PaymentMethods() {
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Payment Methods</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Manage credit cards and gift cards</p>
+        <p className="text-sm text-slate-500 mt-0.5">Manage cards, cashback rates, and per-store rate overrides</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 mb-6 w-fit shadow-sm">
         <button
           onClick={() => setTab('credit-cards')}
@@ -54,91 +53,33 @@ export default function PaymentMethods() {
 
 // ─── CREDIT CARDS TAB ──────────────────────────────────────────────────────────
 
-// Known card templates for Quick Add
-const CARD_TEMPLATES = [
-  { card_name: 'Chase Sapphire Preferred', issuer: 'Chase', reward_type: 'points', points_rate: 1, dining_points_rate: 3, travel_points_rate: 2 },
-  { card_name: 'Chase Sapphire Reserve', issuer: 'Chase', reward_type: 'points', points_rate: 1, dining_points_rate: 3, travel_points_rate: 3 },
-  { card_name: 'Chase Freedom Unlimited', issuer: 'Chase', reward_type: 'cashback', cashback_rate: 1.5, dining_cashback_rate: 3, travel_cashback_rate: 5 },
-  { card_name: 'Chase Freedom Flex', issuer: 'Chase', reward_type: 'cashback', cashback_rate: 1, dining_cashback_rate: 3 },
-  { card_name: 'Amex Gold', issuer: 'American Express', reward_type: 'points', points_rate: 1, dining_points_rate: 4, groceries_points_rate: 4, travel_points_rate: 3 },
-  { card_name: 'Amex Platinum', issuer: 'American Express', reward_type: 'points', points_rate: 1, travel_points_rate: 5 },
-  { card_name: 'Amex Blue Cash Preferred', issuer: 'American Express', reward_type: 'cashback', cashback_rate: 1, groceries_cashback_rate: 6, streaming_cashback_rate: 6, gas_cashback_rate: 3 },
-  { card_name: 'Amex Blue Cash Everyday', issuer: 'American Express', reward_type: 'cashback', cashback_rate: 1, groceries_cashback_rate: 3 },
-  { card_name: 'Capital One Venture X', issuer: 'Capital One', reward_type: 'points', points_rate: 2, travel_points_rate: 10 },
-  { card_name: 'Capital One Venture', issuer: 'Capital One', reward_type: 'points', points_rate: 2 },
-  { card_name: 'Citi Double Cash', issuer: 'Citi', reward_type: 'cashback', cashback_rate: 2 },
-  { card_name: 'Discover it Cash Back', issuer: 'Discover', reward_type: 'cashback', cashback_rate: 1 },
-  { card_name: 'Wells Fargo Active Cash', issuer: 'Wells Fargo', reward_type: 'cashback', cashback_rate: 2 },
-  { card_name: 'Bank of America Customized Cash', issuer: 'Bank of America', reward_type: 'cashback', cashback_rate: 1 },
-];
-
-const ISSUER_DOMAINS = {
-  'american express': 'americanexpress.com',
-  'amex': 'americanexpress.com',
-  'chase': 'chase.com',
-  'citi': 'citi.com',
-  'citibank': 'citi.com',
-  'capital one': 'capitalone.com',
-  'discover': 'discover.com',
-  'bank of america': 'bankofamerica.com',
-  'us bank': 'usbank.com',
-  'u.s. bank': 'usbank.com',
-  'wells fargo': 'wellsfargo.com',
-  'paypal': 'paypal.com',
-  'amazon': 'amazon.com',
-  'target': 'target.com',
-  'costco': 'citi.com',
-};
-
-function getIssuerDomain(issuer) {
-  if (!issuer) return null;
-  return ISSUER_DOMAINS[issuer.toLowerCase()] || (issuer.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '') + '.com');
-}
-
-function IssuerLogoSmall({ issuer }) {
-  const [err, setErr] = useState(false);
-  const domain = getIssuerDomain(issuer);
-  const url = domain ? `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer || '')}` : null;
-  const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
-  if (err || !url) return <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center shrink-0"><span className="text-white font-bold text-xs">{initials}</span></div>;
-  return <div className="h-10 w-10 rounded-lg overflow-hidden shrink-0"><img src={url} alt={issuer} className="h-10 w-10 object-cover" onError={() => setErr(true)} /></div>;
-}
-
 function CreditCardsTab({ queryClient }) {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState('quick'); // 'quick' | 'full'
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [quickLast4, setQuickLast4] = useState('');
-  const [quickSearch, setQuickSearch] = useState('');
-  const [quickIssuerFilter, setQuickIssuerFilter] = useState('all');
-  const [applyPresetRates, setApplyPresetRates] = useState(true);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [customCardOpen, setCustomCardOpen] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
-  const [privacyMode, setPrivacyMode] = useState(false);
-  const emptyForm = {
-    card_name: '', last_4_digits: '', issuer: '', reward_type: 'cashback',
-    cashback_rate: '', points_rate: '',
-    dining_cashback_rate: '', dining_points_rate: '',
-    travel_cashback_rate: '', travel_points_rate: '',
-    groceries_cashback_rate: '', groceries_points_rate: '',
-    gas_cashback_rate: '', gas_points_rate: '',
-    streaming_cashback_rate: '', streaming_points_rate: '',
-    annual_credits: [], benefits: '', notes: '', active: true,
-  };
-  const [formData, setFormData] = useState(emptyForm);
+  const [search, setSearch] = useState('');
+  const [issuerFilter, setIssuerFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
 
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ['creditCards'],
     queryFn: () => base44.entities.CreditCard.list(),
   });
 
+  const { data: orders = [] } = useQuery({
+    queryKey: ['purchaseOrders'],
+    queryFn: () => base44.entities.PurchaseOrder.list(),
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.CreditCard.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card added'); setDialogOpen(false); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card added!'); },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.CreditCard.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card updated'); setDialogOpen(false); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card updated!'); setCustomCardOpen(false); setEditingCard(null); },
   });
 
   const deleteMutation = useMutation({
@@ -146,343 +87,212 @@ function CreditCardsTab({ queryClient }) {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card deleted'); },
   });
 
-  const openDialog = (card = null) => {
-    if (card) {
-      setEditingCard(card);
-      setDialogMode('full');
-      setFormData({
-        card_name: card.card_name || '', last_4_digits: card.last_4_digits || '', issuer: card.issuer || '',
-        reward_type: card.reward_type || 'cashback',
-        cashback_rate: card.cashback_rate || '', points_rate: card.points_rate || '',
-        dining_cashback_rate: card.dining_cashback_rate || '', dining_points_rate: card.dining_points_rate || '',
-        travel_cashback_rate: card.travel_cashback_rate || '', travel_points_rate: card.travel_points_rate || '',
-        groceries_cashback_rate: card.groceries_cashback_rate || '', groceries_points_rate: card.groceries_points_rate || '',
-        gas_cashback_rate: card.gas_cashback_rate || '', gas_points_rate: card.gas_points_rate || '',
-        streaming_cashback_rate: card.streaming_cashback_rate || '', streaming_points_rate: card.streaming_points_rate || '',
-        annual_credits: card.annual_credits || [], benefits: card.benefits || '', notes: card.notes || '', active: card.active !== false,
-      });
+  const handleCreate = async (data) => {
+    await createMutation.mutateAsync(data);
+  };
+
+  const handleEdit = (card) => {
+    setEditingCard(card);
+    setCustomCardOpen(true);
+  };
+
+  const handleSaveCustom = (data) => {
+    if (editingCard) {
+      updateMutation.mutate({ id: editingCard.id, data });
     } else {
-      setEditingCard(null);
-      setDialogMode('quick');
-      setSelectedTemplate(null);
-      setQuickLast4('');
-      setQuickSearch('');
-      setQuickIssuerFilter('all');
-      setFormData(emptyForm);
+      createMutation.mutate(data);
+      setCustomCardOpen(false);
     }
-    setDialogOpen(true);
   };
 
-  const handleQuickAdd = (e) => {
-    e.preventDefault();
-    if (!selectedTemplate) return;
-    const t = selectedTemplate;
-    createMutation.mutate({
-      card_name: t.card_name, issuer: t.issuer, last_4_digits: quickLast4,
-      reward_type: t.reward_type,
-      cashback_rate: t.cashback_rate || null, points_rate: t.points_rate || null,
-      dining_cashback_rate: t.dining_cashback_rate || null, dining_points_rate: t.dining_points_rate || null,
-      travel_cashback_rate: t.travel_cashback_rate || null, travel_points_rate: t.travel_points_rate || null,
-      groceries_cashback_rate: t.groceries_cashback_rate || null, groceries_points_rate: t.groceries_points_rate || null,
-      gas_cashback_rate: t.gas_cashback_rate || null, gas_points_rate: t.gas_points_rate || null,
-      streaming_cashback_rate: t.streaming_cashback_rate || null, streaming_points_rate: t.streaming_points_rate || null,
-      annual_credits: [], active: true,
-    });
+  const handleInlineUpdate = (id, data) => {
+    updateMutation.mutate({ id, data });
   };
 
-  const set = (k, v) => setFormData(p => ({ ...p, [k]: v }));
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const data = {
-      ...formData,
-      cashback_rate: formData.cashback_rate !== '' ? parseFloat(formData.cashback_rate) : null,
-      points_rate: formData.points_rate !== '' ? parseFloat(formData.points_rate) : null,
-      dining_cashback_rate: formData.dining_cashback_rate !== '' ? parseFloat(formData.dining_cashback_rate) : null,
-      dining_points_rate: formData.dining_points_rate !== '' ? parseFloat(formData.dining_points_rate) : null,
-      travel_cashback_rate: formData.travel_cashback_rate !== '' ? parseFloat(formData.travel_cashback_rate) : null,
-      travel_points_rate: formData.travel_points_rate !== '' ? parseFloat(formData.travel_points_rate) : null,
-      groceries_cashback_rate: formData.groceries_cashback_rate !== '' ? parseFloat(formData.groceries_cashback_rate) : null,
-      groceries_points_rate: formData.groceries_points_rate !== '' ? parseFloat(formData.groceries_points_rate) : null,
-      gas_cashback_rate: formData.gas_cashback_rate !== '' ? parseFloat(formData.gas_cashback_rate) : null,
-      gas_points_rate: formData.gas_points_rate !== '' ? parseFloat(formData.gas_points_rate) : null,
-      streaming_cashback_rate: formData.streaming_cashback_rate !== '' ? parseFloat(formData.streaming_cashback_rate) : null,
-      streaming_points_rate: formData.streaming_points_rate !== '' ? parseFloat(formData.streaming_points_rate) : null,
-    };
-    if (editingCard) updateMutation.mutate({ id: editingCard.id, data });
-    else createMutation.mutate(data);
+  const handleDelete = (card) => {
+    if (confirm(`Delete "${card.card_name}"?`)) deleteMutation.mutate(card.id);
   };
 
-  const isCashback = formData.reward_type === 'cashback' || formData.reward_type === 'both';
-  const isPoints = formData.reward_type === 'points' || formData.reward_type === 'both';
-
-  const { data: orders = [] } = useQuery({
-    queryKey: ['purchaseOrders'],
-    queryFn: () => base44.entities.PurchaseOrder.list(),
+  // Stats
+  const now = new Date();
+  const monthStart = startOfMonth(now);
+  const monthEnd = endOfMonth(now);
+  const activeCards = cards.filter(c => c.active !== false);
+  const monthOrders = orders.filter(o => {
+    const d = o.order_date ? parseISO(o.order_date) : null;
+    return d && d >= monthStart && d <= monthEnd;
   });
-  const { data: rewards = [] } = useQuery({
-    queryKey: ['rewards'],
-    queryFn: () => base44.entities.Reward.list(),
-  });
+  const monthSpent = monthOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
+  const cardsWithRate = activeCards.filter(c => c.cashback_rate);
+  const avgCashback = cardsWithRate.length ? cardsWithRate.reduce((s, c) => s + (c.cashback_rate || 0), 0) / cardsWithRate.length : 0;
+
+  // Filters
+  const issuers = [...new Set(cards.map(c => c.issuer).filter(Boolean))];
+  const filtered = useMemo(() => cards.filter(c => {
+    const matchSearch = !search || c.card_name?.toLowerCase().includes(search.toLowerCase()) || c.issuer?.toLowerCase().includes(search.toLowerCase());
+    const matchIssuer = issuerFilter === 'all' || c.issuer === issuerFilter;
+    const matchType = typeFilter === 'all' || c.reward_type === typeFilter;
+    return matchSearch && matchIssuer && matchType;
+  }), [cards, search, issuerFilter, typeFilter]);
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => setPrivacyMode(p => !p)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition ${privacyMode ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
-        >
-          {privacyMode ? '🙈 Privacy On' : '👁️ Privacy Off'}
-        </button>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500">Total Cards</p>
-            <p className="text-2xl font-bold">{cards.length}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500">Active</p>
-            <p className="text-2xl font-bold text-green-600">{cards.filter(c => c.active !== false).length}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500">Avg Cashback</p>
-            <p className="text-2xl font-bold text-purple-600">
-              {cards.length ? (cards.filter(c => c.cashback_rate).reduce((s, c) => s + (c.cashback_rate || 0), 0) / (cards.filter(c => c.cashback_rate).length || 1)).toFixed(1) : 0}%
-            </p>
-          </div>
+      {/* Stats Bar */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Active Cards</p>
+          <p className="text-3xl font-bold text-slate-900">{activeCards.length}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{cards.length} total</p>
         </div>
-        <Button onClick={() => openDialog()} className="bg-purple-600 hover:bg-purple-700 text-white">
-          <Plus className="h-4 w-4 mr-2" /> Add Card
-        </Button>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Spent This Month</p>
+          <p className="text-3xl font-bold text-blue-600">${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{monthOrders.length} orders</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Avg Cashback</p>
+          <p className="text-3xl font-bold text-purple-600">{avgCashback.toFixed(1)}%</p>
+          <p className="text-xs text-slate-400 mt-0.5">across active cards</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {isLoading ? (
-          <p className="text-sm text-slate-400 col-span-3">Loading...</p>
-        ) : cards.length === 0 ? (
-          <p className="text-sm text-slate-400 col-span-3">No credit cards yet</p>
-        ) : cards.map(card => (
-          <CreditCardCard
-            key={card.id}
-            card={card}
-            orders={orders}
-            rewards={rewards}
-            privacyMode={privacyMode}
-            onEdit={openDialog}
-            onDelete={(c) => { if (confirm('Delete card?')) deleteMutation.mutate(c.id); }}
-          />
-        ))}
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input placeholder="Search cards..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+
+        <Select value={issuerFilter} onValueChange={setIssuerFilter}>
+          <SelectTrigger className="w-40">
+            <SlidersHorizontal className="h-4 w-4 mr-2 text-slate-400" />
+            <SelectValue placeholder="All Issuers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Issuers</SelectItem>
+            {issuers.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="cashback">Cashback</SelectItem>
+            <SelectItem value="points">Points</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* View toggle */}
+        <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-1.5 rounded transition ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-1.5 rounded transition ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            <List className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex gap-2 ml-auto">
+          <Button variant="outline" onClick={() => setQuickAddOpen(true)} className="gap-2">
+            <Zap className="h-4 w-4 text-yellow-500" /> Quick Add
+          </Button>
+          <Button onClick={() => { setEditingCard(null); setCustomCardOpen(true); }} className="bg-purple-600 hover:bg-purple-700 text-white gap-2">
+            <Plus className="h-4 w-4" /> Custom Card
+          </Button>
+        </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingCard ? 'Edit Credit Card' : dialogMode === 'quick' ? 'Quick Add Cards' : 'Add Credit Card'}</DialogTitle>
-          </DialogHeader>
-
-          {/* Mode Toggle (only for new cards) */}
-          {!editingCard && (
-            <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
-              <button type="button" onClick={() => setDialogMode('quick')}
-                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${dialogMode === 'quick' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
-                ⚡ Quick Add
-              </button>
-              <button type="button" onClick={() => setDialogMode('full')}
-                className={`flex-1 py-1.5 text-sm font-medium rounded-md transition ${dialogMode === 'full' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
-                ➕ Add New Card
-              </button>
-            </div>
-          )}
-
-          <>{/* QUICK ADD MODE */}
-          {!editingCard && dialogMode === 'quick' && (
-            <form onSubmit={handleQuickAdd} className="space-y-3">
-              {/* Search + Issuer Filter */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder="Search cards..."
-                    value={quickSearch}
-                    onChange={e => setQuickSearch(e.target.value)}
-                    className="pl-9 rounded-full bg-slate-100 border-slate-200"
-                  />
-                </div>
-                <Select value={quickIssuerFilter} onValueChange={setQuickIssuerFilter}>
-                  <SelectTrigger className="w-36 rounded-full bg-white border-slate-200 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Issuers</SelectItem>
-                    {[...new Set(CARD_TEMPLATES.map(t => t.issuer))].map(i => (
-                      <SelectItem key={i} value={i}>{i}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Apply Preset Store Rates toggle */}
-              <button
-                type="button"
-                onClick={() => setApplyPresetRates(p => !p)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition ${applyPresetRates ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}
-              >
-                <div className={`h-5 w-5 rounded flex items-center justify-center shrink-0 border-2 transition ${applyPresetRates ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}`}>
-                  {applyPresetRates && <Check className="h-3 w-3 text-white" />}
-                </div>
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="h-7 w-7 rounded bg-blue-100 flex items-center justify-center">
-                    <CreditCard className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-blue-700">Apply Preset Store Rates</p>
-                    <p className="text-xs text-slate-500">Automatically add common store-specific cashback rates for each card</p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Card list */}
-              <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-                {CARD_TEMPLATES
-                  .filter(t => {
-                    const matchSearch = !quickSearch || t.card_name.toLowerCase().includes(quickSearch.toLowerCase()) || t.issuer.toLowerCase().includes(quickSearch.toLowerCase());
-                    const matchIssuer = quickIssuerFilter === 'all' || t.issuer === quickIssuerFilter;
-                    return matchSearch && matchIssuer;
-                  })
-                  .map(t => {
-                    const isSelected = selectedTemplate?.card_name === t.card_name;
-                    const baseRate = t.reward_type === 'cashback' ? `${t.cashback_rate}% base` : `${t.points_rate}x pts`;
-                    const annualFee = t.annual_fee ? `$${t.annual_fee}/yr` : null;
-                    const storeRates = Object.keys(t).filter(k => k.includes('_cashback_rate') || k.includes('_points_rate')).length;
-                    return (
-                      <button key={t.card_name} type="button"
-                        onClick={() => setSelectedTemplate(isSelected ? null : t)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition ${isSelected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
-                        <IssuerLogoSmall issuer={t.issuer} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-slate-900">{t.card_name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {t.issuer}
-                            <span className="text-green-600 font-medium"> · {baseRate}</span>
-                            {storeRates > 0 && <span className="text-blue-500 font-medium"> · {storeRates} store rates</span>}
-                            {annualFee && <span className="text-slate-500"> · {annualFee}</span>}
-                          </p>
-                        </div>
-                        <div className={`h-5 w-5 rounded-full border-2 shrink-0 flex items-center justify-center transition ${isSelected ? 'border-blue-500 bg-blue-500' : 'border-slate-300'}`}>
-                          {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-              </div>
-
-              {selectedTemplate && (
-                <div className="space-y-1">
-                  <Label className="text-sm">Last 4 Digits <span className="text-slate-400 font-normal">(optional)</span></Label>
-                  <Input value={quickLast4} onChange={e => setQuickLast4(e.target.value.slice(0, 4))} placeholder="e.g. 1234" maxLength="4" />
-                </div>
-              )}
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={!selectedTemplate} className="bg-purple-600 hover:bg-purple-700 text-white">Add Card</Button>
-              </DialogFooter>
-            </form>
-          )}
-
-          {/* FULL FORM MODE */}
-          {(editingCard || dialogMode === 'full') && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <Label>Card Name *</Label>
-                <Input value={formData.card_name} onChange={e => set('card_name', e.target.value)} required placeholder="e.g. Amex Blue Cash" />
-              </div>
-              <div className="space-y-1">
-                <Label>Last 4 Digits</Label>
-                <Input value={formData.last_4_digits} onChange={e => set('last_4_digits', e.target.value.slice(0, 4))} placeholder="e.g. 1234" maxLength="4" />
-              </div>
-              <div className="space-y-1">
-                <Label>Issuer</Label>
-                <Input value={formData.issuer} onChange={e => set('issuer', e.target.value)} placeholder="e.g. American Express" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label>Reward Type</Label>
-              <Select value={formData.reward_type} onValueChange={v => set('reward_type', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cashback">Cashback</SelectItem>
-                  <SelectItem value="points">Points</SelectItem>
-                  <SelectItem value="both">Both</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-slate-50 rounded-xl p-4 space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Base Rates</p>
-              <div className="grid grid-cols-2 gap-3">
-                {isCashback && (
-                  <div className="space-y-1">
-                    <Label className="text-xs">Cashback Rate (%)</Label>
-                    <Input type="number" step="0.01" value={formData.cashback_rate} onChange={e => set('cashback_rate', e.target.value)} placeholder="e.g. 1.5" />
-                  </div>
-                )}
-                {isPoints && (
-                  <div className="space-y-1">
-                    <Label className="text-xs">Points Rate (x)</Label>
-                    <Input type="number" step="0.1" value={formData.points_rate} onChange={e => set('points_rate', e.target.value)} placeholder="e.g. 1" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-blue-50 rounded-xl p-4 space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-blue-500">Category Rates (optional)</p>
-              {[
-                { label: 'Dining', key: 'dining' },
-                { label: 'Travel', key: 'travel' },
-                { label: 'Groceries', key: 'groceries' },
-                { label: 'Gas', key: 'gas' },
-                { label: 'Streaming', key: 'streaming' },
-              ].map(cat => (
-                <div key={cat.key} className="grid grid-cols-3 gap-2 items-center">
-                  <Label className="text-xs text-slate-600">{cat.label}</Label>
-                  {isCashback && <Input type="number" step="0.01" placeholder="% cashback" value={formData[`${cat.key}_cashback_rate`]} onChange={e => set(`${cat.key}_cashback_rate`, e.target.value)} className="text-xs h-8" />}
-                  {isPoints && <Input type="number" step="0.1" placeholder="x points" value={formData[`${cat.key}_points_rate`]} onChange={e => set(`${cat.key}_points_rate`, e.target.value)} className="text-xs h-8" />}
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-1">
-              <Label>Notes</Label>
-              <Input value={formData.notes} onChange={e => set('notes', e.target.value)} placeholder="Additional notes..." />
-            </div>
-
-            <CardBenefitsEditor
-              benefits={formData.annual_credits || []}
-              onChange={(benefits) => set('annual_credits', benefits)}
+      {/* Cards */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-64 bg-slate-100 rounded-2xl animate-pulse" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <CreditCard className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <p className="text-slate-500 font-medium">No cards found</p>
+          <p className="text-sm text-slate-400 mt-1">Try adjusting filters or add a new card</p>
+        </div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filtered.map(card => (
+            <CardVisual
+              key={card.id}
+              card={card}
+              orders={orders}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onUpdate={handleInlineUpdate}
             />
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="active" checked={formData.active} onChange={e => set('active', e.target.checked)} className="rounded" />
-              <Label htmlFor="active" className="cursor-pointer">Card is active</Label>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
-                {editingCard ? 'Update' : 'Add Card'}
-              </Button>
-            </DialogFooter>
-          </form>
-          )}</>
-        </DialogContent>
-      </Dialog>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-100">
+              <tr>
+                {['Card', 'Issuer', 'Type', 'Base Rate', 'Store Rates', 'Monthly Spend', 'Status', ''].map(h => (
+                  <th key={h} className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(card => {
+                const spent = orders.filter(o => o.credit_card_id === card.id && (() => { const d = o.order_date ? parseISO(o.order_date) : null; return d && d >= monthStart && d <= monthEnd; })()).reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
+                return (
+                  <tr key={card.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3 font-semibold text-slate-800">{card.card_name}</td>
+                    <td className="px-4 py-3 text-slate-500">{card.issuer || '—'}</td>
+                    <td className="px-4 py-3"><span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium capitalize">{card.reward_type}</span></td>
+                    <td className="px-4 py-3 font-bold text-green-600">{card.cashback_rate || 0}%</td>
+                    <td className="px-4 py-3 text-slate-500">{(card.store_rates || []).length} rates</td>
+                    <td className="px-4 py-3 font-semibold">${spent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${card.active !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                        {card.active !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => handleEdit(card)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"><Pencil className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => handleDelete(card)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <QuickAddModal
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        existingCards={cards}
+        onCreate={handleCreate}
+      />
+
+      <CustomCardModal
+        open={customCardOpen}
+        onClose={() => { setCustomCardOpen(false); setEditingCard(null); }}
+        editCard={editingCard}
+        onSave={handleSaveCustom}
+      />
     </>
   );
 }
 
-// ─── GIFT CARDS TAB ────────────────────────────────────────────────────────────
+// ─── GIFT CARDS TAB ─────────────────────────────────────────────────────────────
 
 function GiftCardsTab({ queryClient }) {
   const [search, setSearch] = useState('');
@@ -540,21 +350,10 @@ function GiftCardsTab({ queryClient }) {
     const card = allCards.find(c => c.id === creditCardId);
     if (!card) return;
     let rewardAmount = 0, rewardType = 'cashback', currency = 'USD';
-    let pointsMultiplier = card.points_rate || 1;
-    const category = giftCard.category || 'other';
-    if (category === 'dining' && card.dining_points_rate) pointsMultiplier = card.dining_points_rate;
-    else if (category === 'travel' && card.travel_points_rate) pointsMultiplier = card.travel_points_rate;
-    else if (category === 'groceries' && card.groceries_points_rate) pointsMultiplier = card.groceries_points_rate;
-    else if (category === 'gas' && card.gas_points_rate) pointsMultiplier = card.gas_points_rate;
-    else if (category === 'streaming' && card.streaming_points_rate) pointsMultiplier = card.streaming_points_rate;
-
     if (card.reward_type === 'cashback' && card.cashback_rate) {
-      rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2); rewardType = 'cashback'; currency = 'USD';
-    } else if (card.reward_type === 'points' && pointsMultiplier) {
-      rewardAmount = Math.round(purchaseAmount * pointsMultiplier); rewardType = 'points'; currency = 'points';
-    } else if (card.reward_type === 'both') {
-      if (card.cashback_rate) { rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2); rewardType = 'cashback'; currency = 'USD'; }
-      else if (pointsMultiplier) { rewardAmount = Math.round(purchaseAmount * pointsMultiplier); rewardType = 'points'; currency = 'points'; }
+      rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
+    } else if (card.reward_type === 'points' && card.points_rate) {
+      rewardAmount = Math.round(purchaseAmount * card.points_rate); rewardType = 'points'; currency = 'points';
     }
     if (rewardAmount > 0) {
       await base44.entities.Reward.create({
@@ -679,7 +478,7 @@ function GiftCardsTab({ queryClient }) {
           <Input placeholder="Search gift cards..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><Filter className="h-4 w-4 mr-2" /><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
             {['all','available','reserved','exported','used','invalid'].map(s => (
               <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
@@ -707,15 +506,6 @@ function GiftCardsTab({ queryClient }) {
                 <Label>Retailer</Label>
                 <Input value={formData.retailer} onChange={e => setFormData(p => ({ ...p, retailer: e.target.value }))} placeholder="Where purchased" />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={formData.category} onValueChange={v => setFormData(p => ({ ...p, category: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {['dining','travel','groceries','gas','streaming','other'].map(c => <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>)}
-                </SelectContent>
-              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
