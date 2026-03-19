@@ -9,18 +9,35 @@ const colorConfig = {
   purple: { border: 'border-purple-200', bg: 'from-purple-50 to-white',   icon: 'bg-purple-100 text-purple-600', value: 'text-purple-700' },
 };
 
+// Abbreviate a dollar value: handles negatives, K, M
+export function abbrevDollar(val) {
+  const n = Number(val);
+  if (isNaN(n)) return String(val);
+  const neg = n < 0;
+  const abs = Math.abs(n);
+  let formatted;
+  if (abs >= 1_000_000) {
+    formatted = `$${(abs / 1_000_000).toFixed(1)}M`;
+  } else if (abs >= 10_000) {
+    formatted = `$${(abs / 1_000).toFixed(1)}K`;
+  } else {
+    formatted = `$${abs.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  }
+  return neg ? `-${formatted}` : formatted;
+}
+
 export default function MetricCard({ label, value, sub, color, icon }) {
   const c = colorConfig[color] || colorConfig.blue;
   return (
     <div className={`rounded-2xl border ${c.border} bg-gradient-to-br ${c.bg} p-5 shadow-sm`}>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase">{label}</p>
-        <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${c.icon}`}>
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase leading-tight">{label}</p>
+        <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ml-2 ${c.icon}`}>
           {icon}
         </div>
       </div>
-      <p className={`text-2xl font-bold ${c.value}`}>{value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+      <p className={`text-2xl font-bold leading-tight ${c.value}`}>{value}</p>
+      {sub && <p className="text-xs text-slate-400 mt-1 leading-snug">{sub}</p>}
     </div>
   );
 }
