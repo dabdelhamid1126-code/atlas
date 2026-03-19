@@ -72,14 +72,35 @@ const CARD_TEMPLATES = [
   { card_name: 'Bank of America Customized Cash', issuer: 'Bank of America', reward_type: 'cashback', cashback_rate: 1 },
 ];
 
+const ISSUER_DOMAINS = {
+  'american express': 'americanexpress.com',
+  'amex': 'americanexpress.com',
+  'chase': 'chase.com',
+  'citi': 'citi.com',
+  'citibank': 'citi.com',
+  'capital one': 'capitalone.com',
+  'discover': 'discover.com',
+  'bank of america': 'bankofamerica.com',
+  'us bank': 'usbank.com',
+  'u.s. bank': 'usbank.com',
+  'wells fargo': 'wellsfargo.com',
+  'paypal': 'paypal.com',
+  'amazon': 'amazon.com',
+  'target': 'target.com',
+  'costco': 'citi.com',
+};
+
+function getIssuerDomain(issuer) {
+  if (!issuer) return null;
+  return ISSUER_DOMAINS[issuer.toLowerCase()] || (issuer.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '') + '.com');
+}
+
 function IssuerLogoSmall({ issuer }) {
   const [err, setErr] = useState(false);
-  const domain = issuer ? issuer.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.com' : null;
-  const overrides = { 'americanexpress': 'americanexpress.com', 'bankofamerica': 'bankofamerica.com', 'capitalone': 'capitalone.com', 'wellsfargo': 'wellsfargo.com' };
-  const finalDomain = overrides[issuer?.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')] || domain;
-  const url = finalDomain ? `https://cdn.brandfetch.io/${finalDomain}/w/48/h/48` : null;
-  const initials = (issuer || '?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-  if (err || !url) return <div className="h-10 w-10 rounded-lg bg-blue-700 flex items-center justify-center shrink-0"><span className="text-white font-bold text-xs">{initials}</span></div>;
+  const domain = getIssuerDomain(issuer);
+  const url = domain ? `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer || '')}` : null;
+  const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  if (err || !url) return <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center shrink-0"><span className="text-white font-bold text-xs">{initials}</span></div>;
   return <div className="h-10 w-10 rounded-lg overflow-hidden shrink-0"><img src={url} alt={issuer} className="h-10 w-10 object-cover" onError={() => setErr(true)} /></div>;
 }
 
