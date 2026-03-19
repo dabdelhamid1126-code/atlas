@@ -446,19 +446,20 @@ function PDFInvoiceTab() {
     try {
       const results = await Promise.all(
         files.map(async (file) => {
-          const formData = new FormData();
-          formData.append('file', file);
-          
-          const res = await fetch('/api/invoices/upload', {
-            method: 'POST',
-            body: formData,
-          });
-          
-          if (res.ok) {
-            const data = await res.json();
-            return { name: file.name, success: true, ...data };
-          } else {
-            return { name: file.name, success: false, error: 'Upload failed' };
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const res = await base44.functions.invoke('uploadPDFInvoice', { file });
+            
+            if (res?.data?.success) {
+              return { name: file.name, success: true, ordersFound: res.data.ordersFound || 1 };
+            } else {
+              return { name: file.name, success: false, error: res?.data?.error || 'Upload failed' };
+            }
+          } catch (err) {
+            console.error(`Error uploading ${file.name}:`, err);
+            return { name: file.name, success: false, error: err.message };
           }
         })
       );
