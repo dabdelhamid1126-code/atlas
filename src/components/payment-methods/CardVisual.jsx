@@ -65,7 +65,7 @@ function IssuerLogo({ issuer }) {
 
   if (err) {
     return (
-      <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-sm"
+      <div className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-sm shadow-sm"
         style={{ backgroundColor: color }}>
         {initials}
       </div>
