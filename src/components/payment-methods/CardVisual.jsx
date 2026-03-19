@@ -71,12 +71,10 @@ function IssuerLogo({ issuer }) {
       </div>
     );
   }
-  const domain = ISSUER_DOMAIN[issuer] || `${issuer.toLowerCase().replace(/\s+/g, '')}.com`;
   return (
     <img
-      src={`https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`}
+      src={getLogoUrl(issuer)}
       alt={issuer}
-
       onError={() => setErr(true)}
       style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '6px' }}
     />
