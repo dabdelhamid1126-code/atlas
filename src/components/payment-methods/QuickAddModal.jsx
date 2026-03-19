@@ -28,16 +28,27 @@ const PRESET_CARDS = [
   { name:'Costco Anywhere Visa', issuer:'Citi', domain:'citi.com', reward_type:'cashback', cashback_rate:1, annual_fee:0, store_rates:[{store:'Costco',rate:2},{store:'Gas',rate:4}]},
 ];
 
+const ISSUER_COLOR = {
+  'Chase': '#1d4ed8', 'American Express': '#059669', 'Discover': '#d97706',
+  'Capital One': '#dc2626', 'Citi': '#7c3aed', 'Bank of America': '#b91c1c',
+  'US Bank': '#0284c7', 'PayPal': '#003087', 'Target': '#cc0000',
+  'default': '#6366f1',
+};
+
 function PresetLogo({ domain, issuer }) {
   const [err, setErr] = useState(false);
-  const url = `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
+  const url = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
   const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const color = ISSUER_COLOR[issuer] || ISSUER_COLOR['default'];
   if (err) {
-    return <div className="h-9 w-9 rounded-lg bg-purple-100 flex items-center justify-center shrink-0"><span className="text-purple-700 font-bold text-xs">{initials}</span></div>;
+    return (
+      <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-white font-bold text-xs"
+        style={{ backgroundColor: color }}>{initials}</div>
+    );
   }
   return (
-    <div className="h-9 w-9 rounded-lg overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
-      <img src={url} alt={issuer} className="h-9 w-9 object-contain p-0.5" onError={(e) => e.target.style.display='none'} />
+    <div className="h-8 w-8 rounded-lg overflow-hidden bg-white border border-slate-100 shrink-0 flex items-center justify-center">
+      <img src={url} alt={issuer} className="h-6 w-6 object-contain" onError={() => setErr(true)} />
     </div>
   );
 }
