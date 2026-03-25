@@ -1,231 +1,368 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Hash,
-  CreditCard,
-  TrendingUp,
-  FileText,
   BarChart3,
+  Package,
+  CirclePlus,
+  Inbox,
+  Truck,
+  ArrowLeftRight,
+  Hash,
+  Receipt,
+  Calculator,
+  FileText,
+  TrendingUp,
   Menu,
   X,
   LogOut,
-  ChevronRight,
-  Settings as SettingsIcon,
   ChevronDown,
-  Plus
+  Settings as SettingsIcon,
+  Lightbulb,
+  Gift,
+  Heart,
+  Bug,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 
-
-const navigationGroups = [
+const NAV_GROUPS = [
   {
-    label: 'OVERVIEW',
+    label: 'Overview',
     items: [
-      { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
-      { name: 'Analytics', page: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
-    ]
+      { name: 'Dashboard',  page: 'Dashboard', icon: LayoutDashboard },
+      { name: 'Analytics',  page: 'Analytics',  icon: BarChart3, roles: ['admin','manager'] },
+    ],
   },
   {
-    label: 'ORDERS',
+    label: 'Workflow',
     items: [
-      { name: 'Transactions', page: 'Transactions', icon: Hash },
-      { name: 'New Orders', page: 'NewOrders', icon: Plus },
-      { name: 'Import Orders', page: 'EmailImport', icon: FileText },
-      { name: 'Forecast Planner', page: 'Forecast', icon: BarChart3 },
-      { name: 'Forecast Planner', page: 'Forecast', icon: BarChart3 },
-
-    ]
+      { name: 'Inventory On Hand',  page: 'Inventory',    icon: Package },
+      { name: 'Add Transaction',    page: 'NewOrders',    icon: CirclePlus },
+      { name: 'Order Event Review', page: 'Transactions', icon: Inbox },
+      { name: 'Order Lifecycle',    page: 'Forecast',     icon: Truck },
+      { name: 'Import Orders',      page: 'EmailImport',  icon: ArrowLeftRight },
+    ],
   },
   {
-    label: 'INVENTORY',
+    label: 'Records',
     items: [
-      { name: 'Inventory', page: 'Inventory', icon: Package },
-      { name: 'Products', page: 'Products', icon: ShoppingCart },
-      { name: 'Inventory Value', page: 'InventoryValue', icon: TrendingUp },
-    ]
+      { name: 'Transactions',            page: 'Transactions',   icon: Hash },
+      { name: 'Expenses',                page: 'PaymentMethods', icon: Receipt },
+      { name: 'Business Tax Calculator', page: 'Analytics',      icon: Calculator },
+      { name: 'Receipts',                page: 'Invoices',       icon: FileText },
+    ],
   },
   {
-    label: 'FINANCE',
+    label: 'Insights',
     items: [
-      { name: 'Payment Methods', page: 'PaymentMethods', icon: CreditCard },
-      { name: 'Rewards & Cashback', page: 'Rewards', icon: TrendingUp },
-      { name: 'Invoices', page: 'Invoices', icon: FileText },
-    ]
+      { name: 'Analytics & Insights', page: 'Analytics', icon: BarChart3 },
+      { name: 'Forecast Planner',     page: 'Forecast',  icon: TrendingUp },
+    ],
   },
 ];
 
+function LogoMark({ size = 36 }) {
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 10,
+        background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 55%, #ec4899 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}
+    >
+      <svg width={size * 0.48} height={size * 0.48} viewBox="0 0 20 20" fill="none">
+        <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.15)" />
+        <path d="M10 6L14 8.5V13.5L10 16L6 13.5V8.5L10 6Z" fill="white" opacity="0.9" />
+      </svg>
+    </div>
+  );
+}
+
 export default function Layout({ children, currentPageName }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser]               = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed]     = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [supportOpen, setSupportOpen]   = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  const userRole = user?.role || 'user';
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
-  const filteredGroups = navigationGroups.map(group => ({
-    ...group,
-    items: group.items.filter(item => !item.roles || item.roles.includes(userRole))
-  })).filter(group => group.items.length > 0);
+  const userRole     = user?.role || 'user';
+  const filteredGroups = NAV_GROUPS
+    .map(g => ({ ...g, items: g.items.filter(i => !i.roles || i.roles.includes(userRole)) }))
+    .filter(g => g.items.length > 0);
 
-  const handleLogout = () => {
-    base44.auth.logout();
-  };
+  const handleLogout = () => base44.auth.logout();
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(true)}
-          className="text-slate-500"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        <span className="font-semibold text-slate-800">Dalia Distro LLC</span>
-        </div>
-        {user && (
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-black text-white text-xs">
-              {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
+  const SidebarContent = () => (
+    <div
+      className="flex flex-col h-full"
+      style={{ background: '#ffffff', borderRight: '1px solid #e5e7eb' }}
+    >
+      {/* ── Logo ── */}
+      <div
+        className={cn('flex items-center gap-3 px-4 py-4', collapsed && 'justify-center px-2')}
+        style={{ borderBottom: '1px solid #f3f4f6' }}
+      >
+        {collapsed ? (
+          <button
+            className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            onClick={() => setCollapsed(false)}
+            title="Expand sidebar"
+          >
+            <PanelLeftOpen className="w-[18px] h-[18px]" />
+          </button>
+        ) : (
+          <>
+            <LogoMark size={34} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-bold text-slate-800 tracking-tight leading-tight">Dalia Distro</p>
+              <p className="text-[8.5px] text-slate-400 uppercase tracking-[0.14em] mt-0.5 font-semibold">Reselling, Quantified</p>
+            </div>
+            <button
+              className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              onClick={() => setCollapsed(true)}
+              title="Collapse sidebar"
+            >
+              <PanelLeftClose className="w-[18px] h-[18px]" />
+            </button>
+            <button className="lg:hidden text-slate-400" onClick={() => setSidebarOpen(false)}>
+              <X className="w-5 h-5" />
+            </button>
+          </>
         )}
       </div>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* ── Navigation ── */}
+      <nav className="flex-1 py-3 px-2.5 space-y-3 overflow-y-auto overflow-x-hidden">
+        {filteredGroups.map(group => (
+          <div key={group.label} className="space-y-0.5">
+            {!collapsed && (
+              <p className="px-2 pt-1 pb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {group.label}
+              </p>
+            )}
+            {group.items.map(item => {
+              const isActive = currentPageName === item.page;
+              return (
+                <Link
+                  key={`${group.label}-${item.page}`}
+                  to={createPageUrl(item.page)}
+                  title={collapsed ? item.name : undefined}
+                  className={cn(
+                    'flex items-center gap-2.5 px-2.5 py-2 text-[13px] font-medium rounded-xl transition-all duration-150',
+                    collapsed && 'justify-center',
+                    isActive
+                      ? 'bg-violet-50 text-violet-700'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      'flex-shrink-0',
+                      isActive ? 'text-violet-600' : 'text-slate-400'
+                    )}
+                    style={{ width: 16, height: 16 }}
+                  />
+                  {!collapsed && <span className="truncate flex-1">{item.name}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      {/* ── Icon row ── */}
+      <div
+        className={cn('flex items-center justify-center gap-1 py-2 px-2', collapsed ? 'flex-col' : 'flex-row gap-3')}
+        style={{ borderTop: '1px solid #f3f4f6', borderBottom: '1px solid #f3f4f6' }}
+      >
+        <button title="Report a Bug"  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"><Bug      style={{ width: 14, height: 14 }} /></button>
+        <button title="Tips"          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"><Lightbulb style={{ width: 14, height: 14 }} /></button>
+        <button title="Refer & Earn"  className="p-1.5 rounded-lg text-slate-300 cursor-default"><Gift style={{ width: 14, height: 14 }} /></button>
+      </div>
+
+      {/* ── Data Setup ── */}
+      <div className="px-2.5 py-1.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
+        <Link
+          to={createPageUrl('Settings')}
+          title={collapsed ? 'Data Setup' : undefined}
+          className={cn(
+            'flex items-center gap-2.5 py-2 px-2.5 rounded-xl text-[13px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors',
+            collapsed && 'justify-center'
+          )}
+        >
+          <SettingsIcon className="flex-shrink-0 text-slate-400" style={{ width: 15, height: 15 }} />
+          {!collapsed && <span className="truncate">Data Setup</span>}
+        </Link>
+      </div>
+
+      {/* ── Support the Dev ── */}
+      <div className="relative px-2.5 py-1.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
+        <button
+          onClick={() => setSupportOpen(!supportOpen)}
+          title={collapsed ? 'Support the Dev' : undefined}
+          className={cn(
+            'w-full flex items-center gap-2.5 py-2 px-2.5 rounded-xl text-[13px] font-medium transition-colors',
+            supportOpen ? 'bg-pink-50 text-pink-600' : 'text-slate-400 hover:bg-slate-50 hover:text-pink-500',
+            collapsed && 'justify-center'
+          )}
+        >
+          <Heart className={cn('flex-shrink-0', supportOpen && 'fill-pink-500 text-pink-500')} style={{ width: 14, height: 14 }} />
+          {!collapsed && <span className="truncate">Support the Dev</span>}
+        </button>
+
+        {supportOpen && (
+          <div
+            className={cn(
+              'absolute z-50 rounded-2xl p-3 space-y-2',
+              collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-2 right-2 mb-1'
+            )}
+            style={{
+              background: '#fff',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              minWidth: collapsed ? 200 : undefined,
+            }}
+          >
+            <p className="text-[11px] text-slate-500 font-medium">If this tool saves you time, consider a tip!</p>
+            {[['$','green-600','CashApp','$Sirboomin'],['V','blue-600','Venmo','@sirboomin']].map(([icon, , label, handle]) => (
+              <div key={label} className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-slate-700">{icon}</span>
+                  <span className="text-sm text-slate-700">{label}</span>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(handle)}
+                  className="text-xs text-violet-600 hover:text-violet-700 font-semibold"
+                >
+                  {handle}
+                </button>
+              </div>
+            ))}
+            <p className="text-[10px] text-slate-400 text-center">Tap to copy</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── User profile ── */}
+      {user && (
+        <div className="p-2.5">
+          <div className="relative">
+            <button
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              className={cn(
+                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-slate-50 transition-colors',
+                collapsed && 'justify-center px-1'
+              )}
+            >
+              <div className="relative flex-shrink-0">
+                <Avatar className="h-8 w-8">
+                  {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
+                  <AvatarFallback className="text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg,#7c3aed,#a855f7)' }}>
+                    {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-white" />
+              </div>
+              {!collapsed && (
+                <>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-[13px] font-semibold text-slate-700 truncate leading-tight">
+                      {user.full_name || user.email?.split('@')[0] || 'User'}
+                    </p>
+                    <p className="text-[11px] text-green-500 font-medium leading-tight">Online</p>
+                  </div>
+                  <ChevronDown className="flex-shrink-0 text-slate-400" style={{ width: 14, height: 14 }} />
+                </>
+              )}
+            </button>
+
+            {userMenuOpen && (
+              <div
+                className={cn('absolute overflow-hidden mb-1', collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-0 right-0')}
+                style={{
+                  background: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 14,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                  minWidth: collapsed ? 160 : undefined,
+                }}
+              >
+                <Link
+                  to={createPageUrl('Settings')}
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                  style={{ borderBottom: '1px solid #f3f4f6' }}
+                >
+                  <SettingsIcon style={{ width: 15, height: 15 }} />
+                  Settings
+                </Link>
+                <button
+                  onClick={() => { setUserMenuOpen(false); handleLogout(); }}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut style={{ width: 15, height: 15 }} />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex" style={{ background: '#f9fafb' }}>
+
+      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-50 bg-black/50"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 transition-transform duration-300 lg:translate-x-0 shadow-sm",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out lg:static lg:translate-x-0',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          collapsed ? 'lg:w-[72px]' : 'lg:w-[220px]',
+          'w-[220px]'
         )}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm">DD</span>
-              </div>
-              <div>
-                <span className="font-bold text-slate-800 tracking-tight block text-sm">Dalia Distro LLC</span>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-slate-400"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Navigation */}
-          <ScrollArea className="flex-1 py-4">
-            <nav className="px-3 space-y-4">
-              {filteredGroups.map((group) => (
-                <div key={group.label}>
-                  <p className="px-3 mb-1 text-xs font-semibold tracking-widest text-slate-400 uppercase">
-                    {group.label}
-                  </p>
-                  <div className="space-y-0.5">
-                    {group.items.map((item) => {
-                      const isActive = currentPageName === item.page;
-                      return (
-                        <Link
-                          key={item.page}
-                          to={createPageUrl(item.page)}
-                          onClick={() => setSidebarOpen(false)}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                            isActive
-                              ? "bg-violet-50 text-violet-700 font-semibold"
-                              : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-                          )}
-                        >
-                          <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-violet-600" : "text-slate-400")} />
-                          {item.name}
-                          {isActive && <ChevronRight className="h-4 w-4 ml-auto text-violet-500" />}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </nav>
-          </ScrollArea>
-
-          {/* User Section with Dropdown */}
-          {user && (
-            <div className="border-t border-slate-200 p-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-200">
-                    <Avatar className="h-10 w-10">
-                      {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
-                      <AvatarFallback className="bg-gradient-to-br from-purple-600 to-violet-700 text-white text-sm font-semibold">
-                        {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-semibold text-slate-800 truncate">
-                        {user.full_name || 'User'}
-                      </p>
-                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link to={createPageUrl('Settings')} className="flex items-center gap-2">
-                      <SettingsIcon className="h-4 w-4" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 hover:text-red-600">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-        </div>
+        <SidebarContent />
       </aside>
 
-      {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
-        <div className="p-4 lg:p-8">
+      {/* Main */}
+      <main className={cn('flex-1 flex flex-col min-w-0', collapsed ? 'lg:ml-0' : 'lg:ml-0')}>
+        {/* Mobile topbar */}
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-100">
+          <button onClick={() => setSidebarOpen(true)} className="text-slate-500">
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <LogoMark size={26} />
+            <span className="font-bold text-slate-800 text-sm">Dalia Distro</span>
+          </div>
+        </div>
+
+        {/* Page content */}
+        <div className="flex-1 p-4 lg:p-8">
           {children}
         </div>
       </main>
