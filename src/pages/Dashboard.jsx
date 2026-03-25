@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DollarSign, TrendingUp, CreditCard, Percent, Star } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, Percent, Star, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, subDays, startOfYear } from 'date-fns';
 import MetricCard, { abbrevDollar } from '@/components/dashboard/MetricCard';
 import StatusPipeline from '@/components/dashboard/StatusPipeline';
@@ -18,21 +18,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
-  const [metrics, setMetrics] = useState({ totalCost: 0, saleRevenue: 0, cashback: 0, points: 0, netProfit: 0, avgRoi: 0 });
+  const [metrics, setMetrics] = useState({ totalCost: 0, saleRevenue: 0, cashback: 0, points: 0, netProfit: 0, avgRoi: 0, yaCashback: 0, accountingProfit: 0 });
   const [trendData, setTrendData] = useState([]);
   const [byStatusData, setByStatusData] = useState([]);
   const [topCards, setTopCards] = useState([]);
   const [timeFilter, setTimeFilter] = useState('30 Days');
   const [modeFilter, setModeFilter] = useState('All');
+  const [showProfitDetails, setShowProfitDetails] = useState(true);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     loadData();
   }, []);
 
+  const profitMode = user?.profit_mode || 'accounting';
+
   useEffect(() => {
     if (!loading) loadData();
-  }, [timeFilter, modeFilter]);
+  }, [timeFilter, modeFilter, profitMode]);
 
   const getDateCutoff = () => {
     const now = new Date();
@@ -79,12 +82,15 @@ export default function Dashboard() {
 
       const totalCost = filteredOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
       const saleRevenue = paidInvoices.reduce((s, i) => s + (i.total || 0), 0);
-      const cashback = filteredRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
+      const allCashback = filteredRewards.filter(r => r.currency === 'USD');
+      const cashback = allCashback.reduce((s, r) => s + (r.amount || 0), 0);
+      const yaCashback = allCashback.filter(r => r.notes?.includes('Young Adult') || r.notes?.includes('YACB') || r.notes?.includes('Prime Young Adult')).reduce((s, r) => s + (r.amount || 0), 0);
       const points = filteredRewards.filter(r => r.currency === 'points').reduce((s, r) => s + (r.amount || 0), 0);
-      const netProfit = saleRevenue - totalCost;
+      const accountingProfit = saleRevenue - totalCost + cashback;
+      const netProfit = profitMode === 'cashback_wallet' ? accountingProfit - yaCashback : accountingProfit;
       const avgRoi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
 
-      setMetrics({ totalCost, saleRevenue, cashback, points, netProfit, avgRoi });
+      setMetrics({ totalCost, saleRevenue, cashback, points, netProfit, avgRoi, yaCashback, accountingProfit });
 
       // Trend (6 months)
       const now = new Date();
@@ -208,7 +214,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         <MetricCard
           label="Total Cost"
           value={abbrevDollar(metrics.totalCost)}
@@ -224,16 +230,23 @@ export default function Dashboard() {
           icon={<TrendingUp className="h-4 w-4" />}
         />
         <MetricCard
-          label="Cashback + Points"
+          label="Cashback Earned"
           value={abbrevDollar(metrics.cashback)}
-          sub={`${metrics.points.toLocaleString()} pts earned`}
+          sub={`${metrics.points.toLocaleString()} pts`}
           color="pink"
           icon={<CreditCard className="h-4 w-4" />}
         />
         <MetricCard
-          label="Net Profit"
+          label="YA Cashback"
+          value={abbrevDollar(metrics.yaCashback)}
+          sub="Young Adult CB"
+          color="teal"
+          icon={<Star className="h-4 w-4" />}
+        />
+        <MetricCard
+          label={profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Net Profit'}
           value={abbrevDollar(metrics.netProfit)}
-          sub={metrics.netProfit >= 0 ? 'profitable' : 'loss'}
+          sub={profitMode === 'cashback_wallet' ? 'excl. YA used' : 'accounting mode'}
           color={metrics.netProfit >= 0 ? 'green' : 'red'}
           icon={<TrendingUp className="h-4 w-4" />}
         />
@@ -244,6 +257,52 @@ export default function Dashboard() {
           color="purple"
           icon={<Percent className="h-4 w-4" />}
         />
+      </div>
+
+      {/* Profit Explanation Box */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setShowProfitDetails(p => !p)}
+          className="w-full flex items-center justify-between px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+        >
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 text-violet-500" />
+            Profit Breakdown
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 capitalize border border-violet-100">
+              {profitMode === 'cashback_wallet' ? 'Cashback Wallet Mode' : 'Accounting Mode'}
+            </span>
+          </div>
+          {showProfitDetails ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+        </button>
+        {showProfitDetails && (
+          <div className="px-5 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-slate-100 pt-4">
+            <div className="rounded-xl bg-green-50 border border-green-100 p-3">
+              <p className="text-[10px] text-green-600 font-semibold uppercase tracking-wider">Revenue</p>
+              <p className="text-base font-bold text-green-700">{abbrevDollar(metrics.saleRevenue)}</p>
+            </div>
+            <div className="rounded-xl bg-blue-50 border border-blue-100 p-3">
+              <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">Card Spend</p>
+              <p className="text-base font-bold text-blue-700">−{abbrevDollar(metrics.totalCost)}</p>
+            </div>
+            <div className="rounded-xl bg-pink-50 border border-pink-100 p-3">
+              <p className="text-[10px] text-pink-600 font-semibold uppercase tracking-wider">Cashback</p>
+              <p className="text-base font-bold text-pink-700">+{abbrevDollar(metrics.cashback)}</p>
+            </div>
+            {profitMode === 'cashback_wallet' && metrics.yaCashback > 0 ? (
+              <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
+                <p className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider">YA Adjustment</p>
+                <p className="text-base font-bold text-amber-700">−{abbrevDollar(metrics.yaCashback)}</p>
+                <p className="text-[9px] text-amber-500 mt-0.5">Wallet mode deduction</p>
+              </div>
+            ) : (
+              <div className="rounded-xl bg-violet-50 border border-violet-100 p-3">
+                <p className="text-[10px] text-violet-600 font-semibold uppercase tracking-wider">YA Cashback</p>
+                <p className="text-base font-bold text-violet-700">{abbrevDollar(metrics.yaCashback)}</p>
+                <p className="text-[9px] text-violet-500 mt-0.5">Included in total</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Goal Tracker */}

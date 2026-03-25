@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List, SlidersHorizontal, Star } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
 import DataTable from '@/components/shared/DataTable';
 import CardVisual from '@/components/payment-methods/CardVisual';
+import YACashbackTab from '@/components/payment-methods/YACashbackTab';
 import QuickAddModal from '@/components/payment-methods/QuickAddModal';
 import CustomCardModal from '@/components/payment-methods/CustomCardModal';
 import { toast } from 'sonner';
@@ -43,10 +44,17 @@ export default function PaymentMethods() {
         >
           <Gift className="h-4 w-4" /> Gift Cards
         </button>
+        <button
+          onClick={() => setTab('ya-cashback')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'ya-cashback' ? 'bg-amber-500 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}`}
+        >
+          <Star className="h-4 w-4" /> YA Cashback
+        </button>
       </div>
 
       {tab === 'credit-cards' && <CreditCardsTab queryClient={queryClient} />}
       {tab === 'gift-cards' && <GiftCardsTab queryClient={queryClient} />}
+      {tab === 'ya-cashback' && <YACashbackTab />}
     </div>
   );
 }

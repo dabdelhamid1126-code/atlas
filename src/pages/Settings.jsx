@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Target, Settings as SettingsIcon, Upload, Database, Mail, Bell, Palette, Shield } from 'lucide-react';
+import { User, Target, Settings as SettingsIcon, Upload, Database, Mail, Bell, Palette, Shield, Calculator } from 'lucide-react';
 import Goals from './Goals';
+import ProfitModeSettings from '@/components/settings/ProfitModeSettings';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -52,6 +53,7 @@ export default function Settings() {
     { id: 'goals', label: 'Goals', icon: Target },
     { id: 'data', label: 'Data', icon: Database },
     { id: 'email', label: 'Email Setup', icon: Mail },
+    { id: 'profit', label: 'Profit Mode', icon: Calculator },
     { id: 'notifications', label: 'Notifications', icon: Bell, soon: true },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'security', label: 'Security', icon: Shield },
@@ -176,6 +178,11 @@ export default function Settings() {
               <p className="text-slate-500 text-sm mt-1">Export, import, or manage your data</p>
               <p className="text-slate-600 mt-6">Data management features coming soon.</p>
             </div>
+          )}
+
+          {/* Profit Mode Tab */}
+          {activeTab === 'profit' && (
+            <ProfitModeSettings user={user} onSave={(mode) => updateUserMutation.mutate({ profit_mode: mode })} />
           )}
 
           {/* Email Setup Tab */}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -9,7 +9,7 @@ import {
 import { format, subMonths, parseISO } from 'date-fns';
 import {
   RefreshCw, Download, TrendingUp, DollarSign, ShoppingCart,
-  Percent, CreditCard, Store, Package, BarChart2, Filter
+  Percent, CreditCard, Store, Package, BarChart2, Filter, Star, ChevronDown, ChevronUp, Info
 } from 'lucide-react';
 
 const fmt$ = (v) => {
@@ -97,6 +97,12 @@ export default function Analytics() {
   const [fromDate, setFromDate] = useState(() => format(subMonths(new Date(), 12), 'yyyy-MM-dd'));
   const [toDate, setToDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [activeTab, setActiveTab] = useState('overview');
+  const [profitMode, setProfitMode] = useState('accounting');
+  const [showProfitDetails, setShowProfitDetails] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then(u => { if (u?.profit_mode) setProfitMode(u.profit_mode); }).catch(() => {});
+  }, []);
 
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['analyticsOrders'],
@@ -128,16 +134,19 @@ export default function Analytics() {
   const kpis = useMemo(() => {
     const revenue = filteredOrders.reduce((s, o) => s + (o.total_cost || 0), 0);
     const cost = filteredOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
-    const profit = revenue - cost;
+    const cashbackRewards = filteredRewards.filter(r => r.currency === 'USD');
+    const cashback = cashbackRewards.reduce((s, r) => s + (r.amount || 0), 0);
+    const yaCashback = cashbackRewards.filter(r => r.notes?.includes('Young Adult') || r.notes?.includes('YACB') || r.notes?.includes('Prime Young Adult')).reduce((s, r) => s + (r.amount || 0), 0);
+    const accountingProfit = revenue - cost + cashback;
+    const profit = profitMode === 'cashback_wallet' ? accountingProfit - yaCashback : accountingProfit;
     const roi = cost > 0 ? (profit / cost) * 100 : 0;
-    const cashback = filteredRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
-    const commission = profit - cashback;
+    const commission = accountingProfit - cashback;
     const storeMap = {};
     filteredOrders.forEach(o => { if (o.retailer) storeMap[o.retailer] = (storeMap[o.retailer] || 0) + (o.total_cost || 0); });
     const topStore = Object.entries(storeMap).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
     const inventory = filteredOrders.reduce((s, o) => s + (o.items?.reduce((ss, i) => ss + (i.quantity_ordered || 0), 0) || 0), 0);
-    return { revenue, cost, profit, roi, cashback, commission, topStore, inventory };
-  }, [filteredOrders, filteredRewards]);
+    return { revenue, cost, profit, roi, cashback, yaCashback, accountingProfit, commission, topStore, inventory };
+  }, [filteredOrders, filteredRewards, profitMode]);
 
   const periodData = useMemo(() => {
     const map = {};
@@ -251,10 +260,10 @@ export default function Analytics() {
   const KPI_CARDS = [
     { label: 'Revenue', value: fmt$(kpis.revenue), icon: DollarSign, bg: 'bg-blue-50 border-blue-100', iconColor: 'text-blue-400' },
     { label: 'Cost', value: fmt$(kpis.cost), icon: ShoppingCart, bg: 'bg-pink-50 border-pink-100', iconColor: 'text-pink-400' },
-    { label: 'Profit', value: fmt$(kpis.profit), icon: TrendingUp, bg: 'bg-green-50 border-green-100', iconColor: 'text-green-400', subtext: kpis.cost > 0 ? `${fmtPct((kpis.profit / kpis.cost) * 100)} margin` : '' },
+    { label: profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Profit', value: fmt$(kpis.profit), icon: TrendingUp, bg: 'bg-green-50 border-green-100', iconColor: 'text-green-400', subtext: kpis.cost > 0 ? `${fmtPct((kpis.profit / kpis.cost) * 100)} margin` : '' },
     { label: 'ROI', value: fmtPct(kpis.roi), icon: Percent, bg: 'bg-violet-50 border-violet-100', iconColor: 'text-violet-400' },
     { label: 'Cashback', value: fmt$(kpis.cashback), icon: CreditCard, bg: 'bg-pink-50 border-pink-100', iconColor: 'text-pink-400' },
-    { label: 'Commission', value: fmt$(kpis.commission), icon: DollarSign, bg: 'bg-amber-50 border-amber-100', iconColor: 'text-amber-400' },
+    { label: 'YA Cashback', value: fmt$(kpis.yaCashback), icon: Star, bg: 'bg-amber-50 border-amber-100', iconColor: 'text-amber-400', subtext: 'Young Adult CB' },
     { label: 'Top Store', value: kpis.topStore, icon: Store, bg: 'bg-teal-50 border-teal-100', iconColor: 'text-teal-400' },
     { label: 'Inventory', value: kpis.inventory.toString(), icon: Package, bg: 'bg-indigo-50 border-indigo-100', iconColor: 'text-indigo-400', subtext: 'items ordered' },
   ];
@@ -322,6 +331,52 @@ export default function Analytics() {
         {/* ── KPI CARDS ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {KPI_CARDS.map(k => <KpiCard key={k.label} {...k} />)}
+        </div>
+
+        {/* ── PROFIT DETAILS BOX ── */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <button
+            onClick={() => setShowProfitDetails(p => !p)}
+            className="w-full flex items-center justify-between px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+          >
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-violet-500" />
+              Profit Breakdown
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100 capitalize">
+                {profitMode === 'cashback_wallet' ? 'Cashback Wallet Mode' : 'Accounting Mode'}
+              </span>
+            </div>
+            {showProfitDetails ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+          </button>
+          {showProfitDetails && (
+            <div className="px-5 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-slate-100 pt-4">
+              <div className="rounded-xl bg-green-50 border border-green-100 p-3">
+                <p className="text-[10px] text-green-600 font-semibold uppercase tracking-wider">Revenue</p>
+                <p className="text-base font-bold text-green-700">{fmt$(kpis.revenue)}</p>
+              </div>
+              <div className="rounded-xl bg-blue-50 border border-blue-100 p-3">
+                <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">Card Spend</p>
+                <p className="text-base font-bold text-blue-700">−{fmt$(kpis.cost)}</p>
+              </div>
+              <div className="rounded-xl bg-pink-50 border border-pink-100 p-3">
+                <p className="text-[10px] text-pink-600 font-semibold uppercase tracking-wider">Cashback</p>
+                <p className="text-base font-bold text-pink-700">+{fmt$(kpis.cashback)}</p>
+              </div>
+              {profitMode === 'cashback_wallet' && kpis.yaCashback > 0 ? (
+                <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
+                  <p className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider">YA Adjustment</p>
+                  <p className="text-base font-bold text-amber-700">−{fmt$(kpis.yaCashback)}</p>
+                  <p className="text-[9px] text-amber-500 mt-0.5">Wallet mode deduction</p>
+                </div>
+              ) : (
+                <div className="rounded-xl bg-violet-50 border border-violet-100 p-3">
+                  <p className="text-[10px] text-violet-600 font-semibold uppercase tracking-wider">YA Cashback</p>
+                  <p className="text-base font-bold text-violet-700">{fmt$(kpis.yaCashback)}</p>
+                  <p className="text-[9px] text-violet-500 mt-0.5">Included in total</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── TAB NAV ── */}

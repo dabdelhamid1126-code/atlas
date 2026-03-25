@@ -46,6 +46,8 @@ const navigationGroups = [
       { name: 'Transactions', page: 'Transactions', icon: Hash },
       { name: 'New Orders', page: 'NewOrders', icon: Plus },
       { name: 'Import Orders', page: 'EmailImport', icon: FileText },
+      { name: 'Forecast Planner', page: 'Forecast', icon: BarChart3 },
+      { name: 'Forecast Planner', page: 'Forecast', icon: BarChart3 },
 
     ]
   },
