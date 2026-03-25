@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { createPageUrl } from './utils';
+import { createPageUrl } from '../utils';
 import { base44 } from '@/api/base44Client';
-import { PurchaseOrder, Reward, Invoice, CreditCard } from '@/api/entities';
 import {
   User, Database, Target, Mail, Key, Bell, Palette, Shield,
   ExternalLink, Check, Monitor, Sparkles, DollarSign, Eye, EyeOff,
@@ -192,10 +191,10 @@ function DataTab() {
     setExp(true);
     try {
       const data = {};
-      if (sel.orders) data.orders = await PurchaseOrder.list();
-      if (sel.rewards) data.rewards = await Reward.list();
-      if (sel.invoices) data.invoices = await Invoice.list();
-      if (sel.creditCards) data.creditCards = await CreditCard.list();
+      if (sel.orders) data.orders = await base44.entities.PurchaseOrder.list();
+      if (sel.rewards) data.rewards = await base44.entities.Reward.list();
+      if (sel.invoices) data.invoices = await base44.entities.Invoice.list();
+      if (sel.creditCards) data.creditCards = await base44.entities.CreditCard.list();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -211,9 +210,9 @@ function DataTab() {
     setImp(true); setIR(null);
     try {
       const json = JSON.parse(await file.text()); const summary = {};
-      if (json.orders) { for (const o of json.orders) await PurchaseOrder.create(o); summary['Purchase Orders'] = json.orders.length; }
-      if (json.rewards) { for (const r of json.rewards) await Reward.create(r); summary['Rewards'] = json.rewards.length; }
-      if (json.invoices) { for (const i of json.invoices) await Invoice.create(i); summary['Invoices'] = json.invoices.length; }
+      if (json.orders) { for (const o of json.orders) await base44.entities.PurchaseOrder.create(o); summary['Purchase Orders'] = json.orders.length; }
+      if (json.rewards) { for (const r of json.rewards) await base44.entities.Reward.create(r); summary['Rewards'] = json.rewards.length; }
+      if (json.invoices) { for (const i of json.invoices) await base44.entities.Invoice.create(i); summary['Invoices'] = json.invoices.length; }
       setIR({ success: true, summary });
     } catch (err) { setIR({ success: false, error: err.message }); }
     finally { setImp(false); if (fileRef.current) fileRef.current.value = ''; }
@@ -222,8 +221,8 @@ function DataTab() {
   const handleReset = async () => {
     setStage('deleting');
     try {
-      const [orders, rewards, invoices, cards] = await Promise.all([PurchaseOrder.list(), Reward.list(), Invoice.list(), CreditCard.list()]);
-      await Promise.all([...orders.map(o => PurchaseOrder.delete(o.id)), ...rewards.map(r => Reward.delete(r.id)), ...invoices.map(i => Invoice.delete(i.id)), ...cards.map(c => CreditCard.delete(c.id))]);
+      const [orders, rewards, invoices, cards] = await Promise.all([base44.entities.PurchaseOrder.list(), base44.entities.Reward.list(), base44.entities.Invoice.list(), base44.entities.CreditCard.list()]);
+      await Promise.all([...orders.map(o => base44.entities.PurchaseOrder.delete(o.id)), ...rewards.map(r => base44.entities.Reward.delete(r.id)), ...invoices.map(i => base44.entities.Invoice.delete(i.id)), ...cards.map(c => base44.entities.CreditCard.delete(c.id))]);
       setDeleted({ 'Purchase Orders': orders.length, Rewards: rewards.length, Invoices: invoices.length, 'Payment Methods': cards.length });
       setStage('done');
     } catch (err) { alert('Reset failed: ' + err.message); setStage('idle'); }
