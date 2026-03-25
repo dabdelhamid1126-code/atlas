@@ -182,20 +182,6 @@ export default function Layout({ children, currentPageName }) {
         ))}
       </nav>
 
-      {/* ── Data Setup ── */}
-      <div className="px-2.5 py-1.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
-        <Link
-          to={createPageUrl('Settings')}
-          title={collapsed ? 'Data Setup' : undefined}
-          className={cn(
-            'flex items-center gap-2.5 py-2 px-2.5 rounded-xl text-[13px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors',
-            collapsed && 'justify-center'
-          )}
-        >
-          <SettingsIcon className="flex-shrink-0 text-slate-400" style={{ width: 15, height: 15 }} />
-          {!collapsed && <span className="truncate">Data Setup</span>}
-        </Link>
-      </div>
 
 
       {/* ── User profile ── */}
