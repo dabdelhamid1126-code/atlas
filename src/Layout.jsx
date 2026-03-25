@@ -21,7 +21,6 @@ import {
   LogOut,
   ChevronDown,
   Settings as SettingsIcon,
-  Heart,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -90,7 +89,6 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [supportOpen, setSupportOpen]   = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -199,53 +197,6 @@ export default function Layout({ children, currentPageName }) {
         </Link>
       </div>
 
-      {/* ── Support the Dev ── */}
-      <div className="relative px-2.5 py-1.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
-        <button
-          onClick={() => setSupportOpen(!supportOpen)}
-          title={collapsed ? 'Support the Dev' : undefined}
-          className={cn(
-            'w-full flex items-center gap-2.5 py-2 px-2.5 rounded-xl text-[13px] font-medium transition-colors',
-            supportOpen ? 'bg-pink-50 text-pink-600' : 'text-slate-400 hover:bg-slate-50 hover:text-pink-500',
-            collapsed && 'justify-center'
-          )}
-        >
-          <Heart className={cn('flex-shrink-0', supportOpen && 'fill-pink-500 text-pink-500')} style={{ width: 14, height: 14 }} />
-          {!collapsed && <span className="truncate">Support the Dev</span>}
-        </button>
-
-        {supportOpen && (
-          <div
-            className={cn(
-              'absolute z-50 rounded-2xl p-3 space-y-2',
-              collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-2 right-2 mb-1'
-            )}
-            style={{
-              background: '#fff',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-              minWidth: collapsed ? 200 : undefined,
-            }}
-          >
-            <p className="text-[11px] text-slate-500 font-medium">If this tool saves you time, consider a tip!</p>
-            {[['$','green-600','CashApp','$Sirboomin'],['V','blue-600','Venmo','@sirboomin']].map(([icon, , label, handle]) => (
-              <div key={label} className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-100">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-slate-700">{icon}</span>
-                  <span className="text-sm text-slate-700">{label}</span>
-                </div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(handle)}
-                  className="text-xs text-violet-600 hover:text-violet-700 font-semibold"
-                >
-                  {handle}
-                </button>
-              </div>
-            ))}
-            <p className="text-[10px] text-slate-400 text-center">Tap to copy</p>
-          </div>
-        )}
-      </div>
 
       {/* ── User profile ── */}
       {user && (
