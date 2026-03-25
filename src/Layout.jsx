@@ -53,13 +53,6 @@ const NAV_GROUPS = [
       { name: 'Receipts',                page: 'Invoices',       icon: FileText },
     ],
   },
-  {
-    label: 'Insights',
-    items: [
-      { name: 'Analytics & Insights', page: 'Analytics', icon: BarChart3 },
-      { name: 'Forecast Planner',     page: 'Forecast',  icon: TrendingUp },
-    ],
-  },
 ];
 
 function LogoMark({ size = 36 }) {
