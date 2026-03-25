@@ -21,10 +21,7 @@ import {
   LogOut,
   ChevronDown,
   Settings as SettingsIcon,
-  Lightbulb,
-  Gift,
   Heart,
-  Bug,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -186,16 +183,6 @@ export default function Layout({ children, currentPageName }) {
           </div>
         ))}
       </nav>
-
-      {/* ── Icon row ── */}
-      <div
-        className={cn('flex items-center justify-center gap-1 py-2 px-2', collapsed ? 'flex-col' : 'flex-row gap-3')}
-        style={{ borderTop: '1px solid #f3f4f6', borderBottom: '1px solid #f3f4f6' }}
-      >
-        <button title="Report a Bug"  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"><Bug      style={{ width: 14, height: 14 }} /></button>
-        <button title="Tips"          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"><Lightbulb style={{ width: 14, height: 14 }} /></button>
-        <button title="Refer & Earn"  className="p-1.5 rounded-lg text-slate-300 cursor-default"><Gift style={{ width: 14, height: 14 }} /></button>
-      </div>
 
       {/* ── Data Setup ── */}
       <div className="px-2.5 py-1.5" style={{ borderBottom: '1px solid #f3f4f6' }}>
