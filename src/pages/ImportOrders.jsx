@@ -16,6 +16,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -163,7 +164,7 @@ function DropZone({ onFiles, loading }) {
 
 // ── Item row ──────────────────────────────────────────────────────────────
 
-function ItemRow({ item, onUpdate, onRemove }) {
+function ItemRow({ item, onUpdate, onRemove, products = [] }) {
   const total = (parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity) || 1);
 
   const sourceLabel = {
@@ -172,6 +173,16 @@ function ItemRow({ item, onUpdate, onRemove }) {
   };
   const src = sourceLabel[item.image_source];
 
+  const handleSelectProduct = (p) => {
+    onUpdate('product_id',   p.id);
+    onUpdate('product_name', p.name);
+    onUpdate('upc',          p.upc  || '');
+    onUpdate('sku',          p.upc  || '');
+    onUpdate('image_url',    p.image || null);
+    onUpdate('catalog_match', true);
+    onUpdate('image_source',  'catalog');
+  };
+
   return (
     <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 space-y-3">
       {/* Image + name */}
@@ -179,10 +190,19 @@ function ItemRow({ item, onUpdate, onRemove }) {
         <ProductImage src={item.image_url} name={item.product_name} size={52} />
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-start gap-2">
-            <Input className="h-8 text-xs bg-white flex-1" value={item.product_name || ''}
-              onChange={e => onUpdate('product_name', e.target.value)} placeholder="Product name" />
+            <div className="flex-1">
+              <ProductAutocomplete
+                products={products}
+                nameValue={item.product_name || ''}
+                upcValue={item.upc || ''}
+                searchField="name"
+                onSelect={handleSelectProduct}
+                onChangeName={v => onUpdate('product_name', v)}
+                placeholder="Product name"
+              />
+            </div>
             <button onClick={onRemove}
-              className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50 transition flex-shrink-0">
+              className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50 transition flex-shrink-0 mt-1">
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -235,7 +255,7 @@ function ItemRow({ item, onUpdate, onRemove }) {
 
 // ── Review card ───────────────────────────────────────────────────────────
 
-function ReviewCard({ draft, idx, creditCards, giftCards, onUpdate, onConfirm, onDiscard, confirming }) {
+function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, onConfirm, onDiscard, confirming }) {
   const [expanded, setExpanded] = useState(true);
   const [form, setForm] = useState(draft.extracted);
 
@@ -367,6 +387,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, onUpdate, onConfirm, o
             </div>
             {(form.items || []).map(item => (
               <ItemRow key={item.id} item={item}
+                products={products}
                 onUpdate={(k, v) => setItem(item.id, k, v)}
                 onRemove={() => removeItem(item.id)} />
             ))}
@@ -668,7 +689,7 @@ export default function ImportOrders() {
           <div className="space-y-4">
             {drafts.map((draft, idx) => (
               <ReviewCard key={draft.id} draft={draft} idx={idx}
-                creditCards={creditCards} giftCards={giftCards}
+                creditCards={creditCards} giftCards={giftCards} products={products}
                 onUpdate={handleUpdate} onConfirm={handleConfirm} onDiscard={handleDiscard}
                 confirming={confirmingIdx === idx} />
             ))}
