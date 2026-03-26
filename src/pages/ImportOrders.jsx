@@ -59,27 +59,21 @@ function RetailerLogo({ retailer }) {
   );
 }
 
-function ProductImage({ upc, name }) {
-  const [imgUrl, setImgUrl] = useState(null);
-  const [tried, setTried] = useState(false);
+function ProductImage({ upc, name, savedImage }) {
+  const [imgUrl, setImgUrl] = useState(savedImage || null);
 
   useEffect(() => {
-    if (!upc && !name) return;
-    const query = upc || name;
-    const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(query)}`;
-    if (upc) {
-      fetch(url)
-        .then(r => r.json())
-        .then(d => {
-          const img = d?.items?.[0]?.images?.[0];
-          if (img) setImgUrl(img);
-        })
-        .catch(() => {})
-        .finally(() => setTried(true));
-    } else {
-      setTried(true);
-    }
-  }, [upc, name]);
+    if (savedImage) { setImgUrl(savedImage); return; }
+    if (!upc) return;
+    const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`;
+    fetch(url)
+      .then(r => r.json())
+      .then(d => {
+        const img = d?.items?.[0]?.images?.[0];
+        if (img) setImgUrl(img);
+      })
+      .catch(() => {});
+  }, [upc, savedImage]);
 
   if (imgUrl) {
     return (
@@ -330,7 +324,7 @@ function ReviewCard({
               <div key={item.id} className="p-3 bg-slate-50 rounded-xl space-y-2">
                 {/* Row 1: image + name + remove */}
                 <div className="flex items-center gap-2">
-                  <ProductImage upc={item.sku || item.upc} name={item.product_name} />
+                  <ProductImage upc={item.upc || item.sku} name={item.product_name} savedImage={item._saved_image} />
                   <div className="flex-1 min-w-0">
                     <Input className="h-8 text-xs bg-white w-full" value={item.product_name || ''}
                       onChange={e => setItem(item.id, 'product_name', e.target.value)} placeholder="Product name" />
@@ -539,12 +533,12 @@ export default function ImportOrders() {
   // Match extracted items against saved products by SKU or name similarity
   const matchItemsToProducts = (items) => {
     return items.map(item => {
-      // Try SKU match first
+      // Try SKU/UPC match first
       let matched = products.find(p =>
         item.sku && p.upc && String(p.upc) === String(item.sku)
       );
       // Fallback: name match (normalize)
-      if (!matched) {
+      if (!matched && item.product_name) {
         const normalize = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
         const itemNorm = normalize(item.product_name);
         matched = products.find(p => {
@@ -556,9 +550,11 @@ export default function ImportOrders() {
         return {
           ...item,
           product_id: matched.id,
-          sku: item.sku || matched.upc || item.sku,
-          upc: matched.upc || item.sku,
+          product_name: item.product_name || matched.name,
+          sku: item.sku || matched.upc || '',
+          upc: matched.upc || item.sku || '',
           _matched_product: matched.name,
+          _saved_image: matched.image || null,
         };
       }
       return item;
