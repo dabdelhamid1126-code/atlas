@@ -313,15 +313,15 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
         )}
       </div>
 
-      {/* ── Perks ───────────────────────────────────────────────────────── */}
+      {/* ── Perks / Benefits ───────────────────────────────────────────────────────── */}
       <div className="border-t border-slate-100">
         <button onClick={() => setShowPerks(v => !v)} className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition">
           <div className="flex items-center gap-2">
             <Star className="h-3.5 w-3.5 text-amber-400" />
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Card Perks</span>
-            <span className="h-5 min-w-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center bg-amber-100 text-amber-700">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Card Benefits</span>
+            {card.benefits && <span className="h-5 min-w-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center bg-amber-100 text-amber-700">
               {perks.length}
-            </span>
+            </span>}
           </div>
           {showPerks ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
         </button>
@@ -329,7 +329,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
         {showPerks && (
           <div className="px-5 pb-4">
             {perks.length === 0 && !addingPerk && (
-              <p className="text-xs text-slate-400 italic mb-2">No perks saved yet (e.g. lounge access, travel credits)</p>
+              <p className="text-xs text-slate-400 italic mb-2">No benefits saved yet (e.g. lounge access, travel credits, sign-up bonus)</p>
             )}
             <div className="flex flex-wrap gap-1.5 mb-2">
               {perks.map((perk, idx) => (
@@ -345,7 +345,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
               <div className="flex items-center gap-2">
                 <input value={newPerk} onChange={e => setNewPerk(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAddPerk()}
-                  placeholder="e.g. Airport lounge access"
+                  placeholder="e.g. $300 annual travel credit"
                   className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
                   autoFocus />
                 <button onClick={handleAddPerk} className="h-7 w-7 rounded-lg bg-amber-500 flex items-center justify-center hover:bg-amber-600 transition">
@@ -358,7 +358,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
             ) : (
               <button onClick={() => setAddingPerk(true)}
                 className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-amber-200 text-xs font-semibold text-amber-600 hover:border-amber-400 hover:bg-amber-50 transition">
-                <Plus className="h-3.5 w-3.5" /> Add Perk
+                <Plus className="h-3.5 w-3.5" /> Add Benefit
               </button>
             )}
           </div>
