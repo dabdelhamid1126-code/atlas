@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pencil, Trash2, ChevronDown, ChevronUp, Plus, X, Check, AlertTriangle, Star, BarChart2 } from 'lucide-react';
+import { CardLogo } from '@/components/shared/BrandLogo';
 
 const ISSUER_DOMAIN = {
   'Chase': 'chase.com',
@@ -52,35 +53,7 @@ function getLogoUrl(issuer) {
   return `https://logo.clearbit.com/${domain}`;
 }
 
-function IssuerLogo({ issuer, size = 44 }) {
-  const [err, setErr] = useState(false);
-  const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
-  const color = getIssuerColor(issuer);
 
-  if (err || !issuer) {
-    return (
-      <div
-        className="rounded-xl flex items-center justify-center shrink-0 text-white font-bold shadow-sm"
-        style={{ width: size, height: size, backgroundColor: color, fontSize: size * 0.3 }}
-      >
-        {initials}
-      </div>
-    );
-  }
-  return (
-    <div
-      className="rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-100 shadow-sm"
-      style={{ width: size, height: size }}
-    >
-      <img
-        src={getLogoUrl(issuer)}
-        alt={issuer}
-        onError={() => setErr(true)}
-        style={{ width: size * 0.78, height: size * 0.78, objectFit: 'contain' }}
-      />
-    </div>
-  );
-}
 
 function Toggle({ checked, onChange }) {
   return (
@@ -158,7 +131,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <IssuerLogo issuer={card.issuer} size={44} />
+            <CardLogo cardName={card.issuer} size={44} />
             <div>
               <p className="font-bold text-slate-900 leading-tight" style={{ fontSize: 16 }}>{card.card_name}</p>
               <p className="text-sm text-slate-400 mt-0.5">{card.issuer || '—'}{card.last_4_digits ? ` ••${card.last_4_digits}` : ''}</p>

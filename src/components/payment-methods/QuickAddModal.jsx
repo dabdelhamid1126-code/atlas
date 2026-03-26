@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Check, CreditCard, X } from 'lucide-react';
+import { CardLogo } from '@/components/shared/BrandLogo';
 
 const PRESET_CARDS = [
   { name:'Chase Freedom Flex', issuer:'Chase', domain:'chase.com', reward_type:'cashback', cashback_rate:1, annual_fee:0, store_rates:[{store:'Amazon',rate:5},{store:'PayPal',rate:5},{store:'Walmart',rate:5},{store:'Target',rate:5}]},
@@ -28,30 +29,7 @@ const PRESET_CARDS = [
   { name:'Costco Anywhere Visa', issuer:'Citi', domain:'citi.com', reward_type:'cashback', cashback_rate:1, annual_fee:0, store_rates:[{store:'Costco',rate:2},{store:'Gas',rate:4}]},
 ];
 
-const ISSUER_COLOR = {
-  'Chase': '#1d4ed8', 'American Express': '#059669', 'Discover': '#d97706',
-  'Capital One': '#dc2626', 'Citi': '#7c3aed', 'Bank of America': '#b91c1c',
-  'US Bank': '#0284c7', 'PayPal': '#003087', 'Target': '#cc0000',
-  'default': '#6366f1',
-};
 
-function PresetLogo({ domain, issuer }) {
-  const [err, setErr] = useState(false);
-  const url = `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(issuer)}`;
-  const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
-  const color = ISSUER_COLOR[issuer] || ISSUER_COLOR['default'];
-  if (err) {
-    return (
-      <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-white font-bold text-xs"
-        style={{ backgroundColor: color }}>{initials}</div>
-    );
-  }
-  return (
-    <div className="h-8 w-8 rounded-lg overflow-hidden bg-white border border-slate-100 shrink-0 flex items-center justify-center">
-      <img src={url} alt={issuer} className="h-6 w-6 object-contain" onError={() => setErr(true)} />
-    </div>
-  );
-}
 
 export default function QuickAddModal({ open, onClose, existingCards = [], onCreate }) {
   const [search, setSearch] = useState('');
@@ -157,7 +135,7 @@ export default function QuickAddModal({ open, onClose, existingCards = [], onCre
                 onClick={() => toggle(card.name)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-left transition ${isSelected ? 'border-green-400 bg-green-50' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'}`}
               >
-                <PresetLogo domain={card.domain} issuer={card.issuer} />
+                <CardLogo cardName={card.issuer} size={32} />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-slate-900 truncate leading-tight">{card.name}</p>
                   <p className="text-xs text-slate-400 truncate">
