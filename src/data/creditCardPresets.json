@@ -78,7 +78,8 @@
       "benefits": "125,000 points bonus ($6k spend/3mo), $300 annual travel credit, $500 Edit credit, Priority Pass lounge access, $300 dining credit, Apple TV+/Music, Global Entry/TSA PreCheck credit",
       "sign_up_bonus": "125,000 points",
       "intro_apr": "None",
-      "regular_apr": "19.49% - 27.99% variable"
+      "regular_apr": "19.49% - 27.99% variable",
+      "image_url": "https://cdn.brandfetch.io/idnrCPuv87/theme/dark/logo.svg?c=1idzVIG0BYPKsFIDJDI"
     },
     {
       "name": "Chase Ink Business Cash",
@@ -141,7 +142,8 @@
       "benefits": "No annual fee, 5% back for Prime members, 2% on gas/dining",
       "sign_up_bonus": "$150 Amazon gift card",
       "intro_apr": "None",
-      "regular_apr": "18.99% - 27.99% variable"
+      "regular_apr": "18.99% - 27.99% variable",
+      "image_url": "https://cdn.brandfetch.io/idnrCPuv87/theme/dark/logo.svg?c=1idzVIG0BYPKsFIDJDI"
     },
     {
       "name": "Amex Blue Cash Everyday",
@@ -157,7 +159,8 @@
       "benefits": "No annual fee, 3% on groceries/gas/online shopping (up to $2k/$1k respectively)",
       "sign_up_bonus": "$200",
       "intro_apr": "None",
-      "regular_apr": "18.24% - 29.99% variable"
+      "regular_apr": "18.24% - 29.99% variable",
+      "image_url": "https://cdn.brandfetch.io/idnrCPuv87/theme/dark/logo.svg?c=1idzVIG0BYPKsFIDJDI"
     },
     {
       "name": "Amex Blue Cash Preferred",

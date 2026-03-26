@@ -72,6 +72,7 @@ export default function QuickAddModal({ open, onClose, existingCards = [], onCre
         active: true,
         store_rates: applyPresets ? card.store_rates : [],
         benefits: card.benefits || '',
+        image_url: card.image_url || null,
       });
     }
     setLoading(false);

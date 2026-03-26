@@ -119,6 +119,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
   const [newPerk, setNewPerk] = useState('');
   const [addingPerk, setAddingPerk] = useState(false);
   const [logoErr, setLogoErr] = useState(false);
+  const [cardImageErr, setCardImageErr] = useState(false);
 
   const totalSpent = orders.filter(o => o.credit_card_id === card.id).reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
   const txnCount = orders.filter(o => o.credit_card_id === card.id).length;
@@ -167,7 +168,18 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
       )}
 
       {/* ── Card Art Header ─────────────────────────────────────────────── */}
-      <div style={{ position: 'relative', height: 148, background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', height: 148, overflow: 'hidden' }}>
+        {/* Card background image or gradient fallback */}
+        {card.image_url && !cardImageErr ? (
+          <img 
+            src={card.image_url} 
+            alt={card.card_name}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={() => setCardImageErr(true)}
+          />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)` }} />
+        )}
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
 
         {/* Issuer logo — top left */}
