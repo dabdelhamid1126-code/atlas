@@ -310,10 +310,11 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
   const upcCount     = (form.items || []).filter(it => it.image_source === 'upcitemdb').length;
 
   const statusStyles = {
-    ready:    'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    error:    'bg-red-50 text-red-600 border border-red-200',
-    confirmed:'bg-violet-50 text-violet-700 border border-violet-200',
-    pending:  'bg-slate-100 text-slate-600',
+    ready:     'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    error:     'bg-red-50 text-red-600 border border-red-200',
+    confirmed: 'bg-violet-50 text-violet-700 border border-violet-200',
+    duplicate: 'bg-amber-50 text-amber-700 border border-amber-200',
+    pending:   'bg-slate-100 text-slate-600',
   };
 
   return (
@@ -343,7 +344,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusStyles[draft.status] || statusStyles.pending}`}>
-            {draft.status === 'confirmed' ? 'Saved' : draft.status === 'error' ? 'Error' : draft.status === 'ready' ? 'Ready' : 'Review'}
+            {draft.status === 'confirmed' ? 'Saved' : draft.status === 'error' ? 'Error' : draft.status === 'duplicate' ? 'Duplicate' : draft.status === 'ready' ? 'Ready' : 'Review'}
           </span>
           <button onClick={() => setExpanded(!expanded)} className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-400">
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -358,6 +359,12 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
 
       {expanded && draft.status !== 'confirmed' && (
         <div className="px-5 py-4 space-y-5">
+          {draft.isDuplicate && (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>Order <strong>#{form.order_number}</strong> already exists in your system. Edit the order number if this is a different order, or discard.</span>
+            </div>
+          )}
           {draft.error && (
             <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
               <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" /> {draft.error}
@@ -545,9 +552,10 @@ export default function ImportOrders() {
   const [extracting, setExtracting] = useState(false);
   const [confirmingIdx, setConfirmingIdx] = useState(null);
 
-  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards'], queryFn: () => base44.entities.CreditCard.list() });
-  const { data: giftCards   = [] } = useQuery({ queryKey: ['giftCards'],   queryFn: () => base44.entities.GiftCard.list() });
-  const { data: products    = [] } = useQuery({ queryKey: ['products'],    queryFn: () => base44.entities.Product.list() });
+  const { data: creditCards    = [] } = useQuery({ queryKey: ['creditCards'],    queryFn: () => base44.entities.CreditCard.list() });
+  const { data: giftCards     = [] } = useQuery({ queryKey: ['giftCards'],      queryFn: () => base44.entities.GiftCard.list() });
+  const { data: products      = [] } = useQuery({ queryKey: ['products'],       queryFn: () => base44.entities.Product.list() });
+  const { data: existingOrders = [] } = useQuery({ queryKey: ['purchaseOrders'], queryFn: () => base44.entities.PurchaseOrder.list() });
 
   // ── Handle upload ───────────────────────────────────────────────────────
 
@@ -581,7 +589,16 @@ export default function ImportOrders() {
           if (cardMatch) extracted.credit_card_id = cardMatch.id;
         }
 
-        newDrafts.push({ id: crypto.randomUUID(), filename: file.name, status: 'ready', extracted, error: null });
+        // Check for duplicate order number
+        const isDuplicate = extracted.order_number &&
+          existingOrders.some(o => o.order_number === extracted.order_number);
+
+        newDrafts.push({
+          id: crypto.randomUUID(), filename: file.name,
+          status: isDuplicate ? 'duplicate' : 'ready',
+          extracted, error: null,
+          isDuplicate,
+        });
       } catch (err) {
         newDrafts.push({
           id: crypto.randomUUID(), filename: file.name, status: 'error',
@@ -601,6 +618,14 @@ export default function ImportOrders() {
   // ── Confirm + save ──────────────────────────────────────────────────────
 
   const handleConfirm = async (idx, form) => {
+    // Re-check for duplicate at save time (order number may have been edited)
+    const duplicate = form.order_number &&
+      existingOrders.some(o => o.order_number === form.order_number);
+    if (duplicate) {
+      toast.error(`Order #${form.order_number} already exists in your system`);
+      return;
+    }
+
     setConfirmingIdx(idx);
     try {
       const gcTotal       = (form.gift_cards || []).reduce((s, gc) => s + (parseFloat(gc.amount) || 0), 0);
