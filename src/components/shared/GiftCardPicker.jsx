@@ -70,7 +70,7 @@ export default function GiftCardPicker({ giftCards = [], selectedIds = [], onCha
             className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-lg text-xs font-semibold text-amber-700"
           >
             <Gift style={{ width: 11, height: 11 }} />
-            {gc.brand} ${parseFloat(gc.value).toFixed(2)}
+            {gc.brand} {gc.code ? `••${String(gc.code).slice(-4)}` : ''} ${parseFloat(gc.value).toFixed(2)}
             <button
               type="button"
               onClick={e => { e.stopPropagation(); remove(gc.id); }}
@@ -106,7 +106,7 @@ export default function GiftCardPicker({ giftCards = [], selectedIds = [], onCha
               <div className="flex items-center gap-2">
                 <Gift className="text-amber-500 flex-shrink-0" style={{ width: 13, height: 13 }} />
                 <span className="text-sm font-medium text-slate-700">{gc.brand}</span>
-                {gc.last_four && <span className="text-xs text-slate-400">••{gc.last_four}</span>}
+                {gc.code && <span className="text-xs text-slate-400">••{String(gc.code).slice(-4)}</span>}
               </div>
               <span className="text-sm font-semibold text-amber-600">${parseFloat(gc.value).toFixed(2)}</span>
             </button>
