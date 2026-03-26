@@ -209,7 +209,7 @@ export default function NewOrders() {
     - (!form.include_tax_in_cashback      ? tax      : 0)
     - (!form.include_shipping_in_cashback ? shipping : 0);
   const cardCB  = Math.max(0, cashbackBase) * cardRate / 100;
-  const yaCB    = form.amazon_yacb && isAmazon ? cashbackBase * 0.05 : 0;
+  const yaCB    = form.amazon_yacb && isAmazon ? Math.min(cashbackBase * 0.05, 100) : 0;
   const totalCB = cardCB + yaCB;
 
   const totalSalePrice = useMemo(() =>
