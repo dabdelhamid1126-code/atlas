@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Pencil, Trash2, ChevronDown, ChevronUp, Plus, X, Check, AlertTriangle } from 'lucide-react';
+import { Pencil, Trash2, ChevronDown, ChevronUp, Plus, X, Check, AlertTriangle, Star, BarChart2 } from 'lucide-react';
 
 const ISSUER_DOMAIN = {
   'Chase': 'chase.com',
   'American Express': 'americanexpress.com',
+  'Amex': 'americanexpress.com',
   'Citi': 'citi.com',
   'Capital One': 'capitalone.com',
   'Discover': 'discover.com',
@@ -17,17 +18,25 @@ const ISSUER_DOMAIN = {
   'Target': 'target.com',
   'Apple': 'apple.com',
   'Robinhood': 'robinhood.com',
+  'Synchrony': 'synchronybank.com',
+  'Navy Federal': 'navyfederal.org',
+  'PNC': 'pnc.com',
+  'TD Bank': 'td.com',
+  'HSBC': 'hsbc.com',
+  'Goldman Sachs': 'goldmansachs.com',
 };
 
 const ISSUER_COLOR = {
   'Chase': '#1d4ed8',
   'American Express': '#059669',
+  'Amex': '#059669',
   'Discover': '#d97706',
   'Capital One': '#dc2626',
   'Citi': '#7c3aed',
   'Bank of America': '#b91c1c',
   'Barclays': '#0284c7',
   'Wells Fargo': '#b45309',
+  'Goldman Sachs': '#0f172a',
   'default': '#6366f1',
 };
 
@@ -43,33 +52,36 @@ function getLogoUrl(issuer) {
   return `https://logo.clearbit.com/${domain}`;
 }
 
-function IssuerLogo({ issuer }) {
+function IssuerLogo({ issuer, size = 44 }) {
   const [err, setErr] = useState(false);
-  const url = getLogoUrl(issuer);
   const initials = (issuer || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   const color = getIssuerColor(issuer);
 
-  if (err) {
+  if (err || !issuer) {
     return (
-      <div className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-sm shadow-sm"
-        style={{ backgroundColor: color }}>
+      <div
+        className="rounded-xl flex items-center justify-center shrink-0 text-white font-bold shadow-sm"
+        style={{ width: size, height: size, backgroundColor: color, fontSize: size * 0.3 }}
+      >
         {initials}
       </div>
     );
   }
   return (
-    <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-100 shadow-sm">
+    <div
+      className="rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-100 shadow-sm"
+      style={{ width: size, height: size }}
+    >
       <img
         src={getLogoUrl(issuer)}
         alt={issuer}
         onError={() => setErr(true)}
-        style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+        style={{ width: size * 0.78, height: size * 0.78, objectFit: 'contain' }}
       />
     </div>
   );
 }
 
-// Toggle switch component
 function Toggle({ checked, onChange }) {
   return (
     <button
@@ -85,13 +97,17 @@ const STORE_OPTIONS = ['Amazon', 'Walmart', 'Target', 'eBay', 'Costco', 'PayPal'
 
 export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpdate, isDuplicate = false }) {
   const [showRates, setShowRates] = useState(false);
+  const [showPerks, setShowPerks] = useState(false);
   const [addingRate, setAddingRate] = useState(false);
   const [newStore, setNewStore] = useState('');
   const [newRate, setNewRate] = useState('');
+  const [newPerk, setNewPerk] = useState('');
+  const [addingPerk, setAddingPerk] = useState(false);
 
   const totalSpent = orders.filter(o => o.credit_card_id === card.id).reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
   const txnCount = orders.filter(o => o.credit_card_id === card.id).length;
   const storeRates = card.store_rates || [];
+  const perks = card.benefits ? card.benefits.split(',').map(p => p.trim()).filter(Boolean) : [];
   const isActive = card.active !== false;
   const accentColor = getIssuerColor(card.issuer);
 
@@ -107,6 +123,18 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
     setNewStore(''); setNewRate(''); setAddingRate(false);
   };
 
+  const handleAddPerk = () => {
+    if (!newPerk.trim()) return;
+    const updated = [...perks, newPerk.trim()];
+    onUpdate(card.id, { benefits: updated.join(', ') });
+    setNewPerk(''); setAddingPerk(false);
+  };
+
+  const handleDeletePerk = (idx) => {
+    const updated = perks.filter((_, i) => i !== idx);
+    onUpdate(card.id, { benefits: updated.join(', ') });
+  };
+
   const handleToggleActive = () => {
     onUpdate(card.id, { active: !isActive });
   };
@@ -115,11 +143,9 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
   const rateLabel = card.reward_type === 'points' ? `${baseRate}x pts` : `${baseRate}%`;
 
   return (
-    <div
-      className="group bg-white rounded-[14px] border border-slate-200 overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5"
-    >
+    <div className="group bg-white rounded-[14px] border border-slate-200 overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5">
       <div style={{ height: '3px', background: accentColor, borderRadius: '14px 14px 0 0' }} />
-      {/* Duplicate warning */}
+
       {isDuplicate && (
         <div className="flex items-center gap-2 px-5 py-2 bg-amber-50 border-b border-amber-100">
           <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
@@ -132,13 +158,12 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <IssuerLogo issuer={card.issuer} />
+            <IssuerLogo issuer={card.issuer} size={44} />
             <div>
               <p className="font-bold text-slate-900 leading-tight" style={{ fontSize: 16 }}>{card.card_name}</p>
               <p className="text-sm text-slate-400 mt-0.5">{card.issuer || '—'}{card.last_4_digits ? ` ••${card.last_4_digits}` : ''}</p>
             </div>
           </div>
-          {/* Actions + toggle */}
           <div className="flex items-center gap-2">
             <Toggle checked={isActive} onChange={handleToggleActive} />
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -152,11 +177,11 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
           </div>
         </div>
 
-        {/* KPI metrics grid */}
+        {/* KPI metrics */}
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-xl p-3 overflow-hidden" style={{ backgroundColor: `${accentColor}10` }}>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Base Rate</p>
-            <p className="font-bold text-slate-900 break-words" style={{ fontSize: 20, color: accentColor }}>{rateLabel}</p>
+            <p className="font-bold break-words" style={{ fontSize: 20, color: accentColor }}>{rateLabel}</p>
           </div>
           <div className="rounded-xl bg-slate-50 p-3 overflow-hidden">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Total Spent</p>
@@ -166,7 +191,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
           </div>
           <div className="rounded-xl bg-slate-50 p-3 overflow-hidden">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Annual Fee</p>
-            <p className="text-base font-bold text-slate-800 break-words">${card.annual_fee || 0}</p>
+            <p className="text-base font-bold text-slate-800">${card.annual_fee || 0}</p>
           </div>
           <div className="rounded-xl bg-slate-50 p-3 overflow-hidden">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Orders</p>
@@ -175,7 +200,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
         </div>
       </div>
 
-      {/* Top store rate pills */}
+      {/* Store rate pills preview */}
       {storeRates.length > 0 && (
         <div className="px-5 pb-3 flex flex-wrap gap-1.5">
           {storeRates.slice(0, 3).map((r, i) => (
@@ -189,13 +214,14 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
         </div>
       )}
 
-      {/* Expandable Store Rates */}
+      {/* Store Rates Expandable */}
       <div className="border-t border-slate-100">
         <button
           onClick={() => setShowRates(v => !v)}
           className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition"
         >
           <div className="flex items-center gap-2">
+            <BarChart2 className="h-3.5 w-3.5 text-slate-400" />
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Store Rates</span>
             <span className="h-5 min-w-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center text-white"
               style={{ backgroundColor: accentColor }}>
@@ -211,7 +237,6 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
               <span className="text-xs text-slate-400 italic">* All Other Stores</span>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{card.cashback_rate || 0}%</span>
             </div>
-
             {storeRates.map((r, idx) => (
               <div key={idx} className="group/rate flex items-center justify-between py-1.5">
                 <span className="text-sm text-slate-700 font-medium">{r.store}</span>
@@ -224,7 +249,6 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
                 </div>
               </div>
             ))}
-
             {addingRate ? (
               <div className="flex items-center gap-2 pt-2">
                 <select value={newStore} onChange={e => setNewStore(e.target.value)}
@@ -245,6 +269,64 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
               <button onClick={() => setAddingRate(true)}
                 className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-slate-200 text-xs font-semibold text-slate-500 hover:border-purple-400 hover:text-purple-600 transition">
                 <Plus className="h-3.5 w-3.5" /> Add Store Rate
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Perks Expandable */}
+      <div className="border-t border-slate-100">
+        <button
+          onClick={() => setShowPerks(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition"
+        >
+          <div className="flex items-center gap-2">
+            <Star className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Card Perks</span>
+            <span className="h-5 min-w-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center bg-amber-100 text-amber-700">
+              {perks.length}
+            </span>
+          </div>
+          {showPerks ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
+        </button>
+
+        {showPerks && (
+          <div className="px-5 pb-4">
+            {perks.length === 0 && !addingPerk && (
+              <p className="text-xs text-slate-400 italic mb-2">No perks saved yet (e.g. lounge access, travel credits)</p>
+            )}
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {perks.map((perk, idx) => (
+                <span key={idx} className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                  {perk}
+                  <button onClick={() => handleDeletePerk(idx)} className="text-amber-400 hover:text-red-500 transition ml-0.5">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            {addingPerk ? (
+              <div className="flex items-center gap-2">
+                <input
+                  value={newPerk}
+                  onChange={e => setNewPerk(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddPerk()}
+                  placeholder="e.g. Airport lounge access"
+                  className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
+                  autoFocus
+                />
+                <button onClick={handleAddPerk} className="h-7 w-7 rounded-lg bg-amber-500 flex items-center justify-center hover:bg-amber-600 transition">
+                  <Check className="h-3.5 w-3.5 text-white" />
+                </button>
+                <button onClick={() => setAddingPerk(false)} className="h-7 w-7 rounded-lg bg-slate-200 flex items-center justify-center hover:bg-slate-300 transition">
+                  <X className="h-3.5 w-3.5 text-slate-500" />
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setAddingPerk(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-amber-200 text-xs font-semibold text-amber-600 hover:border-amber-400 hover:bg-amber-50 transition">
+                <Plus className="h-3.5 w-3.5" /> Add Perk
               </button>
             )}
           </div>

@@ -14,6 +14,7 @@ import CardVisual from '@/components/payment-methods/CardVisual';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
 import QuickAddModal from '@/components/payment-methods/QuickAddModal';
 import CustomCardModal from '@/components/payment-methods/CustomCardModal';
+import CardAnalyticsView from '@/components/payment-methods/CardAnalyticsView';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import ReactBarcode from 'react-barcode';
@@ -22,6 +23,7 @@ const GC_BRANDS = ['Amazon', 'Apple', 'Google Play', 'Target', 'Walmart', 'Best 
 
 export default function PaymentMethods() {
   const [tab, setTab] = useState('credit-cards');
+  const [cardView, setCardView] = useState('cards'); // 'cards' | 'analytics'
   const queryClient = useQueryClient();
 
   return (
@@ -69,6 +71,7 @@ function CreditCardsTab({ queryClient }) {
   const [issuerFilter, setIssuerFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
+  const [activeView, setActiveView] = useState('cards'); // 'cards' | 'analytics'
 
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ['creditCards'],
@@ -217,6 +220,22 @@ function CreditCardsTab({ queryClient }) {
           </button>
         </div>
 
+        {/* Cards / Analytics toggle */}
+        <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
+          <button
+            onClick={() => setActiveView('cards')}
+            className={`px-3 py-1.5 rounded text-xs font-semibold transition ${activeView === 'cards' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Cards View
+          </button>
+          <button
+            onClick={() => setActiveView('analytics')}
+            className={`px-3 py-1.5 rounded text-xs font-semibold transition ${activeView === 'analytics' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Analytics
+          </button>
+        </div>
+
         <div className="flex gap-2 ml-auto">
           <Button variant="outline" onClick={() => setQuickAddOpen(true)} className="gap-2">
             <Zap className="h-4 w-4 text-yellow-500" /> Quick Add
@@ -227,8 +246,13 @@ function CreditCardsTab({ queryClient }) {
         </div>
       </div>
 
+      {/* Analytics View */}
+      {activeView === 'analytics' && (
+        <CardAnalyticsView cards={cards} orders={orders} />
+      )}
+
       {/* Cards */}
-      {isLoading ? (
+      {activeView === 'cards' && (isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => <div key={i} className="h-64 bg-slate-100 rounded-2xl animate-pulse" />)}
         </div>
@@ -290,7 +314,7 @@ function CreditCardsTab({ queryClient }) {
             </tbody>
           </table>
         </div>
-      )}
+      ))}
 
       <QuickAddModal
         open={quickAddOpen}
