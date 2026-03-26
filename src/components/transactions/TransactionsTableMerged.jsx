@@ -78,7 +78,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
         </div>
 
         {/* Vendor Logo / Icon */}
-        <RetailerLogo retailer={order.retailer} size={36} />
+        <RetailerLogo retailer={order.retailer} size={44} />
 
         {/* Order # + Date */}
         <div className="min-w-0 flex-shrink-0 w-48">
