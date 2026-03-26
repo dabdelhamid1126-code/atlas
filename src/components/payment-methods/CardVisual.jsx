@@ -157,7 +157,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
   };
 
   return (
-    <div className="group bg-white rounded-[14px] border border-slate-200 overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5">
+    <div className="group bg-white rounded-[14px] overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5">
 
       {isDuplicate && (
         <div className="flex items-center gap-2 px-5 py-2 bg-amber-50 border-b border-amber-100">
