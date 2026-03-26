@@ -39,8 +39,7 @@ const NAV_GROUPS = [
     items: [
       { name: 'Inventory On Hand',  page: 'Inventory',    icon: Package },
       { name: 'Add Transaction',    page: 'NewOrders',    icon: CirclePlus },
-      { name: 'Order Event Review', page: 'Transactions', icon: Inbox },
-      { name: 'Order Lifecycle',    page: 'Forecast',     icon: Truck },
+
       { name: 'Import Orders',      page: 'EmailImport',  icon: ArrowLeftRight },
     ],
   },
