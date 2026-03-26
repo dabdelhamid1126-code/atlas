@@ -131,6 +131,42 @@ async function enrichItem(item, products = []) {
   return { ...item, image_url: null, catalog_match: false, image_source: null };
 }
 
+// ── Retailer logo ─────────────────────────────────────────────────────────
+
+const RETAILER_DOMAINS = {
+  'Amazon':      'amazon.com',
+  'Best Buy':    'bestbuy.com',
+  'Walmart':     'walmart.com',
+  'Target':      'target.com',
+  'Costco':      'costco.com',
+  "Sam's Club":  'samsclub.com',
+  'eBay':        'ebay.com',
+  'Woot':        'woot.com',
+  'Apple':       'apple.com',
+};
+
+function RetailerLogo({ retailer, size = 36 }) {
+  const [err, setErr] = useState(false);
+  const domain = RETAILER_DOMAINS[retailer];
+  if (!domain || err) {
+    return (
+      <div style={{ width: size, height: size }}
+        className="rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
+        <FileText className="h-4 w-4 text-violet-500" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://logo.clearbit.com/${domain}`}
+      alt={retailer}
+      style={{ width: size, height: size }}
+      className="rounded-xl object-contain bg-white border border-slate-100 flex-shrink-0 p-1"
+      onError={() => setErr(true)}
+    />
+  );
+}
+
 // ── Product image component ───────────────────────────────────────────────
 
 function ProductImage({ src, name, size = 52 }) {
@@ -325,9 +361,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
-            <FileText className="h-4 w-4 text-violet-500" />
-          </div>
+          <RetailerLogo retailer={form.retailer} size={36} />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-800 truncate">
               {form.retailer || 'Unknown Retailer'}
@@ -489,7 +523,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
                 <SelectItem value={null}>No card</SelectItem>
                 {creditCards.map(c => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.card_name}{c.last_four ? ` (••••${c.last_four})` : ''}
+                    {c.card_name}{c.last_4_digits ? ` ••••${c.last_4_digits}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
