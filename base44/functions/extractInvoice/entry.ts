@@ -19,8 +19,8 @@ Extract the following and return ONLY valid JSON, no markdown, no explanation:
   ],
   "items": [
     {
-      "product_name": "full product name",
-      "sku": "SKU or UPC number if present, else null",
+      "product_name": "full specific product name including brand, model, storage, color (e.g. 'Apple iPhone 15 Pro 256GB Natural Titanium')",
+      "sku": "SKU, UPC, or barcode number if present, else null",
       "model": "model number if present",
       "quantity": 1,
       "unit_cost": 0.00,
@@ -32,6 +32,9 @@ Extract the following and return ONLY valid JSON, no markdown, no explanation:
 }
 
 RULES:
+- product_name MUST be the actual product being purchased, NOT the store/retailer name. Include brand + model + specs.
+- Example good product_name: "Apple AirPods Pro 2nd Generation", "Samsung 65\" QLED 4K TV QN65Q80C", "Nintendo Switch OLED White"
+- Example BAD product_name: "Apple" (too vague), "Best Buy" (that's the retailer), "Item" (not a real name)
 - Merge items with identical SKU into one entry with combined quantity
 - Skip all free items ($0.00) — free trials, digital freebies, gift-with-purchase
 - Skip items where product_name contains "Free" and total_cost is 0

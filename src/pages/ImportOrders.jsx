@@ -324,7 +324,7 @@ function ReviewCard({
               <div key={item.id} className="p-3 bg-slate-50 rounded-xl space-y-2">
                 {/* Row 1: image + name + remove */}
                 <div className="flex items-center gap-2">
-                  <ProductImage upc={item.upc || item.sku} name={item.product_name} savedImage={item._saved_image} />
+                  <ProductImage upc={item.upc || item.sku} name={item.product_name} savedImage={item._saved_image || item._upc_lookup_image} />
                   <div className="flex-1 min-w-0">
                     <Input className="h-8 text-xs bg-white w-full" value={item.product_name || ''}
                       onChange={e => setItem(item.id, 'product_name', e.target.value)} placeholder="Product name" />
@@ -588,6 +588,27 @@ export default function ImportOrders() {
 
         // Match items against saved products to fill in UPC
         extracted.items = matchItemsToProducts(extracted.items);
+
+        // For items with a UPC but weak/missing product name, look up via upcitemdb
+        extracted.items = await Promise.all(extracted.items.map(async (item) => {
+          const upc = item.upc || item.sku;
+          const nameLooksWeak = !item.product_name || item.product_name.trim().length < 5;
+          if (upc && nameLooksWeak) {
+            try {
+              const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`);
+              const d = await r.json();
+              const found = d?.items?.[0];
+              if (found?.title) {
+                return {
+                  ...item,
+                  product_name: found.title,
+                  _upc_lookup_image: found.images?.[0] || null,
+                };
+              }
+            } catch {}
+          }
+          return item;
+        }));
 
         // Try to auto-match credit card by last four
         if (extracted.payment_method_last_four) {
