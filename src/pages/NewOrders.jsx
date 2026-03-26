@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tag, Globe, Package, ShoppingCart, Truck, CreditCard, DollarSign, Layers, Plus, Trash2, Copy, Sparkles, Info } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
+import GiftCardPicker from '@/components/shared/GiftCardPicker';
 
 const PRODUCT_CATEGORIES = ['Electronics', 'Home & Garden', 'Toys & Games', 'Health & Beauty', 'Sports', 'Clothing', 'Tools', 'Gift Cards', 'Grocery', 'Other'];
 const RETAILERS = ['Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco', "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other'];
@@ -492,23 +493,12 @@ export default function NewOrders() {
 
               {/* Gift Cards */}
               <div className="mb-3">
-                <Label className="text-xs text-slate-600 block mb-1">Gift Cards</Label>
-                {giftCards.filter(gc => (gc.status === 'available' || form.gift_card_ids.includes(gc.id)) && (!form.retailer || gc.brand?.toLowerCase() === form.retailer.toLowerCase())).length === 0 ? (
-                  <p className="text-xs text-slate-400">{form.retailer ? `No available ${form.retailer} gift cards` : 'Select a vendor to see gift cards'}</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {giftCards.filter(gc => (gc.status === 'available' || form.gift_card_ids.includes(gc.id)) && (!form.retailer || gc.brand?.toLowerCase() === form.retailer.toLowerCase())).map(gc => (
-                      <label key={gc.id} className="flex items-center gap-1 text-xs bg-white border rounded-lg px-2 py-1.5 cursor-pointer hover:border-amber-400 transition">
-                        <input type="checkbox" checked={form.gift_card_ids.includes(gc.id)}
-                          onChange={e => {
-                            if (e.target.checked) set('gift_card_ids', [...form.gift_card_ids, gc.id]);
-                            else set('gift_card_ids', form.gift_card_ids.filter(id => id !== gc.id));
-                          }} className="rounded" />
-                        {gc.brand} ${gc.value}
-                      </label>
-                    ))}
-                  </div>
-                )}
+                <GiftCardPicker
+                  giftCards={giftCards}
+                  selectedIds={form.gift_card_ids}
+                  onChange={(ids) => set('gift_card_ids', ids)}
+                  retailer={form.retailer}
+                />
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
