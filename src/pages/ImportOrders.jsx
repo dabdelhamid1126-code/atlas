@@ -133,22 +133,22 @@ async function enrichItem(item, products = []) {
 
 // ── Retailer logo ─────────────────────────────────────────────────────────
 
-const RETAILER_DOMAINS = {
-  'Amazon':      'amazon.com',
-  'Best Buy':    'bestbuy.com',
-  'Walmart':     'walmart.com',
-  'Target':      'target.com',
-  'Costco':      'costco.com',
-  "Sam's Club":  'samsclub.com',
-  'eBay':        'ebay.com',
-  'Woot':        'woot.com',
-  'Apple':       'apple.com',
+const RETAILER_SLUGS_MAP = {
+  'Amazon':     'amazon',
+  'Best Buy':   'best-buy',
+  'Walmart':    'walmart',
+  'Target':     'target',
+  'Costco':     'costco',
+  "Sam's Club": 'sams-club',
+  'eBay':       'ebay',
+  'Woot':       'woot',
+  'Apple':      'apple',
 };
 
 function RetailerLogo({ retailer, size = 36 }) {
   const [err, setErr] = useState(false);
-  const domain = RETAILER_DOMAINS[retailer];
-  if (!domain || err) {
+  const slug = RETAILER_SLUGS_MAP[retailer];
+  if (!slug || err) {
     return (
       <div style={{ width: size, height: size }}
         className="rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
@@ -158,7 +158,7 @@ function RetailerLogo({ retailer, size = 36 }) {
   }
   return (
     <img
-      src={`https://logo.clearbit.com/${domain}`}
+      src={`https://1000logos.net/wp-content/uploads/${slug}-logo.png`}
       alt={retailer}
       style={{ width: size, height: size }}
       className="rounded-xl object-contain bg-white border border-slate-100 flex-shrink-0 p-1"

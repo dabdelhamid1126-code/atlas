@@ -4,17 +4,24 @@ import { Pencil, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Exte
 
 const ROWS_PER_PAGE = 15;
 
-const RETAILER_LOGOS = {
-  amazon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png',
-  bestbuy: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/200px-Best_Buy_Logo.svg.png',
-  walmart: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Walmart_Spark.svg/200px-Walmart_Spark.svg.png',
-  target: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Target_Corporation_logo_%28vector%29.svg/200px-Target_Corporation_logo_%28vector%29.svg.png',
+const RETAILER_SLUGS = {
+  'amazon':    'amazon',
+  'best buy':  'best-buy',
+  'walmart':   'walmart',
+  'target':    'target',
+  'costco':    'costco',
+  "sam's club":'sams-club',
+  'ebay':      'ebay',
+  'woot':      'woot',
+  'apple':     'apple',
 };
 
 function getRetailerLogo(name) {
   if (!name) return null;
-  const key = (name || '').toLowerCase().replace(/[^a-z]/g, '');
-  return Object.entries(RETAILER_LOGOS).find(([k]) => key.includes(k))?.[1] || null;
+  const key = name.toLowerCase().trim();
+  const slug = Object.entries(RETAILER_SLUGS).find(([k]) => key.includes(k))?.[1];
+  if (!slug) return null;
+  return `https://1000logos.net/wp-content/uploads/${slug}-logo.png`;
 }
 
 function getVendorInitials(name) {
