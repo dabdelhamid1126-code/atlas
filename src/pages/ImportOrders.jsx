@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import RetailerLogo from '@/components/shared/BrandLogo';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -133,39 +134,7 @@ async function enrichItem(item, products = []) {
 
 // ── Retailer logo ─────────────────────────────────────────────────────────
 
-const RETAILER_SLUGS_MAP = {
-  'Amazon':     'amazon',
-  'Best Buy':   'best-buy',
-  'Walmart':    'walmart',
-  'Target':     'target',
-  'Costco':     'costco',
-  "Sam's Club": 'sams-club',
-  'eBay':       'ebay',
-  'Woot':       'woot',
-  'Apple':      'apple',
-};
 
-function RetailerLogo({ retailer, size = 36 }) {
-  const [err, setErr] = useState(false);
-  const slug = RETAILER_SLUGS_MAP[retailer];
-  if (!slug || err) {
-    return (
-      <div style={{ width: size, height: size }}
-        className="rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
-        <FileText className="h-4 w-4 text-violet-500" />
-      </div>
-    );
-  }
-  return (
-    <img
-      src={`https://1000logos.net/wp-content/uploads/${slug}-logo.png`}
-      alt={retailer}
-      style={{ width: size, height: size }}
-      className="rounded-xl object-contain bg-white border border-slate-100 flex-shrink-0 p-1"
-      onError={() => setErr(true)}
-    />
-  );
-}
 
 // ── Product image component ───────────────────────────────────────────────
 

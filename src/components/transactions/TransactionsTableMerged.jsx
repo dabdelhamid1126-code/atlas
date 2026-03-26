@@ -1,35 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink, Package } from 'lucide-react';
+import RetailerLogo from '@/components/shared/BrandLogo';
 
 const ROWS_PER_PAGE = 15;
-
-const RETAILER_SLUGS = {
-  'amazon':    'amazon',
-  'best buy':  'best-buy',
-  'walmart':   'walmart',
-  'target':    'target',
-  'costco':    'costco',
-  "sam's club":'sams-club',
-  'ebay':      'ebay',
-  'woot':      'woot',
-  'apple':     'apple',
-};
-
-function getRetailerLogo(name) {
-  if (!name) return null;
-  const key = name.toLowerCase().trim();
-  const slug = Object.entries(RETAILER_SLUGS).find(([k]) => key.includes(k))?.[1];
-  if (!slug) return null;
-  return `https://1000logos.net/wp-content/uploads/${slug}-logo.png`;
-}
-
-function getVendorInitials(name) {
-  if (!name) return '?';
-  const words = name.split(' ').filter(Boolean);
-  if (words.length === 1) return name.slice(0, 2).toUpperCase();
-  return words.slice(0, 2).map(w => w[0]).join('').toUpperCase();
-}
 
 function getStatusStyles(status) {
   const s = status?.toLowerCase() || '';
@@ -74,7 +48,6 @@ function getTrackingUrl(trackingNumber, carrier) {
 function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isSelected, onSelectChange }) {
   const [expanded, setExpanded] = useState(false);
 
-  const logo = getRetailerLogo(order.retailer);
   const itemCount = order.items?.length || 0;
   const totalQty = order.items?.reduce((s, i) => s + (parseInt(i.quantity_ordered) || 0), 0) || 0;
   const totalCost = order.total_cost || 0;
@@ -105,12 +78,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
         </div>
 
         {/* Vendor Logo / Icon */}
-        <div className="h-9 w-9 rounded-lg flex-shrink-0 overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
-          {logo
-            ? <img src={logo} alt={order.retailer} className="h-7 w-7 object-contain" />
-            : <span className="text-[11px] font-bold text-slate-600">{getVendorInitials(order.retailer)}</span>
-          }
-        </div>
+        <RetailerLogo retailer={order.retailer} size={36} />
 
         {/* Order # + Date */}
         <div className="min-w-0 flex-shrink-0 w-48">
