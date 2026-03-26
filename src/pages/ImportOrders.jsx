@@ -27,6 +27,38 @@ const RETAILERS = [
   "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other',
 ];
 
+const RETAILER_DOMAINS = {
+  'Amazon':     'amazon.com',
+  'Best Buy':   'bestbuy.com',
+  'Walmart':    'walmart.com',
+  'Target':     'target.com',
+  'Costco':     'costco.com',
+  "Sam's Club": 'samsclub.com',
+  'eBay':       'ebay.com',
+  'Woot':       'woot.com',
+  'Apple':      'apple.com',
+};
+
+function RetailerLogo({ retailer }) {
+  const domain = RETAILER_DOMAINS[retailer] || `${(retailer || '').toLowerCase().replace(/\s+/g, '')}.com`;
+  const [error, setError] = useState(false);
+  if (!retailer || error) {
+    return (
+      <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
+        <FileText className="h-4 w-4 text-violet-500" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://logo.clearbit.com/${domain}`}
+      alt={retailer}
+      className="w-9 h-9 rounded-xl object-contain border border-slate-100 bg-white flex-shrink-0"
+      onError={() => setError(true)}
+    />
+  );
+}
+
 function ProductImage({ upc, name }) {
   const [imgUrl, setImgUrl] = useState(null);
   const [tried, setTried] = useState(false);
@@ -188,9 +220,7 @@ function ReviewCard({
       {/* Card header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
-            <FileText className="h-4 w-4 text-violet-500" />
-          </div>
+          <RetailerLogo retailer={form.retailer} />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-800 truncate">
               {form.retailer || 'Unknown Retailer'}
@@ -300,9 +330,16 @@ function ReviewCard({
               <div key={item.id} className="p-3 bg-slate-50 rounded-xl space-y-2">
                 {/* Row 1: image + name + remove */}
                 <div className="flex items-center gap-2">
-                  <ProductImage upc={item.sku} name={item.product_name} />
-                  <Input className="h-8 text-xs bg-white flex-1" value={item.product_name || ''}
-                    onChange={e => setItem(item.id, 'product_name', e.target.value)} placeholder="Product name" />
+                  <ProductImage upc={item.sku || item.upc} name={item.product_name} />
+                  <div className="flex-1 min-w-0">
+                    <Input className="h-8 text-xs bg-white w-full" value={item.product_name || ''}
+                      onChange={e => setItem(item.id, 'product_name', e.target.value)} placeholder="Product name" />
+                    {item._matched_product && (
+                      <p className="text-[10px] text-emerald-600 font-medium mt-0.5 flex items-center gap-1">
+                        <Check className="h-2.5 w-2.5" /> Matched: {item._matched_product}
+                      </p>
+                    )}
+                  </div>
                   <button onClick={() => removeItem(item.id)} className="p-1 rounded-lg text-red-400 hover:bg-red-50 transition flex-shrink-0">
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -494,6 +531,39 @@ export default function ImportOrders() {
     queryKey: ['giftCards'],
     queryFn: () => base44.entities.GiftCard.list(),
   });
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => base44.entities.Product.list(),
+  });
+
+  // Match extracted items against saved products by SKU or name similarity
+  const matchItemsToProducts = (items) => {
+    return items.map(item => {
+      // Try SKU match first
+      let matched = products.find(p =>
+        item.sku && p.upc && String(p.upc) === String(item.sku)
+      );
+      // Fallback: name match (normalize)
+      if (!matched) {
+        const normalize = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const itemNorm = normalize(item.product_name);
+        matched = products.find(p => {
+          const pNorm = normalize(p.name);
+          return itemNorm && pNorm && (itemNorm.includes(pNorm) || pNorm.includes(itemNorm));
+        });
+      }
+      if (matched) {
+        return {
+          ...item,
+          product_id: matched.id,
+          sku: item.sku || matched.upc || item.sku,
+          upc: matched.upc || item.sku,
+          _matched_product: matched.name,
+        };
+      }
+      return item;
+    });
+  };
 
   // ── Extract from files ──────────────────────────────────────────────────
 
@@ -519,6 +589,9 @@ export default function ImportOrders() {
           ...it,
           id: crypto.randomUUID(),
         }));
+
+        // Match items against saved products to fill in UPC
+        extracted.items = matchItemsToProducts(extracted.items);
 
         // Try to auto-match credit card by last four
         if (extracted.payment_method_last_four) {
@@ -604,7 +677,9 @@ export default function ImportOrders() {
         notes:            form.notes || null,
         product_name:     form.items?.[0]?.product_name || '',
         items: (form.items || []).map(it => ({
+          product_id:        it.product_id || null,
           product_name:      it.product_name,
+          upc:               it.upc || it.sku || null,
           sku:               it.sku || null,
           quantity_ordered:  parseInt(it.quantity) || 1,
           quantity_received: 0,
