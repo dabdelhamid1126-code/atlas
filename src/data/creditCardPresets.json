@@ -1,0 +1,433 @@
+{
+  "creditCards": [
+    {
+      "name": "Chase Freedom Unlimited",
+      "issuer": "Chase",
+      "reward_type": "cashback",
+      "cashback_rate": 1.5,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Dining", "rate": 3 },
+        { "store": "Drugstores", "rate": 3 },
+        { "store": "Travel", "rate": 5 }
+      ],
+      "benefits": "0% intro APR 15 months, $200 bonus after $500 spend in first 3 months",
+      "sign_up_bonus": "$200",
+      "intro_apr": "0% for 15 months",
+      "regular_apr": "18.24% - 29.99% variable"
+    },
+    {
+      "name": "Chase Freedom Flex",
+      "issuer": "Chase",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Bonus Categories (Quarterly)", "rate": 5 },
+        { "store": "Dining", "rate": 3 },
+        { "store": "Drugstores", "rate": 3 },
+        { "store": "Travel", "rate": 5 }
+      ],
+      "benefits": "0% intro APR 15 months, $200 bonus, 5% quarterly categories (up to $1,500)",
+      "sign_up_bonus": "$200",
+      "intro_apr": "0% for 15 months",
+      "regular_apr": "18.24% - 29.99% variable"
+    },
+    {
+      "name": "Chase Freedom Rise",
+      "issuer": "Chase",
+      "reward_type": "cashback",
+      "cashback_rate": 1.5,
+      "annual_fee": 0,
+      "store_rates": [],
+      "benefits": "Best for new to credit & students, 1.5% on all purchases",
+      "sign_up_bonus": "None",
+      "intro_apr": "None",
+      "regular_apr": "25.24% - 29.99% variable"
+    },
+    {
+      "name": "Chase Sapphire Preferred",
+      "issuer": "Chase",
+      "reward_type": "points",
+      "points_rate": 1,
+      "annual_fee": 95,
+      "store_rates": [
+        { "store": "Travel (Chase Travel)", "rate": 5 },
+        { "store": "Dining", "rate": 3 },
+        { "store": "Online Grocery", "rate": 3 },
+        { "store": "Streaming", "rate": 3 },
+        { "store": "Other Travel", "rate": 2 }
+      ],
+      "benefits": "75,000 points bonus ($5k spend/3mo), $50 annual hotel credit, DoorDash DashPass, 10% anniversary points bonus",
+      "sign_up_bonus": "75,000 points",
+      "intro_apr": "None",
+      "regular_apr": "19.24% - 27.49% variable"
+    },
+    {
+      "name": "Chase Sapphire Reserve",
+      "issuer": "Chase",
+      "reward_type": "points",
+      "points_rate": 1,
+      "annual_fee": 795,
+      "store_rates": [
+        { "store": "Travel (Chase Travel)", "rate": 8 },
+        { "store": "Flights (Direct)", "rate": 4 },
+        { "store": "Hotels (Direct)", "rate": 4 },
+        { "store": "Dining", "rate": 3 }
+      ],
+      "benefits": "125,000 points bonus ($6k spend/3mo), $300 annual travel credit, $500 Edit credit, Priority Pass lounge access, $300 dining credit, Apple TV+/Music, Global Entry/TSA PreCheck credit",
+      "sign_up_bonus": "125,000 points",
+      "intro_apr": "None",
+      "regular_apr": "19.49% - 27.99% variable"
+    },
+    {
+      "name": "Chase Ink Business Cash",
+      "issuer": "Chase",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Office Supply", "rate": 5 },
+        { "store": "Internet/Cable/Phone", "rate": 5 },
+        { "store": "Gas", "rate": 2 },
+        { "store": "Dining", "rate": 2 }
+      ],
+      "benefits": "$750 bonus ($6k spend/3mo), 0% intro APR 12 months, 5% on first $25k in bonus categories",
+      "sign_up_bonus": "$750",
+      "intro_apr": "0% for 12 months",
+      "regular_apr": "16.74% - 29.99% variable"
+    },
+    {
+      "name": "Chase Ink Business Unlimited",
+      "issuer": "Chase",
+      "reward_type": "cashback",
+      "cashback_rate": 1.5,
+      "annual_fee": 0,
+      "store_rates": [],
+      "benefits": "$750 bonus ($6k spend/3mo), 0% intro APR 12 months, unlimited 1.5% on all purchases",
+      "sign_up_bonus": "$750",
+      "intro_apr": "0% for 12 months",
+      "regular_apr": "16.74% - 29.99% variable"
+    },
+    {
+      "name": "Chase Ink Business Preferred",
+      "issuer": "Chase",
+      "reward_type": "points",
+      "points_rate": 1,
+      "annual_fee": 95,
+      "store_rates": [
+        { "store": "Shipping", "rate": 3 },
+        { "store": "Advertising", "rate": 3 },
+        { "store": "Internet/Cable/Phone", "rate": 3 },
+        { "store": "Office Supply", "rate": 3 }
+      ],
+      "benefits": "100,000 points bonus ($15k spend/3mo), 3x on first $150k in bonus categories, 25% more value on travel through Chase",
+      "sign_up_bonus": "100,000 points",
+      "intro_apr": "None",
+      "regular_apr": "20.49% - 26.49% variable"
+    },
+    {
+      "name": "Chase Amazon Prime Visa",
+      "issuer": "Chase",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Amazon", "rate": 5 },
+        { "store": "Whole Foods", "rate": 5 },
+        { "store": "Gas", "rate": 2 },
+        { "store": "Dining", "rate": 2 }
+      ],
+      "benefits": "No annual fee, 5% back for Prime members, 2% on gas/dining",
+      "sign_up_bonus": "$150 Amazon gift card",
+      "intro_apr": "None",
+      "regular_apr": "18.99% - 27.99% variable"
+    },
+    {
+      "name": "Amex Blue Cash Everyday",
+      "issuer": "American Express",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Grocery", "rate": 3 },
+        { "store": "Gas", "rate": 3 },
+        { "store": "Online Shopping", "rate": 3 }
+      ],
+      "benefits": "No annual fee, 3% on groceries/gas/online shopping (up to $2k/$1k respectively)",
+      "sign_up_bonus": "$200",
+      "intro_apr": "None",
+      "regular_apr": "18.24% - 29.99% variable"
+    },
+    {
+      "name": "Amex Blue Cash Preferred",
+      "issuer": "American Express",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 95,
+      "store_rates": [
+        { "store": "Grocery", "rate": 6 },
+        { "store": "Streaming", "rate": 6 },
+        { "store": "Gas", "rate": 3 },
+        { "store": "Transit", "rate": 3 }
+      ],
+      "benefits": "6% on groceries (up to $6k/year) and streaming, 3% on gas/transit, $84 annual fee",
+      "sign_up_bonus": "$350",
+      "intro_apr": "0% for 12 months",
+      "regular_apr": "18.24% - 29.99% variable"
+    },
+    {
+      "name": "Amex Business Gold",
+      "issuer": "American Express",
+      "reward_type": "points",
+      "points_rate": 1,
+      "annual_fee": 375,
+      "store_rates": [
+        { "store": "Top 2 Categories (Monthly)", "rate": 4 }
+      ],
+      "benefits": "4x on top 2 spending categories each month (up to $150k/year), 70,000 points bonus",
+      "sign_up_bonus": "70,000 points",
+      "intro_apr": "None",
+      "regular_apr": "17.99% - 26.99% variable"
+    },
+    {
+      "name": "Amex Blue Business Plus",
+      "issuer": "American Express",
+      "reward_type": "points",
+      "points_rate": 2,
+      "annual_fee": 0,
+      "store_rates": [],
+      "benefits": "2x on first $50k/year, no annual fee",
+      "sign_up_bonus": "15,000 points",
+      "intro_apr": "0% for 12 months",
+      "regular_apr": "17.99% - 26.99% variable"
+    },
+    {
+      "name": "Citi Double Cash",
+      "issuer": "Citi",
+      "reward_type": "cashback",
+      "cashback_rate": 2,
+      "annual_fee": 0,
+      "store_rates": [],
+      "benefits": "2% on everything (1% when you buy + 1% when you pay), balance transfer 0% intro",
+      "sign_up_bonus": "$200",
+      "intro_apr": "0% for 18 months on balance transfers",
+      "regular_apr": "18.24% - 28.24% variable"
+    },
+    {
+      "name": "Citi Custom Cash",
+      "issuer": "Citi",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Top Category (Monthly)", "rate": 5 }
+      ],
+      "benefits": "5% on top $500 in top category each billing cycle, 0% intro APR",
+      "sign_up_bonus": "$200",
+      "intro_apr": "0% for 15 months",
+      "regular_apr": "18.24% - 28.24% variable"
+    },
+    {
+      "name": "Capital One Spark Cash Plus",
+      "issuer": "Capital One",
+      "reward_type": "cashback",
+      "cashback_rate": 2,
+      "annual_fee": 150,
+      "store_rates": [],
+      "benefits": "Unlimited 2% cash back, $1,000 bonus ($5k spend/3mo)",
+      "sign_up_bonus": "$1,000",
+      "intro_apr": "None",
+      "regular_apr": "20.99% - 28.99% variable"
+    },
+    {
+      "name": "Discover it Cash Back",
+      "issuer": "Discover",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Bonus Categories (Quarterly)", "rate": 5 }
+      ],
+      "benefits": "5% rotating categories (up to $1,500/quarter), Cashback Match first year",
+      "sign_up_bonus": "Cashback Match (all cash back doubled first year)",
+      "intro_apr": "0% for 15 months",
+      "regular_apr": "16.24% - 27.24% variable"
+    },
+    {
+      "name": "Bank of America Customized Cash",
+      "issuer": "Bank of America",
+      "reward_type": "cashback",
+      "cashback_rate": 1.5,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Choice Category", "rate": 3 },
+        { "store": "Wholesale Clubs", "rate": 2 }
+      ],
+      "benefits": "3% in choice category, 2% at wholesale clubs, Preferred Rewards bonus (up to 75%)",
+      "sign_up_bonus": "$200",
+      "intro_apr": "0% for 15 months",
+      "regular_apr": "17.99% - 27.99% variable"
+    },
+    {
+      "name": "US Bank Cash+",
+      "issuer": "US Bank",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Choice Categories (2)", "rate": 5 }
+      ],
+      "benefits": "5% on first $2k in 2 choice categories, 2% on $1k in everyday categories",
+      "sign_up_bonus": "$200",
+      "intro_apr": "0% for 15 months",
+      "regular_apr": "17.99% - 27.99% variable"
+    },
+    {
+      "name": "PayPal Cashback Mastercard",
+      "issuer": "PayPal",
+      "reward_type": "cashback",
+      "cashback_rate": 1.5,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "PayPal", "rate": 3 }
+      ],
+      "benefits": "3% on PayPal purchases, 2% everywhere else, no annual fee",
+      "sign_up_bonus": "None",
+      "intro_apr": "None",
+      "regular_apr": "19.99% - 29.99% variable"
+    },
+    {
+      "name": "Target RedCard",
+      "issuer": "Target",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Target", "rate": 5 }
+      ],
+      "benefits": "5% off at Target, free shipping, extended returns",
+      "sign_up_bonus": "None",
+      "intro_apr": "None",
+      "regular_apr": "27.65% variable"
+    },
+    {
+      "name": "Amazon Business Prime Amex",
+      "issuer": "American Express",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Amazon Business", "rate": 5 },
+        { "store": "Amazon", "rate": 5 }
+      ],
+      "benefits": "5% back for Prime members, 3% back otherwise, no annual fee",
+      "sign_up_bonus": "$150 Amazon credit",
+      "intro_apr": "None",
+      "regular_apr": "18.24% - 26.24% variable"
+    },
+    {
+      "name": "Costco Anywhere Visa",
+      "issuer": "Citi",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Costco", "rate": 2 },
+        { "store": "Gas", "rate": 4 },
+        { "store": "Dining", "rate": 3 },
+        { "store": "Travel", "rate": 3 }
+      ],
+      "benefits": "4% gas (up to $7k/year), 3% dining/travel, 2% Costco, 1% other, requires Costco membership",
+      "sign_up_bonus": "None",
+      "intro_apr": "None",
+      "regular_apr": "18.24% - 27.99% variable"
+    },
+    {
+      "name": "Robinhood Gold",
+      "issuer": "Robinhood",
+      "reward_type": "cashback",
+      "cashback_rate": 1.5,
+      "annual_fee": 0,
+      "store_rates": [],
+      "benefits": "Unlimited 1.5% cash back, 3% for Gold members, no annual fee",
+      "sign_up_bonus": "Varies",
+      "intro_apr": "None",
+      "regular_apr": "18.99% - 28.99% variable"
+    },
+    {
+      "name": "Apple Card",
+      "issuer": "Goldman Sachs",
+      "reward_type": "cashback",
+      "cashback_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Apple", "rate": 3 },
+        { "store": "Apple Pay (Select Merchants)", "rate": 2 }
+      ],
+      "benefits": "3% at Apple, 2% with Apple Pay, 1% everywhere, no fees",
+      "sign_up_bonus": "None",
+      "intro_apr": "None",
+      "regular_apr": "17.99% - 28.99% variable"
+    },
+    {
+      "name": "Bilt Mastercard",
+      "issuer": "Bilt",
+      "reward_type": "points",
+      "points_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Rent", "rate": 1 },
+        { "store": "Dining", "rate": 3 },
+        { "store": "Travel", "rate": 2 }
+      ],
+      "benefits": "Earn points on rent with no fee, 3x dining, 2x travel, transfer to airline/hotel partners",
+      "sign_up_bonus": "Varies",
+      "intro_apr": "None",
+      "regular_apr": "17.99% - 28.99% variable"
+    },
+    {
+      "name": "Wells Fargo Active Cash",
+      "issuer": "Wells Fargo",
+      "reward_type": "cashback",
+      "cashback_rate": 2,
+      "annual_fee": 0,
+      "store_rates": [],
+      "benefits": "Unlimited 2% cash back, $200 bonus, 0% intro APR",
+      "sign_up_bonus": "$200",
+      "intro_apr": "0% for 15 months",
+      "regular_apr": "19.99% - 29.99% variable"
+    },
+    {
+      "name": "Wells Fargo Autograph",
+      "issuer": "Wells Fargo",
+      "reward_type": "points",
+      "points_rate": 1,
+      "annual_fee": 0,
+      "store_rates": [
+        { "store": "Restaurants", "rate": 3 },
+        { "store": "Travel", "rate": 3 },
+        { "store": "Gas", "rate": 3 },
+        { "store": "Transit", "rate": 3 },
+        { "store": "Popular Streaming", "rate": 3 },
+        { "store": "Phone Plans", "rate": 3 }
+      ],
+      "benefits": "3x on 6 categories, 1x on everything, 20,000 points bonus",
+      "sign_up_bonus": "20,000 points",
+      "intro_apr": "0% for 12 months",
+      "regular_apr": "19.99% - 29.99% variable"
+    },
+    {
+      "name": "Barclays Arrival Plus",
+      "issuer": "Barclays",
+      "reward_type": "points",
+      "points_rate": 2,
+      "annual_fee": 89,
+      "store_rates": [],
+      "benefits": "Unlimited 2x miles, 5% miles back on redemptions, 70,000 bonus miles",
+      "sign_up_bonus": "70,000 miles",
+      "intro_apr": "None",
+      "regular_apr": "18.24% - 28.24% variable"
+    }
+  ]
+}
