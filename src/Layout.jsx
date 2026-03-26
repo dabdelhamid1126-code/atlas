@@ -258,8 +258,8 @@ export default function Layout({ children, currentPageName }) {
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out lg:static lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-          collapsed ? 'lg:w-[72px]' : 'lg:w-[220px]',
-          'w-[220px]'
+          collapsed ? 'lg:w-[72px]' : 'lg:w-[260px]',
+          'w-[260px]'
         )}
       >
         <SidebarContent />
