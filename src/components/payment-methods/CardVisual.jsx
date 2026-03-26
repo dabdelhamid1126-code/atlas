@@ -168,13 +168,13 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
       )}
 
       {/* ── Card Art Header ─────────────────────────────────────────────── */}
-      <div style={{ position: 'relative', height: 148, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', height: 148, overflow: 'hidden', background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)` }}>
         {/* Card background image or gradient fallback */}
         {card.image_url && !cardImageErr ? (
           <img 
             src={card.image_url} 
             alt={card.card_name}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
             onError={() => setCardImageErr(true)}
           />
         ) : (
