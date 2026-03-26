@@ -119,7 +119,6 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
   const [newPerk, setNewPerk] = useState('');
   const [addingPerk, setAddingPerk] = useState(false);
   const [logoErr, setLogoErr] = useState(false);
-  const [cardImageErr, setCardImageErr] = useState(false);
 
   const totalSpent = orders.filter(o => o.credit_card_id === card.id).reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
   const txnCount = orders.filter(o => o.credit_card_id === card.id).length;
@@ -157,7 +156,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
   };
 
   return (
-    <div className="group bg-white rounded-[14px] overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5">
+    <div className="group bg-white rounded-[14px] border border-slate-200 overflow-hidden transition-all hover:shadow-xl hover:-translate-y-0.5">
 
       {isDuplicate && (
         <div className="flex items-center gap-2 px-5 py-2 bg-amber-50 border-b border-amber-100">
@@ -168,18 +167,7 @@ export default function CardVisual({ card, orders = [], onEdit, onDelete, onUpda
       )}
 
       {/* ── Card Art Header ─────────────────────────────────────────────── */}
-      <div style={{ position: 'relative', height: 148, overflow: 'hidden', background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)` }}>
-        {/* Card background image or gradient fallback */}
-        {card.image_url && !cardImageErr ? (
-          <img 
-            src={card.image_url} 
-            alt={card.card_name}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
-            onError={() => setCardImageErr(true)}
-          />
-        ) : (
-          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)` }} />
-        )}
+      <div style={{ position: 'relative', height: 148, background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
 
         {/* Issuer logo — top left */}
