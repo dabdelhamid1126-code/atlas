@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -21,6 +21,51 @@ import {
 
 const fmt$ = (v) => `$${(parseFloat(v) || 0).toFixed(2)}`;
 const today = () => format(new Date(), 'yyyy-MM-dd');
+
+const RETAILERS = [
+  'Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco',
+  "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other',
+];
+
+function ProductImage({ upc, name }) {
+  const [imgUrl, setImgUrl] = useState(null);
+  const [tried, setTried] = useState(false);
+
+  useEffect(() => {
+    if (!upc && !name) return;
+    const query = upc || name;
+    const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(query)}`;
+    if (upc) {
+      fetch(url)
+        .then(r => r.json())
+        .then(d => {
+          const img = d?.items?.[0]?.images?.[0];
+          if (img) setImgUrl(img);
+        })
+        .catch(() => {})
+        .finally(() => setTried(true));
+    } else {
+      setTried(true);
+    }
+  }, [upc, name]);
+
+  if (imgUrl) {
+    return (
+      <img
+        src={imgUrl}
+        alt={name}
+        className="w-12 h-12 rounded-lg object-contain border border-slate-200 bg-white flex-shrink-0"
+        onError={() => setImgUrl(null)}
+      />
+    );
+  }
+
+  return (
+    <div className="w-12 h-12 rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center flex-shrink-0">
+      <Package className="h-5 w-5 text-slate-300" />
+    </div>
+  );
+}
 
 // Convert file to base64
 const toBase64 = (file) =>
@@ -237,7 +282,12 @@ function ReviewCard({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="space-y-1">
               <Label className="text-xs text-slate-500 flex items-center gap-1"><Tag className="h-3 w-3" /> Retailer</Label>
-              <Input className="h-9 bg-slate-50" value={form.retailer || ''} onChange={e => set('retailer', e.target.value)} placeholder="Best Buy" />
+              <Select value={form.retailer || ''} onValueChange={v => set('retailer', v)}>
+                <SelectTrigger className="h-9 bg-slate-50"><SelectValue placeholder="Select retailer..." /></SelectTrigger>
+                <SelectContent>
+                  {RETAILERS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-slate-500 flex items-center gap-1"><Hash className="h-3 w-3" /> Order #</Label>
@@ -295,33 +345,42 @@ function ReviewCard({
               </button>
             </div>
             {(form.items || []).map((item) => (
-              <div key={item.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-slate-50 rounded-xl">
-                <div className="col-span-5">
-                  <Input className="h-8 text-xs bg-white" value={item.product_name || ''}
+              <div key={item.id} className="p-3 bg-slate-50 rounded-xl space-y-2">
+                {/* Row 1: image + name + remove */}
+                <div className="flex items-center gap-2">
+                  <ProductImage upc={item.sku} name={item.product_name} />
+                  <Input className="h-8 text-xs bg-white flex-1" value={item.product_name || ''}
                     onChange={e => setItem(item.id, 'product_name', e.target.value)} placeholder="Product name" />
-                </div>
-                <div className="col-span-2">
-                  <Input className="h-8 text-xs bg-white" value={item.sku || ''}
-                    onChange={e => setItem(item.id, 'sku', e.target.value)} placeholder="SKU" />
-                </div>
-                <div className="col-span-1">
-                  <Input className="h-8 text-xs bg-white text-center" type="number" min="1"
-                    value={item.quantity || 1} onChange={e => setItem(item.id, 'quantity', e.target.value)} />
-                </div>
-                <div className="col-span-2">
-                  <div className="relative">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
-                    <Input className="h-8 text-xs bg-white pl-5" type="number" step="0.01"
-                      value={item.unit_cost || ''} onChange={e => setItem(item.id, 'unit_cost', e.target.value)} placeholder="0.00" />
-                  </div>
-                </div>
-                <div className="col-span-1 text-xs text-slate-500 font-medium text-right">
-                  {fmt$((parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity) || 1))}
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  <button onClick={() => removeItem(item.id)} className="p-1 rounded-lg text-red-400 hover:bg-red-50 transition">
+                  <button onClick={() => removeItem(item.id)} className="p-1 rounded-lg text-red-400 hover:bg-red-50 transition flex-shrink-0">
                     <X className="h-3.5 w-3.5" />
                   </button>
+                </div>
+                {/* Row 2: UPC/SKU + qty + price + total */}
+                <div className="grid grid-cols-4 gap-2">
+                  <div>
+                    <p className="text-[10px] text-slate-400 mb-0.5">UPC / SKU</p>
+                    <Input className="h-8 text-xs bg-white" value={item.sku || ''}
+                      onChange={e => setItem(item.id, 'sku', e.target.value)} placeholder="UPC or SKU" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 mb-0.5">Qty</p>
+                    <Input className="h-8 text-xs bg-white text-center" type="number" min="1"
+                      value={item.quantity || 1} onChange={e => setItem(item.id, 'quantity', e.target.value)} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 mb-0.5">Unit Price</p>
+                    <div className="relative">
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                      <Input className="h-8 text-xs bg-white pl-5" type="number" step="0.01"
+                        value={item.unit_cost || ''} onChange={e => setItem(item.id, 'unit_cost', e.target.value)} placeholder="0.00" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 mb-0.5">Total</p>
+                    <div className="h-8 flex items-center px-2 bg-slate-100 rounded-md text-xs font-semibold text-slate-600">
+                      {fmt$((parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity) || 1))}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
