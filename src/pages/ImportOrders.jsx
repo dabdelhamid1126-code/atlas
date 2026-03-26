@@ -67,57 +67,9 @@ function ProductImage({ upc, name }) {
   );
 }
 
-// Convert file to base64
-const toBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result.split(',')[1]);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
+// No longer needed — extraction happens server-side
 
-// ── Claude extraction prompt ──────────────────────────────────────────────
 
-const EXTRACTION_PROMPT = `You are extracting order data from a retail invoice or order confirmation.
-
-Extract the following and return ONLY valid JSON, no markdown, no explanation:
-
-{
-  "retailer": "store name (e.g. Best Buy, Amazon, Target)",
-  "order_number": "order number string",
-  "order_date": "YYYY-MM-DD format",
-  "tracking_numbers": ["array of tracking numbers, empty if none"],
-  "tax": 0.00,
-  "shipping_cost": 0.00,
-  "fees": 0.00,
-  "order_total": 0.00,
-  "payment_method_last_four": "last 4 digits of credit/debit card if present, null otherwise",
-  "gift_cards": [
-    { "last_four": "4 digits", "amount": 0.00 }
-  ],
-  "items": [
-    {
-      "product_name": "full product name",
-      "sku": "SKU or UPC number",
-      "model": "model number if present",
-      "quantity": 1,
-      "unit_cost": 0.00,
-      "total_cost": 0.00
-    }
-  ],
-  "pickup_location": "store location if pickup order, null if shipped",
-  "order_type_hint": "churning or marketplace"
-}
-
-RULES:
-- Merge items with identical SKU into one entry with combined quantity
-- Skip all free items ($0.00) like free trials, digital freebies, gift-with-purchase
-- Skip items where product_name contains "Free" and total_cost is 0
-- For gift cards extract last 4 digits from the masked number (e.g. ****2067 → "2067")
-- order_type_hint: use "churning" if this looks like a resale purchase (electronics, appliances, toys), "marketplace" otherwise
-- If order_date not found use today's date
-- All money values as numbers not strings
-- tracking_numbers: empty array [] if none found`;
 
 // ── Sub-components ────────────────────────────────────────────────────────
 
@@ -551,43 +503,16 @@ export default function ImportOrders() {
 
     for (const file of files) {
       try {
-        const base64 = await toBase64(file);
-        const isImage = file.type.startsWith('image/');
-        const isPdf   = file.type === 'application/pdf';
+        // Upload file to get a public URL
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-        // Build message content for Claude
-        const content = [];
-
-        if (isImage) {
-          content.push({
-            type: 'image',
-            source: { type: 'base64', media_type: file.type, data: base64 },
-          });
-        } else if (isPdf) {
-          content.push({
-            type: 'document',
-            source: { type: 'base64', media_type: 'application/pdf', data: base64 },
-          });
-        }
-
-        content.push({ type: 'text', text: EXTRACTION_PROMPT });
-
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 1000,
-            messages: [{ role: 'user', content }],
-          }),
+        // Call backend function to extract via GPT-4o
+        const res = await base44.functions.invoke('extractInvoice', {
+          file_url,
+          file_type: file.type,
         });
 
-        const data = await response.json();
-        const text = data.content?.map(b => b.text || '').join('') || '';
-
-        // Parse JSON — strip any accidental markdown fences
-        const clean = text.replace(/```json|```/g, '').trim();
-        const extracted = JSON.parse(clean);
+        const extracted = res.data.extracted;
 
         // Add unique IDs to items
         extracted.items = (extracted.items || []).map(it => ({
@@ -598,7 +523,7 @@ export default function ImportOrders() {
         // Try to auto-match credit card by last four
         if (extracted.payment_method_last_four) {
           const matched = creditCards.find(c =>
-            String(c.last_four) === String(extracted.payment_method_last_four)
+            String(c.last_4_digits) === String(extracted.payment_method_last_four)
           );
           if (matched) extracted.credit_card_id = matched.id;
         }
