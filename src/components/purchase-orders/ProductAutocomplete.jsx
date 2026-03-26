@@ -20,8 +20,14 @@ export default function ProductAutocomplete({
 
   const filtered = inputValue?.length >= 1
     ? products.filter(p => {
-        if (searchField === 'name') return p.name?.toLowerCase().includes(inputValue.toLowerCase());
-        return p.upc?.toLowerCase().includes(inputValue.toLowerCase());
+        const q = inputValue.toLowerCase();
+        if (searchField === 'name') {
+          return (
+            p.name?.toLowerCase().includes(q) ||
+            p.upc?.toLowerCase().includes(q)
+          );
+        }
+        return p.upc?.toLowerCase().includes(q) || p.name?.toLowerCase().includes(q);
       })
     : [];
 

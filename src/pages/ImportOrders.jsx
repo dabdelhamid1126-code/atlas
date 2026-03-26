@@ -54,15 +54,34 @@ async function fetchUPCData(upc) {
 
 // ── Enrich item: catalog → upcitemdb → raw ────────────────────────────────
 
+// Score how well a product name matches a query (word overlap)
+function fuzzyScore(productName, query) {
+  const pWords = lower(productName).split(/\s+/).filter(w => w.length > 2);
+  const qWords = lower(query).split(/\s+/).filter(w => w.length > 2);
+  if (!pWords.length || !qWords.length) return 0;
+  const matches = qWords.filter(qw => pWords.some(pw => pw.includes(qw) || qw.includes(pw)));
+  return matches.length / Math.max(pWords.length, qWords.length);
+}
+
 async function enrichItem(item, products = []) {
   // 1. Local catalog — UPC exact
   let match = item.upc && products.find(p => p.upc && normalize(p.upc) === normalize(item.upc));
   // 2. Local catalog — SKU exact
   if (!match) match = item.sku && products.find(p => p.sku && normalize(p.sku) === normalize(item.sku));
-  // 3. Local catalog — name fuzzy
+  // 3. Local catalog — name substring
   if (!match && item.product_name) {
     const q = lower(item.product_name);
     match = products.find(p => p.name && (lower(p.name).includes(q) || q.includes(lower(p.name))));
+  }
+  // 4. Local catalog — best fuzzy word-overlap match (score >= 0.4)
+  let closestMatch = null;
+  if (!match && item.product_name) {
+    let bestScore = 0.4; // minimum threshold
+    for (const p of products) {
+      if (!p.name) continue;
+      const score = fuzzyScore(p.name, item.product_name);
+      if (score > bestScore) { bestScore = score; closestMatch = p; }
+    }
   }
 
   if (match) {
@@ -78,7 +97,21 @@ async function enrichItem(item, products = []) {
     };
   }
 
-  // 4. upcitemdb — try UPC first, then SKU
+  if (closestMatch) {
+    return {
+      ...item,
+      product_id:        closestMatch.id,
+      product_name:      item.product_name, // keep extracted name but link the product
+      upc:               closestMatch.upc   || item.upc  || '',
+      sku:               closestMatch.sku   || item.sku  || '',
+      image_url:         closestMatch.image || null,
+      catalog_match:     false,
+      image_source:      'catalog_fuzzy',
+      suggested_product: closestMatch.name,
+    };
+  }
+
+  // 5. upcitemdb — try UPC first, then SKU
   const upcData = await fetchUPCData(item.upc || item.sku);
   if (upcData) {
     return {
@@ -94,7 +127,7 @@ async function enrichItem(item, products = []) {
     };
   }
 
-  // 5. Nothing found
+  // 6. Nothing found
   return { ...item, image_url: null, catalog_match: false, image_source: null };
 }
 
@@ -168,8 +201,9 @@ function ItemRow({ item, onUpdate, onRemove, products = [] }) {
   const total = (parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity) || 1);
 
   const sourceLabel = {
-    catalog:   { text: 'Matched from your product catalog', color: 'text-emerald-600', icon: Sparkles },
-    upcitemdb: { text: 'Product info from UPC Item DB',     color: 'text-blue-600',    icon: Database },
+    catalog:       { text: 'Matched from your product catalog',                           color: 'text-emerald-600', icon: Sparkles },
+    catalog_fuzzy: { text: `Closest match: "${item.suggested_product || ''}"`,            color: 'text-amber-600',   icon: Sparkles },
+    upcitemdb:     { text: 'Product info from UPC Item DB',                               color: 'text-blue-600',    icon: Database },
   };
   const src = sourceLabel[item.image_source];
 
@@ -272,6 +306,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
   const gcTotal      = (form.gift_cards || []).reduce((s, gc) => s + (parseFloat(gc.amount) || 0), 0);
   const finalCost    = itemsTotal + (parseFloat(form.tax) || 0) + (parseFloat(form.shipping_cost) || 0) + (parseFloat(form.fees) || 0) - gcTotal;
   const catalogCount = (form.items || []).filter(it => it.catalog_match).length;
+  const fuzzyCount   = (form.items || []).filter(it => it.image_source === 'catalog_fuzzy').length;
   const upcCount     = (form.items || []).filter(it => it.image_source === 'upcitemdb').length;
 
   const statusStyles = {
@@ -300,7 +335,8 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
             <p className="text-xs text-slate-400 mt-0.5">
               {form.items?.length || 0} item(s) · {fmt$(itemsTotal)}
               {catalogCount > 0 && <span className="text-emerald-600 ml-1.5">· {catalogCount} catalog</span>}
-              {upcCount > 0     && <span className="text-blue-600 ml-1">· {upcCount} UPC lookup</span>}
+              {fuzzyCount   > 0 && <span className="text-amber-600 ml-1">· {fuzzyCount} suggested</span>}
+              {upcCount     > 0 && <span className="text-blue-600 ml-1">· {upcCount} UPC lookup</span>}
               {draft.filename   && <span className="ml-1.5">· {draft.filename}</span>}
             </p>
           </div>
