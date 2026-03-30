@@ -1,404 +1,473 @@
 import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Target, Layers, ChevronDown, ChevronUp, Plus, Trash2, Save } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
-import { format, addDays } from 'date-fns';
+import {
+  Calculator, TrendingUp, CreditCard, BarChart2,
+  Store, ChevronUp, ChevronDown,
+} from 'lucide-react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
+} from 'recharts';
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
-const fmt$ = (v) => {
-  const n = Math.abs(v || 0);
-  if (n >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `$${(v / 1000).toFixed(1)}K`;
-  return `$${(v || 0).toFixed(2)}`;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const fmt$ = (v) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(v || 0);
+const pct = (v) => `${Number(v || 0).toFixed(1)}%`;
+
+const TOOLTIP_STYLE = {
+  borderRadius: 12, border: '1px solid #e2e8f0',
+  fontSize: 12, background: '#fff', color: '#1e293b',
 };
 
-const TOOLTIP_STYLE = { borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, background: '#fff', color: '#1e293b' };
+// ── Section Card ──────────────────────────────────────────────────────────────
 
-const DEFAULT_PARAMS = {
-  dealsPerDay: 3,
-  avgProfit: 25,
-  avgCashback: 8,
-  forecastDays: 90,
-  forecastMode: 'all',
-  monthlyGrowthRate: 0,
-  reinvestmentRate: 0,
-  target: '',
-};
-
-const DEFAULT_SCENARIOS = [
-  { id: '1', name: 'Conservative', dealsPerDay: 2, avgProfit: 20, avgCashback: 6, monthlyGrowthRate: 0, reinvestmentRate: 0 },
-  { id: '2', name: 'Baseline', dealsPerDay: 3, avgProfit: 25, avgCashback: 8, monthlyGrowthRate: 2, reinvestmentRate: 10 },
-  { id: '3', name: 'Aggressive', dealsPerDay: 5, avgProfit: 35, avgCashback: 12, monthlyGrowthRate: 5, reinvestmentRate: 20 },
-];
-
-function SectionCard({ title, subtitle, children }) {
+function SectionCard({ icon: Icon, title, color = 'violet', children }) {
+  const colors = {
+    violet: { icon: 'text-violet-500', bg: 'bg-violet-50', border: 'border-violet-100' },
+    emerald: { icon: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+    blue: { icon: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' },
+    amber: { icon: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-100' },
+  };
+  const c = colors[color] || colors.violet;
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-      {title && <p className="text-xs font-bold tracking-widest uppercase text-slate-700 mb-0.5">{title}</p>}
-      {subtitle && <p className="text-[10px] text-slate-400 mb-4">{subtitle}</p>}
-      {!subtitle && title && <div className="mb-4" />}
-      {children}
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className={`flex items-center gap-3 px-5 py-4 border-b border-slate-100 ${c.bg}`}>
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center bg-white border ${c.border}`}>
+          <Icon className={`w-4 h-4 ${c.icon}`} />
+        </div>
+        <h2 className="text-sm font-bold text-slate-800">{title}</h2>
+      </div>
+      <div className="p-5">{children}</div>
     </div>
   );
 }
 
-function ParamSlider({ label, value, onChange, min, max, step = 1, prefix = '', suffix = '' }) {
+// ── 1. PROFIT CALCULATOR ──────────────────────────────────────────────────────
+
+function ProfitCalculator({ creditCards }) {
+  const [unitCost, setUnitCost] = useState('');
+  const [qty, setQty] = useState('1');
+  const [salePrice, setSalePrice] = useState('');
+  const [selectedCardId, setSelectedCardId] = useState('');
+
+  const totalCost = (parseFloat(unitCost) || 0) * (parseInt(qty) || 1);
+  const totalSale = (parseFloat(salePrice) || 0) * (parseInt(qty) || 1);
+  const grossProfit = totalSale - totalCost;
+  const roi = totalCost > 0 ? (grossProfit / totalCost) * 100 : 0;
+
+  const selectedCard = creditCards.find(c => c.id === selectedCardId);
+  const cashbackRate = selectedCard?.cashback_rate || 0;
+  const cashbackEarned = totalCost * cashbackRate / 100;
+  const netProfit = grossProfit + cashbackEarned;
+
+  const isPositive = netProfit >= 0;
+
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-600">{label}</span>
-        <span className="text-xs font-bold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">{prefix}{value}{suffix}</span>
+    <SectionCard icon={Calculator} title="Profit Calculator" color="violet">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        <div>
+          <label className="text-xs text-slate-500 font-medium mb-1 block">Unit Cost</label>
+          <div className="relative">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+            <input type="number" min="0" step="0.01" value={unitCost}
+              onChange={e => setUnitCost(e.target.value)} placeholder="0.00"
+              className="w-full h-9 pl-6 pr-3 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white" />
+          </div>
+        </div>
+        <div>
+          <label className="text-xs text-slate-500 font-medium mb-1 block">Quantity</label>
+          <input type="number" min="1" step="1" value={qty}
+            onChange={e => setQty(e.target.value)} placeholder="1"
+            className="w-full h-9 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white" />
+        </div>
+        <div>
+          <label className="text-xs text-slate-500 font-medium mb-1 block">Expected Sale Price</label>
+          <div className="relative">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+            <input type="number" min="0" step="0.01" value={salePrice}
+              onChange={e => setSalePrice(e.target.value)} placeholder="0.00"
+              className="w-full h-9 pl-6 pr-3 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white" />
+          </div>
+        </div>
       </div>
-      <input
-        type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-violet-600"
-      />
-      <div className="flex justify-between text-[10px] text-slate-400">
-        <span>{prefix}{min}{suffix}</span>
-        <span>{prefix}{max}{suffix}</span>
+
+      <div className="mb-4">
+        <label className="text-xs text-slate-500 font-medium mb-1 block">Credit Card</label>
+        <select value={selectedCardId} onChange={e => setSelectedCardId(e.target.value)}
+          className="w-full h-9 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white">
+          <option value="">No card selected</option>
+          {creditCards.filter(c => c.active !== false).map(c => (
+            <option key={c.id} value={c.id}>{c.card_name} — {c.cashback_rate || 0}% cashback</option>
+          ))}
+        </select>
       </div>
-    </div>
+
+      {/* Results */}
+      {totalCost > 0 && (
+        <div className={`rounded-2xl border p-4 space-y-2.5 ${isPositive ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Calculation Results</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white rounded-xl p-3 border border-slate-100 text-center">
+              <p className="text-[10px] text-slate-400 mb-0.5">Total Cost</p>
+              <p className="text-sm font-bold text-slate-700">{fmt$(totalCost)}</p>
+            </div>
+            <div className="bg-white rounded-xl p-3 border border-slate-100 text-center">
+              <p className="text-[10px] text-slate-400 mb-0.5">Gross Profit</p>
+              <p className={`text-sm font-bold ${grossProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{fmt$(grossProfit)}</p>
+            </div>
+            <div className="bg-white rounded-xl p-3 border border-slate-100 text-center">
+              <p className="text-[10px] text-slate-400 mb-0.5">ROI</p>
+              <p className={`text-sm font-bold ${roi >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{pct(roi)}</p>
+            </div>
+          </div>
+          {cashbackEarned > 0 && (
+            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border border-slate-100">
+              <div>
+                <p className="text-xs font-semibold text-slate-700">Cashback ({pct(cashbackRate)} on {fmt$(totalCost)})</p>
+                <p className="text-[10px] text-slate-400">{selectedCard?.card_name}</p>
+              </div>
+              <p className="text-sm font-bold text-violet-600">+{fmt$(cashbackEarned)}</p>
+            </div>
+          )}
+          <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border-2 border-dashed border-slate-200">
+            <p className="text-sm font-bold text-slate-800">Net Profit (after cashback)</p>
+            <p className={`text-lg font-bold ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
+              {isPositive ? '+' : ''}{fmt$(netProfit)}
+            </p>
+          </div>
+        </div>
+      )}
+    </SectionCard>
   );
 }
 
-function buildForecastData(params) {
-  const { dealsPerDay, avgProfit, avgCashback, forecastDays, monthlyGrowthRate, reinvestmentRate } = params;
-  const data = [];
-  let cumProfit = 0;
-  let cumCashback = 0;
-  let currentDealsPerDay = dealsPerDay;
-  const monthlyGrowthFactor = 1 + (monthlyGrowthRate / 100) / 30;
+// ── 2. MONTHLY PROJECTION ─────────────────────────────────────────────────────
 
-  for (let d = 1; d <= forecastDays; d++) {
-    const growthMultiplier = Math.pow(monthlyGrowthFactor, d);
-    const effectiveDeals = currentDealsPerDay * growthMultiplier;
-    const reinvestBonus = (reinvestmentRate / 100) * (cumProfit / Math.max(d, 1));
-    const dailyProfit = effectiveDeals * avgProfit + reinvestBonus;
-    const dailyCashback = effectiveDeals * avgCashback;
-    cumProfit += dailyProfit;
-    cumCashback += dailyCashback;
-    if (d % 7 === 0 || d === forecastDays) {
-      data.push({
-        day: d,
-        label: `Day ${d}`,
-        dailyProfit: Math.round(dailyProfit * 7),
-        cumProfit: Math.round(cumProfit),
-        cumCashback: Math.round(cumCashback),
-        total: Math.round(cumProfit + cumCashback),
+function MonthlyProjection({ orders, goals }) {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const recentOrders = useMemo(() => {
+    return orders.filter(o => o.order_date && new Date(o.order_date) >= thirtyDaysAgo);
+  }, [orders]);
+
+  const avgROI = useMemo(() => {
+    const withProfit = recentOrders.filter(o => {
+      const sale = (o.items || []).reduce((s, i) => s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
+      return sale > 0 && o.total_cost > 0;
+    });
+    if (!withProfit.length) return 0;
+    const total = withProfit.reduce((s, o) => {
+      const sale = (o.items || []).reduce((acc, i) => acc + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
+      return s + (sale - o.total_cost) / o.total_cost * 100;
+    }, 0);
+    return total / withProfit.length;
+  }, [recentOrders]);
+
+  const totalSpent30d = recentOrders.reduce((s, o) => s + (o.total_cost || 0), 0);
+  const avgDailySpend = totalSpent30d / 30;
+  const projectedMonthlyProfit = avgDailySpend * 30 * (avgROI / 100);
+
+  const profitGoal = goals.find(g => g.type === 'profit' && g.timeframe === 'monthly' && g.active !== false);
+  const goalTarget = profitGoal?.target_value || 0;
+  const progressPct = goalTarget > 0 ? Math.min((projectedMonthlyProfit / goalTarget) * 100, 100) : 0;
+
+  const daysLeft = useMemo(() => {
+    const end = endOfMonth(now);
+    return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+  }, []);
+
+  return (
+    <SectionCard icon={TrendingUp} title="Monthly Projection" color="emerald">
+      <div className="space-y-4">
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+            <p className="text-[10px] text-slate-400 mb-0.5">30-Day Orders</p>
+            <p className="text-base font-bold text-slate-700">{recentOrders.length}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+            <p className="text-[10px] text-slate-400 mb-0.5">Avg ROI</p>
+            <p className={`text-base font-bold ${avgROI >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{pct(avgROI)}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+            <p className="text-[10px] text-slate-400 mb-0.5">Days Left</p>
+            <p className="text-base font-bold text-slate-700">{daysLeft}</p>
+          </div>
+        </div>
+
+        {/* Projection banner */}
+        <div className={`rounded-xl px-4 py-3 border ${projectedMonthlyProfit >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+          <p className="text-xs text-slate-500">If you maintain this pace, you'll earn</p>
+          <p className={`text-2xl font-bold mt-0.5 ${projectedMonthlyProfit >= 0 ? 'text-emerald-700' : 'text-amber-700'}`}>
+            {fmt$(projectedMonthlyProfit)}
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">this month in profit</p>
+        </div>
+
+        {/* Progress toward goal */}
+        {goalTarget > 0 ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-600">Monthly Profit Goal</span>
+              <span className="text-slate-400">{fmt$(projectedMonthlyProfit)} / {fmt$(goalTarget)}</span>
+            </div>
+            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${progressPct >= 100 ? 'bg-emerald-500' : progressPct >= 60 ? 'bg-violet-500' : 'bg-amber-500'}`}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-slate-400 text-right">{progressPct.toFixed(0)}% of goal</p>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400 text-center py-2">Set a monthly profit goal in the Goals page to see progress here</p>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
+// ── 3. BEST CARDS FOR THIS DEAL ───────────────────────────────────────────────
+
+function BestCardsForDeal({ creditCards }) {
+  const [storeName, setStoreName] = useState('');
+
+  const ranked = useMemo(() => {
+    if (!storeName.trim()) return [];
+    const q = storeName.trim().toLowerCase();
+
+    return creditCards
+      .filter(c => c.active !== false)
+      .map(c => {
+        // Check per-store rates first
+        const storeRate = (c.store_rates || []).find(sr =>
+          sr.store && sr.store.toLowerCase().includes(q)
+        );
+        const baseRate = c.cashback_rate || 0;
+        const effectiveRate = storeRate ? storeRate.rate : baseRate;
+        return {
+          id: c.id,
+          card_name: c.card_name,
+          issuer: c.issuer,
+          effectiveRate,
+          baseRate,
+          hasStoreRate: !!storeRate,
+          estimatedCashback100: effectiveRate, // per $100 spent
+        };
+      })
+      .sort((a, b) => b.effectiveRate - a.effectiveRate)
+      .slice(0, 6);
+  }, [creditCards, storeName]);
+
+  const topRate = ranked[0]?.effectiveRate || 0;
+
+  return (
+    <SectionCard icon={Store} title="Best Cards For This Deal" color="blue">
+      <div className="mb-4">
+        <label className="text-xs text-slate-500 font-medium mb-1 block">Enter a store name</label>
+        <input
+          type="text"
+          value={storeName}
+          onChange={e => setStoreName(e.target.value)}
+          placeholder="e.g. Amazon, Walmart, Target..."
+          className="w-full h-9 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+        />
+      </div>
+
+      {storeName.trim() === '' ? (
+        <p className="text-sm text-slate-400 text-center py-4">Type a store name to see your best card options</p>
+      ) : ranked.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-4">No cards found</p>
+      ) : (
+        <div className="space-y-2">
+          {ranked.map((card, idx) => (
+            <div key={card.id} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition ${
+              idx === 0 ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100'
+            }`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                idx === 0 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'
+              }`}>
+                {idx + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800 truncate">{card.card_name}</p>
+                <p className="text-[11px] text-slate-400">
+                  {card.hasStoreRate ? `Store-specific rate` : 'Base cashback rate'}
+                  {card.baseRate !== card.effectiveRate && ` (base: ${pct(card.baseRate)})`}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className={`text-sm font-bold ${idx === 0 ? 'text-blue-700' : 'text-slate-700'}`}>{pct(card.effectiveRate)}</p>
+                <p className="text-[10px] text-slate-400">{fmt$(card.estimatedCashback100)} per $100</p>
+              </div>
+              {/* Bar */}
+              <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden shrink-0">
+                <div
+                  className={`h-full rounded-full ${idx === 0 ? 'bg-blue-500' : 'bg-slate-400'}`}
+                  style={{ width: topRate > 0 ? `${(card.effectiveRate / topRate) * 100}%` : '0%' }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+// ── 4. TREND PROJECTION CHART ─────────────────────────────────────────────────
+
+function TrendProjection({ orders }) {
+  const chartData = useMemo(() => {
+    const now = new Date();
+    const points = [];
+
+    // Last 3 months actuals
+    for (let i = 2; i >= 0; i--) {
+      const monthStart = startOfMonth(subMonths(now, i));
+      const monthEnd = endOfMonth(subMonths(now, i));
+      const monthOrders = orders.filter(o => {
+        if (!o.order_date) return false;
+        const d = new Date(o.order_date);
+        return d >= monthStart && d <= monthEnd;
+      });
+      const profit = monthOrders.reduce((s, o) => {
+        const sale = (o.items || []).reduce((acc, it) =>
+          acc + (parseFloat(it.sale_price) || 0) * (parseInt(it.quantity_ordered) || 1), 0);
+        return s + (sale > 0 ? sale - (o.total_cost || 0) : 0);
+      }, 0);
+      points.push({
+        label: format(monthStart, 'MMM'),
+        profit: Math.round(profit),
+        projected: null,
+        isProjected: false,
       });
     }
-  }
-  return data;
-}
 
-export default function Forecast() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [params, setParams] = useState(DEFAULT_PARAMS);
-  const [scenarios, setScenarios] = useState(DEFAULT_SCENARIOS);
-  const [newScenarioName, setNewScenarioName] = useState('');
+    // Compute trend slope from last 3 months
+    const actuals = points.map(p => p.profit);
+    const avgActual = actuals.reduce((s, v) => s + v, 0) / actuals.length;
+    // Simple linear trend: slope = (last - first) / 2 months
+    const slope = actuals.length >= 2 ? (actuals[actuals.length - 1] - actuals[0]) / (actuals.length - 1) : 0;
 
-  const setParam = (key, val) => setParams(p => ({ ...p, [key]: val }));
+    // Next 3 months projected
+    for (let i = 1; i <= 3; i++) {
+      const futureMonth = subMonths(now, -i);
+      const projectedProfit = Math.max(0, Math.round(avgActual + slope * i));
+      points.push({
+        label: format(futureMonth, 'MMM'),
+        profit: null,
+        projected: projectedProfit,
+        isProjected: true,
+      });
+    }
 
-  const { data: orders = [] } = useQuery({
-    queryKey: ['forecastOrders'],
-    queryFn: () => base44.entities.PurchaseOrder.list('-order_date', 200),
-  });
-  const { data: rewards = [] } = useQuery({
-    queryKey: ['forecastRewards'],
-    queryFn: () => base44.entities.Reward.list(),
-  });
+    return points;
+  }, [orders]);
 
-  // Auto-populate baseline from last 30 days of real data
-  const actuals = useMemo(() => {
-    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
-    const recent = orders.filter(o => o.order_date && new Date(o.order_date) >= cutoff);
-    const recentRewards = rewards.filter(r => r.date_earned && new Date(r.date_earned) >= cutoff && r.currency === 'USD');
-    const totalCashback = recentRewards.reduce((s, r) => s + (r.amount || 0), 0);
-    const count = recent.length;
-    const avgDailyDeals = count / 30;
-    return { count, avgDailyDeals: parseFloat(avgDailyDeals.toFixed(1)), totalCashback };
-  }, [orders, rewards]);
-
-  const forecastData = useMemo(() => buildForecastData(params), [params]);
-  const finalPoint = forecastData[forecastData.length - 1] || {};
-
-  // Target day
-  const targetDays = useMemo(() => {
-    if (!params.target) return null;
-    const t = parseFloat(params.target);
-    if (isNaN(t) || t <= 0) return null;
-    const hit = forecastData.find(d => d.total >= t);
-    return hit ? hit.day : null;
-  }, [forecastData, params.target]);
-
-  const scenarioComparison = useMemo(() => {
-    return scenarios.map(s => {
-      const data = buildForecastData({ ...s, forecastDays: params.forecastDays });
-      const last = data[data.length - 1] || {};
-      return { ...s, projectedProfit: last.cumProfit || 0, projectedCashback: last.cumCashback || 0, total: last.total || 0 };
-    });
-  }, [scenarios, params.forecastDays]);
-
-  const saveScenario = () => {
-    if (!newScenarioName.trim()) return;
-    setScenarios(prev => [...prev, { ...params, id: Date.now().toString(), name: newScenarioName.trim() }]);
-    setNewScenarioName('');
-  };
-
-  const deleteScenario = (id) => setScenarios(prev => prev.filter(s => s.id !== id));
-  const loadScenario = (s) => setParams(p => ({ ...p, dealsPerDay: s.dealsPerDay, avgProfit: s.avgProfit, avgCashback: s.avgCashback, monthlyGrowthRate: s.monthlyGrowthRate || 0, reinvestmentRate: s.reinvestmentRate || 0 }));
-
-  const TABS = [
-    { id: 'overview', label: 'Overview', icon: <TrendingUp className="h-3.5 w-3.5" /> },
-    { id: 'params', label: 'Business Parameters', icon: <Layers className="h-3.5 w-3.5" /> },
-    { id: 'scenarios', label: 'Scenarios', icon: <Target className="h-3.5 w-3.5" /> },
-  ];
+  const lastActual = chartData.filter(d => d.profit !== null).slice(-1)[0];
+  const lastProjected = chartData.slice(-1)[0];
+  const projectedGrowth = lastActual && lastProjected
+    ? lastProjected.projected - lastActual.profit
+    : 0;
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Forecast Planner</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Model growth, set targets, and compare scenarios</p>
+    <SectionCard icon={BarChart2} title="Trend Projection — Last 3 Months + Next 3 Months" color="amber">
+      <div className="flex items-center gap-4 mb-4 text-xs">
+        <div className="flex items-center gap-1.5">
+          <div className="w-8 h-0.5 bg-emerald-500 rounded" />
+          <span className="text-slate-500">Actual</span>
         </div>
-        {actuals.count > 0 && (
-          <div className="text-right">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Based on Last 30 Days</p>
-            <p className="text-sm font-semibold text-slate-700">{actuals.count} orders · {actuals.avgDailyDeals}/day avg</p>
+        <div className="flex items-center gap-1.5">
+          <div className="w-8 h-0.5 border-t-2 border-dashed border-violet-400" />
+          <span className="text-slate-500">Projected</span>
+        </div>
+        {projectedGrowth !== 0 && (
+          <div className={`ml-auto flex items-center gap-1 font-semibold ${projectedGrowth >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+            {projectedGrowth >= 0 ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {projectedGrowth >= 0 ? '+' : ''}{fmt$(projectedGrowth)} trend
           </div>
         )}
       </div>
 
-      {/* Mode + Tab Nav */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 gap-1 shadow-sm">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${activeTab === t.id ? 'bg-violet-600 text-white shadow' : 'text-slate-500 hover:bg-slate-50'}`}>
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
+      <ResponsiveContainer width="100%" height={220}>
+        <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="projectedGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+          <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false}
+            tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}`} />
+          <Tooltip contentStyle={TOOLTIP_STYLE}
+            formatter={(v, name) => [v !== null ? fmt$(v) : '—', name === 'profit' ? 'Actual Profit' : 'Projected Profit']} />
+          {/* Divider between actual and projected */}
+          <ReferenceLine x={chartData.find(d => d.isProjected)?.label}
+            stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth={1.5} />
+          <Area type="monotone" dataKey="profit" name="profit"
+            stroke="#10b981" strokeWidth={2.5} fill="url(#profitGrad)"
+            dot={{ fill: '#10b981', r: 4 }} activeDot={{ r: 5 }}
+            connectNulls={false} />
+          <Area type="monotone" dataKey="projected" name="projected"
+            stroke="#8b5cf6" strokeWidth={2} strokeDasharray="6 4"
+            fill="url(#projectedGrad)"
+            dot={{ fill: '#8b5cf6', r: 4 }} activeDot={{ r: 5 }}
+            connectNulls={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </SectionCard>
+  );
+}
 
-        <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 gap-1 shadow-sm ml-auto">
-          {['all', 'churning', 'marketplace'].map(m => (
-            <button key={m} onClick={() => setParam('forecastMode', m)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition ${params.forecastMode === m ? 'bg-violet-600 text-white shadow' : 'text-slate-500 hover:bg-slate-50'}`}>
-              {m === 'all' ? 'All Deals' : m === 'churning' ? 'Churning Only' : 'Marketplace Only'}
-            </button>
-          ))}
-        </div>
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
+export default function Forecast() {
+  const { data: orders = [] } = useQuery({
+    queryKey: ['forecastOrders'],
+    queryFn: () => base44.entities.PurchaseOrder.list('-order_date', 300),
+  });
+  const { data: creditCards = [] } = useQuery({
+    queryKey: ['creditCards'],
+    queryFn: () => base44.entities.CreditCard.list(),
+  });
+  const { data: goals = [] } = useQuery({
+    queryKey: ['goals'],
+    queryFn: () => base44.entities.Goal.list(),
+  });
+
+  return (
+    <div className="space-y-6 pb-10">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <TrendingUp className="h-6 w-6 text-violet-500" /> Forecast
+        </h1>
+        <p className="text-sm text-slate-400 mt-0.5">Calculate profitability, project earnings, and find your best cards</p>
       </div>
 
-      {/* ── OVERVIEW TAB ── */}
-      {activeTab === 'overview' && (
-        <div className="space-y-5">
-          {/* KPI row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: 'Projected Profit', value: fmt$(finalPoint.cumProfit), color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
-              { label: 'Projected Cashback', value: fmt$(finalPoint.cumCashback), color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100' },
-              { label: 'Total Projected', value: fmt$(finalPoint.total), color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
-              targetDays
-                ? { label: 'Target Hit', value: `Day ${targetDays}`, sub: `~${format(addDays(new Date(), targetDays), 'MMM d')}`, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100' }
-                : { label: 'Target', value: params.target ? 'Not reached' : 'Not set', color: 'text-slate-500', bg: 'bg-slate-50 border-slate-100' },
-            ].map(k => (
-              <div key={k.label} className={`rounded-2xl border p-4 ${k.bg}`}>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{k.label}</p>
-                <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
-                {k.sub && <p className="text-[10px] text-slate-400 mt-0.5">{k.sub}</p>}
-              </div>
-            ))}
-          </div>
+      {/* Top 2 cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <ProfitCalculator creditCards={creditCards} />
+        <MonthlyProjection orders={orders} goals={goals} />
+      </div>
 
-          {/* Target input */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4">
-            <Target className="h-5 w-5 text-amber-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-xs font-bold text-slate-700">Set a Profit Target</p>
-              <p className="text-[10px] text-slate-400">See exactly which day you'll hit it</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-400">$</span>
-              <input
-                type="number" value={params.target} onChange={e => setParam('target', e.target.value)}
-                placeholder="e.g. 10000"
-                className="h-8 w-32 px-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400"
-              />
-            </div>
-            {targetDays && (
-              <div className="text-right shrink-0">
-                <p className="text-xs font-bold text-amber-600">Day {targetDays}</p>
-                <p className="text-[10px] text-slate-400">{format(addDays(new Date(), targetDays), 'MMM d, yyyy')}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Cumulative chart */}
-          <SectionCard title="Cumulative Profit & Cashback Projection" subtitle={`${params.forecastDays}-day forecast`}>
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={forecastData}>
-                <defs>
-                  <linearGradient id="fgProfit" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#4ade80" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="fgCashback" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="cumProfit" name="Profit" stroke="#4ade80" fill="url(#fgProfit)" strokeWidth={2} dot={false} />
-                <Area type="monotone" dataKey="cumCashback" name="Cashback" stroke="#a78bfa" fill="url(#fgCashback)" strokeWidth={2} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </SectionCard>
-
-          {/* Weekly deals */}
-          <SectionCard title="Weekly Profit Projection">
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={forecastData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
-                <Line type="monotone" dataKey="dailyProfit" name="Weekly Profit" stroke="#60a5fa" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </SectionCard>
-        </div>
-      )}
-
-      {/* ── PARAMS TAB ── */}
-      {activeTab === 'params' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <SectionCard title="Deal Parameters" subtitle="Daily deal volume and per-deal returns">
-            <div className="space-y-6">
-              <ParamSlider label="Deals Per Day" value={params.dealsPerDay} onChange={v => setParam('dealsPerDay', v)} min={0.5} max={20} step={0.5} />
-              <ParamSlider label="Average Profit Per Deal" value={params.avgProfit} onChange={v => setParam('avgProfit', v)} min={0} max={200} prefix="$" />
-              <ParamSlider label="Average Cashback Per Deal" value={params.avgCashback} onChange={v => setParam('avgCashback', v)} min={0} max={100} prefix="$" />
-              <ParamSlider label="Forecast Days" value={params.forecastDays} onChange={v => setParam('forecastDays', v)} min={30} max={365} step={30} suffix=" days" />
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Growth & Compounding" subtitle="Model business growth over time">
-            <div className="space-y-6">
-              <ParamSlider label="Monthly Growth Rate" value={params.monthlyGrowthRate} onChange={v => setParam('monthlyGrowthRate', v)} min={0} max={20} suffix="%" />
-              <ParamSlider label="Reinvestment Rate" value={params.reinvestmentRate} onChange={v => setParam('reinvestmentRate', v)} min={0} max={50} suffix="%" />
-
-              {/* Growth impact card */}
-              {params.monthlyGrowthRate > 0 && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
-                  <p className="text-xs font-bold text-green-700">Growth Impact</p>
-                  {(() => {
-                    const baseline = buildForecastData({ ...params, monthlyGrowthRate: 0, reinvestmentRate: 0 });
-                    const withGrowth = buildForecastData(params);
-                    const baseTotal = baseline[baseline.length - 1]?.total || 0;
-                    const growthTotal = withGrowth[withGrowth.length - 1]?.total || 0;
-                    const uplift = growthTotal - baseTotal;
-                    return (
-                      <>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-500">Baseline (no growth)</span>
-                          <span className="font-semibold text-slate-700">{fmt$(baseTotal)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-500">With {params.monthlyGrowthRate}% growth/mo</span>
-                          <span className="font-semibold text-green-600">{fmt$(growthTotal)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs border-t border-green-200 pt-2">
-                          <span className="font-bold text-green-700">Uplift</span>
-                          <span className="font-bold text-green-700">+{fmt$(uplift)}</span>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-          </SectionCard>
-        </div>
-      )}
-
-      {/* ── SCENARIOS TAB ── */}
-      {activeTab === 'scenarios' && (
-        <div className="space-y-5">
-          {/* Save current as scenario */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3">
-            <Save className="h-4 w-4 text-violet-500 shrink-0" />
-            <p className="text-sm font-medium text-slate-700 flex-1">Save current parameters as scenario</p>
-            <input
-              type="text" placeholder="Scenario name..." value={newScenarioName}
-              onChange={e => setNewScenarioName(e.target.value)}
-              className="h-8 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 w-48"
-            />
-            <button onClick={saveScenario}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-600 text-white hover:bg-violet-700 transition">
-              <Plus className="h-3.5 w-3.5" /> Save
-            </button>
-          </div>
-
-          {/* Scenario comparison table */}
-          <SectionCard title="Scenario Comparison" subtitle={`Projected over ${params.forecastDays} days`}>
-            <div className="space-y-3">
-              {scenarioComparison.map(s => (
-                <div key={s.id} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-violet-200 transition">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800">{s.name}</p>
-                    <p className="text-[10px] text-slate-400">{s.dealsPerDay} deals/day · ${s.avgProfit} profit · ${s.avgCashback} cashback</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-green-600">{fmt$(s.projectedProfit)}</p>
-                    <p className="text-[10px] text-slate-400">profit</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-violet-600">{fmt$(s.projectedCashback)}</p>
-                    <p className="text-[10px] text-slate-400">cashback</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-blue-600">{fmt$(s.total)}</p>
-                    <p className="text-[10px] text-slate-400">total</p>
-                  </div>
-                  <div className="flex gap-1">
-                    <button onClick={() => loadScenario(s)}
-                      className="px-2 py-1 text-[10px] font-semibold bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition">
-                      Load
-                    </button>
-                    <button onClick={() => deleteScenario(s.id)} className="p-1 text-slate-300 hover:text-red-400 transition">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          {/* Visual scenario chart */}
-          <SectionCard title="Scenario Chart" subtitle="Compare cumulative profit across scenarios">
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="label" type="category" allowDuplicatedCategory={false} tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                {scenarios.slice(0, 4).map((s, i) => {
-                  const data = buildForecastData({ ...s, forecastDays: params.forecastDays });
-                  const colors = ['#4ade80', '#60a5fa', '#a78bfa', '#fb923c'];
-                  return <Line key={s.id} data={data} type="monotone" dataKey="cumProfit" name={s.name} stroke={colors[i % colors.length]} strokeWidth={2} dot={false} />;
-                })}
-              </LineChart>
-            </ResponsiveContainer>
-          </SectionCard>
-        </div>
-      )}
+      {/* Bottom 2 cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <BestCardsForDeal creditCards={creditCards} />
+        <TrendProjection orders={orders} />
+      </div>
     </div>
   );
 }

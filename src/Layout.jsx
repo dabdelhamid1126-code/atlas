@@ -33,6 +33,7 @@ const NAV_GROUPS = [
     items: [
       { name: 'Dashboard',  page: 'Dashboard', icon: LayoutDashboard },
       { name: 'Analytics',  page: 'Analytics',  icon: BarChart3, roles: ['admin','manager'] },
+      { name: 'Forecast',   page: 'Forecast',   icon: TrendingUp },
     ],
   },
   {
