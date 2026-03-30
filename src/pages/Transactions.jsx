@@ -367,7 +367,6 @@ export default function Transactions() {
       date: 'DATE',
       product: 'PRODUCT',
       vendor: 'VENDOR',
-
       qty: 'QTY',
       cost: 'COST',
       sale: 'SALE',
@@ -376,7 +375,8 @@ export default function Transactions() {
       orderNum: 'ORDER #',
       tracking: 'TRACKING #',
       payment: 'PAYMENT',
-      status: 'STATUS'
+      status: 'STATUS',
+      split_payments: 'SPLIT_PAYMENTS',
     };
 
     const headers = visibleColumns
@@ -427,6 +427,11 @@ export default function Transactions() {
             break;
           case 'status':
             val = order.status || '';
+            break;
+          case 'split_payments':
+            if (order.payment_splits?.length > 1) {
+              val = order.payment_splits.map(sp => `${sp.card_name}:${sp.amount}`).join('|');
+            }
             break;
         }
         values.push(`"${String(val).replace(/"/g, '""')}"`);
@@ -489,6 +494,7 @@ export default function Transactions() {
     { id: 'tracking', label: 'Tracking #' },
     { id: 'payment', label: 'Payment' },
     { id: 'status', label: 'Status' },
+    { id: 'split_payments', label: 'Split Payments' },
   ];
 
   return (

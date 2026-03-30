@@ -26,6 +26,20 @@ const today = () => format(new Date(), 'yyyy-MM-dd');
 const normalize = (s) => String(s || '').replace(/\D/g, '');
 const lower = (s) => String(s || '').toLowerCase().trim();
 
+// Parse CSV split_payments column: "CardName1:Amount1|CardName2:Amount2"
+export function parseSplitPayments(raw, creditCards = []) {
+  if (!raw || typeof raw !== 'string') return [];
+  const parts = raw.split('|').map(p => p.trim()).filter(Boolean);
+  if (parts.length < 2) return [];
+  return parts.map(p => {
+    const [name, amtStr] = p.split(':');
+    const cardName = (name || '').trim();
+    const amount   = parseFloat(amtStr) || 0;
+    const card     = creditCards.find(c => c.card_name?.toLowerCase() === cardName.toLowerCase());
+    return { card_id: card?.id || '', card_name: cardName, amount };
+  });
+}
+
 const RETAILERS = [
   'Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco',
   "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other',
@@ -500,6 +514,17 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
             {form.payment_method_last_four && (
               <p className="text-xs text-slate-400">Invoice shows card ending ••••{form.payment_method_last_four}</p>
             )}
+            {/* Show parsed split payments from CSV if present */}
+            {form.payment_splits?.length > 1 && (
+              <div className="mt-2 p-2 bg-purple-50 border border-purple-100 rounded-lg">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-purple-500 mb-1">Split Payment Detected</p>
+                {form.payment_splits.map((sp, i) => (
+                  <div key={i} className="flex justify-between text-xs text-slate-600">
+                    <span>{sp.card_name}</span><span>${(sp.amount || 0).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Notes */}
@@ -645,6 +670,12 @@ export default function ImportOrders() {
         return acc;
       }, []);
 
+      // Handle split payments
+      const hasSplits = form.payment_splits?.length > 1;
+      const primaryCardId = hasSplits
+        ? (form.payment_splits[0]?.card_id || form.credit_card_id || null)
+        : (form.credit_card_id || null);
+
       const order = await base44.entities.PurchaseOrder.create({
         order_type:       form.order_type_hint || 'churning',
         order_number:     form.order_number    || `ORD-${Date.now()}`,
@@ -655,7 +686,8 @@ export default function ImportOrders() {
         total_cost:       totalCost,
         gift_card_value:  gcTotal,
         final_cost:       finalCost,
-        credit_card_id:   form.credit_card_id  || null,
+        credit_card_id:   primaryCardId,
+        payment_splits:   hasSplits ? form.payment_splits : [],
         gift_card_ids:    matchedGcIds,
         tracking_numbers: (form.tracking_numbers || []).filter(Boolean),
         notes:            form.notes            || null,
@@ -678,8 +710,24 @@ export default function ImportOrders() {
         await base44.entities.GiftCard.update(gcId, { status: 'used', used_order_number: form.order_number });
       }
 
-      if (form.credit_card_id && finalCost > 0) {
-        const card = creditCards.find(c => c.id === form.credit_card_id);
+      if (hasSplits) {
+        for (const sp of form.payment_splits) {
+          const card = creditCards.find(c => c.id === sp.card_id);
+          if (!card?.cashback_rate) continue;
+          const cb = parseFloat((sp.amount * card.cashback_rate / 100).toFixed(2));
+          if (cb > 0) {
+            await base44.entities.Reward.create({
+              credit_card_id: card.id, card_name: card.card_name, source: card.card_name,
+              type: 'cashback', currency: 'USD',
+              purchase_amount: sp.amount, amount: cb,
+              purchase_order_id: order.id, order_number: form.order_number,
+              date_earned: form.order_date || today(), status: 'pending',
+              notes: `Auto from imported order ${form.order_number} (split: $${sp.amount})`,
+            });
+          }
+        }
+      } else if (primaryCardId && finalCost > 0) {
+        const card = creditCards.find(c => c.id === primaryCardId);
         if (card?.cashback_rate) {
           const cb = parseFloat((finalCost * card.cashback_rate / 100).toFixed(2));
           if (cb > 0) {

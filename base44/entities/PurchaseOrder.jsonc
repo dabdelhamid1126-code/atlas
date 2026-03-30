@@ -1,0 +1,258 @@
+{
+  "name": "PurchaseOrder",
+  "type": "object",
+  "properties": {
+    "order_type": {
+      "type": "string",
+      "enum": [
+        "churning",
+        "marketplace"
+      ],
+      "default": "churning",
+      "description": "Order type: churning or marketplace"
+    },
+    "order_number": {
+      "type": "string",
+      "description": "Unique order number"
+    },
+    "tracking_number": {
+      "type": "string",
+      "description": "Shipping tracking number"
+    },
+    "carrier": {
+      "type": "string",
+      "description": "Shipping carrier (FEDEX, UPS, USPS, etc.)"
+    },
+    "tracking_status": {
+      "type": "string",
+      "description": "Current tracking status from carrier"
+    },
+    "tracking_location": {
+      "type": "string",
+      "description": "Current location of the package"
+    },
+    "delivered_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date package was delivered"
+    },
+    "retailer": {
+      "type": "string",
+      "description": "Retailer name"
+    },
+    "account": {
+      "type": "string",
+      "description": "Account used to place the order"
+    },
+    "buyer": {
+      "type": "string",
+      "description": "Buyer name (for churning orders)"
+    },
+    "marketplace_platform": {
+      "type": "string",
+      "description": "Marketplace platform (e.g. eBay, Amazon, Facebook Marketplace)"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "dining",
+        "travel",
+        "groceries",
+        "gas",
+        "streaming",
+        "other"
+      ],
+      "default": "other",
+      "description": "Purchase category for reward calculation"
+    },
+    "product_category": {
+      "type": "string",
+      "enum": [
+        "Electronics",
+        "Home & Garden",
+        "Toys & Games",
+        "Health & Beauty",
+        "Sports",
+        "Clothing",
+        "Tools",
+        "Gift Cards",
+        "Grocery",
+        "Other"
+      ],
+      "description": "Product category"
+    },
+    "credit_card_id": {
+      "type": "string",
+      "description": "Primary credit card used for this purchase"
+    },
+    "card_name": {
+      "type": "string",
+      "description": "Credit card name for quick reference"
+    },
+    "payment_splits": {
+      "type": "array",
+      "description": "Split payment across multiple cards",
+      "items": {
+        "type": "object",
+        "properties": {
+          "card_id": {
+            "type": "string"
+          },
+          "card_name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "gift_card_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Gift cards used for this order"
+    },
+    "gift_card_value": {
+      "type": "number",
+      "description": "Total value of gift cards used"
+    },
+    "is_pickup": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a pickup order"
+    },
+    "pickup_location": {
+      "type": "string",
+      "description": "Pickup location for pickup orders"
+    },
+    "is_dropship": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this order ships directly to a seller (dropship)"
+    },
+    "dropship_to": {
+      "type": "string",
+      "description": "Seller/recipient name or address for dropship orders"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "ordered",
+        "shipped",
+        "partially_received",
+        "received",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Order status"
+    },
+    "items": {
+      "type": "array",
+      "description": "Items in the order",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "upc": {
+            "type": "string"
+          },
+          "quantity_ordered": {
+            "type": "number"
+          },
+          "quantity_received": {
+            "type": "number"
+          },
+          "unit_cost": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "original_price": {
+      "type": "number",
+      "description": "Original price before any discounts or promotions"
+    },
+    "discount_amount": {
+      "type": "number",
+      "description": "Total discount amount (promos, coupons, etc.)"
+    },
+    "price_after_discount": {
+      "type": "number",
+      "description": "Price after discount, before gift cards"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Total order cost before gift cards"
+    },
+    "final_cost": {
+      "type": "number",
+      "description": "Final cost after gift cards applied"
+    },
+    "tax": {
+      "type": "number",
+      "description": "Tax amount"
+    },
+    "shipping_cost": {
+      "type": "number",
+      "description": "Shipping cost"
+    },
+    "fees": {
+      "type": "number",
+      "description": "Additional fees"
+    },
+    "include_tax_in_cashback": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include tax in cashback calculation"
+    },
+    "include_shipping_in_cashback": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include shipping in cashback calculation"
+    },
+    "order_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date order was placed"
+    },
+    "expected_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Expected delivery date"
+    },
+    "extra_cashback_percent": {
+      "type": "number",
+      "description": "Extra cashback percentage (e.g., 5 for Amazon Young Adult 5%)"
+    },
+    "bonus_amount": {
+      "type": "number",
+      "description": "Flat bonus amount"
+    },
+    "bonus_notes": {
+      "type": "string",
+      "description": "Notes about bonuses (include 'Prime Young Adult' for YACB)"
+    },
+    "rewards_on_original_price": {
+      "type": "boolean",
+      "default": false,
+      "description": "Calculate % rewards on original price before discounts (for Amazon promos)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Order notes"
+    }
+  },
+  "required": [
+    "order_number",
+    "retailer",
+    "status"
+  ]
+}

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 import GiftCardPicker from '@/components/shared/GiftCardPicker';
+import SplitPaymentInput from '@/components/payment-methods/SplitPaymentInput';
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
@@ -96,6 +97,7 @@ const defaultForm = () => ({
   shipping_cost: '',
   fees: '',
   credit_card_id: '',
+  payment_splits: [],
   gift_card_ids: [],
   include_tax_in_cashback: true,
   include_shipping_in_cashback: true,
@@ -181,7 +183,13 @@ export default function NewOrders() {
 
   // ── Calculations ────────────────────────────────────────────────────────
 
-  const selectedCard = creditCards.find(c => c.id === form.credit_card_id);
+  // Split payment helpers
+  const isSplit = form.payment_splits && form.payment_splits.length > 1;
+  // Primary card for cashback calc: first split or single card
+  const primaryCardId = isSplit
+    ? (form.payment_splits[0]?.card_id || '')
+    : form.credit_card_id;
+  const selectedCard = creditCards.find(c => c.id === primaryCardId);
   const isAmazon     = form.retailer === 'Amazon';
   const statuses     = form.order_type === 'churning' ? CHURNING_STATUSES : MARKETPLACE_STATUSES;
 
@@ -208,7 +216,18 @@ export default function NewOrders() {
   const cashbackBase   = chargedOnCard
     - (!form.include_tax_in_cashback      ? tax      : 0)
     - (!form.include_shipping_in_cashback ? shipping : 0);
-  const cardCB  = Math.max(0, cashbackBase) * cardRate / 100;
+
+  // For split payments: sum cashback across all cards proportionally
+  const splitCashbackTotal = isSplit
+    ? form.payment_splits.reduce((sum, sp) => {
+        const card = creditCards.find(c => c.id === sp.card_id);
+        const rate = card?.cashback_rate || 0;
+        const amt  = parseFloat(sp.amount) || 0;
+        return sum + (amt * rate / 100);
+      }, 0)
+    : 0;
+
+  const cardCB  = isSplit ? splitCashbackTotal : Math.max(0, cashbackBase) * cardRate / 100;
   const yaCB    = form.amazon_yacb && isAmazon ? Math.min(cashbackBase * 0.05, 100) : 0;
   const totalCB = cardCB + yaCB;
 
@@ -236,7 +255,32 @@ export default function NewOrders() {
         queryClient.invalidateQueries({ queryKey: ['giftCards'] });
       }
 
-      if (order.credit_card_id && totalCB > 0) {
+      // Create rewards — split or single
+      if (data.payment_splits?.length > 1) {
+        for (const sp of data.payment_splits) {
+          const card = creditCards.find(c => c.id === sp.card_id);
+          if (!card) continue;
+          const rate = card.cashback_rate || 0;
+          const cb   = parseFloat((sp.amount * rate / 100).toFixed(2));
+          if (cb > 0) {
+            await base44.entities.Reward.create({
+              credit_card_id:  sp.card_id,
+              card_name:       card.card_name,
+              source:          card.card_name,
+              type:            'cashback',
+              currency:        'USD',
+              purchase_amount: sp.amount,
+              amount:          cb,
+              purchase_order_id: order.id,
+              order_number:    order.order_number,
+              date_earned:     order.order_date,
+              status:          'pending',
+              notes:           `Auto from order ${order.order_number} (split: $${sp.amount})`,
+            });
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      } else if (order.credit_card_id && totalCB > 0) {
         const card = creditCards.find(c => c.id === order.credit_card_id);
         if (card) {
           await base44.entities.Reward.create({
@@ -296,6 +340,23 @@ export default function NewOrders() {
 
     const orderNumber = form.order_number?.trim() || `ORD-${Date.now()}`;
 
+    // Validate split totals
+    if (isSplit) {
+      const splitsTotal = form.payment_splits.reduce((s, sp) => s + (parseFloat(sp.amount) || 0), 0);
+      if (Math.abs(splitsTotal - finalCost) > 0.01) {
+        toast.error(`Split amounts ($${splitsTotal.toFixed(2)}) must equal final cost ($${finalCost.toFixed(2)})`);
+        return;
+      }
+      if (form.payment_splits.some(sp => !sp.card_id)) {
+        toast.error('Please select a card for each split payment');
+        return;
+      }
+    }
+
+    // Primary card = first split or single card
+    const primaryCardId = isSplit ? (form.payment_splits[0]?.card_id || null) : (form.credit_card_id || null);
+    const primaryCard   = creditCards.find(c => c.id === primaryCardId);
+
     createMutation.mutate({
       order_type:          form.order_type,
       order_number:        orderNumber,
@@ -315,8 +376,13 @@ export default function NewOrders() {
       total_cost:          totalCost,
       gift_card_value:     giftCardTotal,
       final_cost:          finalCost,
-      credit_card_id:      form.credit_card_id      || null,
-      card_name:           selectedCard?.card_name  || null,
+      credit_card_id:      primaryCardId,
+      card_name:           primaryCard?.card_name  || null,
+      payment_splits:      isSplit ? form.payment_splits.map(sp => ({
+        card_id:   sp.card_id,
+        card_name: sp.card_name,
+        amount:    parseFloat(sp.amount) || 0,
+      })) : [],
       gift_card_ids:       form.gift_card_ids,
       include_tax_in_cashback:     form.include_tax_in_cashback,
       include_shipping_in_cashback: form.include_shipping_in_cashback,
@@ -664,41 +730,74 @@ export default function NewOrders() {
             <div className="bg-rose-50 rounded-2xl p-5">
               <SectionHeader icon={CreditCard} label="Payment & Cashback" color="pink" />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Payment Method</Label>
-                  <Select value={form.credit_card_id} onValueChange={(v) => set('credit_card_id', v)}>
-                    <SelectTrigger className="bg-white">
-                      {form.credit_card_id
-                        ? <span>{selectedCard?.card_name}</span>
-                        : <SelectValue placeholder="Select card..." />}
-                    </SelectTrigger>
-                    <SelectContent>
-                      {creditCards.filter(c => c.active !== false).map(c =>
-                        <SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-600">Payment Method(s)</Label>
+                  {!isSplit && (
+                    <button type="button"
+                      onClick={() => {
+                        const splits = form.credit_card_id
+                          ? [{ card_id: form.credit_card_id, card_name: selectedCard?.card_name || '', amount: finalCost > 0 ? finalCost.toFixed(2) : '' }]
+                          : [{ card_id: '', card_name: '', amount: '' }];
+                        set('payment_splits', [...splits, { card_id: '', card_name: '', amount: '' }]);
+                      }}
+                      className="text-xs text-pink-600 hover:text-pink-700 font-medium flex items-center gap-1">
+                      <Plus className="h-3 w-3" /> Split payment
+                    </button>
+                  )}
+                  {isSplit && (
+                    <button type="button"
+                      onClick={() => {
+                        const first = form.payment_splits[0];
+                        set('payment_splits', []);
+                        set('credit_card_id', first?.card_id || '');
+                      }}
+                      className="text-xs text-slate-500 hover:text-slate-700 font-medium">
+                      Use single card
+                    </button>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Cashback Rate %</Label>
-                  <div className="relative">
-                    <Input className="bg-white pr-8" type="number" step="0.1" min="0"
-                      value={form.cashback_rate_override || cardRate || ''}
-                      onChange={e => set('cashback_rate_override', e.target.value)}
-                      placeholder={cardRate ? String(cardRate) : '0'} />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">%</span>
+
+                {isSplit ? (
+                  <SplitPaymentInput
+                    splits={form.payment_splits}
+                    onChange={(splits) => set('payment_splits', splits)}
+                    creditCards={creditCards}
+                    totalRequired={finalCost}
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Select value={form.credit_card_id} onValueChange={(v) => set('credit_card_id', v)}>
+                        <SelectTrigger className="bg-white">
+                          {form.credit_card_id
+                            ? <span>{selectedCard?.card_name}</span>
+                            : <SelectValue placeholder="Select card..." />}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {creditCards.filter(c => c.active !== false).map(c =>
+                            <SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="relative">
+                        <Input className="bg-white pr-8" type="number" step="0.1" min="0"
+                          value={form.cashback_rate_override || cardRate || ''}
+                          onChange={e => set('cashback_rate_override', e.target.value)}
+                          placeholder={cardRate ? String(cardRate) : '0 %'} />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                        <Input className="bg-slate-100 pl-6 text-green-600 font-medium" readOnly
+                          value={totalCB.toFixed(2)} />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">
-                    Cashback Amount <span className="text-slate-400">(auto)</span>
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                    <Input className="bg-slate-100 pl-6 text-green-600 font-medium" readOnly
-                      value={totalCB.toFixed(2)} />
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Gift card chip picker */}

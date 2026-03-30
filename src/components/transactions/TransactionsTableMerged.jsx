@@ -121,7 +121,13 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
           {/* Payment */}
           <div className="text-right min-w-[110px]">
             <p className="text-[10px] text-slate-400 uppercase tracking-wide">Payment</p>
-            <p className="font-medium text-slate-700 text-xs truncate max-w-[110px]">{cardName}</p>
+            {order.payment_splits?.length > 1 ? (
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                Split ×{order.payment_splits.length}
+              </span>
+            ) : (
+              <p className="font-medium text-slate-700 text-xs truncate max-w-[110px]">{cardName}</p>
+            )}
           </div>
 
           {/* Status */}
@@ -207,6 +213,21 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
               );
             })}
           </div>
+
+          {/* Split payment breakdown */}
+          {order.payment_splits?.length > 1 && (
+            <div className="bg-purple-50 rounded-xl border border-purple-100 p-3 mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-purple-500 mb-2">Split Payment</p>
+              <div className="space-y-1">
+                {order.payment_splits.map((sp, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium">{sp.card_name}</span>
+                    <span className="font-bold text-slate-800">${(sp.amount || 0).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Summary Bar + Actions */}
           <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-200 mt-1">
