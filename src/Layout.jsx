@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import CommandPalette from '@/components/CommandPalette';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
@@ -24,6 +25,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Zap,
+  Search,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -89,7 +91,21 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [cmdOpen, setCmdOpen]         = useState(false);
   const location = useLocation();
+
+  const openCmd = useCallback(() => setCmdOpen(true), []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -130,6 +146,13 @@ export default function Layout({ children, currentPageName }) {
               <p className="text-[8.5px] text-slate-400 uppercase tracking-[0.14em] mt-0.5 font-semibold">Reselling, Quantified</p>
             </div>
             <button
+              onClick={openCmd}
+              title="Search (⌘K)"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            >
+              <Search className="w-[16px] h-[16px]" />
+            </button>
+            <button
               className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               onClick={() => setCollapsed(true)}
               title="Collapse sidebar"
@@ -143,8 +166,20 @@ export default function Layout({ children, currentPageName }) {
         )}
       </div>
 
+      {/* ── Search hint ── */}
+      {!collapsed && (
+        <button
+          onClick={openCmd}
+          className="mx-3 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors text-slate-400 text-xs w-[calc(100%-24px)]"
+        >
+          <Search className="w-3.5 h-3.5 shrink-0" />
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="text-[10px] bg-white border border-slate-200 rounded px-1 py-0.5 font-medium">⌘K</kbd>
+        </button>
+      )}
+
       {/* ── Navigation ── */}
-      <nav className="flex-1 py-3 px-2.5 space-y-3 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 py-2 px-2.5 space-y-3 overflow-y-auto overflow-x-hidden">
         {filteredGroups.map(group => (
           <div key={group.label} className="space-y-0.5">
             {!collapsed && (
@@ -254,6 +289,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen flex" style={{ background: '#f9fafb' }}>
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
       {/* Mobile overlay */}
       {sidebarOpen && (
