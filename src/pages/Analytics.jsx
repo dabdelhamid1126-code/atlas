@@ -223,15 +223,36 @@ export default function Analytics() {
   const paymentData = useMemo(() => {
     const map = {};
     filteredOrders.forEach(o => {
-      const key = o.credit_card_id || 'unknown';
-      const card = creditCards.find(c => c.id === key);
-      const name = card?.card_name || o.card_name || 'Unknown';
-      if (!map[key]) map[key] = { id: key, name, spent: 0, cashback: 0, txns: 0, statedRate: card?.cashback_rate || 0 };
-      map[key].spent += o.total_cost || 0;
-      map[key].txns += 1;
+      // Handle split payments — distribute spend across each card in the split
+      if (o.payment_splits?.length > 1) {
+        o.payment_splits.forEach(sp => {
+          const key = sp.card_id || 'unknown';
+          const card = creditCards.find(c => c.id === key);
+          const name = card?.card_name || sp.card_name || 'Unknown';
+          if (!map[key]) map[key] = { id: key, name, spent: 0, cashback: 0, txns: 0, statedRate: card?.cashback_rate || 0 };
+          map[key].spent += sp.amount || 0;
+          // cashback per split card = amount * card rate
+          const rate = card?.cashback_rate || sp.cashback_rate || 0;
+          map[key].cashback += (sp.amount || 0) * rate / 100;
+        });
+        // Count txn once on the primary card
+        const primaryKey = o.payment_splits[0]?.card_id || 'unknown';
+        if (map[primaryKey]) map[primaryKey].txns += 1;
+      } else {
+        const key = o.credit_card_id || 'unknown';
+        const card = creditCards.find(c => c.id === key);
+        const name = card?.card_name || o.card_name || 'Unknown';
+        if (!map[key]) map[key] = { id: key, name, spent: 0, cashback: 0, txns: 0, statedRate: card?.cashback_rate || 0 };
+        map[key].spent += o.total_cost || 0;
+        map[key].txns += 1;
+        // Add cashback from rewards for non-split orders
+        // (handled below via filteredRewards)
+      }
     });
+    // Add rewards cashback for non-split orders only
     filteredRewards.filter(r => r.currency === 'USD').forEach(r => {
       const o = filteredOrders.find(x => x.id === r.purchase_order_id);
+      if (!o || o.payment_splits?.length > 1) return; // skip split orders (already computed above)
       const key = o?.credit_card_id || 'unknown';
       if (map[key]) map[key].cashback += r.amount || 0;
     });
