@@ -42,7 +42,12 @@ const NAV_GROUPS = [
       { name: 'Add Transaction',    page: 'NewOrders',    icon: CirclePlus },
 
       { name: 'Import Orders',      page: 'ImportOrders', icon: ArrowLeftRight },
-      { name: 'Deals Dashboard',    page: 'Deals',        icon: Zap },
+    ],
+  },
+  {
+    label: 'Marketplace',
+    items: [
+      { name: 'Deals Dashboard', page: 'Deals', icon: Zap },
     ],
   },
   {
