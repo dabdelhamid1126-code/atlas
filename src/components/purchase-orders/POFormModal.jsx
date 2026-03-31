@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/select';
 import {
   CreditCard, Package, Tag, Globe, Plus, Trash2, Copy,
-  AlertTriangle, DollarSign, X, ClipboardList, Minus,
+  AlertTriangle, DollarSign, X, ClipboardList, Minus, ImageOff,
 } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 import GiftCardPicker from '@/components/shared/GiftCardPicker';
@@ -35,12 +35,32 @@ const LBL = ({ children }) => (
   </label>
 );
 
+function ItemThumb({ src, name }) {
+  const [err, setErr] = useState(false);
+  if (!src || err) {
+    return (
+      <div style={{
+        width: 40, height: 40, borderRadius: 8, flexShrink: 0,
+        background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#10b981', fontSize: 14, fontWeight: 700,
+      }}>
+        {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 14, height: 14 }} />}
+      </div>
+    );
+  }
+  return (
+    <img src={src} alt={name} onError={() => setErr(true)}
+      style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+  );
+}
+
 const defaultSaleEvent = () => ({
   id: crypto.randomUUID(), buyer: '', sale_date: '', payout_date: '', items: [],
 });
 
 const defaultItem = () => ({
-  product_id: '', product_name: '', upc: '', quantity_ordered: 1, quantity_received: 0, unit_cost: 0, sale_price: 0,
+  product_id: '', product_name: '', upc: '', quantity_ordered: 1, quantity_received: 0, unit_cost: 0, sale_price: 0, product_image_url: '',
 });
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -427,9 +447,14 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                           </div>
                         </div>
                         <div style={{ marginBottom: 8 }}><LBL>Product</LBL>
-                          <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
-                            onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); if(idx===0) set('product_category',p.category||formData.product_category); }}
-                            onChangeName={val => updateItem(idx,'product_name',val)} placeholder="e.g. iPad Air" />
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                            <ItemThumb src={item.product_image_url} name={item.product_name} />
+                            <div style={{ flex: 1 }}>
+                              <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
+                                onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); updateItem(idx,'product_image_url',p.image||''); if(idx===0) set('product_category',p.category||formData.product_category); }}
+                                onChangeName={val => updateItem(idx,'product_name',val)} placeholder="e.g. iPad Air" />
+                            </div>
+                          </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                           <div><LBL>Unit Price</LBL>
@@ -567,20 +592,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                 </div>
 
                 {/* Gift cards */}
-                {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).length > 0 && (
-                  <div style={{ marginBottom: 14 }}>
-                    <LBL>Gift Cards</LBL>
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:4 }}>
-                      {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).map(gc => (
-                        <label key={gc.id} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, padding:'4px 10px', borderRadius:8, cursor:'pointer', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', color:'#e2e8f0' }}>
-                          <input type="checkbox" checked={formData.gift_card_ids.includes(gc.id)}
-                            onChange={e => { if(e.target.checked) set('gift_card_ids',[...formData.gift_card_ids,gc.id]); else set('gift_card_ids',formData.gift_card_ids.filter(id=>id!==gc.id)); }} />
-                          {gc.brand} ${gc.value}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <GiftCardPicker giftCards={giftCards} selectedIds={formData.gift_card_ids} onChange={(ids) => set('gift_card_ids', ids)} retailer={formData.retailer} />
 
                 {/* Checkboxes */}
                 <div style={{ display:'flex', flexWrap:'wrap', gap:16 }}>
@@ -710,10 +722,10 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
 
         {/* ── Footer ── */}
         <div style={{ padding:'14px 24px', borderTop:'1px solid rgba(255,255,255,0.07)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', background:'#111827' }}>
-          <div style={{fontSize:12, color:'#94a3b8'}}>
+          <div style={{fontSize:12, color:'#94a3b8', display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 2}}>
             <span style={{fontWeight:600, color:'#e2e8f0'}}>Total: ${totalPrice.toFixed(2)}</span>
-            {cashbackAmount > 0 && <span style={{marginLeft:8, color:'#10b981'}}>CB: ${cashbackAmount.toFixed(2)}</span>}
-            {giftCardTotal > 0 && <span style={{marginLeft:8, color:'#f59e0b'}}>GC: -${giftCardTotal.toFixed(2)}</span>}
+            {cashbackAmount > 0 && <><span style={{ margin: '0 6px' }}>·</span><span style={{color:'#10b981'}}>CB: ${cashbackAmount.toFixed(2)}</span></>}
+            {giftCardTotal > 0 && <><span style={{ margin: '0 6px' }}>·</span><span style={{color:'#f59e0b'}}>GC: ${giftCardTotal.toFixed(2)}</span></>}
           </div>
           <div style={{display:'flex', gap:10}}>
             <button type="button" onClick={() => onOpenChange(false)}
