@@ -46,19 +46,38 @@ function CardLogo({ cardName, size = 16 }) {
 const getSaleRowsForItem = (order, item) => {
   if (!order.sale_events?.length) return [];
   const rows = [];
+  
   order.sale_events.forEach(event => {
-    const matchedItem = (event.items || []).find(
-      si => si.product_name === item.product_name ||
-            si.item_id === item.id ||
-            si.item_id === item.product_id
-    );
+    const matchedItem = (event.items || []).find(si => {
+      // Match by product_name (most reliable)
+      if (si.product_name && item.product_name) {
+        const siName = si.product_name.toLowerCase().trim();
+        const itemName = item.product_name.toLowerCase().trim();
+        if (siName === itemName || 
+            siName.includes(itemName.slice(0, 20)) ||
+            itemName.includes(siName.slice(0, 20)))
+          return true;
+      }
+      // Match by item_id
+      if (si.item_id && item.id && si.item_id === item.id) return true;
+      if (si.item_id && item.product_id && si.item_id === item.product_id) return true;
+      // If only 1 item in order, always match
+      if ((order.items?.length === 1) && (event.items?.length >= 1)) return true;
+      return false;
+    });
+    
     if (matchedItem) {
+      const costPerUnit = parseFloat(item.unit_cost || item.unit_price || item.cost_per_unit || 0);
+      const salePrice = parseFloat(matchedItem.sale_price || 0);
+      const qty = parseInt(matchedItem.quantity || 1);
+      const profit = (salePrice - costPerUnit) * qty;
+      
       rows.push({
-        buyer: event.buyer,
-        quantity: matchedItem.quantity || 1,
-        sale_price: matchedItem.sale_price || 0,
-        cost_per_unit: parseFloat(item.unit_cost || item.unit_price || 0),
-        profit: (parseFloat(matchedItem.sale_price) - parseFloat(item.unit_cost || item.unit_price || 0)) * (matchedItem.quantity || 1)
+        buyer: event.buyer || 'Unknown Buyer',
+        quantity: qty,
+        sale_price: salePrice,
+        cost_per_unit: costPerUnit,
+        profit: profit
       });
     }
   });
@@ -336,20 +355,8 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           </span>
         )}
 
-        {/* Right stats - column labels + values */}
+        {/* Right stats - profit, payment, status */}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          {itemCount > 0 && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748b' }}>Cost</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#60a5fa' }}>{fmt$(totalCost)}</div>
-            </div>
-          )}
-          {totalRevenue > 0 && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748b' }}>Revenue</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#10b981' }}>{fmt$(totalRevenue)}</div>
-            </div>
-          )}
           {hasSales && (
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748b' }}>Profit</div>
@@ -400,67 +407,72 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           const isSingleBuyer = itemSales.length <= 1;
 
           return (
-            <div key={idx}>
-              {isSingleBuyer ? (
-                 // Single row for 0 or 1 sale
-                 <div>
-                   <div style={{
-                     padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
-                     background: 'transparent',
-                   }}>
-                     <div style={{ width: 38, flexShrink: 0 }}></div>
-                     <div style={{ width: 38, flexShrink: 0 }}></div>
-                     <ItemImg src={imageUrl} name={item.product_name} qty={qty} />
-                     <div style={{ flex: 1, minWidth: 0 }}>
-                       <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                         {item.product_name || '—'}
-                       </div>
-                       {item.upc && <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{item.upc}</div>}
-                     </div>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
-                       <StatCol label="Qty" value={qty} color="#e2e8f0" />
-                       <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
-                       {hasSales ? (
-                         <>
-                           <StatCol label="Sale/unit" value={fmt$(parseFloat(itemSales[0].sale_price) || 0)} color="#10b981" />
-                           <StatCol label="Profit" value={fmt$((parseFloat(itemSales[0].sale_price) || 0 - unitCost) * qty)} color="#10b981" />
-                         </>
-                       ) : (
-                         <>
-                           <StatCol label="Sale/unit" value="—" color="#475569" />
-                           <StatCol label="Profit" value="—" color="#475569" />
-                         </>
-                       )}
-                     </div>
-                   </div>
-                   {hasSales && itemSales[0] && (
-                     <div style={{ paddingLeft: 52, paddingRight: 16, paddingTop: 4, paddingBottom: 8, borderLeft: '2px solid rgba(16,185,129,0.3)', background: 'transparent' }}>
-                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
-                         <div style={{ minWidth: 120, fontSize: 11, fontWeight: 600, color: '#06b6d4' }}>{itemSales[0].buyer || 'Unknown'}</div>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                           <div style={{ textAlign: 'right', minWidth: 50 }}>
-                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Qty</div>
-                             <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>{itemSales[0].quantity}</div>
-                           </div>
-                           <div style={{ textAlign: 'right', minWidth: 60 }}>
-                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Cost/Unit</div>
-                             <div style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa' }}>{fmt$(unitCost)}</div>
-                           </div>
-                           <div style={{ textAlign: 'right', minWidth: 60 }}>
-                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Sale/Unit</div>
-                             <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>{fmt$(parseFloat(itemSales[0].sale_price) || 0)}</div>
-                           </div>
-                           <div style={{ textAlign: 'right', minWidth: 60 }}>
-                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Profit</div>
-                             <div style={{ fontSize: 12, fontWeight: 700, color: (parseFloat(itemSales[0].sale_price) - unitCost) * itemSales[0].quantity >= 0 ? '#10b981' : '#f87171' }}>
-                               {fmt$((parseFloat(itemSales[0].sale_price) - unitCost) * itemSales[0].quantity)}
-                             </div>
-                           </div>
-                         </div>
-                       </div>
-                     </div>
-                   )}
-                 </div>
+           <div key={idx}>
+             {isSingleBuyer ? (
+                // Single row for 0 or 1 sale
+                <div>
+                  <div style={{
+                    padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
+                    background: 'transparent',
+                  }}>
+                    <div style={{ width: 38, flexShrink: 0 }}></div>
+                    <div style={{ width: 38, flexShrink: 0 }}></div>
+                    <ItemImg src={imageUrl} name={item.product_name} qty={qty} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.product_name || '—'}
+                      </div>
+                      {item.upc && <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{item.upc}</div>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+                      <StatCol label="Qty" value={qty} color="#e2e8f0" />
+                      <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
+                      {hasSales ? (
+                        <>
+                          <StatCol label="Sale/unit" value={fmt$(parseFloat(itemSales[0].sale_price) || 0)} color="#10b981" />
+                          <StatCol label="Profit" value={fmt$((parseFloat(itemSales[0].sale_price) || 0 - unitCost) * qty)} color="#10b981" />
+                        </>
+                      ) : (
+                        <>
+                          <StatCol label="Sale/unit" value="—" color="#475569" />
+                          <StatCol label="Profit" value="—" color="#475569" />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {getSaleRowsForItem(order, item).map((row, i) => (
+                    <div key={i} style={{
+                      marginLeft: '60px',
+                      marginTop: '4px',
+                      marginBottom: '4px',
+                      padding: '5px 12px',
+                      borderLeft: '2px solid rgba(16,185,129,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: 'rgba(16,185,129,0.03)',
+                      borderRadius: '0 6px 6px 0',
+                      fontSize: 11
+                    }}>
+                      <span style={{
+                        color: '#06b6d4', 
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        minWidth: '120px'
+                      }}>
+                        {row.buyer}
+                      </span>
+                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>QTY</span>
+                      <span style={{color:'#e2e8f0',fontSize:'12px',fontWeight:700, minWidth:'16px'}}>{row.quantity}</span>
+                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>COST/UNIT</span>
+                      <span style={{color:'#60a5fa',fontSize:'12px',fontWeight:700}}>${row.cost_per_unit.toFixed(2)}</span>
+                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>SALE/UNIT</span>
+                      <span style={{color:'#10b981',fontSize:'12px',fontWeight:700}}>${row.sale_price.toFixed(2)}</span>
+                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>PROFIT</span>
+                      <span style={{fontSize:'12px', fontWeight:700, color: row.profit >= 0 ? '#10b981' : '#ef4444'}}>${row.profit.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
                ) : (
                 // Multiple buyer rows
                 <div style={{ borderBottom: idx < order.items.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
