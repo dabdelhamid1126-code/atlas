@@ -39,8 +39,8 @@ export default function TransactionsFilters({
   return (
     <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
       {/* Main filter row */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 200 }}>
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 10, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
           <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#475569', pointerEvents: 'none' }} />
           <Input
             type="text"
@@ -52,38 +52,42 @@ export default function TransactionsFilters({
           />
         </div>
 
-        <Select value={statusFilter} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-36 text-sm text-slate-300" style={inp}>
-            <SelectValue placeholder="All Statuses">{statusFilter === 'all' ? 'All Statuses' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}</SelectValue>
-          </SelectTrigger>
-          <SelectContent style={{ background: '#1a2234' }}>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {STATUSES.map(s => (
-              <SelectItem key={s} value={s} style={{ color: '#e2e8f0' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0, minWidth: 0 }}>
+          <Select value={statusFilter} onValueChange={onStatusChange}>
+            <SelectTrigger className="text-sm text-slate-300" style={{ ...inp, minWidth: 130 }}>
+              <SelectValue placeholder="All Statuses">{statusFilter === 'all' ? 'All Statuses' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent style={{ background: '#1a2234' }}>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {STATUSES.map(s => (
+                <SelectItem key={s} value={s} style={{ color: '#e2e8f0' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={vendorFilter} onValueChange={onVendorChange}>
-          <SelectTrigger className="w-36 text-sm text-slate-300" style={inp}>
-            <SelectValue placeholder="All Vendors">{vendorFilter === 'all' ? 'All Vendors' : vendorFilter}</SelectValue>
-          </SelectTrigger>
-          <SelectContent style={{ background: '#1a2234' }}>
-            <SelectItem value="all">All Vendors</SelectItem>
-            {vendors.map(v => (
-              <SelectItem key={v} value={v} style={{ color: '#e2e8f0' }}>{v}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={vendorFilter} onValueChange={onVendorChange}>
+            <SelectTrigger className="text-sm text-slate-300" style={{ ...inp, minWidth: 130 }}>
+              <SelectValue placeholder="All Vendors">{vendorFilter === 'all' ? 'All Vendors' : vendorFilter}</SelectValue>
+            </SelectTrigger>
+            <SelectContent style={{ background: '#1a2234' }}>
+              <SelectItem value="all">All Vendors</SelectItem>
+              {vendors.map(v => (
+                <SelectItem key={v} value={v} style={{ color: '#e2e8f0' }}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={accountFilter} onValueChange={onAccountChange}>
-          <SelectTrigger className="w-36 text-sm text-slate-300" style={inp}>
-            <SelectValue placeholder="All Platforms">{accountFilter === 'all' ? 'All Platforms' : accountFilter}</SelectValue>
-          </SelectTrigger>
-          <SelectContent style={{ background: '#1a2234' }}>
-            <SelectItem value="all">All Platforms</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={accountFilter} onValueChange={onAccountChange}>
+            <SelectTrigger className="text-sm text-slate-300" style={{ ...inp, minWidth: 130 }}>
+              <SelectValue placeholder="All Platforms">{accountFilter === 'all' ? 'All Platforms' : accountFilter}</SelectValue>
+            </SelectTrigger>
+            <SelectContent style={{ background: '#1a2234' }}>
+              <SelectItem value="all">All Platforms</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        </div>
 
         <button
           onClick={() => setExpanded(!expanded)}
@@ -99,9 +103,6 @@ export default function TransactionsFilters({
           <Filter style={{ width: 14, height: 14 }} />
           More Filters
         </button>
-      </div>
-
-      {/* Expanded Section */}
       {expanded && (
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
           <div>

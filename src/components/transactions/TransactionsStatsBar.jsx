@@ -72,7 +72,7 @@ export default function TransactionsStatsBar({ orders = [] }) {
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={stat.label} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 14px', overflow: 'hidden' }}>
+          <div key={stat.label} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 14px', overflow: 'hidden', borderLeft: `3px solid ${stat.iconColor}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: stat.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon style={{ width: 16, height: 16, color: stat.iconColor }} />

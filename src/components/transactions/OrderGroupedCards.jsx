@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronDown, Edit2, Trash2, ImageOff } from 'lucide-react';
+import { ChevronRight, Edit2, Trash2, ImageOff } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 // ── Brandfetch client ID ───────────────────────────────────────────────────
@@ -298,9 +298,9 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
             )}
           </div>
           <StatusBadge status={order.status} />
-          <ChevronDown style={{
+          <ChevronRight style={{
             width: 14, height: 14, color: '#64748b', flexShrink: 0, marginLeft: 4,
-            transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+            transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease',
           }} />
         </div>
