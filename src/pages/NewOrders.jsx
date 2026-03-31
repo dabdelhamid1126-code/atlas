@@ -747,7 +747,7 @@ export default function NewOrders() {
             </div>
 
             {/* PAYMENT & CASHBACK */}
-            <div className="bg-rose-50 rounded-2xl p-5">
+            <div className="rounded-2xl p-5" style={{ background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.15)' }}>
               <SectionHeader icon={CreditCard} label="Payment & Cashback" color="pink" />
 
               <div className="space-y-3 mb-4">
@@ -789,7 +789,7 @@ export default function NewOrders() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <Select value={form.credit_card_id} onValueChange={(v) => set('credit_card_id', v)}>
-                        <SelectTrigger className="bg-white">
+                        <SelectTrigger className="text-slate-200" style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.1)' }}>
                           {form.credit_card_id
                             ? <span>{selectedCard?.card_name}</span>
                             : <SelectValue placeholder="Select card..." />}
@@ -802,7 +802,8 @@ export default function NewOrders() {
                     </div>
                     <div className="space-y-1">
                       <div className="relative">
-                        <Input className="bg-white pr-8" type="number" step="0.1" min="0"
+                        <Input className="pr-8" type="number" step="0.1" min="0"
+                          style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                           value={form.cashback_rate_override || cardRate || ''}
                           onChange={e => set('cashback_rate_override', e.target.value)}
                           placeholder={cardRate ? String(cardRate) : '0 %'} />
@@ -812,7 +813,8 @@ export default function NewOrders() {
                     <div className="space-y-1">
                       <div className="relative">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                        <Input className="bg-slate-100 pl-6 text-green-600 font-medium" readOnly
+                        <Input className="pl-6 font-medium" readOnly
+                          style={{ background: 'rgba(255,255,255,0.05)', color: '#34d399', borderColor: 'rgba(255,255,255,0.1)' }}
                           value={totalCB.toFixed(2)} />
                       </div>
                     </div>
@@ -832,19 +834,19 @@ export default function NewOrders() {
 
               {/* Cashback checkboxes + YA toggle */}
               <div className="flex flex-wrap items-center gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={form.include_tax_in_cashback}
-                    onChange={e => set('include_tax_in_cashback', e.target.checked)} className="rounded" />
-                  Include tax in cashback
+                <label className="flex items-center gap-2 text-sm cursor-pointer text-slate-300">
+                <input type="checkbox" checked={form.include_tax_in_cashback}
+                  onChange={e => set('include_tax_in_cashback', e.target.checked)} className="rounded" />
+                Include tax in cashback
                 </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={form.include_shipping_in_cashback}
-                    onChange={e => set('include_shipping_in_cashback', e.target.checked)} className="rounded" />
-                  Include shipping in cashback
+                <label className="flex items-center gap-2 text-sm cursor-pointer text-slate-300">
+                <input type="checkbox" checked={form.include_shipping_in_cashback}
+                  onChange={e => set('include_shipping_in_cashback', e.target.checked)} className="rounded" />
+                Include shipping in cashback
                 </label>
                 {isAmazon && (
-                  <label className={`flex items-center gap-2 text-sm cursor-pointer px-3 py-1.5 rounded-lg border transition
-                    ${form.amazon_yacb ? 'bg-amber-100 border-amber-400 text-amber-800' : 'bg-white border-slate-200'}`}>
+                <label className={`flex items-center gap-2 text-sm cursor-pointer px-3 py-1.5 rounded-lg border transition
+                  ${form.amazon_yacb ? 'bg-amber-500/20 border-amber-400/50 text-amber-300' : 'bg-white/5 border-white/10 text-slate-300'}`}>
                     <input type="checkbox" checked={form.amazon_yacb}
                       onChange={e => set('amazon_yacb', e.target.checked)} className="rounded" />
                     <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Amazon Young Adult 5%
@@ -854,11 +856,11 @@ export default function NewOrders() {
 
               {/* Cashback breakdown */}
               {totalCB > 0 && (
-                <div className="mt-3 p-3 rounded-xl bg-green-50 border border-green-200 text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 text-green-600 font-semibold mb-1">
+                <div className="mt-3 p-3 rounded-xl text-xs space-y-1" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-semibold mb-1">
                     <Info className="h-3 w-3" /> Cashback Breakdown
                   </div>
-                  <div className="flex justify-between text-slate-500">
+                  <div className="flex justify-between text-slate-400">
                     <span>
                       Cashback base
                       {form.include_tax_in_cashback      ? ' + tax'      : ''}
@@ -867,20 +869,20 @@ export default function NewOrders() {
                     <span>{fmt$(cashbackBase)}</span>
                   </div>
                   {cardCB > 0 && (
-                    <div className="flex justify-between text-slate-500">
+                    <div className="flex justify-between text-slate-400">
                       <span>Card cashback ({cardRate}%)</span>
-                      <span className="text-green-600">+{fmt$(cardCB)}</span>
+                      <span className="text-emerald-400">+{fmt$(cardCB)}</span>
                     </div>
                   )}
                   {yaCB > 0 && (
-                    <div className="flex justify-between text-slate-500">
+                    <div className="flex justify-between text-slate-400">
                       <span>Amazon Young Adult (5%)</span>
-                      <span className="text-amber-600">+{fmt$(yaCB)}</span>
+                      <span className="text-amber-400">+{fmt$(yaCB)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-semibold pt-1 border-t border-green-200">
-                    <span>Total cashback</span>
-                    <span className="text-green-600">{fmt$(totalCB)}</span>
+                  <div className="flex justify-between font-semibold pt-1" style={{ borderTop: '1px solid rgba(16,185,129,0.2)' }}>
+                    <span className="text-slate-300">Total cashback</span>
+                    <span className="text-emerald-400">{fmt$(totalCB)}</span>
                   </div>
                 </div>
               )}
@@ -890,7 +892,8 @@ export default function NewOrders() {
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Notes</Label>
               <Textarea value={form.notes} onChange={e => set('notes', e.target.value)}
-                placeholder="Any additional notes..." rows={2} />
+                placeholder="Any additional notes..." rows={2}
+                style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }} />
             </div>
           </div>
 
@@ -899,59 +902,62 @@ export default function NewOrders() {
             <div className="lg:sticky lg:top-6 space-y-4">
 
               {/* Order Summary */}
-              <div className="bg-white rounded-2xl border border-purple-200 p-5 space-y-3">
-                <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-purple-500" /> Order Summary
+              <div className="rounded-2xl p-5 space-y-3" style={{ background: '#111827', border: '1px solid rgba(124,58,237,0.2)' }}>
+                <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-purple-400" /> Order Summary
                 </h3>
                 <div className="space-y-2 text-sm">
                   <SummaryRow label="Subtotal" value={fmt$(itemsSubtotal)} />
                   {tax      > 0 && <SummaryRow label="Tax"      value={`+${fmt$(tax)}`}      />}
                   {shipping > 0 && <SummaryRow label="Shipping" value={`+${fmt$(shipping)}`} />}
                   {fees     > 0 && <SummaryRow label="Fees"     value={`+${fmt$(fees)}`}     />}
-                  <div className="border-t border-purple-100 pt-2">
+                  <div className="pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     <SummaryRow label="Total Cost" value={fmt$(totalCost)} bold />
                   </div>
                   {giftCardTotal > 0 && (
-                    <SummaryRow label="Gift Cards" value={`-${fmt$(giftCardTotal)}`} color="text-amber-600" />
+                    <SummaryRow label="Gift Cards" value={`-${fmt$(giftCardTotal)}`} color="text-amber-400" />
                   )}
                   {giftCardTotal > 0 && (
                     <SummaryRow label="Final Cost" value={fmt$(finalCost)} bold />
                   )}
                   {totalCB > 0 && (
-                    <SummaryRow label="Cashback" value={`+${fmt$(totalCB)}`} color="text-green-600" />
+                    <SummaryRow label="Cashback" value={`+${fmt$(totalCB)}`} color="text-emerald-400" />
                   )}
                   {totalSalePrice > 0 && (
                     <>
-                      <div className="border-t border-purple-100 pt-2">
-                        <SummaryRow label="Sale Total" value={fmt$(totalSalePrice)} color="text-blue-600" />
+                      <div className="pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                        <SummaryRow label="Sale Total" value={fmt$(totalSalePrice)} color="text-blue-400" />
                       </div>
                       {commission !== 0 && (
                         <SummaryRow
                           label="Commission"
                           value={commission >= 0 ? `+${fmt$(commission)}` : `-${fmt$(Math.abs(commission))}`}
-                          color={commission >= 0 ? 'text-green-600' : 'text-red-500'}
+                          color={commission >= 0 ? 'text-emerald-400' : 'text-red-400'}
                         />
                       )}
                       <SummaryRow label="Net Profit" value={fmt$(netProfit)}
-                        color={netProfit >= 0 ? 'text-green-600' : 'text-red-500'} bold />
+                        color={netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'} bold />
                       <SummaryRow label="ROI" value={`${roi.toFixed(1)}%`}
-                        color={roi >= 0 ? 'text-green-600' : 'text-red-500'} />
+                        color={roi >= 0 ? 'text-emerald-400' : 'text-red-400'} />
                     </>
                   )}
                 </div>
               </div>
 
               {/* Mode badge */}
-              <div className={`rounded-xl px-4 py-3 flex items-center gap-3
-                ${form.order_type === 'churning' ? 'bg-amber-50 border border-amber-200' : 'bg-blue-50 border border-blue-200'}`}>
+              <div className={`rounded-xl px-4 py-3 flex items-center gap-3`}
+                style={{
+                  background: form.order_type === 'churning' ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)',
+                  border: `1px solid ${form.order_type === 'churning' ? 'rgba(245,158,11,0.25)' : 'rgba(59,130,246,0.25)'}`,
+                }}>
                 {form.order_type === 'churning'
-                  ? <Tag className="h-4 w-4 text-amber-500" />
-                  : <Globe className="h-4 w-4 text-blue-500" />}
+                  ? <Tag className="h-4 w-4 text-amber-400" />
+                  : <Globe className="h-4 w-4 text-blue-400" />}
                 <div>
-                  <p className={`text-sm font-semibold ${form.order_type === 'churning' ? 'text-amber-700' : 'text-blue-700'}`}>
+                  <p className={`text-sm font-semibold ${form.order_type === 'churning' ? 'text-amber-300' : 'text-blue-300'}`}>
                     {form.order_type === 'churning' ? 'Churning Mode' : 'Marketplace Mode'}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-400">
                     {form.buyer || form.marketplace_platform
                       ? `Buyer: ${form.buyer || form.marketplace_platform}`
                       : 'No buyer selected'}
@@ -961,13 +967,13 @@ export default function NewOrders() {
 
               {/* Receipts indicator */}
               {receipts.length > 0 && (
-                <div className="rounded-xl px-4 py-3 flex items-center gap-3 bg-slate-50 border border-slate-200">
+                <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <Paperclip className="h-4 w-4 text-slate-400" />
                   <div>
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-slate-200">
                       {receipts.length} receipt{receipts.length !== 1 ? 's' : ''} attached
                     </p>
-                    <p className="text-xs text-slate-400">Will be saved with this order</p>
+                    <p className="text-xs text-slate-500">Will be saved with this order</p>
                   </div>
                 </div>
               )}
@@ -989,7 +995,7 @@ export default function NewOrders() {
               </button>
 
               <button type="button" onClick={() => window.history.back()}
-                className="w-full py-2.5 rounded-xl text-sm text-slate-500 hover:text-slate-700 border border-slate-200 hover:bg-slate-50 transition">
+                className="w-full py-2.5 rounded-xl text-sm text-slate-400 hover:text-slate-200 transition" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
                 Cancel — Back to Transactions
               </button>
             </div>
