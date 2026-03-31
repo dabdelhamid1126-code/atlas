@@ -38,8 +38,27 @@ export default function GoalTracker({ metrics }) {
               : goal.type === 'revenue' ? (metrics.saleRevenue || 0)
               : goal.type === 'cashback' ? (metrics.cashback || 0)
               : 0;
-            const pct = Math.min((current / goal.target_value) * 100, 100);
-            const reached = current >= goal.target_value;
+            const isNegative = current < 0;
+            const pct = isNegative ? 0 : Math.min((current / goal.target_value) * 100, 100);
+            const reached = !isNegative && current >= goal.target_value;
+
+            const barColor = isNegative
+              ? 'linear-gradient(90deg, #ef4444, #f87171)'
+              : reached
+                ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                : 'linear-gradient(90deg, #10b981, #06b6d4)';
+
+            const borderColor = isNegative
+              ? 'rgba(239,68,68,0.3)'
+              : reached
+                ? 'rgba(16,185,129,0.3)'
+                : 'rgba(255,255,255,0.07)';
+
+            const glowShadow = isNegative
+              ? '0 0 16px rgba(239,68,68,0.08)'
+              : reached
+                ? '0 0 16px rgba(16,185,129,0.08)'
+                : 'none';
 
             return (
               <div
@@ -47,8 +66,8 @@ export default function GoalTracker({ metrics }) {
                 className="rounded-xl border p-4 overflow-hidden min-w-0"
                 style={{
                   background: 'rgba(255,255,255,0.03)',
-                  borderColor: reached ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.07)',
-                  boxShadow: reached ? '0 0 16px rgba(16,185,129,0.08)' : 'none',
+                  borderColor,
+                  boxShadow: glowShadow,
                 }}
               >
                 <div className="flex items-start justify-between gap-1 mb-1 flex-wrap">
@@ -61,7 +80,7 @@ export default function GoalTracker({ metrics }) {
                   </span>
                 </div>
                 <div className="flex items-baseline gap-1 mb-3 flex-wrap">
-                  <span className={`text-xl font-bold text-slate-200`}>
+                  <span className={`text-xl font-bold ${isNegative ? 'text-red-400' : 'text-slate-200'}`}>
                     {goal.type === 'transactions' ? current : abbrevDollar(current)}
                   </span>
                   <span className="text-xs text-slate-500">
@@ -71,18 +90,15 @@ export default function GoalTracker({ metrics }) {
                 <div className="h-2 rounded-full overflow-hidden mb-2" style={{ background: 'rgba(255,255,255,0.06)' }}>
                   <div
                     className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${pct}%`,
-                      background: reached
-                        ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-                        : 'linear-gradient(90deg, #10b981, #06b6d4)',
-                    }}
+                    style={{ width: `${pct}%`, background: barColor }}
                   />
                 </div>
                 <p className="text-xs font-semibold">
-                  {reached
-                    ? <span className="text-amber-400">Goal reached! 🎉</span>
-                    : <span className="text-slate-500">{Math.round(pct)}% complete</span>
+                  {isNegative
+                    ? <span className="text-red-400">Negative value</span>
+                    : reached
+                      ? <span className="text-amber-400">Goal reached! 🎉</span>
+                      : <span className="text-slate-500">{Math.round(pct)}% complete</span>
                   }
                 </p>
               </div>

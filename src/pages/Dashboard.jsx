@@ -406,9 +406,9 @@ export default function Dashboard() {
           value={`${metrics.avgRoi.toFixed(2)}%`}
           sub="return on investment"
           icon={Percent}
-          colorClass="text-cyan-400"
-          iconBg="bg-cyan-500/10"
-          iconBorder="border-cyan-500/20"
+          colorClass={metrics.avgRoi < 0 ? 'text-red-400' : 'text-cyan-400'}
+          iconBg={metrics.avgRoi < 0 ? 'bg-red-500/10' : 'bg-cyan-500/10'}
+          iconBorder={metrics.avgRoi < 0 ? 'border-red-500/20' : 'border-cyan-500/20'}
         />
       </div>
 
@@ -431,9 +431,9 @@ export default function Dashboard() {
         </button>
         {showProfitDetails && (
           <div className="px-5 pb-5 pt-4 border-t grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
-              <p className="text-[10px] text-emerald-500 font-semibold uppercase tracking-wider mb-1">Revenue</p>
-              <p className="text-lg font-bold text-emerald-400">{fmt(metrics.saleRevenue)}</p>
+            <div className={`rounded-xl p-3 ${metrics.saleRevenue < 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'}`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${metrics.saleRevenue < 0 ? 'text-red-400' : 'text-emerald-500'}`}>Revenue</p>
+              <p className={`text-lg font-bold ${metrics.saleRevenue < 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmt(metrics.saleRevenue)}</p>
             </div>
             <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
               <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider mb-1">Card Spend</p>
