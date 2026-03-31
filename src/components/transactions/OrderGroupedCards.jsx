@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, Edit2, Trash2, ImageOff } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import RetailerLogo from '@/components/shared/BrandLogo';
 
 // ── Store logo gradients ──────────────────────────────────────────────────
 const STORE_GRADIENTS = {
@@ -119,14 +120,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         </div>
 
         {/* Store logo */}
-        <div style={{
-          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-          background: getStoreGradient(order.retailer),
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 800, color: 'white', letterSpacing: '0.02em',
-        }}>
-          {initials}
-        </div>
+        <RetailerLogo retailer={order.retailer} size={38} />
 
         {/* Order info */}
         <div style={{ minWidth: 0 }}>
