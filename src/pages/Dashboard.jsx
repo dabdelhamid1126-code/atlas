@@ -82,16 +82,15 @@ function PipelineCard({ status, count, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-xl border p-2 sm:p-3 flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3 w-full text-center sm:text-left cursor-pointer hover:-translate-y-0.5 transition-all overflow-hidden min-w-0 ${cfg.border}`}
+      title={cfg.label}
+      className={`rounded-xl border p-2 flex flex-col items-center gap-1 w-full text-center cursor-pointer hover:-translate-y-0.5 transition-all overflow-hidden min-w-0 ${cfg.border}`}
       style={{ background: '#111827' }}
     >
-      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-        <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${cfg.color}`} />
+      <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+        <Icon className={`h-4 w-4 ${cfg.color}`} />
       </div>
-      <div className="min-w-0 w-full">
-        <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate">{cfg.label}</p>
-        <p className={`text-lg sm:text-xl font-bold ${cfg.color}`}>{count}</p>
-      </div>
+      <p className={`hidden lg:block text-[10px] text-slate-500 font-medium w-full truncate`}>{cfg.label}</p>
+      <p className={`text-base lg:text-lg font-bold ${cfg.color}`}>{count}</p>
     </button>
   );
 }
