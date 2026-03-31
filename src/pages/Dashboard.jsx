@@ -100,13 +100,13 @@ function PipelineCard({ status, count, onClick }) {
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-3 text-xs">
-      <p className="font-semibold text-slate-700 mb-1.5">{label}</p>
+    <div className="rounded-xl shadow-lg p-3 text-xs" style={{ background: '#1e2738', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <p className="font-semibold text-slate-200 mb-1.5">{label}</p>
       {payload.map(p => (
         <div key={p.name} className="flex items-center gap-2 mb-0.5">
           <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
-          <span className="text-slate-500 capitalize">{p.name}:</span>
-          <span className="font-semibold text-slate-700">{fmt(p.value)}</span>
+          <span className="text-slate-400 capitalize">{p.name}:</span>
+          <span className="font-semibold text-slate-100">{fmt(p.value)}</span>
         </div>
       ))}
     </div>
@@ -313,7 +313,7 @@ export default function Dashboard() {
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2">
               {greeting()}, {firstName} 👋
               {refreshing && <RefreshCw className="w-4 h-4 text-slate-400 animate-spin" />}
             </h1>
@@ -328,21 +328,21 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+          <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
             {MODE_FILTERS.map(mode => (
               <button key={mode} onClick={() => setModeFilter(mode)}
                 className={`px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all ${
-                  modeFilter === mode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
+                  modeFilter === mode ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                 }`}>
                 {mode}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+          <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
             {TIME_FILTERS.map(time => (
               <button key={time} onClick={() => setTimeFilter(time)}
                 className={`px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all ${
-                  timeFilter === time ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
+                  timeFilter === time ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                 }`}>
                 {time}
               </button>
@@ -503,31 +503,31 @@ export default function Dashboard() {
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gradProfit" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gradSpent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#60a5fa" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gradCashback" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#ec4899" stopOpacity={0.2} />
                     <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
                 <Tooltip content={<ChartTooltip />} />
                 <Area type="monotone" dataKey="revenue"  stroke="#10b981" fill="url(#gradRevenue)"  strokeWidth={2} name="Revenue"  dot={{ r: 3, fill: '#10b981' }} />
-                <Area type="monotone" dataKey="profit"   stroke="#8b5cf6" fill="url(#gradProfit)"   strokeWidth={2} name="Profit"   dot={{ r: 3, fill: '#8b5cf6' }} />
-                <Area type="monotone" dataKey="spent"    stroke="#3b82f6" fill="url(#gradSpent)"    strokeWidth={2} name="Spent"    dot={{ r: 3, fill: '#3b82f6' }} />
+                <Area type="monotone" dataKey="profit"   stroke="#06b6d4" fill="url(#gradProfit)"   strokeWidth={2} name="Profit"   dot={{ r: 3, fill: '#06b6d4' }} />
+                <Area type="monotone" dataKey="spent"    stroke="#60a5fa" fill="url(#gradSpent)"    strokeWidth={2} name="Spent"    dot={{ r: 3, fill: '#60a5fa' }} />
                 <Area type="monotone" dataKey="cashback" stroke="#ec4899" fill="url(#gradCashback)" strokeWidth={2} name="Cashback" dot={{ r: 3, fill: '#ec4899' }} />
               </AreaChart>
             </ResponsiveContainer>
           )}
           <div className="flex flex-wrap items-center gap-4 mt-3">
-            {[['#10b981','Revenue'],['#8b5cf6','Profit'],['#3b82f6','Spent'],['#ec4899','Cashback']].map(([color, label]) => (
+            {[['#10b981','Revenue'],['#06b6d4','Profit'],['#60a5fa','Spent'],['#ec4899','Cashback']].map(([color, label]) => (
               <div key={label} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
                 <span className="text-xs text-slate-400">{label}</span>
@@ -537,10 +537,10 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">By Status</h2>
+          <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">By Status</h2>
             {byStatusData.length === 0 ? (
-              <p className="text-sm text-slate-400">No data</p>
+              <p className="text-sm text-slate-500">No data</p>
             ) : (
               <div className="flex items-center gap-4">
                 <ResponsiveContainer width={100} height={100}>
@@ -555,9 +555,9 @@ export default function Dashboard() {
                     <div key={d.name} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                        <span className="text-slate-500 uppercase text-[10px] font-medium">{d.name}</span>
+                        <span className="text-slate-400 uppercase text-[10px] font-medium">{d.name}</span>
                       </div>
-                      <span className="font-semibold text-slate-700">{d.value}</span>
+                      <span className="font-semibold text-slate-200">{d.value}</span>
                     </div>
                   ))}
                 </div>
@@ -565,24 +565,24 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Top Cards</h2>
+          <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Top Cards</h2>
             {topCards.length === 0 ? (
-              <p className="text-sm text-slate-400">No card data</p>
+              <p className="text-sm text-slate-500">No card data</p>
             ) : (
               <div className="space-y-3">
                 {topCards.map((card, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="h-3.5 w-3.5 text-violet-500" />
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                        <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 truncate">{card.name}</p>
-                        <p className="text-[10px] text-slate-400">{card.orders} txns</p>
+                        <p className="text-sm font-medium text-slate-200 truncate">{card.name}</p>
+                        <p className="text-[10px] text-slate-500">{card.orders} txns</p>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-violet-600 flex-shrink-0 ml-2">{fmt(card.spent)}</span>
+                    <span className="text-sm font-semibold text-emerald-400 flex-shrink-0 ml-2">{fmt(card.spent)}</span>
                   </div>
                 ))}
               </div>
@@ -593,19 +593,19 @@ export default function Dashboard() {
 
       {/* ── Recent Transactions ── */}
       {modalImage && <ImageModal src={modalImage.src} alt={modalImage.alt} onClose={() => setModalImage(null)} />}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Transactions</h2>
+      <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+        <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Recent Transactions</h2>
         </div>
         {sortedRecent.length === 0 ? (
-          <div className="px-5 py-8 text-sm text-slate-400 text-center">No transactions in this range.</div>
+          <div className="px-5 py-8 text-sm text-slate-500 text-center">No transactions in this range.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60">
+                <tr className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                   {['','Product','Retailer','Buyer','Cost','Cashback','Profit','Status','Date'].map((h, i) => (
-                    <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -620,34 +620,35 @@ export default function Dashboard() {
                   const imageUrl = order.image_url || order.items?.[0]?.image_url || null;
                   const buyer = order.sale_platform || order.buyer || '—';
                   return (
-                    <tr key={order.id || i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <tr key={order.id || i} className="border-b hover:bg-white/3 transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
                       {/* Image */}
                       <td className="pl-4 pr-2 py-2.5">
                         <div
-                          className="w-9 h-9 rounded-lg border border-slate-100 bg-slate-50 overflow-hidden flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition"
+                          className="w-9 h-9 rounded-lg border overflow-hidden flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition"
+                          style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}
                           onClick={() => imageUrl && setModalImage({ src: imageUrl, alt: productName })}
                         >
                           {imageUrl ? (
                             <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
                           ) : (
-                            <ImageOff className="w-4 h-4 text-slate-300" />
+                            <ImageOff className="w-4 h-4 text-slate-600" />
                           )}
                         </div>
                       </td>
                       {/* Product */}
-                      <td className="px-4 py-2.5 font-medium text-slate-800 max-w-[160px]">
+                      <td className="px-4 py-2.5 font-medium text-slate-200 max-w-[160px]">
                         <span className="truncate block">{productName}</span>
                       </td>
                       {/* Retailer */}
-                      <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{order.retailer || '—'}</td>
+                      <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap">{order.retailer || '—'}</td>
                       {/* Buyer */}
-                      <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{buyer}</td>
+                      <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap">{buyer}</td>
                       {/* Cost */}
-                      <td className="px-4 py-2.5 text-blue-500 font-medium whitespace-nowrap">{fmt(cost)}</td>
+                      <td className="px-4 py-2.5 text-blue-400 font-medium whitespace-nowrap">{fmt(cost)}</td>
                       {/* Cashback */}
-                      <td className="px-4 py-2.5 text-pink-500 font-medium whitespace-nowrap">{fmt(cashbackAmt)}</td>
+                      <td className="px-4 py-2.5 text-pink-400 font-medium whitespace-nowrap">{fmt(cashbackAmt)}</td>
                       {/* Profit */}
-                      <td className={`px-4 py-2.5 font-semibold whitespace-nowrap ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      <td className={`px-4 py-2.5 font-semibold whitespace-nowrap ${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {fmt(profit)}
                       </td>
                       {/* Status */}
@@ -657,11 +658,11 @@ export default function Dashboard() {
                             {statusCfg.label}
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-400 capitalize">{order.status || '—'}</span>
+                          <span className="text-xs text-slate-500 capitalize">{order.status || '—'}</span>
                         )}
                       </td>
                       {/* Date */}
-                      <td className="px-4 py-2.5 text-xs text-slate-400 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">
                         {order.order_date ? format(parseISO(order.order_date), 'M/d/yyyy') : '—'}
                       </td>
                     </tr>
