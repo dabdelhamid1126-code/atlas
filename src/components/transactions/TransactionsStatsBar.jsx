@@ -21,7 +21,7 @@ export default function TransactionsStatsBar({ orders = [] }) {
   }, 0);
 
   const hasAnySales = orders.some(o => (o.sale_events || []).length > 0);
-  const profitValueColor = hasAnySales ? (totalProfit > 0 ? '#10b981' : '#f87171') : '#94a3b8';
+  const profitValueColor = hasAnySales ? (totalProfit > 0 ? '#10b981' : '#ef4444') : '#94a3b8';
   const profitBg = hasAnySales ? (totalProfit > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)') : 'rgba(148,163,184,0.08)';
 
   const stats = [
@@ -53,9 +53,9 @@ export default function TransactionsStatsBar({ orders = [] }) {
       label: 'Total Cost',
       value: `$${totalCost.toFixed(2)}`,
       icon: CreditCard,
-      iconBg: 'rgba(239,68,68,0.1)',
-      iconColor: '#f87171',
-      valueColor: '#f87171',
+      iconBg: 'rgba(96,165,250,0.1)',
+      iconColor: '#60a5fa',
+      valueColor: '#60a5fa',
     },
     {
       label: 'Total Profit',
@@ -68,18 +68,18 @@ export default function TransactionsStatsBar({ orders = [] }) {
   ];
 
   return (
-    <div className="grid grid-cols-5 gap-3 mb-5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={stat.label} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: stat.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon style={{ width: 18, height: 18, color: stat.iconColor }} />
+          <div key={stat.label} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 14px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: stat.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon style={{ width: 16, height: 16, color: stat.iconColor }} />
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#64748b', marginBottom: 2 }}>{stat.label}</p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: stat.valueColor, lineHeight: 1.2 }}>{stat.value}</p>
+                <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#64748b', marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stat.label}</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: stat.valueColor, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stat.value}</p>
               </div>
             </div>
           </div>
