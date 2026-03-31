@@ -176,6 +176,50 @@
         }
       }
     },
+    "sale_events": {
+      "type": "array",
+      "description": "Individual sale events \u2014 supports splitting one order across multiple buyers",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "buyer": {
+            "type": "string",
+            "description": "Buyer name or marketplace platform"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "sale_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "payout_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_name": {
+                  "type": "string"
+                },
+                "qty": {
+                  "type": "number"
+                },
+                "sale_price": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "original_price": {
       "type": "number",
       "description": "Original price before any discounts or promotions"
