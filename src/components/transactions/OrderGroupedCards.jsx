@@ -76,7 +76,7 @@ function StatCol({ label, value, color = '#e2e8f0' }) {
 }
 
 // ── Single order card ─────────────────────────────────────────────────────
-function OrderCard({ order, creditCards, rewards, onEdit, onDelete, isSelected, onToggleSelect }) {
+function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelete, isSelected, onToggleSelect }) {
   const [expanded, setExpanded] = useState(true);
 
   const card = creditCards.find(c => c.id === order.credit_card_id);
@@ -173,6 +173,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, isSelected, 
             const qty = parseInt(item.quantity_ordered) || 1;
             const itemProfit = salePrice > 0 ? (salePrice - unitCost) * qty : null;
             const itemProfitColor = itemProfit !== null ? (itemProfit >= 0 ? '#10b981' : '#f87171') : null;
+            const imageUrl = item.product_image_url || products.find(p => p.id === item.product_id)?.image;
             return (
               <div key={idx} style={{
                 padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
@@ -181,7 +182,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, isSelected, 
               }}>
                 <div style={{ width: 38, flexShrink: 0 }}></div>{/* spacer for checkbox */}
                 <div style={{ width: 38, flexShrink: 0 }}></div>{/* spacer for logo */}
-                <ItemImg src={item.product_image_url} name={item.product_name} />
+                <ItemImg src={imageUrl} name={item.product_name} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.product_name || '—'}
@@ -242,7 +243,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, isSelected, 
 const PAGE_SIZE = 25;
 
 export default function OrderGroupedCards({
-  data = [], creditCards = [], rewards = [],
+  data = [], creditCards = [], rewards = [], products = [],
   onEdit, onDelete, isLoading,
   selectedIds, onSelectionChange,
   onClearFilters,
@@ -296,6 +297,7 @@ export default function OrderGroupedCards({
             order={order}
             creditCards={creditCards}
             rewards={rewards}
+            products={products}
             onEdit={onEdit}
             onDelete={onDelete}
             isSelected={selectedIds.has(order.id)}

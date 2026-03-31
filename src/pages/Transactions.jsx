@@ -571,6 +571,7 @@ export default function Transactions() {
         data={sortedOrders}
         creditCards={creditCards}
         rewards={rewards}
+        products={products}
         onEdit={(order) => { setEditingOrder(order); setFormOpen(true); }}
         onDelete={(order) => { if (confirm('Delete this order?')) deleteMutation.mutate(order); }}
         isLoading={isLoading}
