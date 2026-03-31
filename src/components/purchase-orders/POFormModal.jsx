@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -117,6 +118,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
   const [formData, setFormData] = useState(() => getInitialForm(order));
   const [activeTab, setActiveTab] = useState('details');
   const [visible, setVisible] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (open) {
@@ -206,11 +208,22 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
     const hasSplits = (formData.payment_splits || []).length > 1;
     const splitsTotal = (formData.payment_splits || []).reduce((s, sp) => s + (parseFloat(sp.amount) || 0), 0);
     if (hasSplits && Math.abs(splitsTotal - totalPrice) > 0.01) { toast.error(`Split amounts ($${splitsTotal.toFixed(2)}) must equal order total ($${totalPrice.toFixed(2)})`); return; }
+    
+    // Normalize sale_events structure: use 'quantity' instead of 'qty'
+    const normalizedSaleEvents = formData.sale_events.map(ev => ({
+      ...ev,
+      items: ev.items.map(it => ({
+        product_name: it.product_name || '',
+        quantity: parseInt(it.qty) || 0,
+        sale_price: parseFloat(it.sale_price) || 0,
+      }))
+    }));
+    
     const dataToSubmit = {
       ...formData,
       items,
       tracking_numbers: formData.tracking_numbers.filter(Boolean),
-      sale_events: formData.sale_events.map(ev => ({ ...ev, items: ev.items.map(it => ({ ...it, qty: parseInt(it.qty) || 0, sale_price: parseFloat(it.sale_price) || 0 })) })),
+      sale_events: normalizedSaleEvents,
       tax, shipping_cost: shippingCost, fees, total_cost: totalPrice,
       gift_card_value: giftCardTotal, final_cost: totalPrice - giftCardTotal,
       credit_card_id: hasSplits ? (formData.payment_splits[0]?.card_id || null) : (formData.credit_card_id || null),
@@ -220,7 +233,12 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
     };
     delete dataToSubmit.amazon_yacb;
     delete dataToSubmit.cashback_rate_override;
+    
+    // Call onSubmit and refresh orders afterward
     onSubmit(dataToSubmit);
+    
+    // Invalidate purchase orders query to refresh the list
+    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
   };
 
   if (!open && !visible) return null;

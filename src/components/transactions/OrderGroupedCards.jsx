@@ -5,6 +5,7 @@ import { format, parseISO } from 'date-fns';
 // ── Store domain mapping ──────────────────────────────────────────────────
 const STORE_DOMAINS = {
   'best buy': 'bestbuy.com',
+  'bestbuy': 'bestbuy.com',
   'amazon': 'amazon.com',
   'walmart': 'walmart.com',
   'apple': 'apple.com',
@@ -15,22 +16,32 @@ const STORE_DOMAINS = {
   'woot': 'woot.com',
 };
 
+const normalizeStore = (name) => {
+  return String(name || '').toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+};
+
+const NORMALIZED_STORE_DOMAINS = Object.fromEntries(
+  Object.entries(STORE_DOMAINS).map(([k, v]) => [normalizeStore(k), v])
+);
+
 const getStoreDomain = (vendorName) => {
   if (!vendorName) return null;
-  const normalized = vendorName.toLowerCase().trim();
-  if (STORE_DOMAINS[normalized]) return STORE_DOMAINS[normalized];
-  // Try to match by substring
-  for (const [key, domain] of Object.entries(STORE_DOMAINS)) {
-    if (normalized.includes(key) || key.includes(normalized)) return domain;
+  // Exact match first
+  if (STORE_DOMAINS[vendorName.toLowerCase()]) return STORE_DOMAINS[vendorName.toLowerCase()];
+  // Normalized match
+  const norm = normalizeStore(vendorName);
+  if (NORMALIZED_STORE_DOMAINS[norm]) return NORMALIZED_STORE_DOMAINS[norm];
+  // Partial match
+  for (const [key, val] of Object.entries(NORMALIZED_STORE_DOMAINS)) {
+    if (norm.includes(key) || key.includes(norm)) return val;
   }
-  // Fallback: try vendor name as domain
-  const fallbackDomain = vendorName.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '') + '.com';
-  return fallbackDomain;
+  return null;
 };
 
 const getStoreLogoUrl = (retailer) => {
   if (!retailer) return null;
   const domain = getStoreDomain(retailer);
+  if (!domain) return null;
   return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(retailer)}`;
 };
 
@@ -102,8 +113,16 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
   const orderRewards = rewards.filter(r => r.purchase_order_id === order.id);
   const cashback = orderRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
   const totalCost = order.final_cost || order.total_cost || 0;
-  const totalSale = order.items?.reduce((s, it) => s + (parseFloat(it.sale_price) || 0) * (parseInt(it.quantity_ordered) || 1), 0) || 0;
-  const profit = totalSale > 0 ? totalSale - totalCost + cashback : cashback;
+  
+  // Calculate revenue from sale_events
+  const totalRevenue = order.sale_events?.reduce(
+    (sum, event) => sum + (event.items?.reduce(
+      (s, item) => s + ((parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 0)), 0
+    ) || 0), 0
+  ) || 0;
+  
+  // Profit: revenue - cost + cashback
+  const profit = totalRevenue > 0 ? totalRevenue - totalCost + cashback : cashback;
   const profitColor = profit >= 0 ? '#10b981' : '#f87171';
   const itemCount = order.items?.length || 0;
   const totalQty = order.items?.reduce((s, it) => s + (parseInt(it.quantity_ordered) || 1), 0) || 0;
@@ -201,8 +220,9 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         {/* Right stats */}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
           <StatCol label="Cost" value={fmt$(totalCost)} color="#60a5fa" />
-          {cashback > 0 && <StatCol label="Cashback" value={fmt$(cashback)} color="#06b6d4" />}
-          {(totalSale > 0 || profit !== 0) && <StatCol label="Profit" value={fmt$(profit)} color={profitColor} />}
+          {totalRevenue > 0 && <StatCol label="Revenue" value={fmt$(totalRevenue)} color="#10b981" />}
+          {totalRevenue > 0 && <StatCol label="Profit" value={fmt$(profit)} color={profitColor} />}
+          {totalRevenue === 0 && cashback > 0 && <StatCol label="Cashback" value={fmt$(cashback)} color="#06b6d4" />}
           {paymentLabel && <StatCol label="Payment" value={paymentLabel} color="#94a3b8" />}
           <StatusBadge status={order.status} />
           <ChevronDown style={{
@@ -215,38 +235,45 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
 
       {/* ── Items list ── */}
       {expanded && itemCount > 0 && (
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {order.items.map((item, idx) => {
-            const unitCost = parseFloat(item.unit_cost) || 0;
-            const salePrice = parseFloat(item.sale_price) || 0;
-            const qty = parseInt(item.quantity_ordered) || 1;
-            const itemProfit = salePrice > 0 ? (salePrice - unitCost) * qty : null;
-            const itemProfitColor = itemProfit !== null ? (itemProfit >= 0 ? '#10b981' : '#f87171') : null;
-            const imageUrl = item.product_image_url || products.find(p => p.id === item.product_id)?.image;
-            return (
-              <div key={idx} style={{
-                padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
-                borderBottom: idx < order.items.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-                background: 'transparent',
-              }}>
-                <div style={{ width: 38, flexShrink: 0 }}></div>{/* spacer for checkbox */}
-                <div style={{ width: 38, flexShrink: 0 }}></div>{/* spacer for logo */}
-                <ItemImg src={imageUrl} name={item.product_name} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {item.product_name || '—'}
-                  </div>
-                  {item.upc && <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{item.upc}</div>}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        {order.items.map((item, idx) => {
+          const unitCost = parseFloat(item.unit_cost) || 0;
+          const qty = parseInt(item.quantity_ordered) || 1;
+          const imageUrl = item.product_image_url || products.find(p => p.id === item.product_id)?.image;
+
+          // Find matching sale event item
+          const saleEventItem = order.sale_events?.flatMap(e => e.items || []).find(
+            si => si.product_name?.toLowerCase() === item.product_name?.toLowerCase()
+          );
+
+          const salePrice = saleEventItem ? parseFloat(saleEventItem.sale_price) || 0 : 0;
+          const itemProfit = salePrice > 0 ? (salePrice - unitCost) * qty : null;
+          const itemProfitColor = itemProfit !== null ? (itemProfit >= 0 ? '#10b981' : '#f87171') : null;
+
+          return (
+            <div key={idx} style={{
+              padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
+              borderBottom: idx < order.items.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
+              background: 'transparent',
+            }}>
+              <div style={{ width: 38, flexShrink: 0 }}></div>{/* spacer for checkbox */}
+              <div style={{ width: 38, flexShrink: 0 }}></div>{/* spacer for logo */}
+              <ItemImg src={imageUrl} name={item.product_name} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {item.product_name || '—'}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
-                  <StatCol label="Qty" value={qty} color="#e2e8f0" />
-                  <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
-                  <StatCol label="Sale/unit" value={salePrice > 0 ? fmt$(salePrice) : '—'} color={salePrice > 0 ? '#10b981' : '#475569'} />
-                  <StatCol label="Profit" value={itemProfit !== null ? fmt$(itemProfit) : '—'} color={itemProfit !== null ? itemProfitColor : '#475569'} />
-                </div>
+                {item.upc && <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{item.upc}</div>}
               </div>
-            );
-          })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+                <StatCol label="Qty" value={qty} color="#e2e8f0" />
+                <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
+                <StatCol label="Sale/unit" value={salePrice > 0 ? fmt$(salePrice) : '—'} color={salePrice > 0 ? '#10b981' : '#475569'} />
+                <StatCol label="Profit" value={itemProfit !== null ? fmt$(itemProfit) : '—'} color={itemProfit !== null ? itemProfitColor : '#475569'} />
+              </div>
+            </div>
+          );
+        })}
         </div>
       )}
 
@@ -259,6 +286,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
       }}>
         <div style={{ fontSize: 11, color: '#475569', display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 2 }}>
           <span>Total: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{fmt$(totalCost)}</span></span>
+          {totalRevenue > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>Revenue: <span style={{ color: '#10b981', fontWeight: 600 }}>{fmt$(totalRevenue)}</span></span></>}
           {cashback > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>CB: <span style={{ color: '#06b6d4', fontWeight: 600 }}>{fmt$(cashback)}</span></span></>}
           {order.order_number && <><span style={{ margin: '0 6px' }}>·</span><span>Order #: <span style={{ color: '#94a3b8' }}>{order.order_number}</span></span></>}
           {order.buyer && <><span style={{ margin: '0 6px' }}>·</span><span>Buyer: <span style={{ color: '#94a3b8' }}>{order.buyer}</span></span></>}
