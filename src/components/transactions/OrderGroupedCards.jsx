@@ -366,7 +366,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           {order.credit_card_id && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <CardLogo cardName={paymentLabel} size={16} />
-              <span style={{ fontSize: 11, color: '#64748b', fontFamily: 'monospace' }}>••••{order.credit_card_id?.slice(-4)}</span>
+              <span style={{ fontSize: 11, color: '#64748b', fontFamily: 'monospace' }}>••••{card?.last_4_digits || order.credit_card_id?.slice(-4)}</span>
             </div>
           )}
           <StatusBadge status={order.status} />
