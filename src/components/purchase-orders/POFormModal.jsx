@@ -49,6 +49,53 @@ import GiftCardPicker from '@/components/shared/GiftCardPicker';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+// ── Brandfetch for card logos ──────────────────────────────────────────────
+const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
+
+const getCardDomain = (cardName) => {
+  const n = String(cardName || '').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+  if (n.includes('chase')) return 'chase.com';
+  if (n.includes('amex') || n.includes('american')) return 'americanexpress.com';
+  if (n.includes('citi')) return 'citi.com';
+  if (n.includes('capital')) return 'capitalone.com';
+  if (n.includes('discover')) return 'discover.com';
+  if (n.includes('bofa') || n.includes('bankofamerica') || n.includes('bank of america')) return 'bankofamerica.com';
+  if (n.includes('usbank') || n.includes('us bank')) return 'usbank.com';
+  if (n.includes('wells')) return 'wellsfargo.com';
+  if (n.includes('barclays')) return 'barclays.com';
+  if (n.includes('costco')) return 'costco.com';
+  if (n.includes('amazon')) return 'amazon.com';
+  if (n.includes('apple')) return 'apple.com';
+  if (n.includes('paypal')) return 'paypal.com';
+  if (n.includes('target')) return 'target.com';
+  if (n.includes('walmart')) return 'walmart.com';
+  return null;
+};
+
+const getCardBrandfetchUrl = (cardName) => {
+  const domain = getCardDomain(cardName);
+  if (!domain) return null;
+  return `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_CLIENT_ID}`;
+};
+
+function CardLogo({ cardName, size = 20 }) {
+  const [err, setErr] = useState(false);
+  const logoUrl = getCardBrandfetchUrl(cardName);
+  const initials = (cardName || 'X').split(' ')[0].charAt(0).toUpperCase();
+  
+  if (!logoUrl || err) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: size * 0.4, flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }}>
+        {initials}
+      </div>
+    );
+  }
+  return (
+    <img src={logoUrl} alt={cardName} onError={() => setErr(true)}
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+  );
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────
 const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'received', 'cancelled'];
 const PRODUCT_CATEGORIES = ['Electronics', 'Home & Garden', 'Toys & Games', 'Health & Beauty', 'Sports', 'Clothing', 'Tools', 'Gift Cards', 'Grocery', 'Other'];
@@ -584,15 +631,21 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                         <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}>
                           {formData.credit_card_id ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
-                              <img src={`https://cdn.brandfetch.io/id/${selectedCard?.issuer?.toLowerCase().replace(/\s+/g, '')}?c=1idzVIG0BYPKsFIDJDI`} alt={selectedCard?.issuer} 
-                                style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'contain' }} onError={e => e.target.style.display = 'none'} />
+                              <CardLogo cardName={selectedCard?.card_name} size={16} />
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                                 {selectedCard?.card_name}{selectedCard?.last_4_digits ? ` •${selectedCard.last_4_digits}` : ''}
                               </span>
                             </div>
                           ) : <SelectValue placeholder="Select..." />}
                         </SelectTrigger>
-                        <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{creditCards.filter(c => c.active !== false).map(c => <SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{c.card_name} {c.last_4_digits ? `•${c.last_4_digits}` : ''}</SelectItem>)}</SelectContent>
+                        <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{creditCards.filter(c => c.active !== false).map(c => (
+                          <SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <CardLogo cardName={c.card_name} size={20} />
+                              <span>{c.card_name}{c.last_4_digits ? ` •${c.last_4_digits}` : ''}</span>
+                            </div>
+                          </SelectItem>
+                        ))}</SelectContent>
                       </Select>
                     ) : <span style={{ fontSize: 11, color: '#64748b' }}>Split</span>}
                   </div>
@@ -603,8 +656,8 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500,
                       ...(cardRate > 0 ? {background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.2)', color:'#10b981'} : {background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#64748b'}) }}>
-                      <CreditCard style={{ width: 13, height: 13 }} />
-                      {cardRate > 0 ? `💳 ${cardRate}% → $${cashbackAmount.toFixed(2)} est.` : 'Select a card for cashback'}
+                      {cardRate > 0 ? <CardLogo cardName={selectedCard?.card_name} size={13} /> : <CreditCard style={{ width: 13, height: 13 }} />}
+                      {cardRate > 0 ? `${cardRate}% → $${cashbackAmount.toFixed(2)} est.` : 'Select a card for cashback'}
                     </div>
                     {cardRate > 0 && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -626,8 +679,22 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                         <div key={idx} style={{ display:'grid', gridTemplateColumns:'5fr 3fr 3fr 32px', gap:8, alignItems:'end', padding:'10px 12px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
                           <div><LBL>Card</LBL>
                             <Select value={sp.card_id||''} onValueChange={v => updateSplit(idx,'card_id',v)}>
-                              <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Card..." /></SelectTrigger>
-                              <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{creditCards.filter(c=>c.active!==false).map(c=><SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{c.card_name}</SelectItem>)}</SelectContent>
+                              <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}>
+                                {sp.card_id ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <CardLogo cardName={spCard?.card_name} size={14} />
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{spCard?.card_name}</span>
+                                  </div>
+                                ) : <SelectValue placeholder="Card..." />}
+                              </SelectTrigger>
+                              <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{creditCards.filter(c=>c.active!==false).map(c=>(
+                                <SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <CardLogo cardName={c.card_name} size={18} />
+                                    <span>{c.card_name}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}</SelectContent>
                             </Select>
                           </div>
                           <div><LBL>Amount</LBL>
@@ -804,7 +871,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
         <div style={{ padding:'14px 24px', borderTop:'1px solid rgba(255,255,255,0.07)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', background:'#111827' }}>
           <div style={{fontSize:12, color:'#94a3b8', display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 2}}>
             <span style={{fontWeight:600, color:'#e2e8f0'}}>Total: ${totalPrice.toFixed(2)}</span>
-            {cashbackAmount > 0 && <><span style={{ margin: '0 6px' }}>·</span><span style={{color:'#10b981'}}>CB: ${cashbackAmount.toFixed(2)}</span></>}
+            {cashbackAmount > 0 && <><span style={{ margin: '0 6px' }}>·</span><div style={{display:'flex', alignItems:'center', gap:4, color:'#10b981'}}><CardLogo cardName={selectedCard?.card_name} size={12} />CB: ${cashbackAmount.toFixed(2)}</div></>}
             {giftCardTotal > 0 && <><span style={{ margin: '0 6px' }}>·</span><span style={{color:'#f59e0b', fontWeight: 600}}>GC: ${giftCardTotal.toFixed(2)}</span></>}
           </div>
           <div style={{display:'flex', gap:10}}>
