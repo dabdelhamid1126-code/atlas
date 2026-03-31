@@ -375,9 +375,9 @@ export default function Dashboard() {
           value={fmt(metrics.cashback)}
           sub={`${metrics.points.toLocaleString()} pts`}
           icon={CreditCard}
-          colorClass="text-cyan-400"
-          iconBg="bg-cyan-500/10"
-          iconBorder="border-cyan-500/20"
+          colorClass={metrics.cashback > 0 ? 'text-cyan-400' : 'text-slate-400'}
+          iconBg={metrics.cashback > 0 ? 'bg-cyan-500/10' : 'bg-slate-500/10'}
+          iconBorder={metrics.cashback > 0 ? 'border-cyan-500/20' : 'border-slate-500/20'}
         />
       </div>
 
@@ -388,9 +388,9 @@ export default function Dashboard() {
           value={fmt(metrics.yaCashback)}
           sub="Young Adult CB"
           icon={Star}
-          colorClass="text-cyan-400"
-          iconBg="bg-cyan-500/10"
-          iconBorder="border-cyan-500/20"
+          colorClass={metrics.yaCashback > 0 ? 'text-cyan-400' : 'text-slate-400'}
+          iconBg={metrics.yaCashback > 0 ? 'bg-cyan-500/10' : 'bg-slate-500/10'}
+          iconBorder={metrics.yaCashback > 0 ? 'border-cyan-500/20' : 'border-slate-500/20'}
         />
         <KpiCard
           label={profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Net Profit'}
@@ -437,7 +437,7 @@ export default function Dashboard() {
             </div>
             <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
               <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider mb-1">Card Spend</p>
-              <p className="text-lg font-bold text-blue-400">−{fmt(metrics.totalCost)}</p>
+              <p className="text-lg font-bold text-red-400">−{fmt(metrics.totalCost)}</p>
             </div>
             <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/20 p-3">
               <p className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider mb-1">Cashback</p>

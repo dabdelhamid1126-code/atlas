@@ -5,10 +5,10 @@ import { Target } from 'lucide-react';
 import { abbrevDollar } from '@/components/dashboard/MetricCard';
 
 const goalConfig = {
-  profit:       { label: 'Net Profit',   color: 'text-emerald-400' },
-  revenue:      { label: 'Revenue',      color: 'text-cyan-400'    },
-  cashback:     { label: 'Cashback',     color: 'text-pink-400'    },
-  transactions: { label: 'Transactions', color: 'text-amber-400'   },
+  profit:       { label: 'Net Profit',   color: 'text-emerald-400', barColor: 'linear-gradient(90deg, #10b981, #06b6d4)' },
+  revenue:      { label: 'Revenue',      color: 'text-cyan-400',    barColor: '#10b981' },
+  cashback:     { label: 'Cashback',     color: 'text-pink-400',    barColor: '#ec4899' },
+  transactions: { label: 'Transactions', color: 'text-amber-400',   barColor: '#f59e0b' },
 };
 
 export default function GoalTracker({ metrics }) {
@@ -38,15 +38,14 @@ export default function GoalTracker({ metrics }) {
               : goal.type === 'revenue' ? (metrics.saleRevenue || 0)
               : goal.type === 'cashback' ? (metrics.cashback || 0)
               : 0;
+            const hasTarget = goal.target_value > 0;
             const isNegative = current < 0;
-            const pct = isNegative ? 0 : Math.min((current / goal.target_value) * 100, 100);
-            const reached = !isNegative && current >= goal.target_value;
+            const pct = (!hasTarget || isNegative) ? 0 : Math.min((current / goal.target_value) * 100, 100);
+            const reached = hasTarget && !isNegative && current >= goal.target_value;
 
             const barColor = isNegative
               ? 'linear-gradient(90deg, #ef4444, #f87171)'
-              : reached
-                ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-                : 'linear-gradient(90deg, #10b981, #06b6d4)';
+              : config.barColor;
 
             const borderColor = isNegative
               ? 'rgba(239,68,68,0.3)'
@@ -94,11 +93,13 @@ export default function GoalTracker({ metrics }) {
                   />
                 </div>
                 <p className="text-xs font-semibold">
-                  {isNegative
-                    ? <span className="text-red-400">Negative value</span>
-                    : reached
-                      ? <span className="text-amber-400">Goal reached! 🎉</span>
-                      : <span className="text-slate-500">{Math.round(pct)}% complete</span>
+                  {!hasTarget
+                    ? <span className="text-slate-500">No target set</span>
+                    : isNegative
+                      ? <span className="text-red-400">Negative value</span>
+                      : reached
+                        ? <span className="text-emerald-400">Goal reached! 🎉</span>
+                        : <span className="text-slate-500">{Math.round(pct)}% complete</span>
                   }
                 </p>
               </div>
