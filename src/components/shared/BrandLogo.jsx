@@ -190,20 +190,36 @@ function LogoBox({ domain, name, size = 36, className = '' }) {
   );
 }
 
+// ── Normalize store name ──────────────────────────────────────────────────
+
+function normalizeStore(name) {
+  return String(name || '').toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+// ── Normalized domain lookup ──────────────────────────────────────────────
+
+const NORMALIZED_RETAILER_DOMAINS = Object.fromEntries(
+  Object.entries(RETAILER_DOMAINS).map(([k, v]) => [normalizeStore(k), v])
+);
+
+function getRetailerDomain(retailer) {
+  if (!retailer) return null;
+  // Exact match first
+  if (RETAILER_DOMAINS[retailer]) return RETAILER_DOMAINS[retailer];
+  // Normalized match
+  const norm = normalizeStore(retailer);
+  if (NORMALIZED_RETAILER_DOMAINS[norm]) return NORMALIZED_RETAILER_DOMAINS[norm];
+  // Partial match
+  for (const [key, val] of Object.entries(NORMALIZED_RETAILER_DOMAINS)) {
+    if (norm.includes(key) || key.includes(norm)) return val;
+  }
+  return null;
+}
+
 // ── RetailerLogo ──────────────────────────────────────────────────────────
 
 export default function RetailerLogo({ retailer, size = 36, className = '' }) {
-  let domain = RETAILER_DOMAINS[retailer];
-  if (!domain && retailer) {
-    // Case-insensitive fallback
-    const lower = retailer.toLowerCase();
-    for (const [key, val] of Object.entries(RETAILER_DOMAINS)) {
-      if (key.toLowerCase() === lower) {
-        domain = val;
-        break;
-      }
-    }
-  }
+  const domain = getRetailerDomain(retailer);
   return <LogoBox domain={domain} name={retailer} size={size} className={className} />;
 }
 

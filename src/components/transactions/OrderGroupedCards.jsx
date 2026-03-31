@@ -1,23 +1,41 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, Edit2, Trash2, ImageOff } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import RetailerLogo from '@/components/shared/BrandLogo';
 
-// ── Store logo gradients ──────────────────────────────────────────────────
-const STORE_GRADIENTS = {
-  'amazon':   'linear-gradient(135deg,#f97316,#ea580c)',
-  'best buy': 'linear-gradient(135deg,#1d4ed8,#1e3a8a)',
-  'bestbuy':  'linear-gradient(135deg,#1d4ed8,#1e3a8a)',
-  'walmart':  'linear-gradient(135deg,#0071ce,#004c97)',
-  'apple':    'linear-gradient(135deg,#6b7280,#374151)',
-  'target':   'linear-gradient(135deg,#cc0000,#990000)',
-  'costco':   'linear-gradient(135deg,#005dab,#003d7a)',
+// ── Store domain mapping ──────────────────────────────────────────────────
+const STORE_DOMAINS = {
+  'best buy': 'bestbuy.com',
+  'amazon': 'amazon.com',
+  'walmart': 'walmart.com',
+  'apple': 'apple.com',
+  'target': 'target.com',
+  'costco': 'costco.com',
+  "sam's club": 'samsclub.com',
+  'ebay': 'ebay.com',
+  'woot': 'woot.com',
 };
-const DEFAULT_GRADIENT = 'linear-gradient(135deg,#10b981,#06b6d4)';
 
-const getStoreGradient = (retailer) => {
-  if (!retailer) return DEFAULT_GRADIENT;
-  return STORE_GRADIENTS[retailer.toLowerCase()] || DEFAULT_GRADIENT;
+const getStoreDomain = (vendorName) => {
+  if (!vendorName) return null;
+  const normalized = vendorName.toLowerCase().trim();
+  if (STORE_DOMAINS[normalized]) return STORE_DOMAINS[normalized];
+  // Try to match by substring
+  for (const [key, domain] of Object.entries(STORE_DOMAINS)) {
+    if (normalized.includes(key) || key.includes(normalized)) return domain;
+  }
+  // Fallback: try vendor name as domain
+  const fallbackDomain = vendorName.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '') + '.com';
+  return fallbackDomain;
+};
+
+const getStoreLogoUrl = (retailer) => {
+  if (!retailer) return null;
+  const domain = getStoreDomain(retailer);
+  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(retailer)}`;
+};
+
+const getStoreInitials = (retailer) => {
+  return (retailer || 'X').slice(0, 2).toUpperCase();
 };
 
 // ── Status badge ─────────────────────────────────────────────────────────
@@ -95,6 +113,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
   const paymentLabel = order.payment_splits?.length > 1
     ? `${order.payment_splits.length} cards`
     : (card?.card_name || order.card_name || null);
+  const logoUrl = getStoreLogoUrl(order.retailer);
 
   return (
     <div style={{
@@ -120,7 +139,43 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         </div>
 
         {/* Store logo */}
-        <RetailerLogo retailer={order.retailer} size={38} />
+        <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0 }}>
+          <img
+            src={logoUrl}
+            alt={order.retailer}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: 10,
+              objectFit: 'contain',
+              background: 'white',
+              padding: '4px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxSizing: 'border-box',
+            }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'linear-gradient(135deg,#10b981,#06b6d4)',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: 13,
+              flexShrink: 0,
+            }}
+          >
+            {getStoreInitials(order.retailer)}
+          </div>
+        </div>
 
         {/* Order info */}
         <div style={{ minWidth: 0 }}>
