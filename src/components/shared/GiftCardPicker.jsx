@@ -1,19 +1,11 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { X, Gift } from 'lucide-react';
 
-/**
- * GiftCardPicker
- *
- * Props:
- *   giftCards     — array of GiftCard entities from base44
- *   selectedIds   — array of selected gift card IDs (form.gift_card_ids)
- *   onChange      — (newIds: string[]) => void
- *   retailer      — current vendor name to pre-filter (optional)
- */
 export default function GiftCardPicker({ giftCards = [], selectedIds = [], onChange, retailer = '' }) {
   const [query, setQuery] = useState('');
   const [open, setOpen]   = useState(false);
-  const inputRef          = useRef(null);
+  const [focused, setFocused] = useState(false);
+  const inputRef = useRef(null);
 
   const available = useMemo(() =>
     giftCards.filter(gc => gc.status === 'available' || selectedIds.includes(gc.id)),
@@ -39,44 +31,49 @@ export default function GiftCardPicker({ giftCards = [], selectedIds = [], onCha
     [selectedCards]
   );
 
+  // Hide entirely if no gift cards exist
+  if (available.length === 0 && selectedIds.length === 0) return null;
+
   const select = (gc) => {
     onChange([...selectedIds, gc.id]);
     setQuery('');
     inputRef.current?.focus();
   };
 
-  const remove = (id) => {
-    onChange(selectedIds.filter(i => i !== id));
-  };
+  const remove = (id) => onChange(selectedIds.filter(i => i !== id));
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Backspace' && !query && selectedIds.length > 0) {
-      remove(selectedIds[selectedIds.length - 1]);
-    }
+    if (e.key === 'Backspace' && !query && selectedIds.length > 0) remove(selectedIds[selectedIds.length - 1]);
     if (e.key === 'Escape') setOpen(false);
   };
 
   return (
     <div className="relative">
-      <label className="block text-xs text-slate-600 mb-1 font-medium">Gift Cards</label>
+      <label className="block text-xs text-slate-400 mb-1.5 font-medium">Gift Cards</label>
 
+      {/* Input area */}
       <div
-        className="flex flex-wrap gap-1.5 p-2 min-h-[40px] bg-white border border-slate-200 rounded-xl cursor-text focus-within:ring-2 focus-within:ring-violet-300 focus-within:border-violet-300 transition-all"
         onClick={() => { setOpen(true); inputRef.current?.focus(); }}
+        style={{
+          display: 'flex', flexWrap: 'wrap', gap: 6, padding: '7px 10px', minHeight: 40,
+          background: '#0d1117',
+          border: `1px solid ${focused ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`,
+          borderRadius: 8, cursor: 'text', transition: 'border-color 0.15s',
+        }}
       >
         {selectedCards.map(gc => (
-          <span
-            key={gc.id}
-            className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-lg text-xs font-semibold text-amber-700"
-          >
-            <Gift style={{ width: 11, height: 11 }} />
+          <span key={gc.id} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '2px 10px 2px 8px',
+            background: 'rgba(245,158,11,0.12)',
+            border: '1px solid rgba(245,158,11,0.25)',
+            borderRadius: 20, color: '#fbbf24', fontSize: 11, fontWeight: 600,
+          }}>
+            <Gift style={{ width: 10, height: 10 }} />
             {gc.brand} {gc.code ? `••${String(gc.code).slice(-4)}` : ''} ${parseFloat(gc.value).toFixed(2)}
-            <button
-              type="button"
-              onClick={e => { e.stopPropagation(); remove(gc.id); }}
-              className="w-3.5 h-3.5 rounded-full bg-amber-200 hover:bg-amber-300 flex items-center justify-center transition-colors ml-0.5"
-            >
-              <X style={{ width: 8, height: 8 }} />
+            <button type="button" onMouseDown={e => { e.stopPropagation(); remove(gc.id); }}
+              style={{ color: '#f59e0b', lineHeight: 1, marginLeft: 2, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <X style={{ width: 9, height: 9 }} />
             </button>
           </span>
         ))}
@@ -86,49 +83,60 @@ export default function GiftCardPicker({ giftCards = [], selectedIds = [], onCha
           type="text"
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onFocus={() => { setFocused(true); setOpen(true); }}
+          onBlur={() => { setFocused(false); setTimeout(() => setOpen(false), 150); }}
           onKeyDown={handleKeyDown}
           placeholder={selectedCards.length === 0 ? 'Search gift cards...' : ''}
-          className="flex-1 min-w-[120px] text-xs text-slate-600 outline-none bg-transparent placeholder-slate-400"
+          style={{
+            flex: 1, minWidth: 100, fontSize: 12, color: 'white',
+            background: 'transparent', border: 'none', outline: 'none',
+          }}
         />
       </div>
 
-      {open && filtered.length > 0 && (
-        <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-48 overflow-y-auto">
-          {filtered.slice(0, 20).map(gc => (
-            <button
-              key={gc.id}
-              type="button"
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: 'absolute', zIndex: 50, left: 0, right: 0, marginTop: 4,
+          background: '#1a2234',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 10,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          maxHeight: 192, overflowY: 'auto',
+        }}>
+          {filtered.length > 0 ? filtered.slice(0, 20).map(gc => (
+            <button key={gc.id} type="button"
               onMouseDown={e => { e.preventDefault(); select(gc); }}
-              className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-amber-50 transition-colors border-b border-slate-50 last:border-0"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', background: 'transparent', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <div className="flex items-center gap-2">
-                <Gift className="text-amber-500 flex-shrink-0" style={{ width: 13, height: 13 }} />
-                <span className="text-sm font-medium text-slate-700">{gc.brand}</span>
-                {gc.code && <span className="text-xs text-slate-400">••{String(gc.code).slice(-4)}</span>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Gift style={{ width: 13, height: 13, color: '#f59e0b', flexShrink: 0 }} />
+                <span style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 500 }}>{gc.brand}</span>
+                {gc.code && <span style={{ color: '#64748b', fontSize: 11 }}>••{String(gc.code).slice(-4)}</span>}
               </div>
-              <span className="text-sm font-semibold text-amber-600">${parseFloat(gc.value).toFixed(2)}</span>
+              <span style={{ color: '#fbbf24', fontSize: 13, fontWeight: 600 }}>${parseFloat(gc.value).toFixed(2)}</span>
             </button>
-          ))}
-          {filtered.length === 0 && query && (
-            <div className="px-3 py-3 text-xs text-slate-400 text-center">No matching gift cards</div>
+          )) : (
+            <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: 12 }}>
+              No gift cards found
+            </div>
           )}
         </div>
       )}
 
-      {available.length === 0 && (
-        <p className="text-xs text-slate-400 mt-1">
-          {retailer ? `No available gift cards for ${retailer}` : 'No available gift cards'}
-        </p>
-      )}
-
+      {/* Selected summary */}
       {selectedCards.length > 0 && (
-        <div className="flex items-center justify-between mt-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl">
-          <span className="text-xs text-amber-700 font-medium">
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginTop: 8, padding: '8px 12px',
+          background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10,
+        }}>
+          <span style={{ color: '#fbbf24', fontSize: 12, fontWeight: 500 }}>
             {selectedCards.length} card{selectedCards.length !== 1 ? 's' : ''} selected
           </span>
-          <span className="text-sm font-bold text-amber-700">
+          <span style={{ color: '#fbbf24', fontSize: 13, fontWeight: 700 }}>
             −${totalDeducted.toFixed(2)}
           </span>
         </div>
