@@ -5,10 +5,10 @@ import { Target } from 'lucide-react';
 import { abbrevDollar } from '@/components/dashboard/MetricCard';
 
 const goalConfig = {
-  profit:       { label: 'Net Profit',    color: 'text-green-600',  bar: 'bg-green-500',  bg: 'bg-green-50  border-green-200' },
-  revenue:      { label: 'Revenue',       color: 'text-blue-600',   bar: 'bg-blue-500',   bg: 'bg-blue-50   border-blue-200' },
-  cashback:     { label: 'Cashback',      color: 'text-pink-600',   bar: 'bg-pink-500',   bg: 'bg-pink-50   border-pink-200' },
-  transactions: { label: 'Transactions', color: 'text-amber-600',  bar: 'bg-amber-500',  bg: 'bg-amber-50  border-amber-200' },
+  profit:       { label: 'Net Profit',   color: 'text-emerald-400', bar: 'bg-emerald-500', border: 'border-emerald-500/20', bg: 'bg-emerald-500/10' },
+  revenue:      { label: 'Revenue',      color: 'text-blue-400',    bar: 'bg-blue-500',    border: 'border-blue-500/20',    bg: 'bg-blue-500/10'    },
+  cashback:     { label: 'Cashback',     color: 'text-pink-400',    bar: 'bg-pink-500',    border: 'border-pink-500/20',    bg: 'bg-pink-500/10'    },
+  transactions: { label: 'Transactions', color: 'text-amber-400',   bar: 'bg-amber-500',   border: 'border-amber-500/20',   bg: 'bg-amber-500/10'   },
 };
 
 export default function GoalTracker({ metrics }) {
@@ -20,16 +20,16 @@ export default function GoalTracker({ metrics }) {
   const activeGoals = goals.filter(g => g.active);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+    <div className="rounded-2xl border p-6" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
       <div className="flex items-center gap-2 mb-5">
-        <div className="h-8 w-8 rounded-lg bg-purple-100 flex items-center justify-center">
-          <Target className="h-4 w-4 text-purple-600" />
+        <div className="h-8 w-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+          <Target className="h-4 w-4 text-purple-400" />
         </div>
-        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Goal Tracker</h3>
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Goal Tracker</h3>
       </div>
 
       {activeGoals.length === 0 ? (
-        <p className="text-sm text-slate-400">Set profit goals in Settings to track your progress here.</p>
+        <p className="text-sm text-slate-500">Set profit goals in Settings to track your progress here.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {activeGoals.map(goal => {
@@ -42,27 +42,32 @@ export default function GoalTracker({ metrics }) {
             const reached = current >= goal.target_value;
 
             return (
-              <div key={`${goal.type}-${goal.timeframe}`}
-                className={`rounded-xl border p-4 overflow-hidden min-w-0 ${config.bg} ${reached ? 'ring-2 ring-amber-400 shadow-amber-100 shadow-md' : ''}`}>
+              <div
+                key={`${goal.type}-${goal.timeframe}`}
+                className={`rounded-xl border p-4 overflow-hidden min-w-0 ${config.bg} ${config.border} ${reached ? 'ring-2 ring-amber-400/40' : ''}`}
+              >
                 <div className="flex items-start justify-between gap-1 mb-1 flex-wrap">
                   <span className={`text-xs font-bold uppercase leading-tight break-words ${config.color}`}>{config.label}</span>
-                  <span className="text-xs bg-white/60 text-slate-500 px-2 py-0.5 rounded-full capitalize shrink-0">{goal.timeframe}</span>
+                  <span className="text-xs bg-white/5 text-slate-400 px-2 py-0.5 rounded-full capitalize shrink-0 border border-white/10">{goal.timeframe}</span>
                 </div>
                 <div className="flex items-baseline gap-1 mb-3 flex-wrap">
                   <span className={`text-xl font-bold ${config.color}`}>
                     {goal.type === 'transactions' ? current : abbrevDollar(current)}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-500">
                     / {goal.type === 'transactions' ? goal.target_value : abbrevDollar(goal.target_value)}
                   </span>
                 </div>
-                <div className="h-2 bg-white/60 rounded-full overflow-hidden mb-2">
-                  <div className={`h-full rounded-full transition-all ${reached ? 'bg-amber-400' : config.bar}`} style={{ width: `${pct}%` }} />
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                  <div
+                    className={`h-full rounded-full transition-all ${reached ? 'bg-amber-400' : config.bar}`}
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
                 <p className="text-xs font-semibold">
                   {reached
-                    ? <span className="text-amber-600">Goal reached! 🎉</span>
-                    : <span className="text-slate-400">{Math.round(pct)}% complete</span>
+                    ? <span className="text-amber-400">Goal reached! 🎉</span>
+                    : <span className="text-slate-500">{Math.round(pct)}% complete</span>
                   }
                 </p>
               </div>
