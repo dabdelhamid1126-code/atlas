@@ -167,7 +167,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
   // Sale event helpers
   const addSaleEvent = () => {
     const ev = defaultSaleEvent();
-    ev.items = formData.items.filter(it => it.product_name?.trim()).map(it => ({ product_name: it.product_name, qty: 1, sale_price: it.sale_price || 0 }));
+    ev.items = formData.items.filter(it => it.product_name?.trim()).map(it => ({ product_name: it.product_name, quantity: 1, sale_price: it.sale_price || 0 }));
     setFormData(prev => ({ ...prev, sale_events: [...prev.sale_events, ev] }));
   };
   const removeSaleEvent = (id) => setFormData(prev => ({ ...prev, sale_events: prev.sale_events.filter(e => e.id !== id) }));
@@ -341,7 +341,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                 {/* Vendor section */}
                 <div style={{ borderRadius: 12, padding: 16, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#f59e0b', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                    🏪 Vendor & Buyer
+                    🏪 Vendor & Order
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
                     <div><LBL>Vendor *</LBL>
@@ -350,21 +350,6 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                         <SelectContent>{RETAILERS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    {formData.order_type === 'churning' ? (
-                      <div><LBL>Buyer</LBL>
-                        <Select value={formData.buyer} onValueChange={v => set('buyer', v)}>
-                          <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
-                          <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    ) : (
-                      <div><LBL>Marketplace</LBL>
-                        <Select value={formData.marketplace_platform} onValueChange={v => set('marketplace_platform', v)}>
-                          <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
-                          <SelectContent>{['eBay','Amazon','Facebook Marketplace','Mercari','OfferUp','Other'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    )}
                     <div><LBL>Status</LBL>
                       <Select value={formData.status} onValueChange={v => { if (v === 'received') setFormData(prev => ({ ...prev, status: v, items: prev.items.map(it => ({...it, quantity_received: it.quantity_ordered})) })); else set('status', v); }}>
                         <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue /></SelectTrigger>
@@ -402,6 +387,13 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                     </div>
                   </div>
 
+                  {/* Marketplace note */}
+                  {formData.order_type === 'marketplace' && (
+                    <p style={{ fontSize: '11px', color: '#64748b', marginBottom: 12, fontStyle: 'italic' }}>
+                      Buyer/platform is set per sale in the Sales tab
+                    </p>
+                  )}
+
                   {/* Dropship / Pickup */}
                   <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer' }}>
@@ -418,7 +410,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                     </label>
                     {formData.is_pickup && <Input style={{ ...inp, width: 140 }} value={formData.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="Location" />}
                   </div>
-                </div>
+                  </div>
 
                 {/* Notes */}
                 <div><LBL>Notes</LBL>
@@ -696,7 +688,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             {ev.items.map((it, itIdx) => (
                               <div key={itIdx} style={{display:'grid', gridTemplateColumns:'5fr 2fr 3fr 28px', gap:6, alignItems:'center'}}>
                                 <Input className="h-7 text-xs" style={inp} value={it.product_name||''} placeholder="Product" onChange={e => updateSaleEventItem(ev.id,itIdx,'product_name',e.target.value)} />
-                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="0" value={it.qty||''} placeholder="Qty" onChange={e => updateSaleEventItem(ev.id,itIdx,'qty',e.target.value)} />
+                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="0" value={it.quantity||''} placeholder="Qty" onChange={e => updateSaleEventItem(ev.id,itIdx,'quantity',e.target.value)} />
                                 <div style={{position:'relative'}}><span style={{position:'absolute',left:7,top:'50%',transform:'translateY(-50%)',color:'#64748b',fontSize:11}}>$</span>
                                   <Input className="h-7 text-xs" style={{...inp,paddingLeft:18}} type="number" step="0.01" min="0" value={it.sale_price||''} placeholder="Price/unit" onChange={e => updateSaleEventItem(ev.id,itIdx,'sale_price',e.target.value)} />
                                 </div>
@@ -705,14 +697,14 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                                 </button>
                               </div>
                             ))}
-                            <button type="button" onClick={() => updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',qty:1,sale_price:0}])}
+                            <button type="button" onClick={() => updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',quantity:1,sale_price:0}])}
                               style={{fontSize:11,color:'#10b981',background:'none',border:'none',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:4}}>
                               <Plus style={{width:11,height:11}} /> Add item
                             </button>
                           </div>
                           {ev.items.length > 0 && (
                             <div style={{marginTop:8,textAlign:'right',fontSize:11,color:'#10b981',fontWeight:600}}>
-                              Sale total: ${ev.items.reduce((s,it) => s+(parseFloat(it.sale_price)||0)*(parseInt(it.qty)||0),0).toFixed(2)}
+                              Sale total: ${ev.items.reduce((s,it) => s+(parseFloat(it.sale_price)||0)*(parseInt(it.quantity)||1),0).toFixed(2)}
                             </div>
                           )}
                         </div>
