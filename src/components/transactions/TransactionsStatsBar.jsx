@@ -8,22 +8,21 @@ export default function TransactionsStatsBar({ orders = [] }) {
   const totalCost = orders.reduce((sum, o) => sum + (o.total_cost || 0), 0);
   
   const totalProfit = orders.reduce((sum, order) => {
-    const saleRevenue = (order.sale_events || []).reduce(
-      (s, event) => s + (event.items || []).reduce(
-        (is, item) => is + ((parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1)), 0
-      ), 0
-    );
+    const events = order.sale_events || [];
+    if (events.length === 0) return sum;
     
-    if (saleRevenue === 0) return sum;
+    const revenue = events.reduce((s, ev) => 
+      s + (ev.items || []).reduce((is, item) => 
+        is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0);
     
     const cost = parseFloat(order.total_cost || 0);
-    const cashback = parseFloat(order.cashback_amount || 0);
-    return sum + saleRevenue - cost + cashback;
+    const cb = parseFloat(order.cashback_amount || 0);
+    return sum + revenue - cost + cb;
   }, 0);
 
   const hasAnySales = orders.some(o => (o.sale_events || []).length > 0);
-  const profitValueColor = totalProfit > 0 ? '#10b981' : (totalProfit < 0 && hasAnySales ? '#f87171' : '#94a3b8');
-  const profitBg = totalProfit > 0 ? 'rgba(16,185,129,0.1)' : (totalProfit < 0 && hasAnySales ? 'rgba(239,68,68,0.1)' : 'rgba(148,163,184,0.08)');
+  const profitValueColor = hasAnySales ? (totalProfit > 0 ? '#10b981' : '#f87171') : '#94a3b8';
+  const profitBg = hasAnySales ? (totalProfit > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)') : 'rgba(148,163,184,0.08)';
 
   const stats = [
     {
