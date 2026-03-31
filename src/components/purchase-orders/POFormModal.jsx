@@ -576,9 +576,17 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                     {(formData.payment_splits || []).length === 0 ? (
                       <Select value={formData.credit_card_id || ''} onValueChange={v => { const card = creditCards.find(c => c.id === v); set('credit_card_id', v); set('card_name', card?.card_name || ''); }}>
                         <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}>
-                          {formData.credit_card_id ? <span className="text-xs">{selectedCard?.card_name}</span> : <SelectValue placeholder="Select..." />}
+                          {formData.credit_card_id ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                              <img src={`https://cdn.brandfetch.io/id/${selectedCard?.issuer?.toLowerCase().replace(/\s+/g, '')}?c=1idzVIG0BYPKsFIDJDI`} alt={selectedCard?.issuer} 
+                                style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'contain' }} onError={e => e.target.style.display = 'none'} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                {selectedCard?.card_name}{selectedCard?.last_4_digits ? ` •${selectedCard.last_4_digits}` : ''}
+                              </span>
+                            </div>
+                          ) : <SelectValue placeholder="Select..." />}
                         </SelectTrigger>
-                        <SelectContent>{creditCards.filter(c => c.active !== false).map(c => <SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{creditCards.filter(c => c.active !== false).map(c => <SelectItem key={c.id} value={c.id}>{c.card_name} {c.last_4_digits ? `•${c.last_4_digits}` : ''}</SelectItem>)}</SelectContent>
                       </Select>
                     ) : <span style={{ fontSize: 11, color: '#64748b' }}>Split</span>}
                   </div>
