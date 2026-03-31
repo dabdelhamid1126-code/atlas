@@ -42,7 +42,7 @@ const NAV_GROUPS = [
     label: 'Workflow',
     items: [
       { name: 'Inventory On Hand',  page: 'Inventory',    icon: Package },
-      { name: 'Add Transaction',    page: 'NewOrders',    icon: CirclePlus },
+      { name: 'Add Order',          page: 'NewOrders',    icon: CirclePlus },
 
       { name: 'Import Orders',      page: 'ImportOrders', icon: ArrowLeftRight },
     ],
