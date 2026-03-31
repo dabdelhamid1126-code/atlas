@@ -233,7 +233,8 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         onClick={() => setExpanded(p => !p)}
         style={{
           background: 'rgba(255,255,255,0.02)', padding: '12px 16px',
-          display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none',
+          display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none',
+          flexWrap: 'wrap', '@media (max-width: 768px)': { gap: 8 }
         }}
       >
         {/* Checkbox */}
@@ -244,26 +245,26 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         </div>
 
         {/* Store logo */}
-        <StoreLogo retailer={order.retailer} />
+        <StoreLogo retailer={order.retailer} size={32} />
 
         {/* Order info */}
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 4 }}>
             {order.order_number ? (
-              <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`#${order.order_number}`}>
+              <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`#${order.order_number}`}>
                 #{order.order_number}
               </span>
             ) : (order.retailer || 'Unknown')}
-            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400, whiteSpace: 'nowrap' }}>
-              {order.order_number && order.retailer ? `${order.retailer} · ` : ''}{orderDate}
-            </span>
           </div>
+          <span style={{ fontSize: 10, color: '#64748b', fontWeight: 400, whiteSpace: 'nowrap' }}>
+            {order.order_number && order.retailer ? `${order.retailer} · ` : ''}{orderDate}
+          </span>
         </div>
 
         {/* Item count badge */}
         {itemCount > 0 && (
           <span style={{
-            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+            fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 12,
             background: 'rgba(6,182,212,0.12)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)',
             flexShrink: 0,
           }}>
@@ -271,20 +272,34 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           </span>
         )}
 
-        {/* Right stats */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
-          <StatCol label="Cost" value={fmt$(totalCost)} color="#60a5fa" />
-          {totalRevenue > 0 && <StatCol label="Revenue" value={fmt$(totalRevenue)} color="#10b981" />}
-          {hasSales ? (
-            <StatCol label="Profit" value={fmt$(profit)} color={profitColor} />
-          ) : (
-            <StatCol label="Profit" value="—" color="#64748b" />
-          )}
-          {totalRevenue === 0 && cashback > 0 && <StatCol label="Cashback" value={fmt$(cashback)} color="#06b6d4" />}
-          {paymentLabel && <StatCol label="Payment" value={paymentLabel} color="#94a3b8" />}
+        {/* Right stats - compact pills */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: '#e2e8f0' }}>
+            <span style={{ color: '#60a5fa', fontWeight: 700 }}>{fmt$(totalCost)}</span>
+            <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#64748b' }}>·</span>
+            {totalRevenue > 0 && (
+              <>
+                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#10b981', fontWeight: 700 }}>{fmt$(totalRevenue)}</span>
+                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#64748b' }}>·</span>
+              </>
+            )}
+            {hasSales ? (
+              <span style={{ color: profitColor, fontWeight: 700 }}>{fmt$(profit)}</span>
+            ) : (
+              <span style={{ color: '#64748b' }}>—</span>
+            )}
+            {paymentLabel && (
+              <>
+                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#64748b' }}>·</span>
+                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#94a3b8' }} title={paymentLabel}>
+                  {paymentLabel}
+                </span>
+              </>
+            )}
+          </div>
           <StatusBadge status={order.status} />
           <ChevronDown style={{
-            width: 16, height: 16, color: '#64748b', flexShrink: 0,
+            width: 14, height: 14, color: '#64748b', flexShrink: 0, marginLeft: 4,
             transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
             transition: 'transform 0.2s ease',
           }} />
