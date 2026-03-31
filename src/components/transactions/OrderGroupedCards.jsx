@@ -2,52 +2,39 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, Edit2, Trash2, ImageOff } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
-// ── Store domain mapping ──────────────────────────────────────────────────
-const STORE_DOMAINS = {
-  'best buy': 'bestbuy.com',
-  'bestbuy': 'bestbuy.com',
-  'amazon': 'amazon.com',
-  'walmart': 'walmart.com',
-  'apple': 'apple.com',
-  'target': 'target.com',
-  'costco': 'costco.com',
-  "sam's club": 'samsclub.com',
-  'ebay': 'ebay.com',
-  'woot': 'woot.com',
-};
+// ── Brandfetch client ID ───────────────────────────────────────────────────
+const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
 
-const normalizeStore = (name) => {
-  return String(name || '').toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
-};
-
-const NORMALIZED_STORE_DOMAINS = Object.fromEntries(
-  Object.entries(STORE_DOMAINS).map(([k, v]) => [normalizeStore(k), v])
-);
-
+// ── Store domain mapping ───────────────────────────────────────────────────
 const getStoreDomain = (vendorName) => {
   if (!vendorName) return null;
-  // Exact match first
-  if (STORE_DOMAINS[vendorName.toLowerCase()]) return STORE_DOMAINS[vendorName.toLowerCase()];
-  // Normalized match
-  const norm = normalizeStore(vendorName);
-  if (NORMALIZED_STORE_DOMAINS[norm]) return NORMALIZED_STORE_DOMAINS[norm];
-  // Partial match
-  for (const [key, val] of Object.entries(NORMALIZED_STORE_DOMAINS)) {
-    if (norm.includes(key) || key.includes(norm)) return val;
-  }
-  return null;
+  const n = String(vendorName || '')
+    .toLowerCase()
+    .replace(/[\s\-\_\.\']/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+  if (n.includes('bestbuy')) return 'bestbuy.com';
+  if (n.includes('amazon')) return 'amazon.com';
+  if (n.includes('walmart')) return 'walmart.com';
+  if (n.includes('apple')) return 'apple.com';
+  if (n.includes('target')) return 'target.com';
+  if (n.includes('costco')) return 'costco.com';
+  if (n.includes('samsclub') || n.includes('sams')) return 'samsclub.com';
+  if (n.includes('ebay')) return 'ebay.com';
+  if (n.includes('woot')) return 'woot.com';
+  if (n.includes('newegg')) return 'newegg.com';
+  if (n.includes('staples')) return 'staples.com';
+  if (n.includes('homedepot')) return 'homedepot.com';
+  if (n.includes('lowes')) return 'lowes.com';
+  return n + '.com';
 };
 
-const getStoreLogoUrl = (retailer) => {
-  if (!retailer) return null;
-  const domain = getStoreDomain(retailer);
+const getBrandfetchUrl = (domain) => {
   if (!domain) return null;
-  return `https://arbitrageplatform-production-6eb2.up.railway.app/api/logos/${domain}?fallbackName=${encodeURIComponent(retailer)}`;
+  return `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_CLIENT_ID}`;
 };
 
-const getStoreInitials = (retailer) => {
-  return (retailer || 'X').slice(0, 2).toUpperCase();
-};
+
 
 // ── Status badge ─────────────────────────────────────────────────────────
 const STATUS_STYLES = {
@@ -105,6 +92,50 @@ function StatCol({ label, value, color = '#e2e8f0' }) {
   );
 }
 
+// ── Store logo component ──────────────────────────────────────────────────
+function StoreLogo({ retailer, size = 38 }) {
+  const [err, setErr] = useState(false);
+  const domain = getStoreDomain(retailer);
+  const logoUrl = getBrandfetchUrl(domain);
+  const initials = (retailer || 'X').slice(0, 2).toUpperCase();
+
+  if (!logoUrl || err) {
+    return (
+      <div style={{
+        width: size,
+        height: size,
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg,#10b981,#06b6d4)',
+        color: 'white',
+        fontWeight: 700,
+        fontSize: 13,
+        flexShrink: 0,
+      }}>
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={logoUrl}
+      alt={retailer}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 10,
+        objectFit: 'contain',
+        display: 'block',
+        flexShrink: 0,
+      }}
+      onError={() => setErr(true)}
+    />
+  );
+}
+
 // ── Single order card ─────────────────────────────────────────────────────
 function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelete, isSelected, onToggleSelect }) {
   const [expanded, setExpanded] = useState(true);
@@ -132,7 +163,6 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
   const paymentLabel = order.payment_splits?.length > 1
     ? `${order.payment_splits.length} cards`
     : (card?.card_name || order.card_name || null);
-  const logoUrl = getStoreLogoUrl(order.retailer);
 
   return (
     <div style={{
@@ -158,43 +188,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         </div>
 
         {/* Store logo */}
-        <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0 }}>
-          <img
-            src={logoUrl}
-            alt={order.retailer}
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: 10,
-              objectFit: 'contain',
-              background: 'white',
-              padding: '4px',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxSizing: 'border-box',
-            }}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'linear-gradient(135deg,#10b981,#06b6d4)',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: 13,
-              flexShrink: 0,
-            }}
-          >
-            {getStoreInitials(order.retailer)}
-          </div>
-        </div>
+        <StoreLogo retailer={order.retailer} />
 
         {/* Order info */}
         <div style={{ minWidth: 0 }}>
