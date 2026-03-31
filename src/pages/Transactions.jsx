@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import PageHeader from '@/components/shared/PageHeader';
 import TransactionsStatsBar from '@/components/transactions/TransactionsStatsBar.jsx';
 import TransactionsFilters from '@/components/transactions/TransactionsFilters.jsx';
-import TransactionsTableMerged from '@/components/transactions/TransactionsTableMerged.jsx';
+import OrderGroupedCards from '@/components/transactions/OrderGroupedCards';
 import POFormModal from '@/components/purchase-orders/POFormModal';
 import PODetailsModal from '@/components/purchase-orders/PODetailsModal';
 
@@ -501,47 +501,42 @@ export default function Transactions() {
     <div>
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Track and manage your purchases by mode</p>
+          <h1 className="text-2xl font-bold text-slate-100">Transactions</h1>
+          <p className="text-sm text-slate-400 mt-0.5">Track and manage your purchases</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleCSVDownload}>
-            <Download className="h-4 w-4 mr-2" />
-            CSV
-          </Button>
+          <button onClick={handleCSVDownload}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 transition"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <Download className="h-4 w-4" /> CSV
+          </button>
         </div>
       </div>
 
       {/* Mode Tabs */}
-      <div className="flex items-center gap-1 mb-6 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
+      <div className="flex items-center gap-1 mb-5 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
         {modes.map(m => (
-          <button
-            key={m.id}
-            onClick={() => setMode(m.id)}
-            className={`px-5 py-2 rounded-lg font-medium text-sm transition ${
-              mode === m.id
-                ? 'bg-purple-600 text-white shadow'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
+          <button key={m.id} onClick={() => setMode(m.id)}
+            className="px-5 py-2 rounded-lg font-semibold text-sm transition"
+            style={mode === m.id
+              ? { background: '#10b981', color: 'white' }
+              : { background: 'transparent', color: '#94a3b8' }}>
             {m.label}
           </button>
         ))}
       </div>
 
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 mb-4 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl">
-          <span className="font-semibold text-purple-800 text-sm">{selectedIds.size} selected</span>
-          <button
-            onClick={handleBulkDelete}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 transition"
-          >
+        <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl"
+          style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          <span className="font-semibold text-emerald-400 text-sm">{selectedIds.size} selected</span>
+          <button onClick={handleBulkDelete}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </button>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            className="ml-auto text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
-          >
+          <button onClick={() => setSelectedIds(new Set())}
+            className="ml-auto text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition">
             <X className="h-3.5 w-3.5" /> Clear
           </button>
         </div>
@@ -571,25 +566,20 @@ export default function Transactions() {
         creditCards={creditCards}
       />
 
-      <TransactionsTableMerged
+      <OrderGroupedCards
         data={sortedOrders}
-        visibleColumns={visibleColumns}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-        onSort={handleSort}
-        onEdit={(order) => { setEditingOrder(order); setFormOpen(true); }}
-        onView={(order) => { setSelectedOrder(order); setDetailsOpen(true); }}
-        onDelete={(order) => {
-          if (confirm('Delete this order?')) {
-            deleteMutation.mutate(order);
-          }
-        }}
         creditCards={creditCards}
         rewards={rewards}
-        products={products}
+        onEdit={(order) => { setEditingOrder(order); setFormOpen(true); }}
+        onDelete={(order) => { if (confirm('Delete this order?')) deleteMutation.mutate(order); }}
         isLoading={isLoading}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
+        onClearFilters={() => {
+          setSearch(''); setStatusFilter('all'); setVendorFilter('all');
+          setFromDate(''); setToDate(''); setPaymentMethodFilter('all');
+          setCategoryFilter('all'); setAccountFilter('all');
+        }}
       />
 
       <POFormModal
