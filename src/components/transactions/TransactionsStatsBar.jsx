@@ -8,15 +8,22 @@ export default function TransactionsStatsBar({ orders = [] }) {
   const totalCost = orders.reduce((sum, o) => sum + (o.total_cost || 0), 0);
   
   const totalProfit = orders.reduce((sum, order) => {
-    const revenue = order.sale_events?.reduce(
-      (s, event) => s + (event.items?.reduce(
-        (is, item) => is + ((parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 0)), 0
-      ) || 0), 0
-    ) || 0;
-    const cost = parseFloat(order.total_cost || order.final_cost || 0);
+    const saleRevenue = (order.sale_events || []).reduce(
+      (s, event) => s + (event.items || []).reduce(
+        (is, item) => is + ((parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1)), 0
+      ), 0
+    );
+    
+    if (saleRevenue === 0) return sum;
+    
+    const cost = parseFloat(order.total_cost || 0);
     const cashback = parseFloat(order.cashback_amount || 0);
-    return sum + (revenue - cost + cashback);
+    return sum + saleRevenue - cost + cashback;
   }, 0);
+
+  const hasAnySales = orders.some(o => (o.sale_events || []).length > 0);
+  const profitValueColor = totalProfit > 0 ? '#10b981' : (totalProfit < 0 && hasAnySales ? '#f87171' : '#94a3b8');
+  const profitBg = totalProfit > 0 ? 'rgba(16,185,129,0.1)' : (totalProfit < 0 && hasAnySales ? 'rgba(239,68,68,0.1)' : 'rgba(148,163,184,0.08)');
 
   const stats = [
     {
@@ -53,16 +60,16 @@ export default function TransactionsStatsBar({ orders = [] }) {
     },
     {
       label: 'Total Profit',
-      value: `$${totalProfit.toFixed(2)}`,
+      value: hasAnySales ? `$${totalProfit.toFixed(2)}` : '$0.00',
       icon: TrendingUp,
-      iconBg: totalProfit >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-      iconColor: totalProfit >= 0 ? '#10b981' : '#f87171',
-      valueColor: totalProfit >= 0 ? '#10b981' : '#f87171',
+      iconBg: profitBg,
+      iconColor: profitValueColor,
+      valueColor: profitValueColor,
     },
   ];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '20px' }}>
+    <div className="grid grid-cols-5 gap-3 mb-5">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (

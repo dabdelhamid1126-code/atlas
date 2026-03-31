@@ -481,9 +481,36 @@ export default function Transactions() {
   }), [orders]);
 
   const modes = [
-    { id: 'all', label: 'All', Icon: LayoutGrid },
-    { id: 'churning', label: 'Churning', Icon: Zap },
-    { id: 'marketplace', label: 'Marketplace', Icon: Globe },
+    {
+      id: 'all',
+      label: 'All',
+      Icon: LayoutGrid,
+      activeStyle: {
+        background: 'rgba(168,85,247,0.2)',
+        color: '#c084fc',
+        border: '1px solid rgba(168,85,247,0.3)',
+      },
+    },
+    {
+      id: 'churning',
+      label: 'Churning',
+      Icon: Zap,
+      activeStyle: {
+        background: 'rgba(245,158,11,0.15)',
+        color: '#fbbf24',
+        border: '1px solid rgba(245,158,11,0.3)',
+      },
+    },
+    {
+      id: 'marketplace',
+      label: 'Marketplace',
+      Icon: Globe,
+      activeStyle: {
+        background: 'rgba(96,165,250,0.15)',
+        color: '#60a5fa',
+        border: '1px solid rgba(96,165,250,0.3)',
+      },
+    },
   ];
 
   const columnOptions = [
@@ -521,20 +548,20 @@ export default function Transactions() {
 
       {/* Mode Tabs */}
       <div className="flex items-center gap-1 mb-5 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        {modes.map(m => (
-          <button key={m.id} onClick={() => setMode(m.id)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm transition"
-            style={mode === m.id
-              ? { background: '#10b981', color: 'white' }
-              : { background: 'transparent', color: '#94a3b8' }}>
-            <m.Icon className="w-3.5 h-3.5" />
-            {m.label}
-            <span style={{ fontSize: '10px', fontWeight: 600, color: 'inherit', opacity: 0.7, marginLeft: '4px' }}>
-              ({modeCounts[m.id]})
-            </span>
-          </button>
-        ))}
-      </div>
+         {modes.map(m => (
+           <button key={m.id} onClick={() => setMode(m.id)}
+             className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm transition"
+             style={mode === m.id
+               ? m.activeStyle
+               : { background: 'transparent', color: '#94a3b8', border: '1px solid transparent' }}>
+             <m.Icon className="w-3.5 h-3.5" />
+             {m.label}
+             <span style={{ fontSize: '10px', fontWeight: 600, color: 'inherit', opacity: 0.7, marginLeft: '4px' }}>
+               ({modeCounts[m.id]})
+             </span>
+           </button>
+         ))}
+       </div>
 
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl"
