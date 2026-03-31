@@ -304,9 +304,9 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
   return (
     <div style={{
       background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14,
-      marginBottom: 10, transition: 'border-color 0.15s', overflow: 'hidden',
+      marginBottom: 10, transition: 'border-color 0.15s ease', overflow: 'hidden',
     }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.11)'}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'}
       onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
     >
       {/* ── Header row ── */}
@@ -334,7 +334,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 4 }}>
             {order.order_number ? (
-              <span style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`#${order.order_number}`}>
+              <span style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace', fontWeight: 700, color: '#e2e8f0' }} title={`#${order.order_number}`}>
                 #{order.order_number}
               </span>
             ) : (order.retailer || 'Unknown')}
@@ -363,10 +363,10 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
               <div style={{ fontSize: 13, fontWeight: 700, color: profitColor }}>{fmt$(profit)}</div>
             </div>
           )}
-          {order.credit_card_id && (
+          {order.credit_card_id && card?.last_4_digits && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <CardLogo cardName={paymentLabel} size={16} />
-              <span style={{ fontSize: 11, color: '#64748b', fontFamily: 'monospace' }}>••••{card?.last_4_digits || order.credit_card_id?.slice(-4)}</span>
+              <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', fontWeight: 700 }}>••••{card.last_4_digits}</span>
             </div>
           )}
           <StatusBadge status={order.status} />
@@ -391,10 +391,28 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
       {/* ── Items list ── */}
       {expanded && itemCount > 0 && (
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Item column headers - only show when no sales */}
+      {!order.sale_events?.length && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(255,255,255,0.01)' }}>
+          <div style={{ width: 38, flexShrink: 0 }}></div>
+          <div style={{ width: 38, flexShrink: 0 }}></div>
+          <div style={{ width: 40, flexShrink: 0 }}></div>
+          <div style={{ flex: 1 }}></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+            <StatCol label="Qty" value="" color="#e2e8f0" />
+            <StatCol label="Cost/unit" value="" color="#60a5fa" />
+            <StatCol label="Sale/unit" value="" color="#e2e8f0" />
+            <StatCol label="Profit" value="" color="#e2e8f0" />
+          </div>
+        </div>
+      )}
+
         {order.items.map((item, idx) => {
           const unitCost = parseFloat(item.unit_cost) || 0;
           const qty = parseInt(item.quantity_ordered) || 1;
           const imageUrl = item.product_image_url || products.find(p => p.id === item.product_id)?.image;
+          const saleRows = getSaleRowsForItem(order, item);
+          const hasSales = saleRows.length > 0;
 
           // Find all sales for this item across all events
           const itemSales = order.sale_events?.flatMap(e => 
@@ -403,7 +421,6 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
               .map(si => ({ ...si, buyer: e.buyer }))
           ) || [];
 
-          const hasSales = itemSales.length > 0;
           const isSingleBuyer = itemSales.length <= 1;
 
           return (
@@ -427,22 +444,17 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                     <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
                       <StatCol label="Qty" value={qty} color="#e2e8f0" />
                       <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
-                      {hasSales ? (
+                      {!hasSales && (
                         <>
-                          <StatCol label="Sale/unit" value={fmt$(parseFloat(itemSales[0].sale_price) || 0)} color="#10b981" />
-                          <StatCol label="Profit" value={fmt$((parseFloat(itemSales[0].sale_price) || 0 - unitCost) * qty)} color="#10b981" />
-                        </>
-                      ) : (
-                        <>
-                          <StatCol label="Sale/unit" value="—" color="#475569" />
-                          <StatCol label="Profit" value="—" color="#475569" />
+                          <StatCol label="Sale/unit" value="—" color="#64748b" />
+                          <StatCol label="Profit" value="—" color="#64748b" />
                         </>
                       )}
                     </div>
                   </div>
                   <div style={{
                     marginTop: '6px',
-                    marginLeft: '48px',
+                    marginLeft: '60px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0px'
@@ -452,42 +464,31 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        padding: '5px 0',
-                        paddingLeft: '20px',
-                        position: 'relative'
+                        padding: '4px 0',
+                        paddingLeft: '16px',
+                        position: 'relative',
+                        borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none'
                       }}>
                         {/* Timeline dot */}
                         <div style={{
                           position: 'absolute',
-                          left: '5px',
+                          left: '4px',
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          width: '8px',
-                          height: '8px',
+                          width: '7px',
+                          height: '7px',
                           borderRadius: '50%',
                           background: '#10b981',
                           border: '2px solid #111827',
                           zIndex: 1
                         }}/>
 
-                        {/* Timeline line connecting dots */}
-                        {i < arr.length - 1 && (
-                          <div style={{
-                            position: 'absolute',
-                            left: '8px',
-                            top: 'calc(50% + 6px)',
-                            width: '2px',
-                            height: '100%',
-                            background: 'rgba(16,185,129,0.2)'
-                          }}/>
-                        )}
-
                         {/* Buyer name */}
                         <span style={{
                           color: '#06b6d4',
                           fontSize: '11px',
                           fontWeight: 700,
-                          minWidth: '120px'
+                          minWidth: '130px'
                         }}>
                           {row.buyer}
                         </span>
@@ -524,9 +525,9 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                           border: `1px solid ${row.profit >= 0 
                             ? 'rgba(16,185,129,0.2)' 
                             : 'rgba(239,68,68,0.2)'}`,
-                          padding: '1px 8px',
+                          padding: '2px 9px',
                           borderRadius: '20px',
-                          fontSize: '10px',
+                          fontSize: '10.5px',
                           fontWeight: 700
                         }}>
                           {row.profit >= 0 ? '+' : ''}
@@ -602,6 +603,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           <span>Total: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{fmt$(totalCost)}</span></span>
           {totalRevenue > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>Revenue: <span style={{ color: '#10b981', fontWeight: 600 }}>{fmt$(totalRevenue)}</span></span></>}
           {cashback > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>CB: <span style={{ color: '#06b6d4', fontWeight: 600 }}>{fmt$(cashback)}</span></span></>}
+          {hasSales && <><span style={{ margin: '0 6px' }}>·</span><span>Profit: <span style={{ color: profit >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>{fmt$(profit)}</span></span></>}
           {order.order_number && <><span style={{ margin: '0 6px' }}>·</span><span>Order #: <span style={{ color: '#94a3b8' }}>{order.order_number}</span></span></>}
           {order.fulfillment_type === 'direct_dropship' && order.dropship_to && <><span style={{ margin: '0 6px' }}>·</span><span style={{ color: '#f59e0b', fontWeight: 600 }}>🚛 → {order.dropship_to}</span></>}
           {order.fulfillment_type === 'store_pickup' && <><span style={{ margin: '0 6px' }}>·</span><span style={{ color: '#a855f7', fontWeight: 600 }}>📍 Pickup</span></>}
