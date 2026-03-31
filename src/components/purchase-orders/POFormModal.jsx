@@ -201,7 +201,11 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
   // Sale event helpers
   const addSaleEvent = () => {
     const ev = defaultSaleEvent();
-    ev.items = formData.items.filter(it => it.product_name?.trim()).map(it => ({ product_name: it.product_name, quantity: 1, sale_price: it.sale_price || 0 }));
+    ev.items = formData.items.filter(it => it.product_name?.trim()).map(it => ({ 
+      product_name: it.product_name, 
+      quantity: 1, 
+      sale_price: it.sale_price || 0 
+    }));
     setFormData(prev => ({ ...prev, sale_events: [...prev.sale_events, ev] }));
   };
   const removeSaleEvent = (id) => setFormData(prev => ({ ...prev, sale_events: prev.sale_events.filter(e => e.id !== id) }));
@@ -243,12 +247,12 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
     const splitsTotal = (formData.payment_splits || []).reduce((s, sp) => s + (parseFloat(sp.amount) || 0), 0);
     if (hasSplits && Math.abs(splitsTotal - totalPrice) > 0.01) { toast.error(`Split amounts ($${splitsTotal.toFixed(2)}) must equal order total ($${totalPrice.toFixed(2)})`); return; }
     
-    // Normalize sale_events structure: use 'quantity' instead of 'qty'
+    // Normalize sale_events structure: ensure quantity always has a fallback
     const normalizedSaleEvents = formData.sale_events.map(ev => ({
       ...ev,
       items: ev.items.map(it => ({
         product_name: it.product_name || '',
-        quantity: parseInt(it.qty) || 0,
+        quantity: parseInt(it.quantity ?? 1) || 1,
         sale_price: parseFloat(it.sale_price) || 0,
       }))
     }));
@@ -740,7 +744,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             {ev.items.map((it, itIdx) => (
                               <div key={itIdx} style={{display:'grid', gridTemplateColumns:'5fr 2fr 3fr 28px', gap:6, alignItems:'center'}}>
                                 <Input className="h-7 text-xs" style={inp} value={it.product_name||''} placeholder="Product" onChange={e => updateSaleEventItem(ev.id,itIdx,'product_name',e.target.value)} />
-                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="1" value={it.quantity||1} placeholder="1" onChange={e => updateSaleEventItem(ev.id,itIdx,'quantity',e.target.value)} />
+                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="1" value={it.quantity ?? 1} placeholder="1" onChange={e => updateSaleEventItem(ev.id,itIdx,'quantity',parseInt(e.target.value) || 1)} />
                                 <div style={{position:'relative'}}><span style={{position:'absolute',left:7,top:'50%',transform:'translateY(-50%)',color:'#64748b',fontSize:11}}>$</span>
                                   <Input className="h-7 text-xs" style={{...inp,paddingLeft:18}} type="number" step="0.01" min="0" value={it.sale_price||''} placeholder="Price/unit" onChange={e => updateSaleEventItem(ev.id,itIdx,'sale_price',e.target.value)} />
                                 </div>
@@ -749,14 +753,14 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                                 </button>
                               </div>
                             ))}
-                            <button type="button" onClick={() => { updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',qty:1,sale_price:0}]); }}
+                            <button type="button" onClick={() => { updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',quantity:1,sale_price:0}]); }}
                               style={{fontSize:11,color:'#10b981',background:'none',border:'none',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:4}}>
                               <Plus style={{width:11,height:11}} /> Add item
                             </button>
                           </div>
                           {ev.items.length > 0 && (
                             <div style={{marginTop:8,textAlign:'right',fontSize:11,color:'#10b981',fontWeight:600}}>
-                              Sale total: ${ev.items.reduce((s,it) => s+(parseFloat(it.sale_price)||0)*(parseInt(it.quantity)||1),0).toFixed(2)}
+                              Sale total: ${ev.items.reduce((s,it) => s+(parseFloat(it.sale_price)||0)*(parseInt(it.quantity??1)||1),0).toFixed(2)}
                             </div>
                           )}
                         </div>
