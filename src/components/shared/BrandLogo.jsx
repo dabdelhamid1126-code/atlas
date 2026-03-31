@@ -193,7 +193,17 @@ function LogoBox({ domain, name, size = 36, className = '' }) {
 // ── RetailerLogo ──────────────────────────────────────────────────────────
 
 export default function RetailerLogo({ retailer, size = 36, className = '' }) {
-  const domain = RETAILER_DOMAINS[retailer] || null;
+  let domain = RETAILER_DOMAINS[retailer];
+  if (!domain && retailer) {
+    // Case-insensitive fallback
+    const lower = retailer.toLowerCase();
+    for (const [key, val] of Object.entries(RETAILER_DOMAINS)) {
+      if (key.toLowerCase() === lower) {
+        domain = val;
+        break;
+      }
+    }
+  }
   return <LogoBox domain={domain} name={retailer} size={size} className={className} />;
 }
 
