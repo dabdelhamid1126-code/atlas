@@ -21,13 +21,13 @@ const TIME_FILTERS = ['Today', '7 Days', '30 Days', 'YTD', 'All Time'];
 const MODE_FILTERS = ['All', 'Churning', 'Resell'];
 
 const STATUS_CONFIG = {
-  purchased:  { label: 'Purchased',  icon: ShoppingBag,  color: 'text-blue-500',    bg: 'bg-blue-50',    border: 'border-blue-100'    },
-  shipped:    { label: 'Shipped',    icon: Send,          color: 'text-amber-500',   bg: 'bg-amber-50',   border: 'border-amber-100'   },
-  received:   { label: 'Received',   icon: Package,       color: 'text-orange-500',  bg: 'bg-orange-50',  border: 'border-orange-100'  },
-  paid:       { label: 'Paid',       icon: CheckCircle,   color: 'text-green-500',   bg: 'bg-green-50',   border: 'border-green-100'   },
-  listed:     { label: 'Listed',     icon: ListChecks,    color: 'text-purple-500',  bg: 'bg-purple-50',  border: 'border-purple-100'  },
-  sold:       { label: 'Sold',       icon: DollarSign,    color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-  completed:  { label: 'Completed',  icon: CheckCircle,   color: 'text-teal-500',    bg: 'bg-teal-50',    border: 'border-teal-100'    },
+  purchased:  { label: 'Purchased',  icon: ShoppingBag,  color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20'    },
+  shipped:    { label: 'Shipped',    icon: Send,          color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20'   },
+  received:   { label: 'Received',   icon: Package,       color: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/20'  },
+  paid:       { label: 'Paid',       icon: CheckCircle,   color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  listed:     { label: 'Listed',     icon: ListChecks,    color: 'text-purple-400',  bg: 'bg-purple-500/10',  border: 'border-purple-500/20'  },
+  sold:       { label: 'Sold',       icon: DollarSign,    color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  completed:  { label: 'Completed',  icon: CheckCircle,   color: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/20'    },
 };
 
 const PIE_COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#3b82f6', '#ef4444'];
@@ -42,17 +42,17 @@ function fmt(n) {
 // ── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({ label, value, sub, icon: Icon, colorClass, iconBg, iconBorder }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col gap-3 min-w-0">
+    <div className="rounded-2xl border p-4 flex flex-col gap-3 min-w-0" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</p>
           <p className={`text-2xl font-bold leading-tight ${colorClass}`}>{value}</p>
         </div>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} border ${iconBorder}`}>
           <Icon className={`h-4 w-4 ${colorClass}`} />
         </div>
       </div>
-      {sub && <p className="text-xs text-slate-400">{sub}</p>}
+      {sub && <p className="text-xs text-slate-500">{sub}</p>}
     </div>
   );
 }
@@ -76,19 +76,20 @@ function ImageModal({ src, alt, onClose }) {
 function PipelineCard({ status, count, onClick }) {
   const cfg = STATUS_CONFIG[status?.toLowerCase()] || {
     label: status, icon: Package,
-    color: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-100'
+    color: 'text-slate-400', bg: 'bg-white/5', border: 'border-white/10'
   };
   const Icon = cfg.icon;
   return (
     <button
       onClick={onClick}
-      className={`bg-white rounded-xl border ${cfg.border} p-2 sm:p-3 flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3 shadow-sm w-full text-center sm:text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden min-w-0`}
+      className={`rounded-xl border p-2 sm:p-3 flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3 w-full text-center sm:text-left cursor-pointer hover:-translate-y-0.5 transition-all overflow-hidden min-w-0 ${cfg.border}`}
+      style={{ background: '#111827' }}
     >
       <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
         <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${cfg.color}`} />
       </div>
       <div className="min-w-0 w-full">
-        <p className="text-[10px] sm:text-xs text-slate-400 font-medium truncate">{cfg.label}</p>
+        <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate">{cfg.label}</p>
         <p className={`text-lg sm:text-xl font-bold ${cfg.color}`}>{count}</p>
       </div>
     </button>
@@ -357,27 +358,27 @@ export default function Dashboard() {
           value={fmt(metrics.totalCost)}
           sub={`${filteredOrders.length} orders (incl. tax & shipping)`}
           icon={ShoppingBag}
-          colorClass="text-blue-500"
-          iconBg="bg-blue-50"
-          iconBorder="border-blue-100"
+          colorClass="text-blue-400"
+          iconBg="bg-blue-500/10"
+          iconBorder="border-blue-500/20"
         />
         <KpiCard
           label="Sale Revenue"
           value={fmt(metrics.saleRevenue)}
           sub="from paid invoices"
           icon={TrendingUp}
-          colorClass="text-green-500"
-          iconBg="bg-green-50"
-          iconBorder="border-green-100"
+          colorClass="text-emerald-400"
+          iconBg="bg-emerald-500/10"
+          iconBorder="border-emerald-500/20"
         />
         <KpiCard
           label="Cashback Earned"
           value={fmt(metrics.cashback)}
           sub={`${metrics.points.toLocaleString()} pts`}
           icon={CreditCard}
-          colorClass="text-pink-500"
-          iconBg="bg-pink-50"
-          iconBorder="border-pink-100"
+          colorClass="text-cyan-400"
+          iconBg="bg-cyan-500/10"
+          iconBorder="border-cyan-500/20"
         />
       </div>
 
@@ -388,72 +389,72 @@ export default function Dashboard() {
           value={fmt(metrics.yaCashback)}
           sub="Young Adult CB"
           icon={Star}
-          colorClass="text-teal-500"
-          iconBg="bg-teal-50"
-          iconBorder="border-teal-100"
+          colorClass="text-cyan-400"
+          iconBg="bg-cyan-500/10"
+          iconBorder="border-cyan-500/20"
         />
         <KpiCard
           label={profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Net Profit'}
           value={fmt(metrics.netProfit)}
           sub={profitMode === 'cashback_wallet' ? 'excl. YA used' : 'accounting mode'}
           icon={TrendingUp}
-          colorClass={metrics.netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}
-          iconBg={metrics.netProfit >= 0 ? 'bg-emerald-50' : 'bg-red-50'}
-          iconBorder={metrics.netProfit >= 0 ? 'border-emerald-100' : 'border-red-100'}
+          colorClass={metrics.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}
+          iconBg={metrics.netProfit >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'}
+          iconBorder={metrics.netProfit >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'}
         />
         <KpiCard
           label="Avg ROI"
           value={`${metrics.avgRoi.toFixed(2)}%`}
           sub="return on investment"
           icon={Percent}
-          colorClass="text-purple-500"
-          iconBg="bg-purple-50"
-          iconBorder="border-purple-100"
+          colorClass="text-purple-400"
+          iconBg="bg-purple-500/10"
+          iconBorder="border-purple-500/20"
         />
       </div>
 
       {/* ── Profit Breakdown ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
         <button
           onClick={() => setShowProfitDetails(p => !p)}
-          className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-slate-200 hover:bg-white/5 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 text-violet-500" />
+            <Info className="h-4 w-4 text-emerald-400" />
             Profit Breakdown
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100 capitalize">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 capitalize">
               {profitMode === 'cashback_wallet' ? 'Cashback Wallet Mode' : 'Accounting Mode'}
             </span>
           </div>
           {showProfitDetails
-            ? <ChevronUp className="h-4 w-4 text-slate-400" />
-            : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            ? <ChevronUp className="h-4 w-4 text-slate-500" />
+            : <ChevronDown className="h-4 w-4 text-slate-500" />}
         </button>
         {showProfitDetails && (
-          <div className="px-5 pb-5 pt-4 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-xl bg-green-50 border border-green-100 p-3">
-              <p className="text-[10px] text-green-600 font-semibold uppercase tracking-wider mb-1">Revenue</p>
-              <p className="text-lg font-bold text-green-700">{fmt(metrics.saleRevenue)}</p>
+          <div className="px-5 pb-5 pt-4 border-t grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
+              <p className="text-[10px] text-emerald-500 font-semibold uppercase tracking-wider mb-1">Revenue</p>
+              <p className="text-lg font-bold text-emerald-400">{fmt(metrics.saleRevenue)}</p>
             </div>
-            <div className="rounded-xl bg-blue-50 border border-blue-100 p-3">
-              <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-wider mb-1">Card Spend</p>
-              <p className="text-lg font-bold text-blue-700">−{fmt(metrics.totalCost)}</p>
+            <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
+              <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider mb-1">Card Spend</p>
+              <p className="text-lg font-bold text-blue-400">−{fmt(metrics.totalCost)}</p>
             </div>
-            <div className="rounded-xl bg-pink-50 border border-pink-100 p-3">
-              <p className="text-[10px] text-pink-600 font-semibold uppercase tracking-wider mb-1">Cashback</p>
-              <p className="text-lg font-bold text-pink-700">+{fmt(metrics.cashback)}</p>
+            <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/20 p-3">
+              <p className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider mb-1">Cashback</p>
+              <p className="text-lg font-bold text-cyan-400">+{fmt(metrics.cashback)}</p>
             </div>
             {profitMode === 'cashback_wallet' && metrics.yaCashback > 0 ? (
-              <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
-                <p className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider mb-1">YA Adjustment</p>
-                <p className="text-lg font-bold text-amber-700">−{fmt(metrics.yaCashback)}</p>
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                <p className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider mb-1">YA Adjustment</p>
+                <p className="text-lg font-bold text-amber-400">−{fmt(metrics.yaCashback)}</p>
                 <p className="text-[9px] text-amber-500 mt-0.5">Wallet mode deduction</p>
               </div>
             ) : (
-              <div className="rounded-xl bg-violet-50 border border-violet-100 p-3">
-                <p className="text-[10px] text-violet-600 font-semibold uppercase tracking-wider mb-1">YA Cashback</p>
-                <p className="text-lg font-bold text-violet-700">{fmt(metrics.yaCashback)}</p>
-                <p className="text-[9px] text-violet-500 mt-0.5">Included in total</p>
+              <div className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-3">
+                <p className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider mb-1">YA Cashback</p>
+                <p className="text-lg font-bold text-purple-400">{fmt(metrics.yaCashback)}</p>
+                <p className="text-[9px] text-purple-500 mt-0.5">Included in total</p>
               </div>
             )}
           </div>
@@ -464,8 +465,8 @@ export default function Dashboard() {
       <GoalTracker metrics={metrics} />
 
       {/* ── Status Pipeline ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Status Pipeline</h2>
+      <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Status Pipeline</h2>
         {Object.keys(statusCounts).length === 0 ? (
           <p className="text-sm text-slate-400">No orders in this range.</p>
         ) : (
@@ -487,8 +488,8 @@ export default function Dashboard() {
 
       {/* ── Charts Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+        <div className="lg:col-span-2 rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
             Profit &amp; Revenue Trend (6 Months)
           </h2>
           {trendData.length === 0 ? (
