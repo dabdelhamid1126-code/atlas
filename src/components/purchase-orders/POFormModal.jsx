@@ -397,13 +397,13 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                     <div><LBL>Vendor *</LBL>
                       <Select value={formData.retailer} onValueChange={v => set('retailer', v)}>
                         <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
-                        <SelectContent>{RETAILERS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                        <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{RETAILERS.map(r => <SelectItem key={r} value={r} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{r}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div><LBL>Status</LBL>
                       <Select value={formData.status} onValueChange={v => { if (v === 'received') setFormData(prev => ({ ...prev, status: v, items: prev.items.map(it => ({...it, quantity_received: it.quantity_ordered})) })); else set('status', v); }}>
                         <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue /></SelectTrigger>
-                        <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g,' ')}</SelectItem>)}</SelectContent>
+                        <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{STATUSES.map(s => <SelectItem key={s} value={s} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{s.replace(/_/g,' ')}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div><LBL>Order Number</LBL>
@@ -468,7 +468,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                       <LBL>Ship To (Buyer)</LBL>
                       <Select value={formData.dropship_to} onValueChange={v => set('dropship_to', v)}>
                         <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
-                        <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+                        <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{s.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   )}
@@ -502,7 +502,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                     </div>
                     <Select value={formData.product_category} onValueChange={v => set('product_category', v)}>
                       <SelectTrigger className="text-slate-200 h-7 text-xs w-32" style={inp}><SelectValue placeholder="Category..." /></SelectTrigger>
-                      <SelectContent>{PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                      <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{c}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
 
@@ -592,7 +592,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             </div>
                           ) : <SelectValue placeholder="Select..." />}
                         </SelectTrigger>
-                        <SelectContent>{creditCards.filter(c => c.active !== false).map(c => <SelectItem key={c.id} value={c.id}>{c.card_name} {c.last_4_digits ? `•${c.last_4_digits}` : ''}</SelectItem>)}</SelectContent>
+                        <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{creditCards.filter(c => c.active !== false).map(c => <SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{c.card_name} {c.last_4_digits ? `•${c.last_4_digits}` : ''}</SelectItem>)}</SelectContent>
                       </Select>
                     ) : <span style={{ fontSize: 11, color: '#64748b' }}>Split</span>}
                   </div>
@@ -627,7 +627,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                           <div><LBL>Card</LBL>
                             <Select value={sp.card_id||''} onValueChange={v => updateSplit(idx,'card_id',v)}>
                               <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Card..." /></SelectTrigger>
-                              <SelectContent>{creditCards.filter(c=>c.active!==false).map(c=><SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}</SelectContent>
+                              <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{creditCards.filter(c=>c.active!==false).map(c=><SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{c.card_name}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div><LBL>Amount</LBL>
@@ -739,9 +739,9 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                           <div><LBL>Buyer / Platform</LBL>
                             <Select value={ev.buyer||''} onValueChange={v => updateSaleEvent(ev.id,'buyer',v)}>
                               <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
-                              <SelectContent>
-                                {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
-                                {['eBay','Amazon','Facebook Marketplace','Mercari','OfferUp'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                              <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                                {sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{s.name}</SelectItem>)}
+                                {['eBay','Amazon','Facebook Marketplace','Mercari','OfferUp'].map(p => <SelectItem key={p} value={p} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{p}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>

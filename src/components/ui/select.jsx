@@ -87,22 +87,44 @@ const SelectLabel = React.forwardRef(({ className, ...props }, ref) => (
 ))
 SelectLabel.displayName = "SelectLabel"
 
-const SelectItem = React.forwardRef(({ className, children, value, ...props }, ref) => {
+const SelectItem = React.forwardRef(({ className, children, value, style, ...props }, ref) => {
   const context = React.useContext(SelectContext)
   const isSelected = context?.value === value
+  
+  // Apply dark theme styles for selected/hover states if style prop exists
+  const itemStyle = style ? {
+    ...style,
+    ...(isSelected && {
+      background: 'rgba(16,185,129,0.12)',
+      color: '#10b981',
+      borderLeft: '2px solid #10b981',
+    })
+  } : {}
   
   return (
     <div
       ref={ref}
       onClick={() => context?.onValueChange(value)}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        isSelected && "bg-accent",
+        "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
+      style={itemStyle}
+      onMouseEnter={(e) => {
+        if (style && !isSelected) {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+          e.currentTarget.style.color = '#e2e8f0'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (style) {
+          e.currentTarget.style.background = style.background || 'transparent'
+          e.currentTarget.style.color = isSelected ? '#10b981' : (style.color || '#94a3b8')
+        }
+      }}
       {...props}>
       <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
-        {isSelected && <Check className="h-4 w-4" />}
+        {isSelected && <Check className="h-4 w-4" style={{ color: '#10b981' }} />}
       </span>
       {children}
     </div>
