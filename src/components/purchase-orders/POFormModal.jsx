@@ -10,6 +10,40 @@ import {
   CreditCard, Package, Tag, Globe, Plus, Trash2, Copy,
   AlertTriangle, DollarSign, X, ClipboardList, Minus, ImageOff,
 } from 'lucide-react';
+
+function StoreLogo({ retailer, size = 32 }) {
+  const [err, setErr] = React.useState(false);
+  const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
+  const getStoreDomain = (vendorName) => {
+    if (!vendorName) return null;
+    const n = String(vendorName || '').toLowerCase().replace(/[\s\-\_\.\']/g, '').replace(/[^a-z0-9]/g, '');
+    if (n.includes('bestbuy')) return 'bestbuy.com';
+    if (n.includes('amazon')) return 'amazon.com';
+    if (n.includes('walmart')) return 'walmart.com';
+    if (n.includes('apple')) return 'apple.com';
+    if (n.includes('target')) return 'target.com';
+    if (n.includes('costco')) return 'costco.com';
+    if (n.includes('samsclub') || n.includes('sams')) return 'samsclub.com';
+    if (n.includes('ebay')) return 'ebay.com';
+    return n + '.com';
+  };
+  const domain = getStoreDomain(retailer);
+  const logoUrl = domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_CLIENT_ID}` : null;
+  const initials = (retailer || 'X').slice(0, 2).toUpperCase();
+  
+  if (!logoUrl || err) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'linear-gradient(135deg, #10b981, #06b6d4)', color: 'white', fontWeight: 800, fontSize: size * 0.35, flexShrink: 0 }}>
+        {initials}
+      </div>
+    );
+  }
+  return (
+    <img src={logoUrl} alt={retailer} onError={() => setErr(true)}
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+  );
+}
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 import GiftCardPicker from '@/components/shared/GiftCardPicker';
 import { toast } from 'sonner';
@@ -20,10 +54,10 @@ const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'receiv
 const PRODUCT_CATEGORIES = ['Electronics', 'Home & Garden', 'Toys & Games', 'Health & Beauty', 'Sports', 'Clothing', 'Tools', 'Gift Cards', 'Grocery', 'Other'];
 const RETAILERS = ['Amazon', 'Bestbuy', 'Walmart', 'Target', 'Costco', "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other'];
 const TABS = [
-  { id: 'details',  label: '📋 Details' },
-  { id: 'items',    label: '📦 Items' },
-  { id: 'payment',  label: '💳 Payment' },
-  { id: 'sales',    label: '💰 Sales' },
+  { id: 'details',  label: 'Details', Icon: ClipboardList },
+  { id: 'items',    label: 'Items', Icon: Package },
+  { id: 'payment',  label: 'Payment', Icon: CreditCard },
+  { id: 'sales',    label: 'Sales', Icon: DollarSign },
 ];
 
 // ── Style helpers ──────────────────────────────────────────────────────────
@@ -41,18 +75,18 @@ function ItemThumb({ src, name }) {
   if (!src || err) {
     return (
       <div style={{
-        width: 40, height: 40, borderRadius: 8, flexShrink: 0,
+        width: 36, height: 36, borderRadius: 8, flexShrink: 0,
         background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#10b981', fontSize: 14, fontWeight: 700,
+        color: '#10b981', fontSize: 13, fontWeight: 700,
       }}>
-        {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 14, height: 14 }} />}
+        {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 13, height: 13 }} />}
       </div>
     );
   }
   return (
     <img src={src} alt={name} onError={() => setErr(true)}
-      style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+      style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
   );
 }
 
@@ -265,7 +299,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
         style={{
           position: 'relative',
           width: '100%',
-          maxWidth: 600,
+          maxWidth: 660,
           height: '100%',
           background: '#111827',
           borderLeft: '1px solid rgba(255,255,255,0.11)',
@@ -280,11 +314,14 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
         {/* ── Header ── */}
         <div style={{ padding: '18px 24px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: 'white', margin: 0, lineHeight: 1.2 }}>
-                {order ? 'Edit Order' : 'New Order'}
-              </h2>
-              {subtitle && <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{subtitle}</p>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
+              <StoreLogo retailer={formData.retailer} size={32} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: 'white', margin: 0, lineHeight: 1.2 }}>
+                  {order ? 'Edit Order' : 'New Order'}
+                </h2>
+                {subtitle && <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{subtitle}</p>}
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {order && onDelete && (
@@ -305,13 +342,14 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
             {TABS.map(tab => (
               <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
                 style={{
-                  padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                  padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                   background: 'transparent', border: 'none', outline: 'none',
                   borderBottom: activeTab === tab.id ? '2px solid #10b981' : '2px solid transparent',
                   color: activeTab === tab.id ? '#10b981' : '#94a3b8',
                   transition: 'all 0.15s',
                   marginBottom: -1,
                 }}>
+                <tab.Icon className="w-3.5 h-3.5" />
                 {tab.label}
               </button>
             ))}
@@ -394,22 +432,42 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                     </p>
                   )}
 
-                  {/* Dropship / Pickup */}
-                  <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={formData.is_dropship} onChange={e => set('is_dropship', e.target.checked)} /> 🚚 Dropship
-                    </label>
-                    {formData.is_dropship && (
+                  {/* Dropship / Pickup toggles */}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    <button type="button" onClick={() => set('is_dropship', !formData.is_dropship)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                        ...(formData.is_dropship
+                          ? { background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }
+                          : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' })
+                      }}>
+                      🚚 Dropship
+                    </button>
+                    <button type="button" onClick={() => set('is_pickup', !formData.is_pickup)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                        ...(formData.is_pickup
+                          ? { background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }
+                          : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' })
+                      }}>
+                      📍 Pickup
+                    </button>
+                  </div>
+                  {formData.is_dropship && (
+                    <div style={{ marginTop: 10 }}>
+                      <LBL>Dropship To</LBL>
                       <Select value={formData.dropship_to} onValueChange={v => set('dropship_to', v)}>
-                        <SelectTrigger className="text-slate-200 h-8 w-36 text-xs" style={inp}><SelectValue placeholder="Seller..." /></SelectTrigger>
+                        <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select seller..." /></SelectTrigger>
                         <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
                       </Select>
-                    )}
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={formData.is_pickup} onChange={e => set('is_pickup', e.target.checked)} /> 📍 Pickup
-                    </label>
-                    {formData.is_pickup && <Input style={{ ...inp, width: 140 }} value={formData.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="Location" />}
-                  </div>
+                    </div>
+                  )}
+                  {formData.is_pickup && (
+                    <div style={{ marginTop: 10 }}>
+                      <LBL>Pickup Location</LBL>
+                      <Input style={inp} value={formData.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="e.g. Store 5" />
+                    </div>
+                  )}
                   </div>
 
                 {/* Notes */}
@@ -461,8 +519,8 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             <ItemThumb src={item.product_image_url} name={item.product_name} />
                             <div style={{ flex: 1 }}>
                               <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
-                                onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); updateItem(idx,'product_image_url',p.image||''); if(idx===0) set('product_category',p.category||formData.product_category); }}
-                                onChangeName={val => updateItem(idx,'product_name',val)} placeholder="e.g. iPad Air" />
+                                  onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); updateItem(idx,'product_image_url',p.image||p.image); if(idx===0) set('product_category',p.category||formData.product_category); }}
+                                  onChangeName={val => updateItem(idx,'product_name',val)} placeholder="e.g. iPad Air" />
                             </div>
                           </div>
                         </div>
@@ -682,7 +740,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             {ev.items.map((it, itIdx) => (
                               <div key={itIdx} style={{display:'grid', gridTemplateColumns:'5fr 2fr 3fr 28px', gap:6, alignItems:'center'}}>
                                 <Input className="h-7 text-xs" style={inp} value={it.product_name||''} placeholder="Product" onChange={e => updateSaleEventItem(ev.id,itIdx,'product_name',e.target.value)} />
-                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="0" value={it.quantity||''} placeholder="Qty" onChange={e => updateSaleEventItem(ev.id,itIdx,'quantity',e.target.value)} />
+                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="1" value={it.quantity||1} placeholder="1" onChange={e => updateSaleEventItem(ev.id,itIdx,'quantity',e.target.value)} />
                                 <div style={{position:'relative'}}><span style={{position:'absolute',left:7,top:'50%',transform:'translateY(-50%)',color:'#64748b',fontSize:11}}>$</span>
                                   <Input className="h-7 text-xs" style={{...inp,paddingLeft:18}} type="number" step="0.01" min="0" value={it.sale_price||''} placeholder="Price/unit" onChange={e => updateSaleEventItem(ev.id,itIdx,'sale_price',e.target.value)} />
                                 </div>
@@ -691,7 +749,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                                 </button>
                               </div>
                             ))}
-                            <button type="button" onClick={() => updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',quantity:1,sale_price:0}])}
+                            <button type="button" onClick={() => { updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',qty:1,sale_price:0}]); }}
                               style={{fontSize:11,color:'#10b981',background:'none',border:'none',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:4}}>
                               <Plus style={{width:11,height:11}} /> Add item
                             </button>
@@ -729,7 +787,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
           <div style={{fontSize:12, color:'#94a3b8', display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 2}}>
             <span style={{fontWeight:600, color:'#e2e8f0'}}>Total: ${totalPrice.toFixed(2)}</span>
             {cashbackAmount > 0 && <><span style={{ margin: '0 6px' }}>·</span><span style={{color:'#10b981'}}>CB: ${cashbackAmount.toFixed(2)}</span></>}
-            {giftCardTotal > 0 && <><span style={{ margin: '0 6px' }}>·</span><span style={{color:'#f59e0b'}}>GC: ${giftCardTotal.toFixed(2)}</span></>}
+            {giftCardTotal > 0 && <><span style={{ margin: '0 6px' }}>·</span><span style={{color:'#f59e0b', fontWeight: 600}}>GC: ${giftCardTotal.toFixed(2)}</span></>}
           </div>
           <div style={{display:'flex', gap:10}}>
             <button type="button" onClick={() => onOpenChange(false)}
