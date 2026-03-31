@@ -1,9 +1,69 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronRight, Edit2, Trash2, ImageOff } from 'lucide-react';
+import { ChevronDown, Edit2, Trash2, ImageOff } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 // ── Brandfetch client ID ───────────────────────────────────────────────────
 const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
+
+// ── Card domain mapping ────────────────────────────────────────────────────
+const getCardDomain = (cardName) => {
+  const n = String(cardName || '').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+  if (n.includes('chase')) return 'chase.com';
+  if (n.includes('amex') || n.includes('american')) return 'americanexpress.com';
+  if (n.includes('citi')) return 'citi.com';
+  if (n.includes('capital')) return 'capitalone.com';
+  if (n.includes('discover')) return 'discover.com';
+  if (n.includes('bofa') || n.includes('bankofamerica')) return 'bankofamerica.com';
+  if (n.includes('usbank')) return 'usbank.com';
+  if (n.includes('wells')) return 'wellsfargo.com';
+  if (n.includes('amazon')) return 'amazon.com';
+  if (n.includes('apple')) return 'apple.com';
+  if (n.includes('costco')) return 'costco.com';
+  if (n.includes('target')) return 'target.com';
+  return null;
+};
+
+function CardLogo({ cardName, size = 16 }) {
+  const [err, setErr] = React.useState(false);
+  const domain = getCardDomain(cardName);
+  const logoUrl = domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_CLIENT_ID}` : null;
+  const initials = (cardName || 'X').split(' ')[0].charAt(0).toUpperCase();
+  
+  if (!logoUrl || err) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: size * 0.35, flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }}>
+        {initials}
+      </div>
+    );
+  }
+  return (
+    <img src={logoUrl} alt={cardName} onError={() => setErr(true)}
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+  );
+}
+
+// ── Get sale rows for item ─────────────────────────────────────────────────
+const getSaleRowsForItem = (order, item) => {
+  if (!order.sale_events?.length) return [];
+  const rows = [];
+  order.sale_events.forEach(event => {
+    const matchedItem = (event.items || []).find(
+      si => si.product_name === item.product_name ||
+            si.item_id === item.id ||
+            si.item_id === item.product_id
+    );
+    if (matchedItem) {
+      rows.push({
+        buyer: event.buyer,
+        quantity: matchedItem.quantity || 1,
+        sale_price: matchedItem.sale_price || 0,
+        cost_per_unit: parseFloat(item.unit_cost || item.unit_price || 0),
+        profit: (parseFloat(matchedItem.sale_price) - parseFloat(item.unit_cost || item.unit_price || 0)) * (matchedItem.quantity || 1)
+      });
+    }
+  });
+  return rows;
+};
 
 // ── Store domain mapping & brand colors ─────────────────────────────────
 const STORE_BRAND_COLORS = {
@@ -109,20 +169,22 @@ function StoreLogo({ retailer, size = 40 }) {
 
 // ── Status badge ─────────────────────────────────────────────────────────
 const STATUS_STYLES = {
-  pending:            { bg: 'rgba(245,158,11,0.12)',  color: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
-  ordered:            { bg: 'rgba(59,130,246,0.12)',  color: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
-  shipped:            { bg: 'rgba(168,85,247,0.12)',  color: '#c084fc', border: 'rgba(168,85,247,0.25)' },
-  partially_received: { bg: 'rgba(251,146,60,0.12)',  color: '#fb923c', border: 'rgba(251,146,60,0.25)' },
-  received:           { bg: 'rgba(16,185,129,0.12)',  color: '#10b981', border: 'rgba(16,185,129,0.25)' },
-  cancelled:          { bg: 'rgba(239,68,68,0.12)',   color: '#f87171', border: 'rgba(239,68,68,0.25)' },
+  pending:            { bg: 'rgba(245,158,11,0.12)',  color: '#f59e0b', border: 'rgba(245,158,11,0.3)' },
+  ordered:            { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa', border: 'rgba(96,165,250,0.3)' },
+  shipped:            { bg: 'rgba(168,85,247,0.12)',  color: '#c084fc', border: 'rgba(168,85,247,0.3)' },
+  partially_received: { bg: 'rgba(251,146,60,0.12)',  color: '#fb923c', border: 'rgba(251,146,60,0.3)' },
+  received:           { bg: 'rgba(6,182,212,0.12)',   color: '#06b6d4', border: 'rgba(6,182,212,0.3)' },
+  paid:               { bg: 'rgba(16,185,129,0.12)',  color: '#10b981', border: 'rgba(16,185,129,0.3)' },
+  cancelled:          { bg: 'rgba(239,68,68,0.12)',   color: '#f87171', border: 'rgba(239,68,68,0.3)' },
+  completed:          { bg: 'rgba(16,185,129,0.12)',  color: '#10b981', border: 'rgba(16,185,129,0.3)' },
 };
 
 function StatusBadge({ status }) {
   const s = STATUS_STYLES[status] || { bg: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: 'rgba(255,255,255,0.1)' };
   return (
     <span style={{
-      fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-      padding: '3px 9px', borderRadius: 20, whiteSpace: 'nowrap',
+      fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+      padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap',
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
     }}>
       {status?.replace(/_/g, ' ') || '—'}
@@ -234,8 +296,10 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         style={{
           background: 'rgba(255,255,255,0.02)', padding: '12px 16px',
           display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none',
-          flexWrap: 'wrap', '@media (max-width: 768px)': { gap: 8 }
+          transition: 'background 0.15s',
         }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
       >
         {/* Checkbox */}
         <div onClick={e => { e.stopPropagation(); onToggleSelect(order.id); }}
@@ -251,7 +315,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 4 }}>
             {order.order_number ? (
-              <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`#${order.order_number}`}>
+              <span style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`#${order.order_number}`}>
                 #{order.order_number}
               </span>
             ) : (order.retailer || 'Unknown')}
@@ -272,31 +336,32 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           </span>
         )}
 
-        {/* Right stats - compact pills */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: '#e2e8f0' }}>
-            <span style={{ color: '#60a5fa', fontWeight: 700 }}>{fmt$(totalCost)}</span>
-            <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#64748b' }}>·</span>
-            {totalRevenue > 0 && (
-              <>
-                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#10b981', fontWeight: 700 }}>{fmt$(totalRevenue)}</span>
-                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#64748b' }}>·</span>
-              </>
-            )}
-            {hasSales ? (
-              <span style={{ color: profitColor, fontWeight: 700 }}>{fmt$(profit)}</span>
-            ) : (
-              <span style={{ color: '#64748b' }}>—</span>
-            )}
-            {paymentLabel && (
-              <>
-                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, color: '#64748b' }}>·</span>
-                <span style={{ display: 'none', '@media (min-width: 769px)': { display: 'inline' }, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#94a3b8' }} title={paymentLabel}>
-                  {paymentLabel}
-                </span>
-              </>
-            )}
-          </div>
+        {/* Right stats - column labels + values */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          {itemCount > 0 && (
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748b' }}>Cost</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#60a5fa' }}>{fmt$(totalCost)}</div>
+            </div>
+          )}
+          {totalRevenue > 0 && (
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748b' }}>Revenue</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#10b981' }}>{fmt$(totalRevenue)}</div>
+            </div>
+          )}
+          {hasSales && (
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748b' }}>Profit</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: profitColor }}>{fmt$(profit)}</div>
+            </div>
+          )}
+          {order.credit_card_id && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <CardLogo cardName={paymentLabel} size={16} />
+              <span style={{ fontSize: 11, color: '#64748b', fontFamily: 'monospace' }}>••••{order.credit_card_id?.slice(-4)}</span>
+            </div>
+          )}
           <StatusBadge status={order.status} />
           {order.fulfillment_type === 'store_pickup' && (
             <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 12, background: 'rgba(168,85,247,0.12)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)', whiteSpace: 'nowrap' }}>
@@ -308,9 +373,9 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
               🚛 Dropship{order.dropship_to ? ` → ${order.dropship_to}` : ''}
             </span>
           )}
-          <ChevronRight style={{
-            width: 14, height: 14, color: '#64748b', flexShrink: 0, marginLeft: 4,
-            transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+          <ChevronDown style={{
+            width: 16, height: 16, color: '#64748b', flexShrink: 0,
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease',
           }} />
         </div>
@@ -337,38 +402,66 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           return (
             <div key={idx}>
               {isSingleBuyer ? (
-                // Single row for 0 or 1 sale
-                <div style={{
-                  padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
-                  borderBottom: idx < order.items.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-                  background: 'transparent',
-                }}>
-                  <div style={{ width: 38, flexShrink: 0 }}></div>
-                  <div style={{ width: 38, flexShrink: 0 }}></div>
-                  <ItemImg src={imageUrl} name={item.product_name} qty={qty} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.product_name || '—'}
-                    </div>
-                    {item.upc && <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{item.upc}</div>}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
-                    <StatCol label="Qty" value={qty} color="#e2e8f0" />
-                    <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
-                    {hasSales ? (
-                      <>
-                        <StatCol label="Sale/unit" value={fmt$(parseFloat(itemSales[0].sale_price) || 0)} color="#10b981" />
-                        <StatCol label="Profit" value={fmt$((parseFloat(itemSales[0].sale_price) || 0 - unitCost) * qty)} color="#10b981" />
-                      </>
-                    ) : (
-                      <>
-                        <StatCol label="Sale/unit" value="—" color="#475569" />
-                        <StatCol label="Profit" value="—" color="#475569" />
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
+                 // Single row for 0 or 1 sale
+                 <div>
+                   <div style={{
+                     padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
+                     background: 'transparent',
+                   }}>
+                     <div style={{ width: 38, flexShrink: 0 }}></div>
+                     <div style={{ width: 38, flexShrink: 0 }}></div>
+                     <ItemImg src={imageUrl} name={item.product_name} qty={qty} />
+                     <div style={{ flex: 1, minWidth: 0 }}>
+                       <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                         {item.product_name || '—'}
+                       </div>
+                       {item.upc && <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{item.upc}</div>}
+                     </div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+                       <StatCol label="Qty" value={qty} color="#e2e8f0" />
+                       <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
+                       {hasSales ? (
+                         <>
+                           <StatCol label="Sale/unit" value={fmt$(parseFloat(itemSales[0].sale_price) || 0)} color="#10b981" />
+                           <StatCol label="Profit" value={fmt$((parseFloat(itemSales[0].sale_price) || 0 - unitCost) * qty)} color="#10b981" />
+                         </>
+                       ) : (
+                         <>
+                           <StatCol label="Sale/unit" value="—" color="#475569" />
+                           <StatCol label="Profit" value="—" color="#475569" />
+                         </>
+                       )}
+                     </div>
+                   </div>
+                   {hasSales && itemSales[0] && (
+                     <div style={{ paddingLeft: 52, paddingRight: 16, paddingTop: 4, paddingBottom: 8, borderLeft: '2px solid rgba(16,185,129,0.3)', background: 'transparent' }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
+                         <div style={{ minWidth: 120, fontSize: 11, fontWeight: 600, color: '#06b6d4' }}>{itemSales[0].buyer || 'Unknown'}</div>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+                           <div style={{ textAlign: 'right', minWidth: 50 }}>
+                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Qty</div>
+                             <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>{itemSales[0].quantity}</div>
+                           </div>
+                           <div style={{ textAlign: 'right', minWidth: 60 }}>
+                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Cost/Unit</div>
+                             <div style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa' }}>{fmt$(unitCost)}</div>
+                           </div>
+                           <div style={{ textAlign: 'right', minWidth: 60 }}>
+                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Sale/Unit</div>
+                             <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>{fmt$(parseFloat(itemSales[0].sale_price) || 0)}</div>
+                           </div>
+                           <div style={{ textAlign: 'right', minWidth: 60 }}>
+                             <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Profit</div>
+                             <div style={{ fontSize: 12, fontWeight: 700, color: (parseFloat(itemSales[0].sale_price) - unitCost) * itemSales[0].quantity >= 0 ? '#10b981' : '#f87171' }}>
+                               {fmt$((parseFloat(itemSales[0].sale_price) - unitCost) * itemSales[0].quantity)}
+                             </div>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               ) : (
                 // Multiple buyer rows
                 <div style={{ borderBottom: idx < order.items.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
                   {/* Header row with product name */}
