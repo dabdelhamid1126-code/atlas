@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, Trash2, Tag, Globe, X } from 'lucide-react';
+import { Plus, Download, Trash2, Tag, Globe, X, Zap, LayoutGrid } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/shared/PageHeader';
 import TransactionsStatsBar from '@/components/transactions/TransactionsStatsBar.jsx';
@@ -475,9 +475,9 @@ export default function Transactions() {
   }, [orders]);
 
   const modes = [
-    { id: 'all', label: 'All' },
-    { id: 'churning', label: '🔄 Churning' },
-    { id: 'marketplace', label: '🏪 Marketplace' },
+    { id: 'all', label: 'All', Icon: LayoutGrid },
+    { id: 'churning', label: 'Churning', Icon: Zap },
+    { id: 'marketplace', label: 'Marketplace', Icon: Globe },
   ];
 
   const columnOptions = [
@@ -517,10 +517,11 @@ export default function Transactions() {
       <div className="flex items-center gap-1 mb-5 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
         {modes.map(m => (
           <button key={m.id} onClick={() => setMode(m.id)}
-            className="px-5 py-2 rounded-lg font-semibold text-sm transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm transition"
             style={mode === m.id
               ? { background: '#10b981', color: 'white' }
               : { background: 'transparent', color: '#94a3b8' }}>
+            <m.Icon className="w-3.5 h-3.5" />
             {m.label}
           </button>
         ))}

@@ -10,6 +10,7 @@ import {
   AlertTriangle, DollarSign, X, ClipboardList, Minus,
 } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
+import GiftCardPicker from '@/components/shared/GiftCardPicker';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -25,8 +26,8 @@ const TABS = [
 ];
 
 // ── Style helpers ──────────────────────────────────────────────────────────
-const inp = { background: 'rgba(255,255,255,0.04)', color: 'white', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8 };
-const inpRo = { background: 'rgba(255,255,255,0.02)', color: '#64748b', borderColor: 'rgba(255,255,255,0.07)', borderRadius: 8 };
+const inp = { background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8 };
+const inpRo = { background: 'rgba(255,255,255,0.04)', color: '#64748b', borderColor: 'rgba(255,255,255,0.07)', borderRadius: 8 };
 
 const LBL = ({ children }) => (
   <label style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', display: 'block', marginBottom: 4 }}>

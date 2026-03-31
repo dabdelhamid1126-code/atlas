@@ -13,62 +13,57 @@ export default function TransactionsStatsBar({ orders = [] }) {
       label: 'Total Items',
       value: totalItems.toLocaleString(),
       icon: Package,
-      bg: 'bg-blue-50',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      valueColor: 'text-slate-900',
+      iconBg: 'rgba(96,165,250,0.1)',
+      iconColor: '#60a5fa',
+      valueColor: '#60a5fa',
     },
     {
       label: 'Listed',
       value: listedCount.toLocaleString(),
       icon: Tag,
-      bg: 'bg-orange-50',
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-500',
-      valueColor: 'text-orange-600',
+      iconBg: 'rgba(168,85,247,0.1)',
+      iconColor: '#c084fc',
+      valueColor: '#c084fc',
     },
     {
       label: 'Sold / Done',
       value: soldCount.toLocaleString(),
       icon: CheckCircle2,
-      bg: 'bg-green-50',
-      iconBg: 'bg-green-100',
-      iconColor: 'text-green-600',
-      valueColor: 'text-green-700',
+      iconBg: 'rgba(16,185,129,0.1)',
+      iconColor: '#10b981',
+      valueColor: '#10b981',
     },
     {
       label: 'Total Cost',
       value: `$${totalCost.toFixed(2)}`,
       icon: CreditCard,
-      bg: 'bg-red-50',
-      iconBg: 'bg-red-100',
-      iconColor: 'text-red-500',
-      valueColor: 'text-red-600',
+      iconBg: 'rgba(239,68,68,0.1)',
+      iconColor: '#f87171',
+      valueColor: '#f87171',
     },
     {
       label: 'Total Profit',
       value: `$${totalProfit.toFixed(2)}`,
       icon: TrendingUp,
-      bg: 'bg-emerald-50',
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600',
-      valueColor: totalProfit >= 0 ? 'text-emerald-700' : 'text-red-600',
+      iconBg: totalProfit >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+      iconColor: totalProfit >= 0 ? '#10b981' : '#f87171',
+      valueColor: totalProfit >= 0 ? '#10b981' : '#f87171',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={stat.label} className={`${stat.bg} rounded-xl p-4 border border-white shadow-sm overflow-hidden`}>
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={`${stat.iconBg} rounded-lg p-2 shrink-0`}>
-                <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+          <div key={stat.label} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: stat.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon style={{ width: 18, height: 18, color: stat.iconColor }} />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-slate-500 break-words">{stat.label}</p>
-                <p className={`text-xl font-bold mt-0.5 break-words ${stat.valueColor}`}>{stat.value}</p>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#64748b', marginBottom: 2 }}>{stat.label}</p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: stat.valueColor, lineHeight: 1.2 }}>{stat.value}</p>
               </div>
             </div>
           </div>

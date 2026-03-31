@@ -50,10 +50,10 @@ function ItemImg({ src, name }) {
   if (!src || err) {
     return (
       <div style={{
-        width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+        width: 40, height: 40, borderRadius: 8, flexShrink: 0,
         background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#10b981', fontSize: 13, fontWeight: 700,
+        color: '#10b981', fontSize: 14, fontWeight: 700,
       }}>
         {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 14, height: 14 }} />}
       </div>
@@ -61,7 +61,7 @@ function ItemImg({ src, name }) {
   }
   return (
     <img src={src} alt={name} onError={() => setErr(true)}
-      style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.08)' }} />
+      style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
   );
 }
 
@@ -130,10 +130,12 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, isSelected, 
 
         {/* Order info */}
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>
-            {order.retailer || 'Unknown'}{order.order_number ? ` · #${order.order_number}` : ''}
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {order.order_number ? `#${order.order_number}` : (order.retailer || 'Unknown')}
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>
+              {order.order_number && order.retailer ? `${order.retailer} · ` : ''}{orderDate}
+            </span>
           </div>
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{orderDate}</div>
         </div>
 
         {/* Item count badge */}
@@ -190,7 +192,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, isSelected, 
                   <StatCol label="Qty" value={qty} color="#e2e8f0" />
                   <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
                   <StatCol label="Sale/unit" value={salePrice > 0 ? fmt$(salePrice) : '—'} color={salePrice > 0 ? '#10b981' : '#475569'} />
-                  {itemProfit !== null && <StatCol label="Profit" value={fmt$(itemProfit)} color={itemProfitColor} />}
+                  <StatCol label="Profit" value={itemProfit !== null ? fmt$(itemProfit) : '—'} color={itemProfit !== null ? itemProfitColor : '#475569'} />
                 </div>
               </div>
             );
@@ -205,11 +207,11 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, isSelected, 
         padding: '8px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <div style={{ fontSize: 11, color: '#475569', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 11, color: '#475569', display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 2 }}>
           <span>Total: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{fmt$(totalCost)}</span></span>
-          {cashback > 0 && <span>Cashback: <span style={{ color: '#06b6d4', fontWeight: 600 }}>{fmt$(cashback)}</span></span>}
-          {order.order_number && <span>Order #: <span style={{ color: '#94a3b8' }}>{order.order_number}</span></span>}
-          {order.buyer && <span>Buyer: <span style={{ color: '#94a3b8' }}>{order.buyer}</span></span>}
+          {cashback > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>CB: <span style={{ color: '#06b6d4', fontWeight: 600 }}>{fmt$(cashback)}</span></span></>}
+          {order.order_number && <><span style={{ margin: '0 6px' }}>·</span><span>Order #: <span style={{ color: '#94a3b8' }}>{order.order_number}</span></span></>}
+          {order.buyer && <><span style={{ margin: '0 6px' }}>·</span><span>Buyer: <span style={{ color: '#94a3b8' }}>{order.buyer}</span></span></>}
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           <button
