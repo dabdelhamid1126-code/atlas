@@ -243,16 +243,22 @@ export default function NewOrders() {
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <button type="button" onClick={() => set('order_type', 'churning')}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${form.order_type === 'churning' ? 'bg-emerald-500 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}>
+                    className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all border"
+                    style={form.order_type === 'churning'
+                      ? { background: 'rgba(245,158,11,0.15)', color: '#fbbf24', borderColor: 'rgba(245,158,11,0.4)' }
+                      : { background: 'transparent', color: '#94a3b8', borderColor: 'transparent' }}>
                     <Tag className="h-3.5 w-3.5" /> Churning
                   </button>
                   <button type="button" onClick={() => set('order_type', 'marketplace')}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${form.order_type === 'marketplace' ? 'bg-emerald-500 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}>
+                    className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all border"
+                    style={form.order_type === 'marketplace'
+                      ? { background: 'rgba(59,130,246,0.15)', color: '#60a5fa', borderColor: 'rgba(59,130,246,0.4)' }
+                      : { background: 'transparent', color: '#94a3b8', borderColor: 'transparent' }}>
                     <Globe className="h-3.5 w-3.5" /> Marketplace
                   </button>
                 </div>
                 <span className="text-xs text-slate-500">
-                  {form.order_type === 'churning' ? 'Buy → ship → scan → get paid' : 'Amazon, eBay, Mercari, etc.'}
+                  {form.order_type === 'churning' ? 'Buy → ship → earn cashback' : 'Amazon, eBay, Mercari, etc.'}
                 </span>
               </div>
 
@@ -334,7 +340,7 @@ export default function NewOrders() {
                   </thead>
                   <tbody>
                     {form.items.map((item, idx) => (
-                      <tr key={item.id} className="group" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <tr key={item.id} className="group" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,255,255,0.02)' }}>
                         <td className="py-2 pl-1 text-xs text-slate-600 font-mono">{idx + 1}</td>
                         <td className="py-2 px-2">
                           <div className="flex items-center gap-2">
@@ -476,15 +482,18 @@ export default function NewOrders() {
 
               {/* Cashback pill */}
               {!isSplit && (
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                    <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
-                    {cardRate > 0 ? (
-                      <span className="text-emerald-400">{cardRate}% cashback → <span className="font-bold">{fmt$(totalCB)}</span> estimated</span>
-                    ) : (
-                      <span className="text-slate-400">Select a card to see cashback</span>
-                    )}
-                  </div>
+               <div className="flex flex-wrap items-center gap-3 mb-4">
+                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+                   style={cardRate > 0
+                     ? { background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }
+                     : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                   <CreditCard className={`h-3.5 w-3.5 ${cardRate > 0 ? 'text-emerald-400' : 'text-slate-500'}`} />
+                   {cardRate > 0 ? (
+                     <span className="text-emerald-400">💳 {cardRate}% cashback → <span className="font-bold">{fmt$(totalCB)}</span> estimated</span>
+                   ) : (
+                     <span className="text-slate-500">Select a card to see cashback</span>
+                   )}
+                 </div>
                   {cardRate > 0 && (
                     <div className="flex items-center gap-1">
                       <Label className="text-xs text-slate-500 cursor-pointer flex items-center gap-1">
@@ -606,63 +615,62 @@ export default function NewOrders() {
             <div className="lg:sticky lg:top-6 space-y-3">
 
               {/* Hero profit card */}
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #0d1117 60%, #111827 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,182,212,0.06) 100%)' }}>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1">Estimated Profit</p>
-                  <p className={`text-3xl font-bold leading-tight ${profitColor}`}>{fmt$(netProfit)}</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    <span className={roi !== 0 ? (roi >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-slate-500'}>{roi.toFixed(1)}% ROI</span>
-                    <span className="mx-1.5">·</span>
-                    {validItemCount} item{validItemCount !== 1 ? 's' : ''}
+              <div className="rounded-2xl overflow-hidden" style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2">Estimated Profit</p>
+                  <p className={`text-4xl leading-tight ${profitColor}`} style={{ fontWeight: 800 }}>{fmt$(netProfit)}</p>
+                  <p className="text-xs mt-1.5 flex items-center gap-1.5">
+                    <span className={`font-semibold ${roi !== 0 ? (roi >= 0 ? 'text-cyan-400' : 'text-red-400') : 'text-slate-500'}`}>{roi.toFixed(1)}% ROI</span>
+                    <span className="text-slate-600">·</span>
+                    <span className="text-slate-500">{validItemCount} item{validItemCount !== 1 ? 's' : ''}</span>
                   </p>
                 </div>
 
                 {/* Line items */}
-                <div className="px-5 py-4 space-y-2 text-sm">
+                <div className="px-5 py-4 space-y-2.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Items subtotal</span>
-                    <span className="text-blue-400 font-medium">{fmt$(itemsSubtotal)}</span>
+                    <span className="text-slate-400">Items subtotal</span>
+                    <span className="text-slate-100 font-medium">{fmt$(itemsSubtotal)}</span>
                   </div>
                   {(tax + shipping + fees) > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Tax + shipping + fees</span>
-                      <span className="text-slate-400">+{fmt$(tax + shipping + fees)}</span>
+                      <span className="text-slate-400">Tax + ship + fees</span>
+                      <span className="text-slate-300">+{fmt$(tax + shipping + fees)}</span>
                     </div>
                   )}
                   {giftCardTotal > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Gift cards</span>
+                      <span className="text-slate-400">Gift cards</span>
                       <span className="text-amber-400">−{fmt$(giftCardTotal)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex justify-between pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                     <span className="text-slate-300 font-medium">Total cost</span>
-                    <span className="text-white font-semibold">{fmt$(finalCost)}</span>
+                    <span className="text-slate-100 font-semibold">{fmt$(finalCost)}</span>
                   </div>
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '6px' }} />
                   {totalCB > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Cashback</span>
-                      <span className="text-cyan-400 font-medium">+{fmt$(totalCB)}</span>
+                      <span className="text-slate-400">Cashback</span>
+                      <span className="text-cyan-400 font-semibold">+{fmt$(totalCB)}</span>
                     </div>
                   )}
                   {totalSalePrice > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Sale total</span>
-                      <span className="text-blue-300 font-medium">{fmt$(totalSalePrice)}</span>
+                      <span className="text-slate-400">Sale total</span>
+                      <span className="text-slate-100 font-medium">{fmt$(totalSalePrice)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex justify-between pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                     <span className="font-semibold text-slate-200">Net profit</span>
-                    <span className={`font-bold text-base ${profitColor}`}>{fmt$(netProfit)}</span>
+                    <span className={`font-extrabold text-base ${profitColor}`}>{fmt$(netProfit)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Submit button */}
               <button type="submit" disabled={createMutation.isPending}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white text-sm font-bold transition disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 20px rgba(16,185,129,0.25)' }}>
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white text-sm font-extrabold tracking-wide transition disabled:opacity-50 uppercase"
+                style={{ background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', boxShadow: '0 4px 24px rgba(16,185,129,0.3)' }}>
                 {createMutation.isPending ? (
                   <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creating...</>
                 ) : (
