@@ -454,7 +454,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                   </div>
                   <div style={{
                     marginTop: '6px',
-                    marginLeft: '60px',
+                    marginLeft: '50px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0px'
