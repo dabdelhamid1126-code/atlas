@@ -82,14 +82,14 @@ function PipelineCard({ status, count, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`bg-white rounded-xl border ${cfg.border} p-3 flex items-center gap-3 shadow-sm w-full text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all`}
+      className={`bg-white rounded-xl border ${cfg.border} p-2 sm:p-3 flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3 shadow-sm w-full text-center sm:text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden min-w-0`}
     >
-      <div className={`w-10 h-10 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-        <Icon className={`h-5 w-5 ${cfg.color}`} />
+      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+        <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${cfg.color}`} />
       </div>
-      <div>
-        <p className="text-xs text-slate-400 font-medium">{cfg.label}</p>
-        <p className={`text-xl font-bold ${cfg.color}`}>{count}</p>
+      <div className="min-w-0 w-full">
+        <p className="text-[10px] sm:text-xs text-slate-400 font-medium truncate">{cfg.label}</p>
+        <p className={`text-lg sm:text-xl font-bold ${cfg.color}`}>{count}</p>
       </div>
     </button>
   );
@@ -309,26 +309,28 @@ export default function Dashboard() {
     <div className="space-y-6 pb-10">
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            {greeting()}, {firstName} 👋
-            {refreshing && <RefreshCw className="w-4 h-4 text-slate-400 animate-spin" />}
-          </h1>
-          <p className="text-sm text-slate-400 mt-0.5">
-            Here's what's happening across your accounts.
-            {lastRefreshed && (
-              <span className="ml-2 text-[11px] text-slate-300">
-                Updated {formatDistanceToNow(lastRefreshed, { addSuffix: true })}
-              </span>
-            )}
-          </p>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+              {greeting()}, {firstName} 👋
+              {refreshing && <RefreshCw className="w-4 h-4 text-slate-400 animate-spin" />}
+            </h1>
+            <p className="text-sm text-slate-400 mt-0.5">
+              Here's what's happening across your accounts.
+              {lastRefreshed && (
+                <span className="ml-2 text-[11px] text-slate-300">
+                  Updated {formatDistanceToNow(lastRefreshed, { addSuffix: true })}
+                </span>
+              )}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
             {MODE_FILTERS.map(mode => (
               <button key={mode} onClick={() => setModeFilter(mode)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all ${
                   modeFilter === mode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
                 }`}>
                 {mode}
@@ -338,7 +340,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
             {TIME_FILTERS.map(time => (
               <button key={time} onClick={() => setTimeFilter(time)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all ${
                   timeFilter === time ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
                 }`}>
                 {time}
@@ -349,7 +351,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── KPI Cards Row 1 ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard
           label="Total Cost"
           value={fmt(metrics.totalCost)}
@@ -380,7 +382,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── KPI Cards Row 2 ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard
           label="YA Cashback"
           value={fmt(metrics.yaCashback)}
@@ -467,7 +469,7 @@ export default function Dashboard() {
         {Object.keys(statusCounts).length === 0 ? (
           <p className="text-sm text-slate-400">No orders in this range.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+          <div className="grid grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
             {Object.keys(STATUS_CONFIG).map(status => (
               <PipelineCard
                 key={status}
