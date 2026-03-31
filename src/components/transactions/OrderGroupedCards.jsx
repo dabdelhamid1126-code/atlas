@@ -133,23 +133,51 @@ function StatusBadge({ status }) {
 function fmt$(n) { return `$${(parseFloat(n) || 0).toFixed(2)}`; }
 
 // ── Item image ────────────────────────────────────────────────────────────
-function ItemImg({ src, name }) {
+function ItemImg({ src, name, qty = 1 }) {
   const [err, setErr] = useState(false);
   if (!src || err) {
     return (
-      <div style={{
-        width: 40, height: 40, borderRadius: 8, flexShrink: 0,
-        background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#10b981', fontSize: 14, fontWeight: 700,
-      }}>
-        {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 14, height: 14 }} />}
+      <div style={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 8,
+          background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#10b981', fontSize: 14, fontWeight: 700,
+        }}>
+          {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 14, height: 14 }} />}
+        </div>
+        {qty > 1 && (
+          <div style={{
+            position: 'absolute', bottom: -4, right: -4,
+            width: 18, height: 18, borderRadius: '50%',
+            background: '#06b6d4', border: '2px solid #111827',
+            color: 'white', fontSize: 10, fontWeight: 800,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 10,
+          }}>
+            {qty}
+          </div>
+        )}
       </div>
     );
   }
   return (
-    <img src={src} alt={name} onError={() => setErr(true)}
-      style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+    <div style={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
+      <img src={src} alt={name} onError={() => setErr(true)}
+        style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', display: 'block' }} />
+      {qty > 1 && (
+        <div style={{
+          position: 'absolute', bottom: -4, right: -4,
+          width: 18, height: 18, borderRadius: '50%',
+          background: '#06b6d4', border: '2px solid #111827',
+          color: 'white', fontSize: 10, fontWeight: 800,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 10,
+        }}>
+          {qty}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -239,7 +267,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
             background: 'rgba(6,182,212,0.12)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)',
             flexShrink: 0,
           }}>
-            {totalQty} item{totalQty !== 1 ? 's' : ''}
+            {itemCount} item{itemCount !== 1 ? 's' : ''}
           </span>
         )}
 
@@ -292,7 +320,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                 }}>
                   <div style={{ width: 38, flexShrink: 0 }}></div>
                   <div style={{ width: 38, flexShrink: 0 }}></div>
-                  <ItemImg src={imageUrl} name={item.product_name} />
+                  <ItemImg src={imageUrl} name={item.product_name} qty={qty} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.product_name || '—'}
@@ -325,7 +353,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                   }}>
                     <div style={{ width: 38, flexShrink: 0 }}></div>
                     <div style={{ width: 38, flexShrink: 0 }}></div>
-                    <ItemImg src={imageUrl} name={item.product_name} />
+                    <ItemImg src={imageUrl} name={item.product_name} qty={qty} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.product_name || '—'}
