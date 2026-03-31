@@ -5,7 +5,18 @@ import { format, parseISO } from 'date-fns';
 // ── Brandfetch client ID ───────────────────────────────────────────────────
 const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
 
-// ── Store domain mapping ───────────────────────────────────────────────────
+// ── Store domain mapping & brand colors ─────────────────────────────────
+const STORE_BRAND_COLORS = {
+  'Amazon': '#f97316',
+  'Best Buy': '#1d4ed8',
+  'Walmart': '#0071ce',
+  'Apple': '#374151',
+  'Target': '#cc0000',
+  'Costco': '#005dab',
+  "Sam's Club": '#007dc6',
+  'eBay': '#e53238',
+};
+
 const getStoreDomain = (vendorName) => {
   if (!vendorName) return null;
   const n = String(vendorName || '')
@@ -29,10 +40,73 @@ const getStoreDomain = (vendorName) => {
   return n + '.com';
 };
 
+const getStoreBrandColor = (retailer) => {
+  if (!retailer) return 'linear-gradient(135deg,#10b981,#06b6d4)';
+  return STORE_BRAND_COLORS[retailer] || 'linear-gradient(135deg,#10b981,#06b6d4)';
+};
+
 const getBrandfetchUrl = (domain) => {
   if (!domain) return null;
   return `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_CLIENT_ID}`;
 };
+
+// ── Store logo component ──────────────────────────────────────────────────
+function StoreLogo({ retailer, size = 38 }) {
+  const [err, setErr] = useState(false);
+  const domain = getStoreDomain(retailer);
+  const logoUrl = getBrandfetchUrl(domain);
+  const bgColor = getStoreBrandColor(retailer);
+  const initials = (retailer || 'X').slice(0, 2).toUpperCase();
+
+  if (!logoUrl || err) {
+    return (
+      <div style={{
+        width: size,
+        height: size,
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: bgColor,
+        border: '1px solid rgba(255,255,255,0.1)',
+        color: 'white',
+        fontWeight: 700,
+        fontSize: 13,
+        flexShrink: 0,
+      }}>
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      width: size,
+      height: size,
+      borderRadius: 10,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: bgColor,
+      border: '1px solid rgba(255,255,255,0.1)',
+      overflow: 'hidden',
+      flexShrink: 0,
+    }}>
+      <img
+        src={logoUrl}
+        alt={retailer}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          padding: '4px',
+          display: 'block',
+        }}
+        onError={() => setErr(true)}
+      />
+    </div>
+  );
+}
 
 
 
@@ -92,50 +166,6 @@ function StatCol({ label, value, color = '#e2e8f0' }) {
   );
 }
 
-// ── Store logo component ──────────────────────────────────────────────────
-function StoreLogo({ retailer, size = 38 }) {
-  const [err, setErr] = useState(false);
-  const domain = getStoreDomain(retailer);
-  const logoUrl = getBrandfetchUrl(domain);
-  const initials = (retailer || 'X').slice(0, 2).toUpperCase();
-
-  if (!logoUrl || err) {
-    return (
-      <div style={{
-        width: size,
-        height: size,
-        borderRadius: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg,#10b981,#06b6d4)',
-        color: 'white',
-        fontWeight: 700,
-        fontSize: 13,
-        flexShrink: 0,
-      }}>
-        {initials}
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={logoUrl}
-      alt={retailer}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: 10,
-        objectFit: 'contain',
-        display: 'block',
-        flexShrink: 0,
-      }}
-      onError={() => setErr(true)}
-    />
-  );
-}
-
 // ── Single order card ─────────────────────────────────────────────────────
 function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelete, isSelected, onToggleSelect }) {
   const [expanded, setExpanded] = useState(true);
@@ -148,13 +178,14 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
   // Calculate revenue from sale_events
   const totalRevenue = order.sale_events?.reduce(
     (sum, event) => sum + (event.items?.reduce(
-      (s, item) => s + ((parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 0)), 0
+      (s, item) => s + ((parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1)), 0
     ) || 0), 0
   ) || 0;
   
-  // Profit: revenue - cost + cashback
-  const profit = totalRevenue > 0 ? totalRevenue - totalCost + cashback : cashback;
-  const profitColor = profit >= 0 ? '#10b981' : '#f87171';
+  // Profit calculation: only show if sales exist
+  const hasSales = totalRevenue > 0;
+  const profit = hasSales ? totalRevenue - totalCost + cashback : 0;
+  const profitColor = hasSales ? (profit >= 0 ? '#10b981' : '#f87171') : '#475569';
   const itemCount = order.items?.length || 0;
   const totalQty = order.items?.reduce((s, it) => s + (parseInt(it.quantity_ordered) || 1), 0) || 0;
   const initials = (order.retailer || 'X').slice(0, 2).toUpperCase();
@@ -215,7 +246,11 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
           <StatCol label="Cost" value={fmt$(totalCost)} color="#60a5fa" />
           {totalRevenue > 0 && <StatCol label="Revenue" value={fmt$(totalRevenue)} color="#10b981" />}
-          {totalRevenue > 0 && <StatCol label="Profit" value={fmt$(profit)} color={profitColor} />}
+          {hasSales ? (
+            <StatCol label="Profit" value={fmt$(profit)} color={profitColor} />
+          ) : (
+            <StatCol label="Profit" value="—" color="#64748b" />
+          )}
           {totalRevenue === 0 && cashback > 0 && <StatCol label="Cashback" value={fmt$(cashback)} color="#06b6d4" />}
           {paymentLabel && <StatCol label="Payment" value={paymentLabel} color="#94a3b8" />}
           <StatusBadge status={order.status} />
