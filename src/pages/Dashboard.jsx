@@ -368,7 +368,7 @@ export default function Dashboard() {
         <KpiCard
           label="Sale Revenue"
           value={fmt(metrics.saleRevenue)}
-          sub="from paid invoices"
+          sub={`${filteredOrders.filter(o => o.sale_events?.length > 0).length} orders with sales`}
           icon={TrendingUp}
           colorClass="text-emerald-400"
           iconBg="bg-emerald-500/10"
@@ -614,14 +614,23 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {sortedRecent.map((order, i) => {
-                  const cost = order.final_cost || order.total_cost || 0;
-                  const cashbackAmt = order.cashback_amount || 0;
-                  const profit = order.profit != null ? order.profit : (cashbackAmt - cost);
-                  const statusKey = order.status?.toLowerCase();
-                  const statusCfg = STATUS_CONFIG[statusKey];
-                  const productName = order.product_name || order.items?.[0]?.product_name || '—';
-                  const imageUrl = order.image_url || order.items?.[0]?.image_url || null;
-                  const buyer = order.sale_platform || order.buyer || '—';
+                   const cost = order.final_cost || order.total_cost || 0;
+                   const cashbackAmt = parseFloat(order.cashback_amount || 0);
+                   const orderProfit = (() => {
+                     const events = order.sale_events || [];
+                     if (events.length === 0) return null;
+                     const revenue = events.reduce((s, ev) =>
+                       s + (ev.items || []).reduce((is, item) =>
+                         is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0);
+                     const orderCost = parseFloat(order.total_cost || order.final_cost || 0);
+                     const cb = parseFloat(order.cashback_amount || 0);
+                     return revenue - orderCost + cb;
+                   })();
+                   const statusKey = order.status?.toLowerCase();
+                   const statusCfg = STATUS_CONFIG[statusKey];
+                   const productName = order.product_name || order.items?.[0]?.product_name || '—';
+                   const imageUrl = order.image_url || order.product_image_url || order.items?.[0]?.image_url || order.items?.[0]?.product_image_url || null;
+                   const buyer = order.sale_events?.length > 0 ? order.sale_events.map(ev => ev.buyer).filter(Boolean).join(', ') : order.sale_platform || '—';
                   return (
                     <tr key={order.id || i} className="border-b hover:bg-white/3 transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
                       {/* Image */}
@@ -651,8 +660,8 @@ export default function Dashboard() {
                       {/* Cashback */}
                       <td className="px-4 py-2.5 text-pink-400 font-medium whitespace-nowrap">{fmt(cashbackAmt)}</td>
                       {/* Profit */}
-                      <td className={`px-4 py-2.5 font-semibold whitespace-nowrap ${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {fmt(profit)}
+                      <td className={`px-4 py-2.5 font-semibold whitespace-nowrap ${orderProfit === null ? 'text-slate-500' : orderProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {orderProfit === null ? '—' : fmt(orderProfit)}
                       </td>
                       {/* Status */}
                       <td className="px-4 py-2.5">
