@@ -1,70 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { CreditCard, Package, ShoppingCart, Truck, Tag, Globe, Plus, Trash2, Copy, AlertTriangle, DollarSign } from 'lucide-react';
+import {
+  CreditCard, Package, Tag, Globe, Plus, Trash2, Copy,
+  AlertTriangle, DollarSign, X, ClipboardList, Minus,
+} from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+// ── Constants ──────────────────────────────────────────────────────────────
 const STATUSES = ['pending', 'ordered', 'shipped', 'partially_received', 'received', 'cancelled'];
 const PRODUCT_CATEGORIES = ['Electronics', 'Home & Garden', 'Toys & Games', 'Health & Beauty', 'Sports', 'Clothing', 'Tools', 'Gift Cards', 'Grocery', 'Other'];
 const RETAILERS = ['Amazon', 'Bestbuy', 'Walmart', 'Target', 'Costco', "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other'];
+const TABS = [
+  { id: 'details',  label: '📋 Details' },
+  { id: 'items',    label: '📦 Items' },
+  { id: 'payment',  label: '💳 Payment' },
+  { id: 'sales',    label: '💰 Sales' },
+];
 
-// Dark style helpers
-const inp = { background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' };
-const inpRo = { background: 'rgba(255,255,255,0.04)', color: '#94a3b8', borderColor: 'rgba(255,255,255,0.1)' };
+// ── Style helpers ──────────────────────────────────────────────────────────
+const inp = { background: 'rgba(255,255,255,0.04)', color: 'white', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8 };
+const inpRo = { background: 'rgba(255,255,255,0.02)', color: '#64748b', borderColor: 'rgba(255,255,255,0.07)', borderRadius: 8 };
 
-const SectionHeader = ({ icon: Icon, label, color }) => (
-  <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-    <Icon className={`h-4 w-4 ${color}`} />
-    <span className={`text-xs font-bold tracking-widest uppercase ${color}`}>{label}</span>
-  </div>
+const LBL = ({ children }) => (
+  <label style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+    {children}
+  </label>
 );
 
 const defaultSaleEvent = () => ({
-  id: crypto.randomUUID(),
-  buyer: '',
-  platform: '',
-  sale_date: '',
-  payout_date: '',
-  items: [],
+  id: crypto.randomUUID(), buyer: '', sale_date: '', payout_date: '', items: [],
 });
 
-export default function POFormModal({
-  open,
-  onOpenChange,
-  order,
-  onSubmit,
-  products,
-  creditCards,
-  giftCards,
-  sellers,
-  isPending
-}) {
-  const defaultItem = () => ({ product_id: '', product_name: '', upc: '', quantity_ordered: 1, quantity_received: 0, unit_cost: 0, sale_price: 0 });
+const defaultItem = () => ({
+  product_id: '', product_name: '', upc: '', quantity_ordered: 1, quantity_received: 0, unit_cost: 0, sale_price: 0,
+});
+
+// ── Main component ─────────────────────────────────────────────────────────
+export default function POFormModal({ open, onOpenChange, order, onSubmit, products, creditCards, giftCards, sellers, isPending, onDelete }) {
 
   const getInitialForm = (o) => {
     const items = o?.items?.length > 0 ? o.items.map(i => ({ ...defaultItem(), ...i, sale_price: i.sale_price || 0 })) : [defaultItem()];
     return o ? {
       order_type: o.order_type || 'churning',
       order_number: o.order_number || '',
-      tracking_number: o.tracking_number || '',
+      tracking_numbers: o.tracking_numbers?.length > 0 ? o.tracking_numbers : (o.tracking_number ? [o.tracking_number] : ['']),
       retailer: o.retailer || '',
       buyer: o.buyer || '',
       marketplace_platform: o.marketplace_platform || '',
@@ -80,162 +66,115 @@ export default function POFormModal({
       is_dropship: o.is_dropship || false,
       dropship_to: o.dropship_to || '',
       order_date: o.order_date || '',
-      expected_date: o.expected_date || '',
       notes: o.notes || '',
       items,
       sale_events: o.sale_events || [],
-      tax: o.tax || 0,
-      shipping_cost: o.shipping_cost || 0,
-      fees: o.fees || 0,
+      tax: o.tax ?? 0,
+      shipping_cost: o.shipping_cost ?? 0,
+      fees: o.fees ?? 0,
       include_tax_in_cashback: o.include_tax_in_cashback !== false,
       include_shipping_in_cashback: o.include_shipping_in_cashback !== false,
       extra_cashback_percent: o.extra_cashback_percent || 0,
-      bonus_amount: o.bonus_amount || 0,
       bonus_notes: o.bonus_notes || '',
-      rewards_on_original_price: o.rewards_on_original_price || false,
       amazon_yacb: o.bonus_notes?.toLowerCase().includes('prime young adult') || false,
       cashback_rate_override: '',
     } : {
-      order_type: 'churning',
-      order_number: '',
-      tracking_number: '',
-      retailer: '',
-      buyer: '',
-      marketplace_platform: '',
-      account: '',
-      status: 'pending',
-      category: 'other',
-      product_category: '',
-      credit_card_id: '',
-      payment_splits: [],
-      gift_card_ids: [],
-      is_pickup: false,
-      pickup_location: '',
-      is_dropship: false,
-      dropship_to: '',
-      order_date: format(new Date(), 'yyyy-MM-dd'),
-      expected_date: '',
-      notes: '',
-      items: [defaultItem()],
-      sale_events: [],
-      tax: 0,
-      shipping_cost: 0,
-      fees: 0,
-      include_tax_in_cashback: true,
-      include_shipping_in_cashback: true,
-      extra_cashback_percent: 0,
-      bonus_amount: 0,
-      bonus_notes: '',
-      rewards_on_original_price: false,
-      amazon_yacb: false,
-      cashback_rate_override: '',
+      order_type: 'churning', order_number: '', tracking_numbers: [''],
+      retailer: '', buyer: '', marketplace_platform: '', account: '',
+      status: 'pending', category: 'other', product_category: '',
+      credit_card_id: '', payment_splits: [], gift_card_ids: [],
+      is_pickup: false, pickup_location: '', is_dropship: false, dropship_to: '',
+      order_date: format(new Date(), 'yyyy-MM-dd'), notes: '',
+      items: [defaultItem()], sale_events: [],
+      tax: 0, shipping_cost: 0, fees: 0,
+      include_tax_in_cashback: true, include_shipping_in_cashback: true,
+      extra_cashback_percent: 0, bonus_notes: '',
+      amazon_yacb: false, cashback_rate_override: '',
     };
   };
 
   const [formData, setFormData] = useState(() => getInitialForm(order));
+  const [activeTab, setActiveTab] = useState('details');
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setFormData(getInitialForm(order));
-  }, [order, open]);
+    if (open) {
+      setFormData(getInitialForm(order));
+      setActiveTab('details');
+      requestAnimationFrame(() => setVisible(true));
+    } else {
+      setVisible(false);
+    }
+  }, [open, order]);
+
+  // Trap escape key
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape' && open) onOpenChange(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onOpenChange]);
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const selectedCard = creditCards.find(c => c.id === formData.credit_card_id);
 
-  // Split payment helpers
-  const addSplit = () => setFormData(prev => ({
-    ...prev,
-    payment_splits: [...(prev.payment_splits || []), { card_id: '', card_name: '', cashback_rate: 0, amount: '' }]
-  }));
-  const removeSplit = (idx) => setFormData(prev => ({
-    ...prev,
-    payment_splits: prev.payment_splits.filter((_, i) => i !== idx)
-  }));
+  // Split helpers
+  const addSplit = () => setFormData(prev => ({ ...prev, payment_splits: [...(prev.payment_splits || []), { card_id: '', card_name: '', cashback_rate: 0, amount: '' }] }));
+  const removeSplit = (idx) => setFormData(prev => ({ ...prev, payment_splits: prev.payment_splits.filter((_, i) => i !== idx) }));
   const updateSplit = (idx, field, value) => setFormData(prev => {
     const splits = prev.payment_splits.map((sp, i) => {
       if (i !== idx) return sp;
-      if (field === 'card_id') {
-        const card = creditCards.find(c => c.id === value);
-        return { ...sp, card_id: value, card_name: card?.card_name || '', cashback_rate: card?.cashback_rate || 0 };
-      }
+      if (field === 'card_id') { const card = creditCards.find(c => c.id === value); return { ...sp, card_id: value, card_name: card?.card_name || '', cashback_rate: card?.cashback_rate || 0 }; }
       return { ...sp, [field]: value };
     });
     return { ...prev, payment_splits: splits };
   });
 
   // Item helpers
-  const updateItem = (idx, field, value) => {
-    setFormData(prev => {
-      const items = prev.items.map((it, i) => i === idx ? { ...it, [field]: value } : it);
-      return { ...prev, items };
-    });
-  };
+  const updateItem = (idx, field, value) => setFormData(prev => ({ ...prev, items: prev.items.map((it, i) => i === idx ? { ...it, [field]: value } : it) }));
   const addItem = () => setFormData(prev => ({ ...prev, items: [...prev.items, defaultItem()] }));
-  const removeItem = (idx) => setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== idx) }));
+  const removeItem = (idx) => setFormData(prev => ({ ...prev, items: prev.items.length > 1 ? prev.items.filter((_, i) => i !== idx) : prev.items }));
   const duplicateItem = (idx) => setFormData(prev => ({ ...prev, items: [...prev.items.slice(0, idx + 1), { ...prev.items[idx] }, ...prev.items.slice(idx + 1)] }));
 
-  // Sale events helpers
+  // Tracking helpers
+  const updateTracking = (idx, val) => setFormData(prev => { const t = [...prev.tracking_numbers]; t[idx] = val; return { ...prev, tracking_numbers: t }; });
+  const addTracking = () => setFormData(prev => ({ ...prev, tracking_numbers: [...prev.tracking_numbers, ''] }));
+  const removeTracking = (idx) => setFormData(prev => ({ ...prev, tracking_numbers: prev.tracking_numbers.length > 1 ? prev.tracking_numbers.filter((_, i) => i !== idx) : [''] }));
+
+  // Sale event helpers
   const addSaleEvent = () => {
-    const newEvent = defaultSaleEvent();
-    // Pre-populate items from order items
-    newEvent.items = formData.items
-      .filter(it => it.product_name?.trim())
-      .map(it => ({ product_name: it.product_name, qty: 1, sale_price: it.sale_price || 0 }));
-    setFormData(prev => ({ ...prev, sale_events: [...prev.sale_events, newEvent] }));
+    const ev = defaultSaleEvent();
+    ev.items = formData.items.filter(it => it.product_name?.trim()).map(it => ({ product_name: it.product_name, qty: 1, sale_price: it.sale_price || 0 }));
+    setFormData(prev => ({ ...prev, sale_events: [...prev.sale_events, ev] }));
   };
   const removeSaleEvent = (id) => setFormData(prev => ({ ...prev, sale_events: prev.sale_events.filter(e => e.id !== id) }));
-  const updateSaleEvent = (id, field, value) => setFormData(prev => ({
-    ...prev,
-    sale_events: prev.sale_events.map(e => e.id !== id ? e : { ...e, [field]: value })
-  }));
+  const updateSaleEvent = (id, field, value) => setFormData(prev => ({ ...prev, sale_events: prev.sale_events.map(e => e.id !== id ? e : { ...e, [field]: value }) }));
   const updateSaleEventItem = (eventId, itemIdx, field, value) => setFormData(prev => ({
     ...prev,
     sale_events: prev.sale_events.map(e => {
       if (e.id !== eventId) return e;
-      const items = e.items.map((it, i) => i === itemIdx ? { ...it, [field]: value } : it);
-      return { ...e, items };
+      return { ...e, items: e.items.map((it, i) => i === itemIdx ? { ...it, [field]: value } : it) };
     })
   }));
 
-  // Auto-calc total price
+  // Calculations
   const tax = parseFloat(formData.tax) || 0;
   const shippingCost = parseFloat(formData.shipping_cost) || 0;
   const fees = parseFloat(formData.fees) || 0;
   const itemsSubtotal = formData.items.reduce((s, it) => s + (parseFloat(it.unit_cost) || 0) * (parseInt(it.quantity_ordered) || 1), 0);
   const totalPrice = itemsSubtotal + tax + shippingCost + fees;
-
-  const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => {
-    const gc = giftCards.find(g => g.id === id);
-    return sum + (gc?.value || 0);
-  }, 0);
-
-  const getCashbackBase = () => {
-    let base = totalPrice;
-    if (!formData.include_tax_in_cashback) base -= tax;
-    if (!formData.include_shipping_in_cashback) base -= shippingCost;
-    return base;
-  };
-
-  const getCardRate = () => {
-    if (!selectedCard) return 0;
-    if (selectedCard.reward_type === 'cashback') return selectedCard.cashback_rate || 0;
-    if (selectedCard.reward_type === 'both') return selectedCard.cashback_rate || 0;
-    return 0;
-  };
-
-  const cashbackBase = getCashbackBase();
-  const cardRate = parseFloat(formData.cashback_rate_override) || getCardRate();
+  const giftCardTotal = formData.gift_card_ids.reduce((sum, id) => { const gc = giftCards.find(g => g.id === id); return sum + (gc?.value || 0); }, 0);
+  const cashbackBase = (() => { let b = totalPrice; if (!formData.include_tax_in_cashback) b -= tax; if (!formData.include_shipping_in_cashback) b -= shippingCost; return b; })();
+  const cardRate = parseFloat(formData.cashback_rate_override) || (selectedCard?.cashback_rate || 0);
   const cashbackAmount = (cashbackBase * cardRate / 100) + (formData.amazon_yacb ? cashbackBase * 0.05 : 0);
-
-  // Sale events totals
   const totalItemsOrdered = formData.items.reduce((s, it) => s + (parseInt(it.quantity_ordered) || 1), 0);
   const totalItemsSold = formData.sale_events.reduce((s, ev) => s + ev.items.reduce((ss, it) => ss + (parseInt(it.qty) || 0), 0), 0);
+  const totalSaleRevenue = formData.sale_events.reduce((s, ev) => s + ev.items.reduce((ss, it) => ss + (parseFloat(it.sale_price) || 0) * (parseInt(it.qty) || 0), 0), 0);
+  const isAmazon = formData.retailer === 'Amazon';
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.order_number?.trim()) { toast.error('Order number is required'); return; }
     if (!formData.retailer?.trim()) { toast.error('Retailer is required'); return; }
-
     const items = formData.items.map(it => ({
       ...it,
       quantity_ordered: parseInt(it.quantity_ordered) || 1,
@@ -243,608 +182,550 @@ export default function POFormModal({
       unit_cost: parseFloat(it.unit_cost) || 0,
       sale_price: parseFloat(it.sale_price) || 0,
     }));
-
     const hasSplits = (formData.payment_splits || []).length > 1;
     const splitsTotal = (formData.payment_splits || []).reduce((s, sp) => s + (parseFloat(sp.amount) || 0), 0);
-    if (hasSplits && Math.abs(splitsTotal - totalPrice) > 0.01) {
-      toast.error(`Split amounts ($${splitsTotal.toFixed(2)}) must equal order total ($${totalPrice.toFixed(2)})`);
-      return;
-    }
-
+    if (hasSplits && Math.abs(splitsTotal - totalPrice) > 0.01) { toast.error(`Split amounts ($${splitsTotal.toFixed(2)}) must equal order total ($${totalPrice.toFixed(2)})`); return; }
     const dataToSubmit = {
       ...formData,
       items,
-      sale_events: formData.sale_events.map(ev => ({
-        ...ev,
-        items: ev.items.map(it => ({ ...it, qty: parseInt(it.qty) || 0, sale_price: parseFloat(it.sale_price) || 0 }))
-      })),
-      tax,
-      shipping_cost: shippingCost,
-      fees,
-      total_cost: totalPrice,
-      gift_card_value: giftCardTotal,
-      final_cost: totalPrice - giftCardTotal,
+      tracking_numbers: formData.tracking_numbers.filter(Boolean),
+      sale_events: formData.sale_events.map(ev => ({ ...ev, items: ev.items.map(it => ({ ...it, qty: parseInt(it.qty) || 0, sale_price: parseFloat(it.sale_price) || 0 })) })),
+      tax, shipping_cost: shippingCost, fees, total_cost: totalPrice,
+      gift_card_value: giftCardTotal, final_cost: totalPrice - giftCardTotal,
       credit_card_id: hasSplits ? (formData.payment_splits[0]?.card_id || null) : (formData.credit_card_id || null),
-      payment_splits: hasSplits
-        ? formData.payment_splits.map(sp => ({
-            card_id: sp.card_id,
-            card_name: sp.card_name,
-            cashback_rate: sp.cashback_rate || 0,
-            amount: parseFloat(sp.amount) || 0,
-          }))
-        : [],
+      payment_splits: hasSplits ? formData.payment_splits.map(sp => ({ card_id: sp.card_id, card_name: sp.card_name, cashback_rate: sp.cashback_rate || 0, amount: parseFloat(sp.amount) || 0 })) : [],
       extra_cashback_percent: formData.amazon_yacb ? 5 : (parseFloat(formData.extra_cashback_percent) || 0),
       bonus_notes: formData.amazon_yacb ? 'Prime Young Adult' : formData.bonus_notes,
     };
     delete dataToSubmit.amazon_yacb;
     delete dataToSubmit.cashback_rate_override;
-
     onSubmit(dataToSubmit);
   };
 
-  const isAmazon = formData.retailer === 'Amazon';
+  if (!open && !visible) return null;
+
+  // ── Subtitle ──────────────────────────────────────────────────────────
+  const subtitle = [formData.order_number && `#${formData.order_number}`, formData.retailer, formData.order_date].filter(Boolean).join(' · ');
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="w-[95vw] max-w-[760px] max-h-[92vh] overflow-y-auto p-0"
-        style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
+      {/* Overlay */}
+      <div
+        onClick={() => onOpenChange(false)}
+        style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(3px)',
+          transition: 'opacity 250ms ease-out',
+          opacity: visible ? 1 : 0,
+        }}
+      />
+
+      {/* Panel */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 600,
+          height: '100%',
+          background: '#111827',
+          borderLeft: '1px solid rgba(255,255,255,0.11)',
+          boxShadow: '-24px 0 60px rgba(0,0,0,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          transform: visible ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 250ms ease-out',
+          color: 'white',
+        }}
       >
-        <DialogHeader className="px-6 pt-5 pb-0">
-          <DialogTitle className="text-lg font-bold text-white">
-            {order ? 'Edit Purchase Order' : 'New Purchase Order'}
-          </DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-5">
-
-          {/* ORDER TYPE TOGGLE */}
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <button type="button" onClick={() => set('order_type', 'churning')}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all border"
-                style={formData.order_type === 'churning'
-                  ? { background: 'rgba(245,158,11,0.15)', color: '#fbbf24', borderColor: 'rgba(245,158,11,0.4)' }
-                  : { background: 'transparent', color: '#94a3b8', borderColor: 'transparent' }}>
-                <Tag className="h-3.5 w-3.5" /> Churning
-              </button>
-              <button type="button" onClick={() => set('order_type', 'marketplace')}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all border"
-                style={formData.order_type === 'marketplace'
-                  ? { background: 'rgba(59,130,246,0.15)', color: '#60a5fa', borderColor: 'rgba(59,130,246,0.4)' }
-                  : { background: 'transparent', color: '#94a3b8', borderColor: 'transparent' }}>
-                <Globe className="h-3.5 w-3.5" /> Marketplace
-              </button>
+        {/* ── Header ── */}
+        <div style={{ padding: '18px 24px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: 'white', margin: 0, lineHeight: 1.2 }}>
+                {order ? 'Edit Order' : 'New Order'}
+              </h2>
+              {subtitle && <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{subtitle}</p>}
             </div>
-          </div>
-
-          {/* VENDOR & BUYER */}
-          <div className="rounded-xl p-4" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
-            <SectionHeader icon={Truck} label="Vendor & Buyer" color="text-amber-400" />
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Vendor / Store *</Label>
-                <Select value={formData.retailer} onValueChange={(v) => set('retailer', v)}>
-                  <SelectTrigger className="text-slate-200" style={inp}><SelectValue placeholder="Select vendor..." /></SelectTrigger>
-                  <SelectContent>{RETAILERS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              {formData.order_type === 'churning' ? (
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Buyer</Label>
-                  <Select value={formData.buyer} onValueChange={(v) => set('buyer', v)}>
-                    <SelectTrigger className="text-slate-200" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
-                    <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Marketplace</Label>
-                  <Select value={formData.marketplace_platform} onValueChange={(v) => set('marketplace_platform', v)}>
-                    <SelectTrigger className="text-slate-200" style={inp}><SelectValue placeholder="Select platform..." /></SelectTrigger>
-                    <SelectContent>
-                      {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp', 'Craigslist', 'Other'].map(p => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Status</Label>
-                <Select value={formData.status} onValueChange={(v) => {
-                  if (v === 'received') {
-                    setFormData(prev => ({ ...prev, status: v, items: prev.items.map(item => ({ ...item, quantity_received: item.quantity_ordered })) }));
-                  } else { set('status', v); }
-                }}>
-                  <SelectTrigger className="text-slate-200" style={inp}><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Order Number</Label>
-                <Input style={inp} value={formData.order_number} onChange={(e) => set('order_number', e.target.value)} placeholder="e.g. 112-3456789" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Account</Label>
-                <Input style={inp} value={formData.account} onChange={(e) => set('account', e.target.value)} placeholder="Account used" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Tracking Number</Label>
-                <Input style={inp} value={formData.tracking_number} onChange={(e) => set('tracking_number', e.target.value)} placeholder="1Z999AA10123456784" />
-              </div>
-            </div>
-            <div className="flex items-center gap-4 flex-wrap mt-1">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
-                <input type="checkbox" checked={formData.is_dropship} onChange={(e) => set('is_dropship', e.target.checked)} className="rounded" />
-                🚚 Dropship
-              </label>
-              {formData.is_dropship && (
-                <Select value={formData.dropship_to} onValueChange={(v) => set('dropship_to', v)}>
-                  <SelectTrigger className="text-slate-200 w-40" style={inp}><SelectValue placeholder="Select seller" /></SelectTrigger>
-                  <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
-                </Select>
-              )}
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
-                <input type="checkbox" checked={formData.is_pickup} onChange={(e) => set('is_pickup', e.target.checked)} className="rounded" />
-                📍 Pickup
-              </label>
-              {formData.is_pickup && (
-                <Input className="w-40" style={inp} value={formData.pickup_location} onChange={(e) => set('pickup_location', e.target.value)} placeholder="Pickup location" />
-              )}
-            </div>
-          </div>
-
-          {/* ORDER ITEMS */}
-          <div className="rounded-xl p-4" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)' }}>
-            <div className="flex items-center justify-between mb-3 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-purple-400" />
-                <span className="text-xs font-bold tracking-widest uppercase text-purple-400">Order Items</span>
-                {formData.items.length > 1 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold text-purple-300" style={{ background: 'rgba(124,58,237,0.2)' }}>{formData.items.length} items</span>
-                )}
-              </div>
-              <div className="space-y-1">
-                <Select value={formData.product_category} onValueChange={(v) => set('product_category', v)}>
-                  <SelectTrigger className="text-slate-200 h-8 text-xs w-36" style={inp}><SelectValue placeholder="Category..." /></SelectTrigger>
-                  <SelectContent>{PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {formData.items.map((item, idx) => (
-                <div key={idx} className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400">Item {idx + 1}</span>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => duplicateItem(idx)} title="Duplicate"
-                        className="p-1 rounded text-slate-500 hover:text-slate-200 hover:bg-white/10 transition">
-                        <Copy className="h-3.5 w-3.5" />
-                      </button>
-                      {formData.items.length > 1 && (
-                        <button type="button" onClick={() => removeItem(idx)} title="Remove"
-                          className="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-500/10 transition">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 mb-2">
-                    <div className="col-span-2 space-y-1">
-                      <Label className="text-xs text-slate-400">Product Name *</Label>
-                      <ProductAutocomplete
-                        products={products}
-                        nameValue={item.product_name || ''}
-                        upcValue={item.upc || ''}
-                        searchField="name"
-                        onSelect={(p) => {
-                          updateItem(idx, 'product_id', p.id);
-                          updateItem(idx, 'product_name', p.name);
-                          updateItem(idx, 'upc', p.upc || '');
-                          if (idx === 0) set('product_category', p.category || formData.product_category);
-                        }}
-                        onChangeName={(val) => updateItem(idx, 'product_name', val)}
-                        placeholder="e.g. iPad Air"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">Unit Price *</Label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">$</span>
-                        <Input className="pl-5 h-9 text-sm" type="number" step="0.01" min="0" style={inp}
-                          value={item.unit_cost || ''} onChange={(e) => updateItem(idx, 'unit_cost', e.target.value)} placeholder="0.00" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">Qty</Label>
-                      <Input className="h-9 text-sm text-center" type="number" min="1" style={inp}
-                        value={item.quantity_ordered || 1} onChange={(e) => updateItem(idx, 'quantity_ordered', e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">SKU / UPC</Label>
-                      <ProductAutocomplete
-                        products={products}
-                        nameValue={item.product_name || ''}
-                        upcValue={item.upc || ''}
-                        searchField="upc"
-                        onSelect={(p) => {
-                          updateItem(idx, 'product_id', p.id);
-                          updateItem(idx, 'product_name', p.name);
-                          updateItem(idx, 'upc', p.upc || '');
-                        }}
-                        onChangeUpc={(val) => updateItem(idx, 'upc', val)}
-                        placeholder="Optional"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">Sale Price (per unit)</Label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">$</span>
-                        <Input className="pl-5 h-9 text-sm" type="number" step="0.01" min="0" style={inp}
-                          value={item.sale_price || ''} onChange={(e) => updateItem(idx, 'sale_price', e.target.value)} placeholder="0.00" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">Total</Label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">$</span>
-                        <Input className="pl-5 h-9 text-sm" style={inpRo} readOnly
-                          value={((parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity_ordered) || 1)).toFixed(2)} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button type="button" onClick={addItem}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg text-purple-400 text-sm font-medium hover:text-purple-300 transition"
-              style={{ border: '2px dashed rgba(124,58,237,0.3)' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.6)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.3)'}>
-              <Plus className="h-4 w-4" /> Add Another Item
-            </button>
-
-            {/* ── SALE EVENTS ── */}
-            <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-emerald-400" />
-                  <span className="text-xs font-bold tracking-widest uppercase text-emerald-400">Sale Events</span>
-                  {totalItemsSold > 0 && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
-                      {totalItemsSold} / {totalItemsOrdered} sold
-                    </span>
-                  )}
-                </div>
-                <button type="button" onClick={addSaleEvent}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                  <Plus className="h-3.5 w-3.5" /> Add Sale
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {order && onDelete && (
+                <button type="button" onClick={() => { onDelete(order.id); onOpenChange(false); }}
+                  style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', cursor: 'pointer' }}>
+                  Delete
                 </button>
-              </div>
-
-              {formData.sale_events.length === 0 && (
-                <p className="text-xs text-slate-500 text-center py-2">No sale events yet. Add one to track partial or multi-buyer sales.</p>
               )}
+              <button type="button" onClick={() => onOpenChange(false)}
+                style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X style={{ width: 16, height: 16 }} />
+              </button>
+            </div>
+          </div>
 
-              <div className="space-y-3">
-                {formData.sale_events.map((ev, evIdx) => (
-                  <div key={ev.id} className="rounded-xl p-3" style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Sale {evIdx + 1}</span>
-                      <button type="button" onClick={() => removeSaleEvent(ev.id)}
-                        className="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-500/10 transition">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: 0 }}>
+            {TABS.map(tab => (
+              <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
+                style={{
+                  padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                  background: 'transparent', border: 'none', outline: 'none',
+                  borderBottom: activeTab === tab.id ? '2px solid #10b981' : '2px solid transparent',
+                  color: activeTab === tab.id ? '#10b981' : '#94a3b8',
+                  transition: 'all 0.15s',
+                  marginBottom: -1,
+                }}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Scrollable content ── */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+          <form id="po-form" onSubmit={handleSubmit}>
+
+            {/* ══ TAB: DETAILS ══════════════════════════════════════════ */}
+            {activeTab === 'details' && (
+              <div className="space-y-4">
+                {/* Mode toggle */}
+                <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', width: 'fit-content' }}>
+                  {[{v:'churning', label:'Churning', icon: Tag, activeStyle: {background:'rgba(245,158,11,0.15)', color:'#fbbf24', borderColor:'rgba(245,158,11,0.4)'}},
+                    {v:'marketplace', label:'Marketplace', icon: Globe, activeStyle: {background:'rgba(59,130,246,0.15)', color:'#60a5fa', borderColor:'rgba(59,130,246,0.4)'}}
+                  ].map(({v, label, icon: Icon, activeStyle}) => (
+                    <button key={v} type="button" onClick={() => set('order_type', v)}
+                      style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:8, fontSize:13, fontWeight:500, cursor:'pointer', border:'1px solid', transition:'all 0.15s',
+                        ...(formData.order_type === v ? activeStyle : {background:'transparent', color:'#94a3b8', borderColor:'transparent'}) }}>
+                      <Icon style={{width:13, height:13}} /> {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Vendor section */}
+                <div style={{ borderRadius: 12, padding: 16, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#f59e0b', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                    🏪 Vendor & Buyer
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+                    <div><LBL>Vendor *</LBL>
+                      <Select value={formData.retailer} onValueChange={v => set('retailer', v)}>
+                        <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
+                        <SelectContent>{RETAILERS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                      </Select>
                     </div>
-
-                    {/* Buyer + dates */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                      <div className="space-y-1 col-span-2 sm:col-span-1">
-                        <Label className="text-xs text-slate-400">Buyer / Platform</Label>
-                        <Select value={ev.buyer || ''} onValueChange={(v) => updateSaleEvent(ev.id, 'buyer', v)}>
-                          <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
-                          <SelectContent>
-                            {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
-                            {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp'].map(p => (
-                              <SelectItem key={p} value={p}>{p}</SelectItem>
-                            ))}
-                          </SelectContent>
+                    {formData.order_type === 'churning' ? (
+                      <div><LBL>Buyer</LBL>
+                        <Select value={formData.buyer} onValueChange={v => set('buyer', v)}>
+                          <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
+                          <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-slate-400">Sale Date</Label>
-                        <Input type="date" className="h-8 text-xs" style={inp} value={ev.sale_date || ''} onChange={e => updateSaleEvent(ev.id, 'sale_date', e.target.value)} />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-slate-400">Payout Date</Label>
-                        <Input type="date" className="h-8 text-xs" style={inp} value={ev.payout_date || ''} onChange={e => updateSaleEvent(ev.id, 'payout_date', e.target.value)} />
-                      </div>
-                    </div>
-
-                    {/* Items sold in this event */}
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-400">Items Sold</Label>
-                      {ev.items.map((it, itIdx) => (
-                        <div key={itIdx} className="grid grid-cols-12 gap-2 items-center">
-                          <div className="col-span-5 space-y-1">
-                            <Input className="h-7 text-xs" style={inp} value={it.product_name || ''} placeholder="Product name"
-                              onChange={e => updateSaleEventItem(ev.id, itIdx, 'product_name', e.target.value)} />
-                          </div>
-                          <div className="col-span-2 space-y-1">
-                            <Input className="h-7 text-xs text-center" type="number" min="0" style={inp} value={it.qty || ''} placeholder="Qty"
-                              onChange={e => updateSaleEventItem(ev.id, itIdx, 'qty', e.target.value)} />
-                          </div>
-                          <div className="col-span-4 space-y-1">
-                            <div className="relative">
-                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">$</span>
-                              <Input className="h-7 text-xs pl-5" type="number" step="0.01" min="0" style={inp}
-                                value={it.sale_price || ''} placeholder="Price/unit"
-                                onChange={e => updateSaleEventItem(ev.id, itIdx, 'sale_price', e.target.value)} />
-                            </div>
-                          </div>
-                          <div className="col-span-1 flex justify-center">
-                            <button type="button" onClick={() => {
-                              const items = ev.items.filter((_, i) => i !== itIdx);
-                              updateSaleEvent(ev.id, 'items', items);
-                            }} className="text-slate-500 hover:text-red-400 transition">
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      <button type="button" onClick={() => updateSaleEvent(ev.id, 'items', [...ev.items, { product_name: '', qty: 1, sale_price: 0 }])}
-                        className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition flex items-center gap-1">
-                        <Plus className="h-3 w-3" /> Add item
-                      </button>
-                    </div>
-
-                    {/* Sale total */}
-                    {ev.items.length > 0 && (
-                      <div className="mt-2 text-right text-xs text-emerald-400 font-semibold">
-                        Total: ${ev.items.reduce((s, it) => s + (parseFloat(it.sale_price) || 0) * (parseInt(it.qty) || 0), 0).toFixed(2)}
+                    ) : (
+                      <div><LBL>Marketplace</LBL>
+                        <Select value={formData.marketplace_platform} onValueChange={v => set('marketplace_platform', v)}>
+                          <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
+                          <SelectContent>{['eBay','Amazon','Facebook Marketplace','Mercari','OfferUp','Other'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                        </Select>
                       </div>
                     )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* PURCHASE DETAILS */}
-          <div className="rounded-xl p-4" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
-            <SectionHeader icon={ShoppingCart} label="Purchase Details" color="text-blue-400" />
-            <div className="grid grid-cols-4 gap-3 mb-3 items-end">
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Subtotal (items)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                  <Input className="pl-7" style={inpRo} readOnly value={itemsSubtotal.toFixed(2)} />
-                </div>
-              </div>
-              <div className="col-span-2 space-y-1">
-                <Label className="text-xs text-slate-400">Total Cost (incl. tax/shipping)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                  <Input className="pl-7 font-semibold" style={inpRo} readOnly value={totalPrice.toFixed(2)} />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Date</Label>
-                <Input type="date" style={inp} value={formData.order_date} onChange={(e) => set('order_date', e.target.value)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Tax</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                  <Input className="pl-7" type="number" step="0.01" min="0" style={inp}
-                    value={formData.tax} onChange={(e) => set('tax', e.target.value)} placeholder="0.00" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Shipping</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                  <Input className="pl-7" type="number" step="0.01" min="0" style={inp}
-                    value={formData.shipping_cost} onChange={(e) => set('shipping_cost', e.target.value)} placeholder="0.00" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Fees</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                  <Input className="pl-7" type="number" step="0.01" min="0" style={inp}
-                    value={formData.fees} onChange={(e) => set('fees', e.target.value)} placeholder="0.00" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* PAYMENT & CASHBACK */}
-          <div className="rounded-xl p-4" style={{ background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.15)' }}>
-            <SectionHeader icon={CreditCard} label="Payment Methods" color="text-pink-400" />
-
-            {(formData.payment_splits || []).length === 0 ? (
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Payment Method</Label>
-                  <Select value={formData.credit_card_id || ''} onValueChange={(v) => {
-                    const card = creditCards.find(c => c.id === v);
-                    set('credit_card_id', v);
-                    set('card_name', card?.card_name || '');
-                  }}>
-                    <SelectTrigger className="text-slate-200" style={inp}>
-                      {formData.credit_card_id ? <span>{selectedCard?.card_name}</span> : <SelectValue placeholder="Select card..." />}
-                    </SelectTrigger>
-                    <SelectContent>{creditCards.filter(c => c.active !== false).map(card => (
-                      <SelectItem key={card.id} value={card.id}>{card.card_name}</SelectItem>
-                    ))}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Cashback Rate %</Label>
-                  <div className="relative">
-                    <Input className="pr-8" type="number" step="0.1" min="0" style={inp}
-                      value={formData.cashback_rate_override || cardRate}
-                      onChange={(e) => set('cashback_rate_override', e.target.value)}
-                      placeholder={cardRate ? String(cardRate) : '0'} />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">%</span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Cashback (auto)</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                    <Input className="pl-7" style={inpRo} readOnly value={cashbackAmount.toFixed(2)} />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-3 space-y-2">
-                {formData.payment_splits.map((sp, idx) => {
-                  const spCard = creditCards.find(c => c.id === sp.card_id);
-                  const spCashback = ((parseFloat(sp.amount) || 0) * (spCard?.cashback_rate || 0) / 100);
-                  return (
-                    <div key={idx} className="grid grid-cols-12 gap-2 items-end rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <div className="col-span-5 space-y-1">
-                        <Label className="text-[10px] text-slate-500">Card</Label>
-                        <Select value={sp.card_id || ''} onValueChange={(v) => updateSplit(idx, 'card_id', v)}>
-                          <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select card..." /></SelectTrigger>
-                          <SelectContent>{creditCards.filter(c => c.active !== false).map(card => (
-                            <SelectItem key={card.id} value={card.id}>{card.card_name}</SelectItem>
-                          ))}</SelectContent>
-                        </Select>
-                      </div>
-                      <div className="col-span-3 space-y-1">
-                        <Label className="text-[10px] text-slate-500">Amount</Label>
-                        <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">$</span>
-                          <Input className="h-8 text-xs pl-5" type="number" step="0.01" min="0" style={inp}
-                            value={sp.amount} onChange={(e) => updateSplit(idx, 'amount', e.target.value)} placeholder="0.00" />
-                        </div>
-                      </div>
-                      <div className="col-span-3 space-y-1">
-                        <Label className="text-[10px] text-slate-500">Cashback</Label>
-                        <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">$</span>
-                          <Input className="h-8 text-xs pl-5" style={inpRo} readOnly value={spCashback.toFixed(2)} />
-                        </div>
-                      </div>
-                      <div className="col-span-1 flex justify-center pb-0.5">
-                        <button type="button" onClick={() => removeSplit(idx)}
-                          className="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-500/10 transition">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                    <div><LBL>Status</LBL>
+                      <Select value={formData.status} onValueChange={v => { if (v === 'received') setFormData(prev => ({ ...prev, status: v, items: prev.items.map(it => ({...it, quantity_received: it.quantity_ordered})) })); else set('status', v); }}>
+                        <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue /></SelectTrigger>
+                        <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g,' ')}</SelectItem>)}</SelectContent>
+                      </Select>
                     </div>
-                  );
-                })}
-                {(() => {
-                  const splitsTotal = formData.payment_splits.reduce((s, sp) => s + (parseFloat(sp.amount) || 0), 0);
-                  const isBalanced = Math.abs(splitsTotal - totalPrice) < 0.01;
-                  return (
-                    <div className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold`}
-                      style={isBalanced
-                        ? { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' }
-                        : { background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b' }}>
-                      <div className="flex items-center gap-1.5">
-                        {!isBalanced && <AlertTriangle className="h-3.5 w-3.5" />}
-                        <span>Split: ${splitsTotal.toFixed(2)} / Total: ${totalPrice.toFixed(2)}</span>
-                      </div>
-                      {isBalanced && <span>✓ Balanced</span>}
+                    <div><LBL>Order Number</LBL>
+                      <Input style={inp} value={formData.order_number} onChange={e => set('order_number', e.target.value)} placeholder="112-3456789" />
                     </div>
-                  );
-                })()}
+                    <div><LBL>Order Date</LBL>
+                      <Input type="date" style={inp} value={formData.order_date} onChange={e => set('order_date', e.target.value)} />
+                    </div>
+                    <div><LBL>Account</LBL>
+                      <Input style={inp} value={formData.account} onChange={e => set('account', e.target.value)} placeholder="Account used" />
+                    </div>
+                  </div>
+
+                  {/* Tracking numbers */}
+                  <div>
+                    <LBL>Tracking Number(s)</LBL>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {formData.tracking_numbers.map((tn, idx) => (
+                        <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <Input style={{ ...inp, flex: 1 }} value={tn} onChange={e => updateTracking(idx, e.target.value)} placeholder="1Z999AA1..." />
+                          {formData.tracking_numbers.length > 1 && (
+                            <button type="button" onClick={() => removeTracking(idx)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                              <Minus style={{ width: 14, height: 14 }} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button type="button" onClick={addTracking} style={{ fontSize: 12, color: '#10b981', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Plus style={{ width: 12, height: 12 }} /> Add tracking number
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dropship / Pickup */}
+                  <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={formData.is_dropship} onChange={e => set('is_dropship', e.target.checked)} /> 🚚 Dropship
+                    </label>
+                    {formData.is_dropship && (
+                      <Select value={formData.dropship_to} onValueChange={v => set('dropship_to', v)}>
+                        <SelectTrigger className="text-slate-200 h-8 w-36 text-xs" style={inp}><SelectValue placeholder="Seller..." /></SelectTrigger>
+                        <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    )}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={formData.is_pickup} onChange={e => set('is_pickup', e.target.checked)} /> 📍 Pickup
+                    </label>
+                    {formData.is_pickup && <Input style={{ ...inp, width: 140 }} value={formData.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="Location" />}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div><LBL>Notes</LBL>
+                  <Textarea value={formData.notes} onChange={e => set('notes', e.target.value)} placeholder="Any notes..." rows={2}
+                    style={{ ...inp, width: '100%', padding: '8px 12px', resize: 'vertical', fontSize: 13 }} />
+                </div>
               </div>
             )}
 
-            <div className="flex items-center gap-2 mb-3">
-              <button type="button" onClick={addSplit}
-                className="flex items-center gap-1.5 text-xs font-semibold text-pink-400 hover:text-pink-300 transition px-3 py-1.5 rounded-lg"
-                style={{ background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.2)' }}>
-                <Plus className="h-3.5 w-3.5" /> Add Payment Method
-              </button>
-              {(formData.payment_splits || []).length > 0 && (
-                <button type="button" onClick={() => set('payment_splits', [])}
-                  className="text-xs text-slate-500 hover:text-slate-300 underline transition">
-                  Switch to single card
-                </button>
-              )}
-            </div>
+            {/* ══ TAB: ITEMS ════════════════════════════════════════════ */}
+            {activeTab === 'items' && (
+              <div>
+                <div style={{ borderRadius: 12, padding: 16, background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Package style={{ width: 14, height: 14, color: '#06b6d4' }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#06b6d4' }}>Order Items</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(6,182,212,0.15)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.25)' }}>
+                        {formData.items.length}
+                      </span>
+                    </div>
+                    <Select value={formData.product_category} onValueChange={v => set('product_category', v)}>
+                      <SelectTrigger className="text-slate-200 h-7 text-xs w-32" style={inp}><SelectValue placeholder="Category..." /></SelectTrigger>
+                      <SelectContent>{PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
 
-            {/* Gift Cards */}
-            <div className="space-y-1 mb-3">
-              <Label className="text-xs text-slate-400">Gift Card Used</Label>
-              {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).length === 0 ? (
-                <p className="text-xs text-slate-500">No available gift cards</p>
-              ) : (
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).map(gc => (
-                    <label key={gc.id} className="flex items-center gap-1 cursor-pointer text-xs px-2 py-1 rounded"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0' }}>
-                      <input type="checkbox" checked={formData.gift_card_ids.includes(gc.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) set('gift_card_ids', [...formData.gift_card_ids, gc.id]);
-                          else set('gift_card_ids', formData.gift_card_ids.filter(id => id !== gc.id));
-                        }} className="rounded" />
-                      {gc.brand} ${gc.value} ...{gc.code?.slice(-3)}
-                    </label>
-                  ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {formData.items.map((item, idx) => (
+                      <div key={idx} style={{ borderRadius: 10, padding: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#06b6d4', background: 'rgba(6,182,212,0.12)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(6,182,212,0.2)' }}>
+                            Item {idx + 1}
+                          </span>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button type="button" onClick={() => duplicateItem(idx)} style={{ padding: 4, borderRadius: 6, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }} title="Duplicate">
+                              <Copy style={{ width: 13, height: 13 }} />
+                            </button>
+                            {formData.items.length > 1 && (
+                              <button type="button" onClick={() => removeItem(idx)} style={{ padding: 4, borderRadius: 6, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                <Trash2 style={{ width: 13, height: 13 }} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ marginBottom: 8 }}><LBL>Product</LBL>
+                          <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
+                            onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); if(idx===0) set('product_category',p.category||formData.product_category); }}
+                            onChangeName={val => updateItem(idx,'product_name',val)} placeholder="e.g. iPad Air" />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                          <div><LBL>Unit Price</LBL>
+                            <div style={{ position: 'relative' }}>
+                              <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
+                              <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={item.unit_cost || ''} onChange={e => updateItem(idx,'unit_cost',e.target.value)} placeholder="0.00" />
+                            </div>
+                          </div>
+                          <div><LBL>Qty</LBL>
+                            <Input className="h-8 text-sm text-center" style={inp} type="number" min="1" value={item.quantity_ordered || 1} onChange={e => updateItem(idx,'quantity_ordered',e.target.value)} />
+                          </div>
+                          <div><LBL>Sale Price</LBL>
+                            <div style={{ position: 'relative' }}>
+                              <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
+                              <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={item.sale_price || ''} onChange={e => updateItem(idx,'sale_price',e.target.value)} placeholder="0.00" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button type="button" onClick={addItem}
+                    style={{ marginTop: 12, width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, color: '#10b981', background: 'none', border: '1px dashed rgba(16,185,129,0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Plus style={{ width: 14, height: 14 }} /> Add Item
+                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            <div className="flex items-center flex-wrap gap-4">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
-                <input type="checkbox" checked={formData.include_tax_in_cashback}
-                  onChange={(e) => set('include_tax_in_cashback', e.target.checked)} className="rounded" />
-                Include tax in cashback
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
-                <input type="checkbox" checked={formData.include_shipping_in_cashback}
-                  onChange={(e) => set('include_shipping_in_cashback', e.target.checked)} className="rounded" />
-                Include shipping in cashback
-              </label>
-              {isAmazon && (
-                <label className="flex items-center gap-2 cursor-pointer text-sm px-3 py-1.5 rounded-lg border transition"
-                  style={formData.amazon_yacb
-                    ? { background: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.4)', color: '#fbbf24' }
-                    : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}>
-                  <input type="checkbox" checked={formData.amazon_yacb}
-                    onChange={(e) => set('amazon_yacb', e.target.checked)} className="rounded" />
-                  ✨ Amazon Young Adult 5%
-                </label>
-              )}
-            </div>
+            {/* ══ TAB: PAYMENT ══════════════════════════════════════════ */}
+            {activeTab === 'payment' && (
+              <div style={{ borderRadius: 12, padding: 16, background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.15)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#ec4899', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  💳 Costs & Payment
+                </div>
+
+                {/* Tax / Shipping / Fees / Card */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+                  <div><LBL>Tax</LBL>
+                    <div style={{ position: 'relative' }}><span style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', color:'#64748b', fontSize:12 }}>$</span>
+                      <Input className="h-8 text-sm" style={{...inp, paddingLeft:22}} type="number" step="0.01" min="0" value={formData.tax} onChange={e => set('tax', e.target.value)} placeholder="0.00" /></div>
+                  </div>
+                  <div><LBL>Shipping</LBL>
+                    <div style={{ position: 'relative' }}><span style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', color:'#64748b', fontSize:12 }}>$</span>
+                      <Input className="h-8 text-sm" style={{...inp, paddingLeft:22}} type="number" step="0.01" min="0" value={formData.shipping_cost} onChange={e => set('shipping_cost', e.target.value)} placeholder="0.00" /></div>
+                  </div>
+                  <div><LBL>Fees</LBL>
+                    <div style={{ position: 'relative' }}><span style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', color:'#64748b', fontSize:12 }}>$</span>
+                      <Input className="h-8 text-sm" style={{...inp, paddingLeft:22}} type="number" step="0.01" min="0" value={formData.fees} onChange={e => set('fees', e.target.value)} placeholder="0.00" /></div>
+                  </div>
+                  <div><LBL>Card</LBL>
+                    {(formData.payment_splits || []).length === 0 ? (
+                      <Select value={formData.credit_card_id || ''} onValueChange={v => { const card = creditCards.find(c => c.id === v); set('credit_card_id', v); set('card_name', card?.card_name || ''); }}>
+                        <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}>
+                          {formData.credit_card_id ? <span className="text-xs">{selectedCard?.card_name}</span> : <SelectValue placeholder="Select..." />}
+                        </SelectTrigger>
+                        <SelectContent>{creditCards.filter(c => c.active !== false).map(c => <SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    ) : <span style={{ fontSize: 11, color: '#64748b' }}>Split</span>}
+                  </div>
+                </div>
+
+                {/* Cashback pill */}
+                {(formData.payment_splits || []).length === 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500,
+                      ...(cardRate > 0 ? {background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.2)', color:'#10b981'} : {background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#64748b'}) }}>
+                      <CreditCard style={{ width: 13, height: 13 }} />
+                      {cardRate > 0 ? `💳 ${cardRate}% → $${cashbackAmount.toFixed(2)} est.` : 'Select a card for cashback'}
+                    </div>
+                    {cardRate > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Input className="h-7 w-14 text-xs text-center" style={inp} type="number" step="0.1" min="0"
+                          value={formData.cashback_rate_override || ''} onChange={e => set('cashback_rate_override', e.target.value)} placeholder={String(cardRate)} />
+                        <span style={{ fontSize: 11, color: '#64748b' }}>%</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Split payments */}
+                {(formData.payment_splits || []).length > 0 && (
+                  <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {formData.payment_splits.map((sp, idx) => {
+                      const spCard = creditCards.find(c => c.id === sp.card_id);
+                      const spCB = ((parseFloat(sp.amount)||0) * (spCard?.cashback_rate||0) / 100);
+                      return (
+                        <div key={idx} style={{ display:'grid', gridTemplateColumns:'5fr 3fr 3fr 32px', gap:8, alignItems:'end', padding:'10px 12px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
+                          <div><LBL>Card</LBL>
+                            <Select value={sp.card_id||''} onValueChange={v => updateSplit(idx,'card_id',v)}>
+                              <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Card..." /></SelectTrigger>
+                              <SelectContent>{creditCards.filter(c=>c.active!==false).map(c=><SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div><LBL>Amount</LBL>
+                            <div style={{position:'relative'}}><span style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',color:'#64748b',fontSize:11}}>$</span>
+                              <Input className="h-8 text-xs" style={{...inp,paddingLeft:20}} type="number" step="0.01" min="0" value={sp.amount} onChange={e=>updateSplit(idx,'amount',e.target.value)} placeholder="0.00" /></div>
+                          </div>
+                          <div><LBL>CB</LBL>
+                            <div style={{position:'relative'}}><span style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',color:'#64748b',fontSize:11}}>$</span>
+                              <Input className="h-8 text-xs" style={{...inpRo,paddingLeft:20}} readOnly value={spCB.toFixed(2)} /></div>
+                          </div>
+                          <button type="button" onClick={()=>removeSplit(idx)} style={{color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:4,marginTop:16}}>
+                            <Trash2 style={{width:13,height:13}} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {(() => {
+                      const st = formData.payment_splits.reduce((s,sp) => s+(parseFloat(sp.amount)||0), 0);
+                      const ok = Math.abs(st - totalPrice) < 0.01;
+                      return (
+                        <div style={{ padding:'8px 12px', borderRadius:8, fontSize:11, fontWeight:600, display:'flex', justifyContent:'space-between',
+                          ...(ok ? {background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.2)',color:'#10b981'} : {background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',color:'#f59e0b'}) }}>
+                          <span>Split: ${st.toFixed(2)} / Total: ${totalPrice.toFixed(2)}</span>
+                          {ok && <span>✓ Balanced</span>}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                <div style={{ display:'flex', gap:10, marginBottom:14 }}>
+                  <button type="button" onClick={addSplit}
+                    style={{ fontSize:12, fontWeight:600, color:'#ec4899', padding:'6px 12px', borderRadius:8, background:'rgba(236,72,153,0.08)', border:'1px solid rgba(236,72,153,0.2)', cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
+                    <Plus style={{width:12,height:12}} /> Split payment
+                  </button>
+                  {(formData.payment_splits||[]).length > 0 && (
+                    <button type="button" onClick={() => set('payment_splits',[])}
+                      style={{ fontSize:12, color:'#64748b', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>
+                      Single card
+                    </button>
+                  )}
+                </div>
+
+                {/* Gift cards */}
+                {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <LBL>Gift Cards</LBL>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:4 }}>
+                      {giftCards.filter(gc => gc.status === 'available' || formData.gift_card_ids.includes(gc.id)).map(gc => (
+                        <label key={gc.id} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, padding:'4px 10px', borderRadius:8, cursor:'pointer', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', color:'#e2e8f0' }}>
+                          <input type="checkbox" checked={formData.gift_card_ids.includes(gc.id)}
+                            onChange={e => { if(e.target.checked) set('gift_card_ids',[...formData.gift_card_ids,gc.id]); else set('gift_card_ids',formData.gift_card_ids.filter(id=>id!==gc.id)); }} />
+                          {gc.brand} ${gc.value}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Checkboxes */}
+                <div style={{ display:'flex', flexWrap:'wrap', gap:16 }}>
+                  <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#cbd5e1', cursor:'pointer' }}>
+                    <input type="checkbox" checked={formData.include_tax_in_cashback} onChange={e => set('include_tax_in_cashback', e.target.checked)} />
+                    Tax in cashback
+                  </label>
+                  <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#cbd5e1', cursor:'pointer' }}>
+                    <input type="checkbox" checked={formData.include_shipping_in_cashback} onChange={e => set('include_shipping_in_cashback', e.target.checked)} />
+                    Shipping in cashback
+                  </label>
+                  {isAmazon && (
+                    <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, cursor:'pointer', padding:'4px 10px', borderRadius:8, border:'1px solid',
+                      ...(formData.amazon_yacb ? {background:'rgba(245,158,11,0.1)', borderColor:'rgba(245,158,11,0.4)', color:'#fbbf24'} : {background:'rgba(255,255,255,0.04)', borderColor:'rgba(255,255,255,0.1)', color:'#94a3b8'}) }}>
+                      <input type="checkbox" checked={formData.amazon_yacb} onChange={e => set('amazon_yacb', e.target.checked)} />
+                      ✨ Amazon YA 5%
+                    </label>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ══ TAB: SALES ════════════════════════════════════════════ */}
+            {activeTab === 'sales' && (
+              <div style={{ borderRadius: 12, padding: 16, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12, paddingBottom:8, borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <DollarSign style={{width:14,height:14,color:'#10b981'}} />
+                    <span style={{fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'#10b981'}}>Sale Events</span>
+                    {totalItemsSold > 0 && (
+                      <span style={{fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'rgba(16,185,129,0.12)', color:'#10b981', border:'1px solid rgba(16,185,129,0.2)'}}>
+                        {totalItemsSold} / {totalItemsOrdered} sold
+                      </span>
+                    )}
+                  </div>
+                  <button type="button" onClick={addSaleEvent}
+                    style={{fontSize:12, fontWeight:600, color:'#10b981', padding:'6px 12px', borderRadius:8, background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.25)', cursor:'pointer', display:'flex', alignItems:'center', gap:4}}>
+                    <Plus style={{width:12,height:12}} /> Record Sale
+                  </button>
+                </div>
+
+                {formData.sale_events.length === 0 ? (
+                  <div style={{textAlign:'center', padding:'32px 0'}}>
+                    <DollarSign style={{width:32,height:32,color:'rgba(16,185,129,0.3)',margin:'0 auto 8px'}} />
+                    <p style={{color:'#64748b',fontSize:13,marginBottom:12}}>No sale events yet</p>
+                    <p style={{color:'#475569',fontSize:11,maxWidth:280,margin:'0 auto 16px'}}>Track partial or multi-buyer sales. Example: CardCash bought 2 @ $150, ElectronicsBuyer bought 1 @ $145</p>
+                    <button type="button" onClick={addSaleEvent}
+                      style={{fontSize:13, fontWeight:600, color:'#10b981', padding:'8px 20px', borderRadius:10, background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.3)', cursor:'pointer'}}>
+                      + Record First Sale
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                    {formData.sale_events.map((ev, evIdx) => (
+                      <div key={ev.id} style={{borderRadius:10, padding:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(16,185,129,0.15)'}}>
+                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
+                          <span style={{fontSize:10, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'#10b981'}}>Sale {evIdx+1}</span>
+                          <button type="button" onClick={() => removeSaleEvent(ev.id)} style={{color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:4}}>
+                            <Trash2 style={{width:13,height:13}} />
+                          </button>
+                        </div>
+
+                        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:8, marginBottom:10 }}>
+                          <div><LBL>Buyer / Platform</LBL>
+                            <Select value={ev.buyer||''} onValueChange={v => updateSaleEvent(ev.id,'buyer',v)}>
+                              <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
+                              <SelectContent>
+                                {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                                {['eBay','Amazon','Facebook Marketplace','Mercari','OfferUp'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div><LBL>Sale Date</LBL>
+                            <Input type="date" className="h-8 text-xs" style={inp} value={ev.sale_date||''} onChange={e => updateSaleEvent(ev.id,'sale_date',e.target.value)} />
+                          </div>
+                          <div><LBL>Payout Date</LBL>
+                            <Input type="date" className="h-8 text-xs" style={inp} value={ev.payout_date||''} onChange={e => updateSaleEvent(ev.id,'payout_date',e.target.value)} />
+                          </div>
+                        </div>
+
+                        <div><LBL>Items Sold</LBL>
+                          <div style={{display:'flex',flexDirection:'column',gap:6,marginTop:4}}>
+                            {ev.items.map((it, itIdx) => (
+                              <div key={itIdx} style={{display:'grid', gridTemplateColumns:'5fr 2fr 3fr 28px', gap:6, alignItems:'center'}}>
+                                <Input className="h-7 text-xs" style={inp} value={it.product_name||''} placeholder="Product" onChange={e => updateSaleEventItem(ev.id,itIdx,'product_name',e.target.value)} />
+                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="0" value={it.qty||''} placeholder="Qty" onChange={e => updateSaleEventItem(ev.id,itIdx,'qty',e.target.value)} />
+                                <div style={{position:'relative'}}><span style={{position:'absolute',left:7,top:'50%',transform:'translateY(-50%)',color:'#64748b',fontSize:11}}>$</span>
+                                  <Input className="h-7 text-xs" style={{...inp,paddingLeft:18}} type="number" step="0.01" min="0" value={it.sale_price||''} placeholder="Price/unit" onChange={e => updateSaleEventItem(ev.id,itIdx,'sale_price',e.target.value)} />
+                                </div>
+                                <button type="button" onClick={() => updateSaleEvent(ev.id,'items',ev.items.filter((_,i)=>i!==itIdx))} style={{color:'#64748b',background:'none',border:'none',cursor:'pointer',padding:2}}>
+                                  <X style={{width:12,height:12}} />
+                                </button>
+                              </div>
+                            ))}
+                            <button type="button" onClick={() => updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',qty:1,sale_price:0}])}
+                              style={{fontSize:11,color:'#10b981',background:'none',border:'none',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:4}}>
+                              <Plus style={{width:11,height:11}} /> Add item
+                            </button>
+                          </div>
+                          {ev.items.length > 0 && (
+                            <div style={{marginTop:8,textAlign:'right',fontSize:11,color:'#10b981',fontWeight:600}}>
+                              Sale total: ${ev.items.reduce((s,it) => s+(parseFloat(it.sale_price)||0)*(parseInt(it.qty)||0),0).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Running totals */}
+                    {totalItemsSold > 0 && (
+                      <div style={{padding:'10px 14px', borderRadius:10, background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                        <span style={{fontSize:12,color:'#10b981',fontWeight:500}}>
+                          {totalItemsSold} of {totalItemsOrdered} items sold
+                        </span>
+                        <span style={{fontSize:13,color:'#10b981',fontWeight:700}}>
+                          ${totalSaleRevenue.toFixed(2)} revenue
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+          </form>
+        </div>
+
+        {/* ── Footer ── */}
+        <div style={{ padding:'14px 24px', borderTop:'1px solid rgba(255,255,255,0.07)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', background:'#111827' }}>
+          <div style={{fontSize:12, color:'#94a3b8'}}>
+            <span style={{fontWeight:600, color:'#e2e8f0'}}>Total: ${totalPrice.toFixed(2)}</span>
+            {cashbackAmount > 0 && <span style={{marginLeft:8, color:'#10b981'}}>CB: ${cashbackAmount.toFixed(2)}</span>}
+            {giftCardTotal > 0 && <span style={{marginLeft:8, color:'#f59e0b'}}>GC: -${giftCardTotal.toFixed(2)}</span>}
           </div>
-
-          {/* Notes */}
-          <div className="space-y-1">
-            <Label className="text-xs text-slate-400">Notes</Label>
-            <Textarea value={formData.notes} onChange={(e) => set('notes', e.target.value)}
-              placeholder="Any additional notes..." rows={2}
-              style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }} />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}
-              style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.15)', color: '#94a3b8' }}>
+          <div style={{display:'flex', gap:10}}>
+            <button type="button" onClick={() => onOpenChange(false)}
+              style={{padding:'8px 16px', borderRadius:8, fontSize:13, fontWeight:500, color:'#94a3b8', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', cursor:'pointer'}}>
               Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}
-              style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', color: 'white', border: 'none' }}>
-              {isPending ? 'Saving...' : (order ? 'Update Order' : 'Create Order')}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            </button>
+            <button type="submit" form="po-form" disabled={isPending}
+              style={{padding:'8px 20px', borderRadius:8, fontSize:13, fontWeight:700, color:'white', background:'linear-gradient(135deg,#10b981,#06b6d4)', border:'none', cursor:'pointer', opacity: isPending ? 0.6 : 1}}>
+              {isPending ? 'Saving...' : (order ? 'Save Changes' : 'Create Order')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
