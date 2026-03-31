@@ -103,6 +103,12 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
 
   const getInitialForm = (o) => {
     const items = o?.items?.length > 0 ? o.items.map(i => ({ ...defaultItem(), ...i, sale_price: i.sale_price || 0 })) : [defaultItem()];
+    
+    // Migrate old is_pickup/is_dropship to new fulfillment_type
+    let fulfillment_type = o?.fulfillment_type || 'ship_to_me';
+    if (o?.is_dropship) fulfillment_type = 'direct_dropship';
+    else if (o?.is_pickup) fulfillment_type = 'store_pickup';
+    
     return o ? {
       order_type: o.order_type || 'churning',
       order_number: o.order_number || '',
@@ -117,10 +123,9 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
       credit_card_id: o.credit_card_id || '',
       payment_splits: o.payment_splits?.length > 0 ? o.payment_splits : [],
       gift_card_ids: o.gift_card_ids || [],
-      is_pickup: o.is_pickup || false,
-      pickup_location: o.pickup_location || '',
-      is_dropship: o.is_dropship || false,
+      fulfillment_type,
       dropship_to: o.dropship_to || '',
+      pickup_location: o.pickup_location || '',
       order_date: o.order_date || '',
       notes: o.notes || '',
       items,
@@ -139,7 +144,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
       retailer: '', buyer: '', marketplace_platform: '', account: '',
       status: 'pending', category: 'other', product_category: '',
       credit_card_id: '', payment_splits: [], gift_card_ids: [],
-      is_pickup: false, pickup_location: '', is_dropship: false, dropship_to: '',
+      fulfillment_type: 'ship_to_me', dropship_to: '', pickup_location: '',
       order_date: format(new Date(), 'yyyy-MM-dd'), notes: '',
       items: [defaultItem()], sale_events: [],
       tax: 0, shipping_cost: 0, fees: 0,
@@ -268,6 +273,9 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
       payment_splits: hasSplits ? formData.payment_splits.map(sp => ({ card_id: sp.card_id, card_name: sp.card_name, cashback_rate: sp.cashback_rate || 0, amount: parseFloat(sp.amount) || 0 })) : [],
       extra_cashback_percent: formData.amazon_yacb ? 5 : (parseFloat(formData.extra_cashback_percent) || 0),
       bonus_notes: formData.amazon_yacb ? 'Prime Young Adult' : formData.bonus_notes,
+      // Map old fields for backwards compatibility
+      is_dropship: formData.fulfillment_type === 'direct_dropship',
+      is_pickup: formData.fulfillment_type === 'store_pickup',
     };
     delete dataToSubmit.amazon_yacb;
     delete dataToSubmit.cashback_rate_override;
@@ -436,40 +444,38 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                     </p>
                   )}
 
-                  {/* Dropship / Pickup toggles */}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                    <button type="button" onClick={() => set('is_dropship', !formData.is_dropship)}
-                      style={{
-                        padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
-                        ...(formData.is_dropship
-                          ? { background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }
-                          : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' })
-                      }}>
-                      🚚 Dropship
-                    </button>
-                    <button type="button" onClick={() => set('is_pickup', !formData.is_pickup)}
-                      style={{
-                        padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
-                        ...(formData.is_pickup
-                          ? { background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }
-                          : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' })
-                      }}>
-                      📍 Pickup
-                    </button>
+                  {/* Fulfillment type 3-way selector */}
+                  <div style={{ display: 'flex', gap: 6, marginTop: 12, padding: 4, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', width: 'fit-content' }}>
+                    {[
+                      { v: 'ship_to_me', label: '📦 Ship to Me', color: '#60a5fa', bgActive: 'rgba(96,165,250,0.15)', borderActive: 'rgba(96,165,250,0.3)' },
+                      { v: 'store_pickup', label: '📍 Store Pickup', color: '#a855f7', bgActive: 'rgba(168,85,247,0.15)', borderActive: 'rgba(168,85,247,0.3)' },
+                      { v: 'direct_dropship', label: '🚛 Dropship', color: '#f59e0b', bgActive: 'rgba(245,158,11,0.15)', borderActive: 'rgba(245,158,11,0.3)' }
+                    ].map(({ v, label, color, bgActive, borderActive }) => (
+                      <button key={v} type="button" onClick={() => set('fulfillment_type', v)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
+                          ...(formData.fulfillment_type === v
+                            ? { background: bgActive, borderColor: borderActive, color }
+                            : { background: 'transparent', borderColor: 'transparent', color: '#94a3b8' })
+                        }}>
+                        {label}
+                      </button>
+                    ))}
                   </div>
-                  {formData.is_dropship && (
+
+                  {formData.fulfillment_type === 'direct_dropship' && (
                     <div style={{ marginTop: 10 }}>
-                      <LBL>Dropship To</LBL>
+                      <LBL>Ship To (Buyer)</LBL>
                       <Select value={formData.dropship_to} onValueChange={v => set('dropship_to', v)}>
-                        <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select seller..." /></SelectTrigger>
+                        <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
                         <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   )}
-                  {formData.is_pickup && (
+                  {formData.fulfillment_type === 'store_pickup' && (
                     <div style={{ marginTop: 10 }}>
                       <LBL>Pickup Location</LBL>
-                      <Input style={inp} value={formData.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="e.g. Store 5" />
+                      <Input style={inp} value={formData.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="e.g. Downtown Store" />
                     </div>
                   )}
                   </div>

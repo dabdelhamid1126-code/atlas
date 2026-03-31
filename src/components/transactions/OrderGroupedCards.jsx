@@ -298,6 +298,16 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
             )}
           </div>
           <StatusBadge status={order.status} />
+          {order.fulfillment_type === 'store_pickup' && (
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 12, background: 'rgba(168,85,247,0.12)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)', whiteSpace: 'nowrap' }}>
+              📍 Pickup
+            </span>
+          )}
+          {order.fulfillment_type === 'direct_dropship' && (
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 12, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)', whiteSpace: 'nowrap' }}>
+              🚛 Dropship{order.dropship_to ? ` → ${order.dropship_to}` : ''}
+            </span>
+          )}
           <ChevronRight style={{
             width: 14, height: 14, color: '#64748b', flexShrink: 0, marginLeft: 4,
             transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
@@ -425,6 +435,8 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           {totalRevenue > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>Revenue: <span style={{ color: '#10b981', fontWeight: 600 }}>{fmt$(totalRevenue)}</span></span></>}
           {cashback > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>CB: <span style={{ color: '#06b6d4', fontWeight: 600 }}>{fmt$(cashback)}</span></span></>}
           {order.order_number && <><span style={{ margin: '0 6px' }}>·</span><span>Order #: <span style={{ color: '#94a3b8' }}>{order.order_number}</span></span></>}
+          {order.fulfillment_type === 'direct_dropship' && order.dropship_to && <><span style={{ margin: '0 6px' }}>·</span><span style={{ color: '#f59e0b', fontWeight: 600 }}>🚛 → {order.dropship_to}</span></>}
+          {order.fulfillment_type === 'store_pickup' && <><span style={{ margin: '0 6px' }}>·</span><span style={{ color: '#a855f7', fontWeight: 600 }}>📍 Pickup</span></>}
           {order.buyer && <><span style={{ margin: '0 6px' }}>·</span><span>Buyer: <span style={{ color: '#94a3b8' }}>{order.buyer}</span></span></>}
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
