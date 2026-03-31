@@ -188,21 +188,26 @@ export default function Dashboard() {
 
   const loadData = async (silent = false) => {
     try {
-      const [orders, rewards, invoices, creditCards] = await Promise.all([
+      const [orders, rewards, creditCards] = await Promise.all([
         base44.entities.PurchaseOrder.list(),
         base44.entities.Reward.list(),
-        base44.entities.Invoice.list(),
         base44.entities.CreditCard.list(),
       ]);
 
       setAllOrders(orders);
 
       const filteredOrders = filterByTime(filterByMode(orders), 'order_date');
-      const paidInvoices = filterByTime(invoices.filter(i => i.status === 'paid'), 'invoice_date');
       const filteredRewards = filterByTime(rewards, 'date_earned');
 
-      const totalCost = filteredOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
-      const saleRevenue = paidInvoices.reduce((s, i) => s + (i.total || 0), 0);
+      // Calculate from PurchaseOrder totals
+      const totalCost = filteredOrders.reduce((s, o) => s + parseFloat(o.total_cost || 0), 0);
+
+      // Calculate sale revenue from sale_events
+      const saleRevenue = filteredOrders.reduce((sum, order) =>
+        sum + (order.sale_events || []).reduce((s, ev) =>
+          s + (ev.items || []).reduce((is, item) =>
+            is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0), 0);
+
       const allCashback = filteredRewards.filter(r => r.currency === 'USD');
       const cashback = allCashback.reduce((s, r) => s + (r.amount || 0), 0);
       const yaCashback = allCashback
@@ -226,16 +231,15 @@ export default function Dashboard() {
           const d = o.order_date ? parseISO(o.order_date) : null;
           return d && d >= mStart && d <= mEnd;
         });
-        const mInvoices = paidInvoices.filter(inv => {
-          const d = inv.invoice_date ? parseISO(inv.invoice_date) : null;
-          return d && d >= mStart && d <= mEnd;
-        });
         const mRewards = filteredRewards.filter(r => {
           const d = r.date_earned ? parseISO(r.date_earned) : null;
           return d && d >= mStart && d <= mEnd;
         });
-        const spent = mOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
-        const revenue = mInvoices.reduce((s, inv) => s + (inv.total || 0), 0);
+        const spent = mOrders.reduce((s, o) => s + parseFloat(o.total_cost || 0), 0);
+        const revenue = mOrders.reduce((sum, order) =>
+          sum + (order.sale_events || []).reduce((s, ev) =>
+            s + (ev.items || []).reduce((is, item) =>
+              is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0), 0);
         const cashbackM = mRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
         trend.push({ month: format(md, 'MMM'), spent, revenue, profit: revenue - spent, cashback: cashbackM });
       }
