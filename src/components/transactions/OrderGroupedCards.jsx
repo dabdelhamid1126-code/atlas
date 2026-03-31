@@ -51,11 +51,10 @@ const getBrandfetchUrl = (domain) => {
 };
 
 // ── Store logo component ──────────────────────────────────────────────────
-function StoreLogo({ retailer, size = 38 }) {
+function StoreLogo({ retailer, size = 40 }) {
   const [err, setErr] = useState(false);
   const domain = getStoreDomain(retailer);
   const logoUrl = getBrandfetchUrl(domain);
-  const bgColor = getStoreBrandColor(retailer);
   const initials = (retailer || 'X').slice(0, 2).toUpperCase();
 
   if (!logoUrl || err) {
@@ -63,15 +62,14 @@ function StoreLogo({ retailer, size = 38 }) {
       <div style={{
         width: size,
         height: size,
-        borderRadius: 10,
+        borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: bgColor,
-        border: '1px solid rgba(255,255,255,0.1)',
+        background: 'linear-gradient(135deg, #10b981, #06b6d4)',
         color: 'white',
-        fontWeight: 700,
-        fontSize: 13,
+        fontWeight: 800,
+        fontSize: 14,
         flexShrink: 0,
       }}>
         {initials}
@@ -83,11 +81,11 @@ function StoreLogo({ retailer, size = 38 }) {
     <div style={{
       width: size,
       height: size,
-      borderRadius: 10,
+      borderRadius: '50%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: bgColor,
+      background: 'rgba(255,255,255,0.06)',
       border: '1px solid rgba(255,255,255,0.1)',
       overflow: 'hidden',
       flexShrink: 0,
@@ -98,8 +96,7 @@ function StoreLogo({ retailer, size = 38 }) {
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'contain',
-          padding: '4px',
+          objectFit: 'cover',
           display: 'block',
         }}
         onError={() => setErr(true)}
