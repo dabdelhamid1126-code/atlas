@@ -115,14 +115,13 @@ export default function ProductAutocomplete({
         overflowY: 'auto',
       }}
       ref={listRef}
-      onMouseDown={e => e.preventDefault()}
     >
       {filtered.length > 0 ? (
         filtered.map((p, i) => (
           <div
             key={p.id}
             ref={el => itemRefs.current[i] = el}
-            onClick={() => handleSelect(p)}
+            onMouseDown={(e) => { e.preventDefault(); handleSelect(p); }}
             style={{
               display: 'flex',
               alignItems: 'center',
