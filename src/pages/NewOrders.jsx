@@ -551,28 +551,31 @@ export default function NewOrders() {
                   💳 Costs & Payment
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 10, marginBottom: 14 }} className="sm:grid-cols-[1fr_1fr_1fr_1.8fr]">
                   <div><LBL>Tax</LBL>
                     <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
-                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={form.tax} onChange={e => set('tax', e.target.value)} placeholder="0.00" /></div>
+                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.tax} onChange={e => set('tax', e.target.value)} placeholder="0.00" /></div>
                   </div>
                   <div><LBL>Shipping</LBL>
                     <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
-                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={form.shipping_cost} onChange={e => set('shipping_cost', e.target.value)} placeholder="0.00" /></div>
+                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.shipping_cost} onChange={e => set('shipping_cost', e.target.value)} placeholder="0.00" /></div>
                   </div>
                   <div><LBL>Fees</LBL>
                     <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
-                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={form.fees} onChange={e => set('fees', e.target.value)} placeholder="0.00" /></div>
+                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.fees} onChange={e => set('fees', e.target.value)} placeholder="0.00" /></div>
                   </div>
-                  <div><LBL>Card</LBL>
+                  <div className="sm:col-auto"><LBL>Card</LBL>
                     {!isSplit ? (
                       <Select value={form.credit_card_id || ''} onValueChange={(v) => set('credit_card_id', v)}>
                         <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}>
                           {form.credit_card_id ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
                               <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} fallbackInitials={selectedCard?.card_name || 'X'} />
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                                {selectedCard?.card_name}{selectedCard?.last_4_digits ? ` •${selectedCard.last_4_digits}` : ''}
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                                {selectedCard?.card_name}
+                              </span>
+                              <span style={{ flexShrink: 0, color: '#64748b', fontSize: '11px', fontFamily: 'monospace', marginLeft: '4px' }}>
+                                ••••{selectedCard?.last_4_digits}
                               </span>
                             </div>
                           ) : <SelectValue placeholder="Select..." />}
@@ -594,7 +597,7 @@ export default function NewOrders() {
 
                 {!isSplit && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 500,
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500, minHeight: 32,
                       ...(cardRate > 0 ? { background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' } : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748b' }) }}>
                       {cardRate > 0 ? <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} /> : <CreditCard style={{ width: 13, height: 13 }} />}
                       {cardRate > 0 ? `${cardRate}% → ${fmt$(totalCB)} est.` : 'Select a card'}
