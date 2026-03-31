@@ -5,10 +5,10 @@ import { Target } from 'lucide-react';
 import { abbrevDollar } from '@/components/dashboard/MetricCard';
 
 const goalConfig = {
-  profit:       { label: 'Net Profit',   color: 'text-emerald-400', bar: 'bg-emerald-500', border: 'border-emerald-500/20', bg: 'bg-emerald-500/10' },
-  revenue:      { label: 'Revenue',      color: 'text-blue-400',    bar: 'bg-blue-500',    border: 'border-blue-500/20',    bg: 'bg-blue-500/10'    },
-  cashback:     { label: 'Cashback',     color: 'text-pink-400',    bar: 'bg-pink-500',    border: 'border-pink-500/20',    bg: 'bg-pink-500/10'    },
-  transactions: { label: 'Transactions', color: 'text-amber-400',   bar: 'bg-amber-500',   border: 'border-amber-500/20',   bg: 'bg-amber-500/10'   },
+  profit:       { label: 'Net Profit',   color: 'text-emerald-400' },
+  revenue:      { label: 'Revenue',      color: 'text-cyan-400'    },
+  cashback:     { label: 'Cashback',     color: 'text-pink-400'    },
+  transactions: { label: 'Transactions', color: 'text-amber-400'   },
 };
 
 export default function GoalTracker({ metrics }) {
@@ -44,24 +44,39 @@ export default function GoalTracker({ metrics }) {
             return (
               <div
                 key={`${goal.type}-${goal.timeframe}`}
-                className={`rounded-xl border p-4 overflow-hidden min-w-0 ${config.bg} ${config.border} ${reached ? 'ring-2 ring-amber-400/40' : ''}`}
+                className="rounded-xl border p-4 overflow-hidden min-w-0"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  borderColor: reached ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.07)',
+                  boxShadow: reached ? '0 0 16px rgba(16,185,129,0.08)' : 'none',
+                }}
               >
                 <div className="flex items-start justify-between gap-1 mb-1 flex-wrap">
                   <span className={`text-xs font-bold uppercase leading-tight break-words ${config.color}`}>{config.label}</span>
-                  <span className="text-xs bg-white/5 text-slate-400 px-2 py-0.5 rounded-full capitalize shrink-0 border border-white/10">{goal.timeframe}</span>
+                  <span
+                    className="text-xs text-slate-400 px-2 py-0.5 rounded-full capitalize shrink-0 border"
+                    style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)' }}
+                  >
+                    {goal.timeframe}
+                  </span>
                 </div>
                 <div className="flex items-baseline gap-1 mb-3 flex-wrap">
-                  <span className={`text-xl font-bold ${config.color}`}>
+                  <span className={`text-xl font-bold text-slate-200`}>
                     {goal.type === 'transactions' ? current : abbrevDollar(current)}
                   </span>
                   <span className="text-xs text-slate-500">
                     / {goal.type === 'transactions' ? goal.target_value : abbrevDollar(goal.target_value)}
                   </span>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                <div className="h-2 rounded-full overflow-hidden mb-2" style={{ background: 'rgba(255,255,255,0.06)' }}>
                   <div
-                    className={`h-full rounded-full transition-all ${reached ? 'bg-amber-400' : config.bar}`}
-                    style={{ width: `${pct}%` }}
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${pct}%`,
+                      background: reached
+                        ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                        : 'linear-gradient(90deg, #10b981, #06b6d4)',
+                    }}
                   />
                 </div>
                 <p className="text-xs font-semibold">
