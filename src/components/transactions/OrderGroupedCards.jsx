@@ -440,38 +440,101 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                       )}
                     </div>
                   </div>
-                  {getSaleRowsForItem(order, item).map((row, i) => (
-                    <div key={i} style={{
-                      marginLeft: '60px',
-                      marginTop: '4px',
-                      marginBottom: '4px',
-                      padding: '5px 12px',
-                      borderLeft: '2px solid rgba(16,185,129,0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      background: 'rgba(16,185,129,0.03)',
-                      borderRadius: '0 6px 6px 0',
-                      fontSize: 11
-                    }}>
-                      <span style={{
-                        color: '#06b6d4', 
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        minWidth: '120px'
+                  <div style={{
+                    marginTop: '6px',
+                    marginLeft: '48px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0px'
+                  }}>
+                    {getSaleRowsForItem(order, item).map((row, i, arr) => (
+                      <div key={i} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '5px 0',
+                        paddingLeft: '20px',
+                        position: 'relative'
                       }}>
-                        {row.buyer}
-                      </span>
-                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>QTY</span>
-                      <span style={{color:'#e2e8f0',fontSize:'12px',fontWeight:700, minWidth:'16px'}}>{row.quantity}</span>
-                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>COST/UNIT</span>
-                      <span style={{color:'#60a5fa',fontSize:'12px',fontWeight:700}}>${row.cost_per_unit.toFixed(2)}</span>
-                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>SALE/UNIT</span>
-                      <span style={{color:'#10b981',fontSize:'12px',fontWeight:700}}>${row.sale_price.toFixed(2)}</span>
-                      <span style={{color:'#475569',fontSize:'9px',textTransform:'uppercase'}}>PROFIT</span>
-                      <span style={{fontSize:'12px', fontWeight:700, color: row.profit >= 0 ? '#10b981' : '#ef4444'}}>${row.profit.toFixed(2)}</span>
-                    </div>
-                  ))}
+                        {/* Timeline dot */}
+                        <div style={{
+                          position: 'absolute',
+                          left: '5px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: '#10b981',
+                          border: '2px solid #111827',
+                          zIndex: 1
+                        }}/>
+
+                        {/* Timeline line connecting dots */}
+                        {i < arr.length - 1 && (
+                          <div style={{
+                            position: 'absolute',
+                            left: '8px',
+                            top: 'calc(50% + 6px)',
+                            width: '2px',
+                            height: '100%',
+                            background: 'rgba(16,185,129,0.2)'
+                          }}/>
+                        )}
+
+                        {/* Buyer name */}
+                        <span style={{
+                          color: '#06b6d4',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          minWidth: '120px'
+                        }}>
+                          {row.buyer}
+                        </span>
+
+                        {/* Qty */}
+                        <span style={{
+                          color: '#64748b',
+                          fontSize: '10px'
+                        }}>
+                          {row.quantity} unit{row.quantity !== 1 ? 's' : ''}
+                        </span>
+
+                        {/* Arrow */}
+                        <span style={{
+                          color: '#374151',
+                          fontSize: '10px'
+                        }}>→</span>
+
+                        {/* Sale price */}
+                        <span style={{
+                          color: '#10b981',
+                          fontWeight: 700,
+                          fontSize: '12px'
+                        }}>
+                          ${parseFloat(row.sale_price).toFixed(2)}
+                        </span>
+
+                        {/* Profit pill */}
+                        <span style={{
+                          background: row.profit >= 0 
+                            ? 'rgba(16,185,129,0.1)' 
+                            : 'rgba(239,68,68,0.1)',
+                          color: row.profit >= 0 ? '#10b981' : '#ef4444',
+                          border: `1px solid ${row.profit >= 0 
+                            ? 'rgba(16,185,129,0.2)' 
+                            : 'rgba(239,68,68,0.2)'}`,
+                          padding: '1px 8px',
+                          borderRadius: '20px',
+                          fontSize: '10px',
+                          fontWeight: 700
+                        }}>
+                          {row.profit >= 0 ? '+' : ''}
+                          ${row.profit.toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                ) : (
                 // Multiple buyer rows
