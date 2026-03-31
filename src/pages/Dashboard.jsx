@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DollarSign, TrendingUp, CreditCard, Percent, Star,
   ChevronDown, ChevronUp, Info, ShoppingBag, Send,
-  Package, CheckCircle, ListChecks
+  Package, CheckCircle, ListChecks, RefreshCw, X, ImageOff
 } from 'lucide-react';
 import {
   format, startOfMonth, endOfMonth, subMonths,
-  parseISO, subDays, startOfYear
+  parseISO, subDays, startOfYear, formatDistanceToNow
 } from 'date-fns';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -56,15 +57,33 @@ function KpiCard({ label, value, sub, icon: Icon, colorClass, iconBg, iconBorder
   );
 }
 
+// ── Image Modal ─────────────────────────────────────────────────────────────
+function ImageModal({ src, alt, onClose }) {
+  if (!src) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="relative max-w-lg w-full mx-4" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-slate-100 transition">
+          <X className="w-4 h-4 text-slate-600" />
+        </button>
+        <img src={src} alt={alt} className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh] bg-white" />
+      </div>
+    </div>
+  );
+}
+
 // ── Pipeline Card ───────────────────────────────────────────────────────────
-function PipelineCard({ status, count }) {
+function PipelineCard({ status, count, onClick }) {
   const cfg = STATUS_CONFIG[status?.toLowerCase()] || {
     label: status, icon: Package,
     color: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-100'
   };
   const Icon = cfg.icon;
   return (
-    <div className={`bg-white rounded-xl border ${cfg.border} p-3 flex items-center gap-3 shadow-sm`}>
+    <button
+      onClick={onClick}
+      className={`bg-white rounded-xl border ${cfg.border} p-3 flex items-center gap-3 shadow-sm w-full text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all`}
+    >
       <div className={`w-10 h-10 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
         <Icon className={`h-5 w-5 ${cfg.color}`} />
       </div>
@@ -72,7 +91,7 @@ function PipelineCard({ status, count }) {
         <p className="text-xs text-slate-400 font-medium">{cfg.label}</p>
         <p className={`text-xl font-bold ${cfg.color}`}>{count}</p>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -95,7 +114,10 @@ function ChartTooltip({ active, payload, label }) {
 
 // ── Main Dashboard ──────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
   const [user, setUser] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
   const [metrics, setMetrics] = useState({
@@ -109,11 +131,20 @@ export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState('30 Days');
   const [modeFilter, setModeFilter] = useState('All');
   const [showProfitDetails, setShowProfitDetails] = useState(true);
+  const [modalImage, setModalImage] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     loadData();
   }, []);
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      silentRefresh();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [timeFilter, modeFilter]);
 
   const profitMode = user?.profit_mode || 'accounting';
 
@@ -149,7 +180,13 @@ export default function Dashboard() {
     });
   };
 
-  const loadData = async () => {
+  const silentRefresh = async () => {
+    setRefreshing(true);
+    await loadData(true);
+    setRefreshing(false);
+  };
+
+  const loadData = async (silent = false) => {
     try {
       const [orders, rewards, invoices, creditCards] = await Promise.all([
         base44.entities.PurchaseOrder.list(),
@@ -224,10 +261,11 @@ export default function Dashboard() {
         }
       });
       setTopCards(Object.values(cardMap).sort((a, b) => b.spent - a.spent).slice(0, 5));
+      setLastRefreshed(new Date());
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -273,10 +311,18 @@ export default function Dashboard() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             {greeting()}, {firstName} 👋
+            {refreshing && <RefreshCw className="w-4 h-4 text-slate-400 animate-spin" />}
           </h1>
-          <p className="text-sm text-slate-400 mt-0.5">Here's what's happening across your accounts.</p>
+          <p className="text-sm text-slate-400 mt-0.5">
+            Here's what's happening across your accounts.
+            {lastRefreshed && (
+              <span className="ml-2 text-[11px] text-slate-300">
+                Updated {formatDistanceToNow(lastRefreshed, { addSuffix: true })}
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
@@ -423,7 +469,15 @@ export default function Dashboard() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
             {Object.keys(STATUS_CONFIG).map(status => (
-              <PipelineCard key={status} status={status} count={statusCounts[status] || 0} />
+              <PipelineCard
+                key={status}
+                status={status}
+                count={statusCounts[status] || 0}
+                onClick={() => {
+                  const params = new URLSearchParams({ status });
+                  navigate(`/Transactions?${params.toString()}`);
+                }}
+              />
             ))}
           </div>
         )}
@@ -535,6 +589,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Recent Transactions ── */}
+      {modalImage && <ImageModal src={modalImage.src} alt={modalImage.alt} onClose={() => setModalImage(null)} />}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Transactions</h2>
@@ -546,8 +601,8 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60">
-                  {['Product','Platform','Cost','Cashback','Profit','Status','Date'].map(h => (
-                    <th key={h} className="text-left px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  {['','Product','Retailer','Buyer','Cost','Cashback','Profit','Status','Date'].map((h, i) => (
+                    <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -558,18 +613,42 @@ export default function Dashboard() {
                   const profit = order.profit != null ? order.profit : (cashbackAmt - cost);
                   const statusKey = order.status?.toLowerCase();
                   const statusCfg = STATUS_CONFIG[statusKey];
+                  const productName = order.product_name || order.items?.[0]?.product_name || '—';
+                  const imageUrl = order.image_url || order.items?.[0]?.image_url || null;
+                  const buyer = order.sale_platform || order.buyer || '—';
                   return (
                     <tr key={order.id || i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-5 py-3 font-medium text-slate-800 max-w-[180px]">
-                        <span className="truncate block">{order.product_name || order.retailer || '—'}</span>
+                      {/* Image */}
+                      <td className="pl-4 pr-2 py-2.5">
+                        <div
+                          className="w-9 h-9 rounded-lg border border-slate-100 bg-slate-50 overflow-hidden flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition"
+                          onClick={() => imageUrl && setModalImage({ src: imageUrl, alt: productName })}
+                        >
+                          {imageUrl ? (
+                            <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageOff className="w-4 h-4 text-slate-300" />
+                          )}
+                        </div>
                       </td>
-                      <td className="px-5 py-3 text-slate-500">{order.retailer || '—'}</td>
-                      <td className="px-5 py-3 text-blue-500 font-medium">{fmt(cost)}</td>
-                      <td className="px-5 py-3 text-pink-500 font-medium">{fmt(cashbackAmt)}</td>
-                      <td className={`px-5 py-3 font-semibold ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {/* Product */}
+                      <td className="px-4 py-2.5 font-medium text-slate-800 max-w-[160px]">
+                        <span className="truncate block">{productName}</span>
+                      </td>
+                      {/* Retailer */}
+                      <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{order.retailer || '—'}</td>
+                      {/* Buyer */}
+                      <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{buyer}</td>
+                      {/* Cost */}
+                      <td className="px-4 py-2.5 text-blue-500 font-medium whitespace-nowrap">{fmt(cost)}</td>
+                      {/* Cashback */}
+                      <td className="px-4 py-2.5 text-pink-500 font-medium whitespace-nowrap">{fmt(cashbackAmt)}</td>
+                      {/* Profit */}
+                      <td className={`px-4 py-2.5 font-semibold whitespace-nowrap ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                         {fmt(profit)}
                       </td>
-                      <td className="px-5 py-3">
+                      {/* Status */}
+                      <td className="px-4 py-2.5">
                         {statusCfg ? (
                           <span className={`inline-flex items-center text-[10px] font-semibold px-2.5 py-1 rounded-full ${statusCfg.bg} ${statusCfg.color} border ${statusCfg.border}`}>
                             {statusCfg.label}
@@ -578,7 +657,8 @@ export default function Dashboard() {
                           <span className="text-xs text-slate-400 capitalize">{order.status || '—'}</span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-xs text-slate-400 whitespace-nowrap">
+                      {/* Date */}
+                      <td className="px-4 py-2.5 text-xs text-slate-400 whitespace-nowrap">
                         {order.order_date ? format(parseISO(order.order_date), 'M/d/yyyy') : '—'}
                       </td>
                     </tr>
