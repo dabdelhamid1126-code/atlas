@@ -219,10 +219,14 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         <StoreLogo retailer={order.retailer} />
 
         {/* Order info */}
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            {order.order_number ? `#${order.order_number}` : (order.retailer || 'Unknown')}
-            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>
+            {order.order_number ? (
+              <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`#${order.order_number}`}>
+                #{order.order_number}
+              </span>
+            ) : (order.retailer || 'Unknown')}
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400, whiteSpace: 'nowrap' }}>
               {order.order_number && order.retailer ? `${order.retailer} · ` : ''}{orderDate}
             </span>
           </div>
@@ -332,8 +336,9 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                   </div>
                   {/* Individual sale rows */}
                   {itemSales.map((sale, sIdx) => {
+                    const saleQty = parseInt(sale.quantity) || 1;
                     const salePrice = parseFloat(sale.sale_price) || 0;
-                    const profit = (salePrice - unitCost) * qty;
+                    const profit = (salePrice - unitCost) * saleQty;
                     return (
                       <div key={sIdx} style={{
                         paddingLeft: '8px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px',
@@ -349,7 +354,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
-                          <StatCol label="Qty" value={qty} color="#e2e8f0" />
+                          <StatCol label="Qty" value={saleQty} color="#e2e8f0" />
                           <StatCol label="Cost/unit" value={fmt$(unitCost)} color="#60a5fa" />
                           <StatCol label="Sale/unit" value={fmt$(salePrice)} color="#10b981" />
                           <StatCol label="Profit" value={fmt$(profit)} color={profit >= 0 ? '#10b981' : '#f87171'} />

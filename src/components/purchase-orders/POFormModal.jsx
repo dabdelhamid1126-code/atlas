@@ -466,7 +466,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                           <div><LBL>Unit Price</LBL>
                             <div style={{ position: 'relative' }}>
                               <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
@@ -475,12 +475,6 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                           </div>
                           <div><LBL>Qty</LBL>
                             <Input className="h-8 text-sm text-center" style={inp} type="number" min="1" value={item.quantity_ordered || 1} onChange={e => updateItem(idx,'quantity_ordered',e.target.value)} />
-                          </div>
-                          <div><LBL>Sale Price</LBL>
-                            <div style={{ position: 'relative' }}>
-                              <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
-                              <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={item.sale_price || ''} onChange={e => updateItem(idx,'sale_price',e.target.value)} placeholder="0.00" />
-                            </div>
                           </div>
                         </div>
                       </div>
