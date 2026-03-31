@@ -56,10 +56,10 @@ export default function TransactionsFilters({
           <SelectTrigger className="w-36 text-sm text-slate-300" style={inp}>
             <SelectValue placeholder="All Statuses">{statusFilter === 'all' ? 'All Statuses' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent style={{ background: '#1a2234' }}>
             <SelectItem value="all">All Statuses</SelectItem>
             {STATUSES.map(s => (
-              <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+              <SelectItem key={s} value={s} style={{ color: '#e2e8f0' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -68,10 +68,10 @@ export default function TransactionsFilters({
           <SelectTrigger className="w-36 text-sm text-slate-300" style={inp}>
             <SelectValue placeholder="All Vendors">{vendorFilter === 'all' ? 'All Vendors' : vendorFilter}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent style={{ background: '#1a2234' }}>
             <SelectItem value="all">All Vendors</SelectItem>
             {vendors.map(v => (
-              <SelectItem key={v} value={v}>{v}</SelectItem>
+              <SelectItem key={v} value={v} style={{ color: '#e2e8f0' }}>{v}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -80,7 +80,7 @@ export default function TransactionsFilters({
           <SelectTrigger className="w-36 text-sm text-slate-300" style={inp}>
             <SelectValue placeholder="All Platforms">{accountFilter === 'all' ? 'All Platforms' : accountFilter}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent style={{ background: '#1a2234' }}>
             <SelectItem value="all">All Platforms</SelectItem>
           </SelectContent>
         </Select>
@@ -118,10 +118,10 @@ export default function TransactionsFilters({
               <SelectTrigger className="text-sm text-slate-300" style={inp}>
                 <SelectValue placeholder="All Cards">{paymentMethodFilter === 'all' ? 'All Cards' : (creditCards.find(c => c.id === paymentMethodFilter)?.card_name || paymentMethodFilter)}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent style={{ background: '#1a2234' }}>
                 <SelectItem value="all">All Cards</SelectItem>
                 {creditCards.map(card => (
-                  <SelectItem key={card.id} value={card.id}>{card.card_name}</SelectItem>
+                  <SelectItem key={card.id} value={card.id} style={{ color: '#e2e8f0' }}>{card.card_name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -132,10 +132,10 @@ export default function TransactionsFilters({
               <SelectTrigger className="text-sm text-slate-300" style={inp}>
                 <SelectValue placeholder="All Categories">{categoryFilter === 'all' ? 'All Categories' : categoryFilter}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent style={{ background: '#1a2234' }}>
                 <SelectItem value="all">All Categories</SelectItem>
                 {CATEGORIES.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  <SelectItem key={cat} value={cat} style={{ color: '#e2e8f0' }}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

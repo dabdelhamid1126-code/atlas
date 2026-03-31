@@ -6,7 +6,17 @@ export default function TransactionsStatsBar({ orders = [] }) {
   const listedCount = orders.filter(o => o.status === 'ordered' || o.status === 'shipped').length;
   const soldCount = orders.filter(o => o.status === 'received').length;
   const totalCost = orders.reduce((sum, o) => sum + (o.total_cost || 0), 0);
-  const totalProfit = orders.reduce((sum, o) => sum + ((o.final_cost || 0) - (o.total_cost || 0)), 0);
+  
+  const totalProfit = orders.reduce((sum, order) => {
+    const revenue = order.sale_events?.reduce(
+      (s, event) => s + (event.items?.reduce(
+        (is, item) => is + ((parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 0)), 0
+      ) || 0), 0
+    ) || 0;
+    const cost = parseFloat(order.total_cost || order.final_cost || 0);
+    const cashback = parseFloat(order.cashback_amount || 0);
+    return sum + (revenue - cost + cashback);
+  }, 0);
 
   const stats = [
     {
@@ -52,7 +62,7 @@ export default function TransactionsStatsBar({ orders = [] }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '20px' }}>
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (

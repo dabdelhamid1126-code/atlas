@@ -474,6 +474,12 @@ export default function Transactions() {
     return [...new Set(orders.map(o => o.retailer).filter(Boolean))].sort();
   }, [orders]);
 
+  const modeCounts = useMemo(() => ({
+    all: orders.length,
+    churning: orders.filter(o => o.order_type === 'churning').length,
+    marketplace: orders.filter(o => o.order_type === 'marketplace').length,
+  }), [orders]);
+
   const modes = [
     { id: 'all', label: 'All', Icon: LayoutGrid },
     { id: 'churning', label: 'Churning', Icon: Zap },
@@ -523,6 +529,9 @@ export default function Transactions() {
               : { background: 'transparent', color: '#94a3b8' }}>
             <m.Icon className="w-3.5 h-3.5" />
             {m.label}
+            <span style={{ fontSize: '10px', fontWeight: 600, color: 'inherit', opacity: 0.7, marginLeft: '4px' }}>
+              ({modeCounts[m.id]})
+            </span>
           </button>
         ))}
       </div>
