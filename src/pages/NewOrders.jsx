@@ -50,7 +50,7 @@ function SectionHeader({ icon: Icon, label, color }) {
     green: 'text-green-500',
   };
   return (
-    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/30">
+    <div className="flex items-center gap-2 mb-4 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
       <Icon className={`h-4 w-4 ${colors[color] || 'text-slate-400'}`} />
       <span className={`text-xs font-bold tracking-widest uppercase ${colors[color] || 'text-slate-400'}`}>
         {label}
@@ -62,8 +62,8 @@ function SectionHeader({ icon: Icon, label, color }) {
 function SummaryRow({ label, value, color, bold }) {
   return (
     <div className="flex justify-between items-center">
-      <span className={bold ? 'font-medium text-slate-700' : 'text-slate-500'}>{label}</span>
-      <span className={`${bold ? 'font-semibold' : ''} ${color || 'text-slate-700'}`}>{value}</span>
+      <span className={bold ? 'font-medium text-slate-300' : 'text-slate-400'}>{label}</span>
+      <span className={`${bold ? 'font-semibold' : ''} ${color || 'text-slate-100'}`}>{value}</span>
     </div>
   );
 }
@@ -401,21 +401,21 @@ export default function NewOrders() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Add New Order</h1>
-        <p className="text-sm text-slate-500 mt-1">Record a new purchase — pick your mode and fill in the details</p>
+        <h1 className="text-2xl font-bold text-slate-100">Add New Order</h1>
+        <p className="text-sm text-slate-400 mt-1">Record a new purchase — pick your mode and fill in the details</p>
       </div>
 
       {/* Mode toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-        <div className="flex gap-1 p-1 bg-white border border-slate-200 rounded-xl w-fit shadow-sm">
+        <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <button type="button" onClick={() => set('order_type', 'churning')}
             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all
-              ${form.order_type === 'churning' ? 'bg-amber-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'}`}>
+              ${form.order_type === 'churning' ? 'bg-amber-500 text-white shadow' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
             <Tag className="h-4 w-4" /> Churning
           </button>
           <button type="button" onClick={() => set('order_type', 'marketplace')}
             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all
-              ${form.order_type === 'marketplace' ? 'bg-blue-500 text-white shadow' : 'text-slate-500 hover:bg-slate-100'}`}>
+              ${form.order_type === 'marketplace' ? 'bg-blue-500 text-white shadow' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}>
             <Globe className="h-4 w-4" /> Marketplace
           </button>
         </div>
@@ -433,21 +433,21 @@ export default function NewOrders() {
           <div className="lg:col-span-2 space-y-5">
 
             {/* ORDER ITEMS */}
-            <div className="bg-purple-50 rounded-2xl p-5">
+            <div className="rounded-2xl p-5" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)' }}>
               <SectionHeader icon={Package} label="Order Items" color="purple" />
               <div className="space-y-3">
                 {form.items.map((item, idx) => (
-                  <div key={item.id} className="bg-white rounded-xl border border-purple-100 p-4">
+                  <div key={item.id} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-purple-500">Item {idx + 1}</span>
                       <div className="flex gap-1">
                         <button type="button" onClick={() => duplicateItem(item.id)} title="Duplicate"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/10 transition">
                           <Copy className="h-3.5 w-3.5" />
                         </button>
                         {form.items.length > 1 && (
                           <button type="button" onClick={() => removeItem(item.id)} title="Remove"
-                            className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition">
+                            className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition">
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         )}
@@ -456,7 +456,7 @@ export default function NewOrders() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-3">
                       <div className="col-span-2 sm:col-span-3 space-y-1">
-                        <Label className="text-xs text-slate-600">Product Name *</Label>
+                        <Label className="text-xs text-slate-400">Product Name *</Label>
                         <ProductAutocomplete
                           products={products}
                           nameValue={item.product_name}
@@ -472,26 +472,29 @@ export default function NewOrders() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-600">Unit Price *</Label>
+                        <Label className="text-xs text-slate-400">Unit Price *</Label>
                         <div className="relative">
                           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
                           <Input className="pl-6 h-9" type="number" step="0.01" min="0"
-                            value={item.unit_cost}
-                            onChange={(e) => updateItem(item.id, 'unit_cost', e.target.value)}
-                            placeholder="0.00" />
+                           style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
+                           value={item.unit_cost}
+                           onChange={(e) => updateItem(item.id, 'unit_cost', e.target.value)}
+                           placeholder="0.00" />
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-600">Qty</Label>
+                        <Label className="text-xs text-slate-400">Qty</Label>
                         <Input className="h-9 text-center" type="number" min="1"
+                          style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                           value={item.quantity_ordered}
                           onChange={(e) => updateItem(item.id, 'quantity_ordered', e.target.value)} />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-600">Total</Label>
+                        <Label className="text-xs text-slate-400">Total</Label>
                         <div className="relative">
                           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                          <Input className="pl-6 h-9 bg-slate-100" readOnly
+                          <Input className="pl-6 h-9" readOnly
+                            style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8', borderColor: 'rgba(255,255,255,0.1)' }}
                             value={((parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity_ordered) || 1)).toFixed(2)} />
                         </div>
                       </div>
@@ -499,7 +502,7 @@ export default function NewOrders() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-600">SKU / UPC</Label>
+                        <Label className="text-xs text-slate-400">SKU / UPC</Label>
                         <ProductAutocomplete
                           products={products}
                           nameValue={item.product_name}
@@ -515,19 +518,20 @@ export default function NewOrders() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-600">Sale Price (per unit)</Label>
+                        <Label className="text-xs text-slate-400">Sale Price (per unit)</Label>
                         <div className="relative">
                           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
                           <Input className="pl-6 h-9" type="number" step="0.01" min="0"
+                            style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                             value={item.sale_price}
                             onChange={(e) => updateItem(item.id, 'sale_price', e.target.value)}
                             placeholder="0.00" />
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-600">Category</Label>
+                        <Label className="text-xs text-slate-400">Category</Label>
                         <Select value={form.product_category} onValueChange={(v) => set('product_category', v)}>
-                          <SelectTrigger className="h-9 bg-white text-xs"><SelectValue placeholder="Category..." /></SelectTrigger>
+                        <SelectTrigger className="h-9 text-xs text-slate-200" style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.1)' }}><SelectValue placeholder="Category..." /></SelectTrigger>
                           <SelectContent>
                             {PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                           </SelectContent>
@@ -539,78 +543,87 @@ export default function NewOrders() {
               </div>
 
               <button type="button" onClick={addItem}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-purple-200 text-purple-600 text-sm font-medium hover:border-purple-400 hover:bg-purple-50 transition">
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-purple-400 text-sm font-medium transition"
+                style={{ border: '2px dashed rgba(124,58,237,0.3)' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,58,237,0.05)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 <Plus className="h-4 w-4" /> Add Another Item
               </button>
 
               {itemsSubtotal > 0 && (
-                <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg bg-purple-100 border border-purple-200">
-                  <span className="text-xs text-purple-600">
+                <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                  <span className="text-xs text-purple-400">
                     {form.items.filter(it => parseFloat(it.unit_cost) > 0).length} item(s)
                   </span>
-                  <span className="text-sm font-semibold text-purple-700">Order Total: {fmt$(itemsSubtotal)}</span>
+                  <span className="text-sm font-semibold text-purple-300">Order Total: {fmt$(itemsSubtotal)}</span>
                 </div>
               )}
             </div>
 
             {/* PURCHASE DETAILS */}
-            <div className="bg-blue-50 rounded-2xl p-5">
+            <div className="rounded-2xl p-5" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
               <SectionHeader icon={ShoppingCart} label="Purchase Details" color="blue" />
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Tax</Label>
+                  <Label className="text-xs text-slate-400">Tax</Label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                    <Input className="bg-white pl-6" type="number" step="0.01" min="0"
+                    <Input className="pl-6" type="number" step="0.01" min="0"
+                      style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                       value={form.tax} onChange={e => set('tax', e.target.value)} placeholder="0.00" />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Shipping</Label>
+                  <Label className="text-xs text-slate-400">Shipping</Label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                    <Input className="bg-white pl-6" type="number" step="0.01" min="0"
+                    <Input className="pl-6" type="number" step="0.01" min="0"
+                      style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                       value={form.shipping_cost} onChange={e => set('shipping_cost', e.target.value)} placeholder="0.00" />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Fees</Label>
+                  <Label className="text-xs text-slate-400">Fees</Label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                    <Input className="bg-white pl-6" type="number" step="0.01" min="0"
+                    <Input className="pl-6" type="number" step="0.01" min="0"
+                      style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                       value={form.fees} onChange={e => set('fees', e.target.value)} placeholder="0.00" />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Order Date</Label>
-                  <Input className="bg-white" type="date"
+                  <Label className="text-xs text-slate-400">Order Date</Label>
+                  <Input type="date"
+                    style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                     value={form.order_date} onChange={e => set('order_date', e.target.value)} />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Sale Date <span className="text-slate-400">(optional)</span></Label>
-                  <Input className="bg-white" type="date"
+                  <Label className="text-xs text-slate-400">Sale Date <span className="text-slate-500">(optional)</span></Label>
+                  <Input type="date"
+                    style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                     value={form.sale_date} onChange={e => set('sale_date', e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Payout Date <span className="text-slate-400">(optional)</span></Label>
-                  <Input className="bg-white" type="date"
+                  <Label className="text-xs text-slate-400">Payout Date <span className="text-slate-500">(optional)</span></Label>
+                  <Input type="date"
+                    style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                     value={form.payout_date} onChange={e => set('payout_date', e.target.value)} />
                 </div>
               </div>
             </div>
 
             {/* VENDOR & BUYER */}
-            <div className="bg-amber-50 rounded-2xl p-5">
+            <div className="rounded-2xl p-5" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
               <SectionHeader icon={Truck} label="Vendor & Buyer" color="amber" />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Vendor / Store *</Label>
+                  <Label className="text-xs text-slate-400">Vendor / Store *</Label>
                   <Select value={form.retailer} onValueChange={(v) => set('retailer', v)}>
-                    <SelectTrigger className="bg-white"><SelectValue placeholder="Select vendor..." /></SelectTrigger>
+                    <SelectTrigger className="text-slate-200" style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.1)' }}><SelectValue placeholder="Select vendor..." /></SelectTrigger>
                     <SelectContent>
                       {RETAILERS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                     </SelectContent>
@@ -619,9 +632,9 @@ export default function NewOrders() {
 
                 {form.order_type === 'churning' ? (
                   <div className="space-y-1">
-                    <Label className="text-xs text-slate-600">Buyer</Label>
+                    <Label className="text-xs text-slate-400">Buyer</Label>
                     <Select value={form.buyer} onValueChange={(v) => set('buyer', v)}>
-                      <SelectTrigger className="bg-white"><SelectValue placeholder="Select buyer..." /></SelectTrigger>
+                      <SelectTrigger className="text-slate-200" style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.1)' }}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
                       <SelectContent>
                         {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                       </SelectContent>
@@ -629,9 +642,9 @@ export default function NewOrders() {
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    <Label className="text-xs text-slate-600">Marketplace</Label>
+                    <Label className="text-xs text-slate-400">Marketplace</Label>
                     <Select value={form.marketplace_platform} onValueChange={(v) => set('marketplace_platform', v)}>
-                      <SelectTrigger className="bg-white"><SelectValue placeholder="Select platform..." /></SelectTrigger>
+                      <SelectTrigger className="text-slate-200" style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.1)' }}><SelectValue placeholder="Select platform..." /></SelectTrigger>
                       <SelectContent>
                         {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp', 'Craigslist', 'Other']
                           .map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
@@ -641,9 +654,9 @@ export default function NewOrders() {
                 )}
 
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Status</Label>
+                  <Label className="text-xs text-slate-400">Status</Label>
                   <Select value={form.status} onValueChange={(v) => set('status', v)}>
-                    <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="text-slate-200" style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.1)' }}><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {statuses.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
@@ -653,29 +666,32 @@ export default function NewOrders() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Order Number</Label>
-                  <Input className="bg-white" value={form.order_number}
+                  <Label className="text-xs text-slate-400">Order Number</Label>
+                  <Input value={form.order_number}
+                    style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                     onChange={e => set('order_number', e.target.value)} placeholder="e.g. 112-3456789" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600">Account</Label>
-                  <Input className="bg-white" value={form.account}
+                  <Label className="text-xs text-slate-400">Account</Label>
+                  <Input value={form.account}
+                    style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                     onChange={e => set('account', e.target.value)} placeholder="Account used" />
                 </div>
               </div>
 
               {/* Multiple tracking numbers */}
               <div className="space-y-1">
-                <Label className="text-xs text-slate-600">Tracking Number(s)</Label>
+                <Label className="text-xs text-slate-400">Tracking Number(s)</Label>
                 <div className="space-y-2">
                   {form.tracking_numbers.map((tn, idx) => (
                     <div key={idx} className="flex items-center gap-2">
-                      <Input className="bg-white flex-1" value={tn}
+                      <Input className="flex-1" value={tn}
+                        style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
                         onChange={e => updateTracking(idx, e.target.value)}
                         placeholder="e.g. 1Z999AA10123456784" />
                       {form.tracking_numbers.length > 1 && (
                         <button type="button" onClick={() => removeTracking(idx)}
-                          className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition flex-shrink-0">
+                          className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition flex-shrink-0">
                           <Minus className="h-3.5 w-3.5" />
                         </button>
                       )}
@@ -690,9 +706,12 @@ export default function NewOrders() {
 
               {/* Receipt upload */}
               <div className="mt-4 space-y-2">
-                <Label className="text-xs text-slate-600">Receipts <span className="text-slate-400">(PNG or PDF, optional)</span></Label>
+                <Label className="text-xs text-slate-400">Receipts <span className="text-slate-400">(PNG or PDF, optional)</span></Label>
                 <div
-                  className="flex items-center gap-2 px-3 py-2 bg-white border border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(245,158,11,0.3)' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(245,158,11,0.6)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(245,158,11,0.3)'}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Paperclip className="h-3.5 w-3.5 text-slate-400" />
@@ -710,10 +729,11 @@ export default function NewOrders() {
                   <div className="space-y-1.5">
                     {receipts.map((file, idx) => (
                       <div key={idx}
-                        className="flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-100 rounded-lg">
+                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
+                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         <div className="flex items-center gap-2 min-w-0">
                           <FileText className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                          <span className="text-xs text-slate-600 truncate">{file.name}</span>
+                          <span className="text-xs text-slate-400 truncate">{file.name}</span>
                         </div>
                         <button type="button" onClick={() => removeReceipt(idx)}
                           className="p-1 text-slate-400 hover:text-red-400 flex-shrink-0 transition">
@@ -732,7 +752,7 @@ export default function NewOrders() {
 
               <div className="space-y-3 mb-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs text-slate-600">Payment Method(s)</Label>
+                  <Label className="text-xs text-slate-400">Payment Method(s)</Label>
                   {!isSplit && (
                     <button type="button"
                       onClick={() => {
@@ -868,7 +888,7 @@ export default function NewOrders() {
 
             {/* NOTES */}
             <div className="space-y-1">
-              <Label className="text-xs text-slate-600">Notes</Label>
+              <Label className="text-xs text-slate-400">Notes</Label>
               <Textarea value={form.notes} onChange={e => set('notes', e.target.value)}
                 placeholder="Any additional notes..." rows={2} />
             </div>
