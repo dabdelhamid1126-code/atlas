@@ -406,9 +406,9 @@ export default function Dashboard() {
           value={`${metrics.avgRoi.toFixed(2)}%`}
           sub="return on investment"
           icon={Percent}
-          colorClass="text-purple-400"
-          iconBg="bg-purple-500/10"
-          iconBorder="border-purple-500/20"
+          colorClass="text-cyan-400"
+          iconBg="bg-cyan-500/10"
+          iconBorder="border-cyan-500/20"
         />
       </div>
 
