@@ -51,7 +51,8 @@ export default function ProductAutocomplete({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
         <Input
-          className="bg-white pl-8"
+          className="pl-8"
+          style={{ background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}
           value={inputValue}
           onChange={(e) => {
             handleChange(e.target.value);

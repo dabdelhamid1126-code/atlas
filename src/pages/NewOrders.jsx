@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Tag, Globe, Package, CreditCard, DollarSign, Plus, Trash2,
-  Copy, Sparkles, Info, Minus, Paperclip, X, FileText, TrendingUp,
+  Copy, Sparkles, Info, Minus, Paperclip, X, FileText, TrendingUp, ImageOff,
 } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 import GiftCardPicker from '@/components/shared/GiftCardPicker';
@@ -24,6 +24,47 @@ const fmt$ = (v) => `$${(parseFloat(v) || 0).toFixed(2)}`;
 // ── Input style helper ────────────────────────────────────────────────────
 const inp = { background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' };
 const inpReadonly = { background: 'rgba(255,255,255,0.04)', color: '#94a3b8', borderColor: 'rgba(255,255,255,0.1)' };
+
+// ── Item Image Thumbnail ──────────────────────────────────────────────────
+function ItemThumb({ src, name, onClick }) {
+  const [err, setErr] = React.useState(false);
+  React.useEffect(() => setErr(false), [src]);
+  if (!src || err) {
+    return (
+      <div
+        onClick={onClick}
+        className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center cursor-pointer text-slate-400 text-sm font-bold select-none"
+        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+      >
+        {name?.charAt(0)?.toUpperCase() || <ImageOff className="h-4 w-4" />}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src} alt={name}
+      onClick={onClick}
+      onError={() => setErr(true)}
+      className="w-10 h-10 rounded-lg object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition"
+      style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+    />
+  );
+}
+
+// ── Image Preview Modal ───────────────────────────────────────────────────
+function ImagePreviewModal({ src, alt, onClose }) {
+  if (!src) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
+      <div className="relative max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg hover:bg-slate-100 transition">
+          <X className="w-4 h-4 text-slate-700" />
+        </button>
+        <img src={src} alt={alt} className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh]" />
+      </div>
+    </div>
+  );
+}
 
 // ── Card wrapper ──────────────────────────────────────────────────────────
 function Card({ children, className = '' }) {
@@ -43,7 +84,7 @@ function CardHeader({ children }) {
 }
 
 // ── Default factories ─────────────────────────────────────────────────────
-const defaultItem = () => ({ id: crypto.randomUUID(), product_id: '', product_name: '', upc: '', quantity_ordered: 1, unit_cost: '', sale_price: '' });
+const defaultItem = () => ({ id: crypto.randomUUID(), product_id: '', product_name: '', upc: '', quantity_ordered: 1, unit_cost: '', sale_price: '', product_image_url: '' });
 
 const defaultForm = () => ({
   order_type: 'churning', retailer: '', buyer: '', marketplace_platform: '', account: '',
@@ -60,6 +101,7 @@ export default function NewOrders() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(defaultForm());
   const [receipts, setReceipts] = useState([]);
+  const [previewImg, setPreviewImg] = useState(null);
   const fileInputRef = useRef(null);
   const set = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
 
@@ -174,7 +216,7 @@ export default function NewOrders() {
       include_tax_in_cashback: form.include_tax_in_cashback, include_shipping_in_cashback: form.include_shipping_in_cashback,
       extra_cashback_percent: form.amazon_yacb && isAmazon ? 5 : 0, bonus_notes: form.amazon_yacb && isAmazon ? 'Prime Young Adult' : null,
       notes: form.notes || null, has_receipts: receipts.length > 0,
-      items: validItems.map(it => ({ product_id: it.product_id || null, product_name: it.product_name.trim(), upc: it.upc || null, quantity_ordered: parseInt(it.quantity_ordered) || 1, quantity_received: 0, unit_cost: parseFloat(it.unit_cost) || 0, sale_price: parseFloat(it.sale_price) || 0 })),
+      items: validItems.map(it => ({ product_id: it.product_id || null, product_name: it.product_name.trim(), upc: it.upc || null, quantity_ordered: parseInt(it.quantity_ordered) || 1, quantity_received: 0, unit_cost: parseFloat(it.unit_cost) || 0, sale_price: parseFloat(it.sale_price) || 0, product_image_url: it.product_image_url || null })),
     });
   };
 
@@ -182,6 +224,7 @@ export default function NewOrders() {
 
   return (
     <div className="max-w-6xl mx-auto pb-10">
+      {previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={() => setPreviewImg(null)} />}
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-100">Add Order</h1>
@@ -294,15 +337,29 @@ export default function NewOrders() {
                       <tr key={item.id} className="group" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                         <td className="py-2 pl-1 text-xs text-slate-600 font-mono">{idx + 1}</td>
                         <td className="py-2 px-2">
-                          <ProductAutocomplete
-                            products={products}
-                            nameValue={item.product_name}
-                            upcValue={item.upc}
-                            searchField="name"
-                            onSelect={(p) => { updateItem(item.id, 'product_id', p.id); updateItem(item.id, 'product_name', p.name); updateItem(item.id, 'upc', p.upc || ''); }}
-                            onChangeName={(v) => updateItem(item.id, 'product_name', v)}
-                            placeholder="Product name..."
-                          />
+                          <div className="flex items-center gap-2">
+                            <ItemThumb
+                              src={item.product_image_url}
+                              name={item.product_name}
+                              onClick={() => item.product_image_url && setPreviewImg({ src: item.product_image_url, alt: item.product_name })}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <ProductAutocomplete
+                                products={products}
+                                nameValue={item.product_name}
+                                upcValue={item.upc}
+                                searchField="name"
+                                onSelect={(p) => {
+                                  updateItem(item.id, 'product_id', p.id);
+                                  updateItem(item.id, 'product_name', p.name);
+                                  updateItem(item.id, 'upc', p.upc || '');
+                                  updateItem(item.id, 'product_image_url', p.image || '');
+                                }}
+                                onChangeName={(v) => updateItem(item.id, 'product_name', v)}
+                                placeholder="Product name..."
+                              />
+                            </div>
+                          </div>
                         </td>
                         <td className="py-2 px-2">
                           <div className="relative">
