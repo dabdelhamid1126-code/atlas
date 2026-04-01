@@ -13,58 +13,91 @@ const fmt = v => new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 const fmtDate = d => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
 const STATUS_OPTIONS = [
-  { value: 'IN_STOCK',  label: 'In Stock',  color: 'bg-blue-50 text-blue-700 border-blue-100' },
-  { value: 'LISTED',    label: 'Listed',    color: 'bg-amber-50 text-amber-700 border-amber-100' },
-  { value: 'SOLD',      label: 'Sold',      color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-  { value: 'RETURNED',  label: 'Returned',  color: 'bg-red-50 text-red-700 border-red-100' },
-  { value: 'DAMAGED',   label: 'Damaged',   color: 'bg-slate-100 text-slate-600 border-slate-200' },
+  { value: 'IN_STOCK',  label: 'In Stock'  },
+  { value: 'LISTED',    label: 'Listed'    },
+  { value: 'SOLD',      label: 'Sold'      },
+  { value: 'RETURNED',  label: 'Returned'  },
+  { value: 'DAMAGED',   label: 'Damaged'   },
 ];
 
+const STATUS_STYLES = {
+  IN_STOCK: { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa', border: 'rgba(96,165,250,0.2)'  },
+  LISTED:   { bg: 'rgba(245,158,11,0.12)',  color: '#fbbf24', border: 'rgba(245,158,11,0.2)'  },
+  SOLD:     { bg: 'rgba(16,185,129,0.12)',  color: '#10b981', border: 'rgba(16,185,129,0.2)'  },
+  RETURNED: { bg: 'rgba(239,68,68,0.12)',   color: '#f87171', border: 'rgba(239,68,68,0.2)'   },
+  DAMAGED:  { bg: 'rgba(255,255,255,0.06)', color: '#64748b', border: 'rgba(255,255,255,0.1)' },
+};
+
 function StatusBadge({ status }) {
-  const opt = STATUS_OPTIONS.find(s => s.value === status) || { label: status, color: 'bg-slate-100 text-slate-500 border-slate-200' };
+  const s = STATUS_STYLES[status] || STATUS_STYLES.DAMAGED;
+  const label = STATUS_OPTIONS.find(o => o.value === status)?.label || status;
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border', opt.color)}>
-      {opt.label}
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: '2px 8px', borderRadius: 20,
+      fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
+      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
+    }}>
+      {label}
     </span>
   );
 }
 
-function SortTh({ label, sortKey, sortConfig, onSort, className = '' }) {
+const inp = {
+  background: '#0d1117',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 8,
+  color: 'white',
+  padding: '8px 12px',
+  fontSize: 13,
+  width: '100%',
+  outline: 'none',
+};
+
+function SortTh({ label, sortKey, sortConfig, onSort, align = 'left' }) {
   const active = sortConfig?.key === sortKey;
   return (
     <th
-      className={cn('cursor-pointer select-none group whitespace-nowrap', className)}
       onClick={() => onSort(sortKey)}
+      style={{
+        padding: '10px 16px',
+        textAlign: align,
+        cursor: 'pointer',
+        userSelect: 'none',
+        fontSize: 10,
+        fontWeight: 600,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        color: active ? '#10b981' : '#64748b',
+        whiteSpace: 'nowrap',
+      }}
     >
-      <div className={cn('flex items-center gap-1', className.includes('text-right') && 'justify-end')}>
-        <span className="group-hover:text-slate-700 transition-colors text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
+        {label}
         {active
           ? sortConfig.dir === 'asc'
-            ? <ChevronUp className="w-3 h-3 text-violet-500" />
-            : <ChevronDown className="w-3 h-3 text-violet-500" />
-          : <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+            ? <ChevronUp style={{ width: 12, height: 12 }} />
+            : <ChevronDown style={{ width: 12, height: 12 }} />
+          : <ArrowUpDown style={{ width: 11, height: 11, opacity: 0.3 }} />
         }
-      </div>
+      </span>
     </th>
   );
 }
 
-function KpiCard({ label, value, icon: Icon, color = 'default' }) {
-  const colors = {
-    blue:    { bg: 'bg-blue-50',    text: 'text-blue-600',    icon: 'text-blue-400'    },
-    amber:   { bg: 'bg-amber-50',   text: 'text-amber-600',   icon: 'text-amber-400'   },
-    green:   { bg: 'bg-emerald-50', text: 'text-emerald-600', icon: 'text-emerald-400' },
-    red:     { bg: 'bg-red-50',     text: 'text-red-600',     icon: 'text-red-400'     },
-    default: { bg: 'bg-slate-50',   text: 'text-slate-700',   icon: 'text-slate-400'   },
-  };
-  const c = colors[color] || colors.default;
+function KpiCard({ label, value, icon: Icon, iconColor, valueColor }) {
   return (
-    <div className="rounded-2xl border border-slate-100 p-4 bg-white shadow-sm">
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className={cn('w-3.5 h-3.5', c.icon)} />
-        <span className="text-xs text-slate-400 font-medium">{label}</span>
+    <div style={{
+      background: '#111827',
+      border: '1px solid rgba(255,255,255,0.07)',
+      borderRadius: 14,
+      padding: '14px 16px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <Icon style={{ width: 14, height: 14, color: iconColor }} />
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748b' }}>{label}</span>
       </div>
-      <p className={cn('text-xl font-bold', c.text)}>{value}</p>
+      <p style={{ fontSize: 20, fontWeight: 700, color: valueColor, lineHeight: 1.2 }}>{value}</p>
     </div>
   );
 }
@@ -101,64 +134,109 @@ function ItemModal({ open, onClose, onSave, item }) {
   };
 
   if (!open) return null;
+
+  const labelStyle = { display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 };
+  const inputStyle = { ...inp, transition: 'border-color 0.15s' };
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800">{item ? 'Edit Item' : 'Add Inventory Item'}</h3>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5" /></button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, overflowY: 'auto' }}>
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
+      <div style={{ display: 'flex', minHeight: '100%', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div style={{
+          position: 'relative', width: '100%', maxWidth: 520,
+          background: '#111827',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 16,
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+        }}>
+          {/* Modal Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{item ? 'Edit Item' : 'Add Inventory Item'}</h3>
+            <button onClick={onClose} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#e2e8f0'}
+              onMouseLeave={e => e.currentTarget.style.color = '#64748b'}>
+              <X style={{ width: 18, height: 18 }} />
+            </button>
           </div>
-          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+
+          <form onSubmit={handleSubmit} style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label className="block text-xs text-slate-500 mb-1.5 font-medium">Product Name *</label>
-              <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300" value={form.product_name} onChange={e => upd('product_name', e.target.value)} required />
+              <label style={labelStyle}>Product Name *</label>
+              <input style={inputStyle} value={form.product_name} onChange={e => upd('product_name', e.target.value)} required
+                onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label className="block text-xs text-slate-500 mb-1.5 font-medium">Unit Cost</label>
-                <input type="number" step="0.01" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300" value={form.unit_cost} onChange={e => upd('unit_cost', e.target.value)} />
+                <label style={labelStyle}>Unit Cost</label>
+                <input type="number" step="0.01" style={inputStyle} value={form.unit_cost} onChange={e => upd('unit_cost', e.target.value)}
+                  onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1.5 font-medium">Listing Price</label>
-                <input type="number" step="0.01" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300" value={form.listing_price} onChange={e => upd('listing_price', e.target.value)} />
+                <label style={labelStyle}>Listing Price</label>
+                <input type="number" step="0.01" style={inputStyle} value={form.listing_price} onChange={e => upd('listing_price', e.target.value)}
+                  onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               <div>
-                <label className="block text-xs text-slate-500 mb-1.5 font-medium">Quantity</label>
-                <input type="number" min="0" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300" value={form.quantity} onChange={e => upd('quantity', e.target.value)} />
+                <label style={labelStyle}>Quantity</label>
+                <input type="number" min="0" style={inputStyle} value={form.quantity} onChange={e => upd('quantity', e.target.value)}
+                  onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1.5 font-medium">SKU</label>
-                <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300" value={form.sku} onChange={e => upd('sku', e.target.value)} placeholder="UPC / SKU" />
+                <label style={labelStyle}>SKU</label>
+                <input style={inputStyle} value={form.sku} onChange={e => upd('sku', e.target.value)} placeholder="UPC / SKU"
+                  onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1.5 font-medium">Status</label>
-                <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 bg-white" value={form.status} onChange={e => upd('status', e.target.value)}>
-                  {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                <label style={labelStyle}>Status</label>
+                <select style={{ ...inputStyle, appearance: 'none' }} value={form.status} onChange={e => upd('status', e.target.value)}
+                  onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}>
+                  {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value} style={{ background: '#1a2234' }}>{s.label}</option>)}
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label className="block text-xs text-slate-500 mb-1.5 font-medium">Platform</label>
-                <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300" value={form.platform} onChange={e => upd('platform', e.target.value)} placeholder="e.g. eBay" />
+                <label style={labelStyle}>Platform</label>
+                <input style={inputStyle} value={form.platform} onChange={e => upd('platform', e.target.value)} placeholder="e.g. eBay"
+                  onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1.5 font-medium">Location</label>
-                <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300" value={form.location} onChange={e => upd('location', e.target.value)} placeholder="Storage location" />
+                <label style={labelStyle}>Location</label>
+                <input style={inputStyle} value={form.location} onChange={e => upd('location', e.target.value)} placeholder="Storage location"
+                  onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1.5 font-medium">Notes</label>
-              <textarea rows={2} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 resize-none" value={form.notes} onChange={e => upd('notes', e.target.value)} />
+              <label style={labelStyle}>Notes</label>
+              <textarea rows={2} style={{ ...inputStyle, resize: 'none' }} value={form.notes} onChange={e => upd('notes', e.target.value)}
+                onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors">Cancel</button>
-              <button type="submit" disabled={saving} className="px-5 py-2 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors disabled:opacity-50 flex items-center gap-2">
-                {saving && <Loader className="w-3.5 h-3.5 animate-spin" />}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 4 }}>
+              <button type="button" onClick={onClose} style={{
+                padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500,
+                color: '#94a3b8', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                Cancel
+              </button>
+              <button type="submit" disabled={saving} style={{
+                padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                color: 'white', background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', cursor: 'pointer',
+                opacity: saving ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                {saving && <Loader style={{ width: 13, height: 13, animation: 'spin 1s linear infinite' }} />}
                 {item ? 'Update' : 'Create'} Item
               </button>
             </div>
@@ -216,7 +294,7 @@ export default function Inventory() {
     quantity:      1,
     unit_cost:     parseFloat(o.final_cost || o.total_cost || 0),
     listing_price: null,
-    status:        o.status === 'received' ? 'IN_STOCK' : o.status === 'shipped' ? 'IN_STOCK' : 'IN_STOCK',
+    status:        'IN_STOCK',
     platform:      o.marketplace_platform || o.order_type || '',
     retailer:      o.retailer || '',
     sale_price:    null,
@@ -300,173 +378,254 @@ export default function Inventory() {
     profit:    filtered.reduce((s, r) => s + (parseFloat(r.profit) || 0), 0),
   }), [filtered]);
 
+  const filterInputStyle = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    color: 'white',
+    padding: '8px 12px',
+    fontSize: 13,
+    outline: 'none',
+    width: '100%',
+    transition: 'border-color 0.15s',
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 lg:px-8 lg:py-10 space-y-6">
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 0 40px' }}>
 
       {/* Toast */}
       {toast && (
-        <div className={cn(
-          'fixed top-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium shadow-lg border',
-          toast.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'
-        )}>
-          {toast.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+        <div style={{
+          position: 'fixed', top: 24, right: 24, zIndex: 50,
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '10px 16px', borderRadius: 12, fontSize: 13, fontWeight: 500,
+          backdropFilter: 'blur(12px)',
+          ...(toast.type === 'success'
+            ? { background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }
+            : { background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }),
+        }}>
+          {toast.type === 'success' ? <Check style={{ width: 15, height: 15 }} /> : <AlertCircle style={{ width: 15, height: 15 }} />}
           {toast.msg}
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 24 }}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Inventory On Hand</h1>
-          <p className="text-slate-400 text-sm mt-1">Marketplace inventory pulled from your orders</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.2 }}>Inventory On Hand</h1>
+          <p style={{ color: '#94a3b8', fontSize: 14, marginTop: 4 }}>Marketplace inventory pulled from your orders</p>
         </div>
         <button
           onClick={() => { setEditItem(null); setModal(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+            color: 'white', background: 'linear-gradient(135deg,#10b981,#06b6d4)',
+            border: 'none', cursor: 'pointer',
+          }}
         >
-          <Plus className="w-4 h-4" /> Add Item
+          <Plus style={{ width: 16, height: 16 }} /> Add Item
         </button>
       </div>
 
       {/* KPI cards */}
       {!loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <KpiCard label="Total Items"  value={String(stats.total)}    icon={Package}      />
-          <KpiCard label="In Stock"     value={String(stats.inStock)}  icon={Package}      color="blue"  />
-          <KpiCard label="Listed"       value={String(stats.listed)}   icon={Tag}          color="amber" />
-          <KpiCard label="Sold"         value={String(stats.sold)}     icon={CheckCircle}  color="green" />
-          <KpiCard label="Cost Basis"   value={fmt(stats.totalCost)}   icon={DollarSign}   color="red"   />
-          <KpiCard label="Total Profit" value={fmt(stats.profit)}      icon={DollarSign}   color="green" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 20 }}>
+          <KpiCard label="Total Items"  value={String(stats.total)}   icon={Package}     iconColor="#60a5fa" valueColor="#60a5fa" />
+          <KpiCard label="In Stock"     value={String(stats.inStock)} icon={Package}     iconColor="#60a5fa" valueColor="#60a5fa" />
+          <KpiCard label="Listed"       value={String(stats.listed)}  icon={Tag}         iconColor="#f59e0b" valueColor="#fbbf24" />
+          <KpiCard label="Sold"         value={String(stats.sold)}    icon={CheckCircle} iconColor="#10b981" valueColor="#10b981" />
+          <KpiCard label="Cost Basis"   value={fmt(stats.totalCost)}  icon={DollarSign}  iconColor="#f87171" valueColor="#f87171" />
+          <KpiCard label="Total Profit" value={fmt(stats.profit)}     icon={DollarSign}  iconColor="#10b981" valueColor="#10b981" />
         </div>
       )}
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl bg-violet-50 border border-violet-100 sticky top-0 z-10">
-          <span className="text-sm font-semibold text-violet-700">{selected.size} selected</span>
-          <div className="w-px h-4 bg-violet-200" />
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10,
+          padding: '10px 16px', borderRadius: 12, marginBottom: 16,
+          background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
+          position: 'sticky', top: 0, zIndex: 10,
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#10b981' }}>{selected.size} selected</span>
+          <div style={{ width: 1, height: 16, background: 'rgba(16,185,129,0.3)' }} />
           {STATUS_OPTIONS.map(s => (
-            <button key={s.value} onClick={() => bulkStatus(s.value)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 transition-colors">
+            <button key={s.value} onClick={() => bulkStatus(s.value)} style={{
+              padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500,
+              color: '#cbd5e1', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.09)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
               → {s.label}
             </button>
           ))}
-          <button onClick={bulkDelete} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 border border-red-200 bg-white hover:bg-red-50 transition-colors">
-            <Trash2 className="w-3.5 h-3.5" /> Delete
+          <button onClick={bulkDelete} style={{
+            display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6,
+            fontSize: 11, fontWeight: 500, color: '#f87171',
+            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer',
+          }}>
+            <Trash2 style={{ width: 13, height: 13 }} /> Delete
           </button>
-          <button onClick={() => setSelected(new Set())} className="ml-auto text-xs text-slate-400 hover:text-slate-600">Clear</button>
+          <button onClick={() => setSelected(new Set())} style={{
+            marginLeft: 'auto', fontSize: 11, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            <X style={{ width: 13, height: 13 }} /> Clear
+          </button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="relative lg:col-span-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+      <div style={{
+        background: '#111827', border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 12, padding: '14px 16px', marginBottom: 16,
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 10, alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#64748b', pointerEvents: 'none' }} />
             <input
               type="text" placeholder="Search products, SKUs, retailers..."
-              className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+              style={{ ...filterInputStyle, paddingLeft: 34 }}
               value={search} onChange={e => setSearch(e.target.value)}
+              onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
             />
           </div>
-          <select
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 text-slate-700"
+          <select style={{ ...filterInputStyle, appearance: 'none' }}
             value={statusFilter} onChange={e => setStatus(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}>
+            <option value="" style={{ background: '#1a2234' }}>All Statuses</option>
+            {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value} style={{ background: '#1a2234' }}>{s.label}</option>)}
           </select>
-          <select
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 text-slate-700"
+          <select style={{ ...filterInputStyle, appearance: 'none' }}
             value={sourceFilter} onChange={e => setSource(e.target.value)}
-          >
-            <option value="all">All Sources</option>
-            <option value="orders">From Orders Only</option>
-            <option value="manual">Manual Items Only</option>
+            onFocus={e => e.target.style.borderColor = 'rgba(16,185,129,0.4)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}>
+            <option value="all" style={{ background: '#1a2234' }}>All Sources</option>
+            <option value="orders" style={{ background: '#1a2234' }}>From Orders Only</option>
+            <option value="manual" style={{ background: '#1a2234' }}>Manual Items Only</option>
           </select>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">{sorted.length} item{sorted.length !== 1 ? 's' : ''}</span>
-          </div>
+          <span style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{sorted.length} item{sorted.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid #10b981', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
         </div>
       ) : sorted.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm text-center py-20">
-          <Package className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium">No inventory items found.</p>
-          <p className="text-slate-400 text-xs mt-1">Items are auto-pulled from your Purchase Orders, or add one manually.</p>
+        <div style={{
+          background: '#111827', border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 14, textAlign: 'center', padding: '80px 24px',
+        }}>
+          <Package style={{ width: 48, height: 48, color: '#1e293b', margin: '0 auto 12px' }} />
+          <p style={{ color: '#64748b', fontSize: 15, fontWeight: 500, marginBottom: 6 }}>No inventory items found.</p>
+          <p style={{ color: '#475569', fontSize: 12 }}>Items are auto-pulled from your Purchase Orders, or add one manually.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div style={{
+          background: '#111827', border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 14, overflow: 'hidden',
+        }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="w-10 px-4 py-3">
-                    <button onClick={toggleAll} className="p-0.5">
-                      <div className={cn('w-4 h-4 rounded border-2 flex items-center justify-center transition-colors', allSelected ? 'bg-violet-500 border-violet-500' : 'border-slate-300')}>
-                        {allSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  <th style={{ width: 40, padding: '10px 16px' }}>
+                    <button onClick={toggleAll} style={{ padding: 2, background: 'none', border: 'none', cursor: 'pointer' }}>
+                      <div style={{
+                        width: 16, height: 16, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: `2px solid ${allSelected ? '#10b981' : '#475569'}`,
+                        background: allSelected ? '#10b981' : 'transparent',
+                        transition: 'all 0.15s',
+                      }}>
+                        {allSelected && <Check style={{ width: 10, height: 10, color: 'white' }} />}
                       </div>
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Source</th>
-                  <SortTh label="Date"          sortKey="created_date"  sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-left" />
-                  <SortTh label="Product"        sortKey="product_name"  sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-left" />
-                  <SortTh label="SKU / Order #"  sortKey="sku"           sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-left" />
-                  <SortTh label="Qty"            sortKey="quantity"      sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-right" />
-                  <SortTh label="Cost"           sortKey="unit_cost"     sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-right" />
-                  <SortTh label="List $"         sortKey="listing_price" sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-right" />
-                  <SortTh label="Sale"           sortKey="sale_price"    sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-right" />
-                  <SortTh label="Profit"         sortKey="profit"        sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-right" />
-                  <SortTh label="Status"         sortKey="status"        sortConfig={sortConfig} onSort={onSort} className="px-4 py-3 text-left" />
-                  <th className="px-4 py-3 text-right w-24" />
+                  <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748b' }}>Source</th>
+                  <SortTh label="Date"         sortKey="created_date"  sortConfig={sortConfig} onSort={onSort} />
+                  <SortTh label="Product"       sortKey="product_name"  sortConfig={sortConfig} onSort={onSort} />
+                  <SortTh label="SKU / Order #" sortKey="sku"           sortConfig={sortConfig} onSort={onSort} />
+                  <SortTh label="Qty"           sortKey="quantity"      sortConfig={sortConfig} onSort={onSort} align="right" />
+                  <SortTh label="Cost"          sortKey="unit_cost"     sortConfig={sortConfig} onSort={onSort} align="right" />
+                  <SortTh label="List $"        sortKey="listing_price" sortConfig={sortConfig} onSort={onSort} align="right" />
+                  <SortTh label="Sale"          sortKey="sale_price"    sortConfig={sortConfig} onSort={onSort} align="right" />
+                  <SortTh label="Profit"        sortKey="profit"        sortConfig={sortConfig} onSort={onSort} align="right" />
+                  <SortTh label="Status"        sortKey="status"        sortConfig={sortConfig} onSort={onSort} />
+                  <th style={{ padding: '10px 16px', width: 80 }} />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {sorted.map(row => {
+              <tbody>
+                {sorted.map((row, idx) => {
                   const isSelected = selected.has(row.id);
                   return (
-                    <tr key={row.id} className={cn('hover:bg-slate-50 transition-colors', isSelected && 'bg-violet-50')}>
-                      <td className="px-4 py-3">
-                        <button onClick={() => toggleSelect(row.id)} className="p-0.5">
-                          <div className={cn('w-4 h-4 rounded border-2 flex items-center justify-center transition-colors', isSelected ? 'bg-violet-500 border-violet-500' : 'border-slate-300')}>
-                            {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                    <tr key={row.id}
+                      style={{
+                        borderBottom: idx < sorted.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                        background: isSelected ? 'rgba(16,185,129,0.06)' : 'transparent',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = isSelected ? 'rgba(16,185,129,0.06)' : 'transparent'; }}
+                    >
+                      <td style={{ padding: '10px 16px' }}>
+                        <button onClick={() => toggleSelect(row.id)} style={{ padding: 2, background: 'none', border: 'none', cursor: 'pointer' }}>
+                          <div style={{
+                            width: 16, height: 16, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: `2px solid ${isSelected ? '#10b981' : '#475569'}`,
+                            background: isSelected ? '#10b981' : 'transparent',
+                            transition: 'all 0.15s',
+                          }}>
+                            {isSelected && <Check style={{ width: 10, height: 10, color: 'white' }} />}
                           </div>
                         </button>
                       </td>
-                      <td className="px-4 py-3">
+                      <td style={{ padding: '10px 16px' }}>
                         {row._source === 'order'
-                          ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100"><ShoppingBag className="w-3 h-3" />Order</span>
-                          : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200"><Package className="w-3 h-3" />Manual</span>
+                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 600, background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>
+                              <ShoppingBag style={{ width: 11, height: 11 }} /> Order
+                            </span>
+                          : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 600, background: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }}>
+                              <Package style={{ width: 11, height: 11 }} /> Manual
+                            </span>
                         }
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{fmtDate(row.created_date || row.order_date)}</td>
-                      <td className="px-4 py-3 max-w-[240px]">
-                        <div className="text-sm font-medium text-slate-700 truncate" title={row.product_name}>{row.product_name}</div>
-                        {row.retailer && row._source === 'order' && <div className="text-xs text-slate-400 mt-0.5">{row.retailer}</div>}
-                        {row.platform && <div className="text-xs text-violet-400 mt-0.5">{row.platform}</div>}
+                      <td style={{ padding: '10px 16px', fontSize: 11, color: '#64748b', whiteSpace: 'nowrap' }}>{fmtDate(row.created_date || row.order_date)}</td>
+                      <td style={{ padding: '10px 16px', maxWidth: 240 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.product_name}>{row.product_name}</div>
+                        {row.retailer && row._source === 'order' && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{row.retailer}</div>}
+                        {row.platform && <div style={{ fontSize: 11, color: '#06b6d4', marginTop: 2 }}>{row.platform}</div>}
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-400 font-mono">{row.sku || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-600 text-right font-medium">{row.quantity}</td>
-                      <td className="px-4 py-3 text-sm text-slate-600 text-right">{row.unit_cost ? fmt(row.unit_cost) : '—'}</td>
-                      <td className="px-4 py-3 text-sm text-amber-600 text-right">{row.listing_price ? fmt(row.listing_price) : '—'}</td>
-                      <td className="px-4 py-3 text-sm text-emerald-600 text-right font-medium">{row.sale_price ? fmt(row.sale_price) : '—'}</td>
-                      <td className={cn('px-4 py-3 text-sm text-right font-semibold', row.profit != null ? (row.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-slate-300')}>
+                      <td style={{ padding: '10px 16px', fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>{row.sku || '—'}</td>
+                      <td style={{ padding: '10px 16px', fontSize: 13, color: '#e2e8f0', fontWeight: 500, textAlign: 'right' }}>{row.quantity}</td>
+                      <td style={{ padding: '10px 16px', fontSize: 13, color: '#60a5fa', textAlign: 'right' }}>{row.unit_cost ? fmt(row.unit_cost) : '—'}</td>
+                      <td style={{ padding: '10px 16px', fontSize: 13, color: '#fbbf24', textAlign: 'right' }}>{row.listing_price ? fmt(row.listing_price) : '—'}</td>
+                      <td style={{ padding: '10px 16px', fontSize: 13, color: '#10b981', textAlign: 'right', fontWeight: 500 }}>{row.sale_price ? fmt(row.sale_price) : '—'}</td>
+                      <td style={{
+                        padding: '10px 16px', fontSize: 13, textAlign: 'right', fontWeight: 600,
+                        color: row.profit != null ? (row.profit >= 0 ? '#10b981' : '#f87171') : '#334155',
+                      }}>
                         {row.profit != null ? fmt(row.profit) : '—'}
                       </td>
-                      <td className="px-4 py-3"><StatusBadge status={row.status} /></td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => openEdit(row)} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Edit">
-                            <PenLine className="w-3.5 h-3.5 text-slate-400" />
+                      <td style={{ padding: '10px 16px' }}><StatusBadge status={row.status} /></td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                          <button onClick={() => openEdit(row)} title="Edit" style={{
+                            padding: 6, borderRadius: 6, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer',
+                          }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#10b981'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#64748b'; }}>
+                            <PenLine style={{ width: 14, height: 14 }} />
                           </button>
-                          <button onClick={() => deleteOne(row)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
-                            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                          <button onClick={() => deleteOne(row)} title="Delete" style={{
+                            padding: 6, borderRadius: 6, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer',
+                          }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#f87171'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#64748b'; }}>
+                            <Trash2 style={{ width: 14, height: 14 }} />
                           </button>
                         </div>
                       </td>
@@ -477,9 +636,15 @@ export default function Inventory() {
             </table>
           </div>
 
-          <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-xs text-slate-400">Showing {sorted.length} item{sorted.length !== 1 ? 's' : ''}</p>
-            <p className="text-xs text-slate-400">
+          {/* Footer */}
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(255,255,255,0.01)',
+            padding: '10px 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <p style={{ fontSize: 11, color: '#64748b' }}>Showing {sorted.length} item{sorted.length !== 1 ? 's' : ''}</p>
+            <p style={{ fontSize: 11, color: '#475569' }}>
               {orderRows.length} from orders · {items.length} manual
             </p>
           </div>
