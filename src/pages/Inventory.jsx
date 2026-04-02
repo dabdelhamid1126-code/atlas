@@ -26,8 +26,9 @@ const getStoreDomain = (vendorName) => {
   return n + '.com';
 };
 
+const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
 const brandfetch = (domain) =>
-  `https://cdn.brandfetch.io/${domain}/w/40/h/40?c=1idnHBBz3W4Yhnlr9Xa`;
+  `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_CLIENT_ID}`;
 
 // Unsold qty: total received - already sold via sale_events
 const unsoldQty = (order, productName) => {
@@ -105,8 +106,14 @@ function StoreLogo({ retailer, size = 24 }) {
 
 // ─── product image ───────────────────────────────────────────────────────────
 
-function ProductImage({ src, name, qty }) {
-  const [err, setErr] = useState(false);
+function ProductImage({ src, name, qty, retailer }) {
+  const [imgErr, setImgErr] = useState(false);
+  const [brandErr, setBrandErr] = useState(false);
+
+  // Fallback: use the retailer's brandfetch logo as product image
+  const brandUrl = retailer ? brandfetch(getStoreDomain(retailer)) : null;
+  const initials = (name || '?').slice(0, 2).toUpperCase();
+
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
       <div style={{
@@ -114,9 +121,13 @@ function ProductImage({ src, name, qty }) {
         background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        {src && !err
-          ? <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setErr(true)} />
-          : <Package style={{ width: 16, height: 16, color: 'rgba(255,255,255,0.2)' }} />}
+        {src && !imgErr ? (
+          <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgErr(true)} />
+        ) : brandUrl && !brandErr ? (
+          <img src={brandUrl} alt={retailer} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrandErr(true)} />
+        ) : (
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>{initials}</span>
+        )}
       </div>
       <div style={{
         position: 'absolute', bottom: -4, right: -4,
@@ -248,7 +259,7 @@ function GroupRow({ group, expanded, onToggle, onEdit }) {
         {/* product */}
         <td style={hd}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <ProductImage src={group.imageUrl} name={group.productName} qty={group.totalQty} />
+            <ProductImage src={group.imageUrl} name={group.productName} qty={group.totalQty} retailer={group.sources[0]?.order?.retailer} />
             <div style={{ minWidth: 0 }}>
               <div style={{
                 fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.92)',
