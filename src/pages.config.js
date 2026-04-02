@@ -54,7 +54,6 @@ import EmailImport from './pages/EmailImport';
 import GiftCards from './pages/GiftCards';
 import Goals from './pages/Goals';
 import Inventory from './pages/Inventory';
-import InventoryValue from './pages/InventoryValue';
 import Invoices from './pages/Invoices';
 import PaymentMethods from './pages/PaymentMethods';
 import Products from './pages/Products';
@@ -74,7 +73,6 @@ export const PAGES = {
     "GiftCards": GiftCards,
     "Goals": Goals,
     "Inventory": Inventory,
-    "InventoryValue": InventoryValue,
     "Invoices": Invoices,
     "PaymentMethods": PaymentMethods,
     "Products": Products,
