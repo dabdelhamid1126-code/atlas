@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Pencil, Trash2, Package, Upload, X, Loader, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Package, Upload, X, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['phones', 'tablets', 'laptops', 'gaming', 'accessories', 'wearables', 'audio', 'other'];
+const PAGE_SIZE = 24;
 
 // ─── auto category guesser ────────────────────────────────────────────────────
 const guessCategory = (name) => {
@@ -19,7 +20,7 @@ const guessCategory = (name) => {
   return 'other';
 };
 
-// ─── style tokens ─────────────────────────────────────────────────────────────
+// ─── styles ───────────────────────────────────────────────────────────────────
 const inp = {
   background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 8, color: 'white', padding: '8px 12px',
@@ -32,7 +33,6 @@ const LBL = ({ children }) => (
   </label>
 );
 
-// ─── category styles ──────────────────────────────────────────────────────────
 const CAT_COLORS = {
   phones:      { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa',  border: 'rgba(96,165,250,0.25)'  },
   tablets:     { bg: 'rgba(16,185,129,0.12)',  color: '#10b981',  border: 'rgba(16,185,129,0.25)'  },
@@ -53,12 +53,9 @@ function CategoryBadge({ category }) {
   );
 }
 
-// ─── product image ────────────────────────────────────────────────────────────
-function ProductImage({ src, name, size = 64 }) {
+function ProductImage({ src, name, size = 60 }) {
   const [err, setErr] = useState(false);
-  if (src && !err) {
-    return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 10, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />;
-  }
+  if (src && !err) return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 10, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: 10, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ fontSize: size * 0.4, fontWeight: 700, color: '#10b981' }}>{name?.charAt(0)?.toUpperCase() || '?'}</span>
@@ -68,9 +65,7 @@ function ProductImage({ src, name, size = 64 }) {
 
 function ProductThumb({ src, name, size = 38 }) {
   const [err, setErr] = useState(false);
-  if (src && !err) {
-    return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />;
-  }
+  if (src && !err) return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: 8, flexShrink: 0, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ fontSize: size * 0.38, fontWeight: 700, color: '#10b981' }}>{name?.charAt(0)?.toUpperCase() || '?'}</span>
@@ -78,61 +73,96 @@ function ProductThumb({ src, name, size = 38 }) {
   );
 }
 
-// ─── product grid card ────────────────────────────────────────────────────────
-function ProductCard({ product, onEdit, onDelete, selected, onToggleSelect, stockCount, orderCount }) {
+function ProductCard({ product, onEdit, onDelete }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => onToggleSelect(product.id)}
       style={{
-        background: selected ? 'rgba(16,185,129,0.07)' : hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${selected ? 'rgba(16,185,129,0.35)' : hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)'}`,
+        background: hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)'}`,
         borderRadius: 12, padding: '12px 10px',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         gap: 8, textAlign: 'center', position: 'relative',
-        transition: 'all 0.15s', cursor: 'pointer',
+        transition: 'all 0.15s',
       }}
     >
-      {/* checkbox top-left */}
-      <div style={{ position: 'absolute', top: 7, left: 7 }}>
-        <input type="checkbox" checked={selected} onChange={() => onToggleSelect(product.id)}
-          onClick={e => e.stopPropagation()}
-          style={{ accentColor: '#10b981', width: 13, height: 13, cursor: 'pointer' }} />
-      </div>
-
-      {/* action buttons — show on hover, only when not in bulk selection */}
-      {hovered && !selected && (
+      {hovered && (
         <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3 }}>
-          <button onClick={e => { e.stopPropagation(); onEdit(product); }} title="Edit"
+          <button onClick={() => onEdit(product)}
             style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
             <Pencil style={{ width: 11, height: 11 }} />
           </button>
-          <button onClick={e => { e.stopPropagation(); onDelete(product); }} title="Delete"
+          <button onClick={() => onDelete(product)}
             style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer' }}>
             <Trash2 style={{ width: 11, height: 11 }} />
           </button>
         </div>
       )}
-
       <ProductImage src={product.image} name={product.name} size={60} />
       <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, maxWidth: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
         {product.name}
       </div>
       <CategoryBadge category={product.category} />
-      {/* stock / order counts */}
-      {(stockCount > 0 || orderCount > 0) && (
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {stockCount > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'rgba(6,182,212,0.12)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)' }}>📦 {stockCount}</span>}
-          {orderCount > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>🛒 {orderCount}</span>}
-        </div>
-      )}
       {product.upc && (
-        <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em' }}>
-          {product.upc}
-        </span>
+        <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{product.upc}</span>
       )}
+    </div>
+  );
+}
+
+// ─── pagination controls ──────────────────────────────────────────────────────
+function Pagination({ page, totalPages, total, onPage }) {
+  if (totalPages <= 1) return null;
+  const start = (page - 1) * PAGE_SIZE + 1;
+  const end   = Math.min(page * PAGE_SIZE, total);
+
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (page > 3) pages.push('...');
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+    if (page < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+  }
+
+  const btnStyle = (active) => ({
+    width: 32, height: 32, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 12, fontWeight: active ? 700 : 400, cursor: 'pointer', border: '1px solid',
+    background: active ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)',
+    borderColor: active ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.08)',
+    color: active ? '#10b981' : 'rgba(255,255,255,0.5)',
+    transition: 'all 0.1s',
+  });
+
+  const navStyle = (disabled) => ({
+    width: 32, height: 32, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 12, cursor: disabled ? 'not-allowed' : 'pointer', border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.03)', color: disabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
+    opacity: disabled ? 0.4 : 1,
+  });
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, flexWrap: 'wrap', gap: 10 }}>
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+        Showing {start}–{end} of {total} products
+      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button onClick={() => onPage(page - 1)} disabled={page === 1} style={navStyle(page === 1)}>
+          <ChevronLeft style={{ width: 14, height: 14 }} />
+        </button>
+        {pages.map((p, i) =>
+          p === '...'
+            ? <span key={`e${i}`} style={{ width: 32, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>…</span>
+            : <button key={p} onClick={() => onPage(p)} style={btnStyle(p === page)}>{p}</button>
+        )}
+        <button onClick={() => onPage(page + 1)} disabled={page === totalPages} style={navStyle(page === totalPages)}>
+          <ChevronRight style={{ width: 14, height: 14 }} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -142,10 +172,9 @@ export default function Products() {
   const queryClient = useQueryClient();
   const [search, setSearch]               = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [page, setPage]                   = useState(1);
   const [dialogOpen, setDialogOpen]       = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [selectedIds, setSelectedIds]     = useState(new Set());
-  const [sortBy, setSortBy]               = useState('alpha');
   const [loadingUPC, setLoadingUPC]       = useState(false);
   const [formData, setFormData]           = useState({ name: '', upc: '', image: '', category: '' });
   const [importOpen, setImportOpen]       = useState(false);
@@ -158,35 +187,6 @@ export default function Products() {
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list(),
   });
-
-  const { data: inventoryItems = [] } = useQuery({
-    queryKey: ['inventoryItems'],
-    queryFn: () => base44.entities.InventoryItem.list(),
-  });
-
-  const { data: purchaseOrders = [] } = useQuery({
-    queryKey: ['purchaseOrders'],
-    queryFn: () => base44.entities.PurchaseOrder.list(),
-  });
-
-  // ── stock & order count maps ─────────────────────────────────────────────
-  const stockCountMap = useMemo(() => {
-    const map = {};
-    inventoryItems.forEach(item => {
-      if (item.product_id) map[item.product_id] = (map[item.product_id] || 0) + (item.quantity || 0);
-    });
-    return map;
-  }, [inventoryItems]);
-
-  const orderCountMap = useMemo(() => {
-    const map = {};
-    purchaseOrders.forEach(order => {
-      (order.items || []).forEach(item => {
-        if (item.product_id) map[item.product_id] = (map[item.product_id] || 0) + (parseInt(item.quantity_ordered) || 1);
-      });
-    });
-    return map;
-  }, [purchaseOrders]);
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Product.create(data),
@@ -209,16 +209,33 @@ export default function Products() {
     setDialogOpen(true);
   };
   const closeDialog = () => { setDialogOpen(false); setEditingProduct(null); };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingProduct) updateMutation.mutate({ id: editingProduct.id, data: { ...formData } });
     else createMutation.mutate({ ...formData });
   };
-
   const handleDelete = (product) => {
     if (confirm(`Delete "${product.name}"?`)) deleteMutation.mutate(product.id);
   };
+
+  // reset to page 1 when filters change
+  const handleSearch = (val) => { setSearch(val); setPage(1); };
+  const handleCat    = (cat) => { setCategoryFilter(cat); setPage(1); };
+
+  // filter → sort → paginate
+  const filtered = useMemo(() =>
+    products
+      .filter(p => {
+        const matchSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.upc?.toLowerCase().includes(search.toLowerCase());
+        const matchCat    = categoryFilter === 'all' || p.category === categoryFilter;
+        return matchSearch && matchCat;
+      })
+      .sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [products, search, categoryFilter]
+  );
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // ── single UPC lookup ────────────────────────────────────────────────────
   const lookupSingleUPC = async () => {
@@ -272,39 +289,9 @@ export default function Products() {
     setImporting(false); setImportOpen(false); setUpcInput(''); setImportRows([]);
   };
 
-  // ── bulk delete ──────────────────────────────────────────────────────────
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedIds.size} product${selectedIds.size !== 1 ? 's' : ''}?`)) return;
-    let deleted = 0;
-    for (const id of selectedIds) {
-      try { await base44.entities.Product.delete(id); deleted++; } catch {}
-    }
-    queryClient.invalidateQueries({ queryKey: ['products'] });
-    toast.success(`Deleted ${deleted} product${deleted !== 1 ? 's' : ''}`);
-    setSelectedIds(new Set());
-  };
-
-  const toggleSelect    = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filtered.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(filtered.map(p => p.id)));
-  };
-
   const toggleRow       = (upc) => setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, selected: !r.selected } : r));
   const toggleAll       = () => { const allSel = importRows.filter(r => r.status === 'new').every(r => r.selected); setImportRows(prev => prev.map(r => r.status === 'new' ? { ...r, selected: !allSel } : r)); };
   const updateImportRow = (upc, field, value) => setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, [field]: value } : r));
-
-  const filtered = products
-    .filter(p => {
-      const matchSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.upc?.toLowerCase().includes(search.toLowerCase());
-      const matchCat    = categoryFilter === 'all' || p.category === categoryFilter;
-      return matchSearch && matchCat;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'stock')   return (stockCountMap[b.id] || 0) - (stockCountMap[a.id] || 0);
-      if (sortBy === 'ordered') return (orderCountMap[b.id] || 0) - (orderCountMap[a.id] || 0);
-      return (a.name || '').localeCompare(b.name || '');
-    });
 
   const newCount  = importRows.filter(r => r.status === 'new').length;
   const dupCount  = importRows.filter(r => r.status === 'duplicate').length;
@@ -338,62 +325,21 @@ export default function Products() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
           <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: 'rgba(255,255,255,0.3)' }} />
-          <input type="text" placeholder="Search products or UPC..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, paddingLeft: 32 }} />
+          <input type="text" placeholder="Search products or UPC..." value={search} onChange={e => handleSearch(e.target.value)} style={{ ...inp, paddingLeft: 32 }} />
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {['all', ...CATEGORIES].map(cat => {
             const s = cat === 'all' ? null : CAT_COLORS[cat];
             const active = categoryFilter === cat;
             return (
-              <button key={cat} onClick={() => setCategoryFilter(cat)}
-                style={{
-                  padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700,
-                  letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer', border: '1px solid',
-                  background: active ? (s?.bg || 'rgba(16,185,129,0.12)') : 'transparent',
-                  color: active ? (s?.color || '#10b981') : 'rgba(255,255,255,0.35)',
-                  borderColor: active ? (s?.border || 'rgba(16,185,129,0.3)') : 'rgba(255,255,255,0.08)',
-                }}>
+              <button key={cat} onClick={() => handleCat(cat)}
+                style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer', border: '1px solid', background: active ? (s?.bg || 'rgba(16,185,129,0.12)') : 'transparent', color: active ? (s?.color || '#10b981') : 'rgba(255,255,255,0.35)', borderColor: active ? (s?.border || 'rgba(16,185,129,0.3)') : 'rgba(255,255,255,0.08)' }}>
                 {cat}
               </button>
             );
           })}
         </div>
-        <div style={{ display: 'flex', gap: 4, marginLeft: 'auto', alignItems: 'center' }}>
-          {/* Sort */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 4px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <ArrowUpDown style={{ width: 11, height: 11, color: 'rgba(255,255,255,0.3)', flexShrink: 0, marginLeft: 4 }} />
-            {[['alpha','A–Z'],['stock','In Stock'],['ordered','Most Ordered']].map(([val, label]) => (
-              <button key={val} onClick={() => setSortBy(val)}
-                style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: 'none',
-                  background: sortBy === val ? 'rgba(16,185,129,0.15)' : 'transparent',
-                  color: sortBy === val ? '#10b981' : 'rgba(255,255,255,0.35)' }}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', whiteSpace: 'nowrap', paddingLeft: 4 }}>
-            {filtered.length} product{filtered.length !== 1 ? 's' : ''}
-          </span>
-        </div>
       </div>
-
-      {/* ── Bulk action bar ── */}
-      {selectedIds.size > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <input type="checkbox" checked={selectedIds.size === filtered.length} onChange={toggleSelectAll} style={{ accentColor: '#10b981', width: 14, height: 14, cursor: 'pointer' }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#10b981' }}>{selectedIds.size} selected</span>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setSelectedIds(new Set())} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer' }}>
-              Deselect all
-            </button>
-            <button onClick={handleBulkDelete} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Trash2 style={{ width: 13, height: 13 }} /> Delete {selectedIds.size}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Grid ── */}
       {isLoading ? (
@@ -406,11 +352,14 @@ export default function Products() {
           <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>No products found.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-          {filtered.map(product => (
-            <ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete} selected={selectedIds.has(product.id)} onToggleSelect={toggleSelect} stockCount={stockCountMap[product.id] || 0} orderCount={orderCountMap[product.id] || 0} />
-          ))}
-        </div>
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+            {paginated.map(product => (
+              <ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete} />
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} total={filtered.length} onPage={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+        </>
       )}
 
       {/* ══ ADD/EDIT MODAL ═══════════════════════════════════════════════════ */}
@@ -424,11 +373,7 @@ export default function Products() {
             </div>
             <form onSubmit={handleSubmit}>
               <div style={{ padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {formData.image && (
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <ProductThumb src={formData.image} name={formData.name} size={80} />
-                  </div>
-                )}
+                {formData.image && <div style={{ display: 'flex', justifyContent: 'center' }}><ProductThumb src={formData.image} name={formData.name} size={80} /></div>}
                 <div>
                   <LBL>Product Name *</LBL>
                   <input style={inp} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. Fire TV Stick 4K Max" />
@@ -445,8 +390,7 @@ export default function Products() {
                 </div>
                 <div>
                   <LBL>Category <span style={{ color: '#10b981', fontSize: 9, fontWeight: 400 }}>auto-detected from name</span></LBL>
-                  <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}
-                    style={{ ...inp, background: '#0d1117', cursor: 'pointer' }}>
+                  <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} style={{ ...inp, background: '#0d1117', cursor: 'pointer' }}>
                     <option value="">Select category...</option>
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -480,14 +424,11 @@ export default function Products() {
               </div>
               <button onClick={() => { setImportOpen(false); setImportRows([]); setUpcInput(''); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}><X style={{ width: 16, height: 16 }} /></button>
             </div>
-
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 24px' }}>
               {importRows.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <LBL>Paste UPCs (one per line or comma separated · max 60)</LBL>
-                  <textarea value={upcInput} onChange={e => setUpcInput(e.target.value)}
-                    placeholder={'840268963422\n195949836251\n045496885311\n...'}
-                    rows={10} style={{ ...inp, resize: 'vertical', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.6 }} />
+                  <textarea value={upcInput} onChange={e => setUpcInput(e.target.value)} placeholder={'840268963422\n195949836251\n045496885311\n...'} rows={10} style={{ ...inp, resize: 'vertical', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.6 }} />
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Category will be auto-detected · you can override before importing</div>
                 </div>
               ) : (
@@ -549,13 +490,10 @@ export default function Products() {
                 </div>
               )}
             </div>
-
             <div style={{ padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{importRows.length > 0 && !lookingUp && `${selCount} product${selCount !== 1 ? 's' : ''} selected`}</div>
               <div style={{ display: 'flex', gap: 10 }}>
-                {importRows.length > 0 && !lookingUp && (
-                  <button onClick={() => { setImportRows([]); setUpcInput(''); }} style={{ padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer' }}>← Back</button>
-                )}
+                {importRows.length > 0 && !lookingUp && <button onClick={() => { setImportRows([]); setUpcInput(''); }} style={{ padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer' }}>← Back</button>}
                 {importRows.length === 0 && (
                   <button onClick={handleBulkLookup} disabled={!upcInput.trim() || lookingUp}
                     style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: upcInput.trim() ? 'linear-gradient(135deg,#10b981,#06b6d4)' : 'rgba(255,255,255,0.05)', border: 'none', color: upcInput.trim() ? 'white' : '#64748b', cursor: upcInput.trim() ? 'pointer' : 'not-allowed' }}>
