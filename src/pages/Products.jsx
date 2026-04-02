@@ -275,11 +275,12 @@ export default function Products() {
   // ── bulk delete ──────────────────────────────────────────────────────────
   const handleBulkDelete = async () => {
     if (!confirm(`Delete ${selectedIds.size} product${selectedIds.size !== 1 ? 's' : ''}?`)) return;
+    let deleted = 0;
     for (const id of selectedIds) {
-      await base44.entities.Product.delete(id);
+      try { await base44.entities.Product.delete(id); deleted++; } catch {}
     }
     queryClient.invalidateQueries({ queryKey: ['products'] });
-    toast.success(`Deleted ${selectedIds.size} product${selectedIds.size !== 1 ? 's' : ''}`);
+    toast.success(`Deleted ${deleted} product${deleted !== 1 ? 's' : ''}`);
     setSelectedIds(new Set());
   };
 
