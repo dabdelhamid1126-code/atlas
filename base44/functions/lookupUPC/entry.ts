@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
             });
             const d = await r.json();
             if (d.items?.length > 0) {
-                d.items.slice(0, 2).forEach(item => {
+                d.items.slice(0, 3).forEach(item => {
                     results.push({ title: item.title, image: item.images?.[0] || '', source: 'UPCitemdb' });
                 });
             }
