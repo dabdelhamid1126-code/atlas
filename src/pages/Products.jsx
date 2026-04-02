@@ -455,7 +455,7 @@ export default function Products() {
                 </div>
                 <div>
                   <LBL>Image URL</LBL>
-                  <input type="url" style={inp} value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="https://..." />
+                  <input type="text" style={inp} value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="https://..." />
                 </div>
               </div>
               <div style={{ padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
