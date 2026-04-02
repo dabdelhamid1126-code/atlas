@@ -394,7 +394,9 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         {order.items.map((item, idx) => {
           const unitCost = parseFloat(item.unit_cost) || 0;
           const qty = parseInt(item.quantity_ordered) || 1;
-          const imageUrl = item.product_image_url || products.find(p => p.id === item.product_id)?.image;
+          const imageUrl = item.product_image_url
+            || products.find(p => p.id === item.product_id)?.image
+            || products.find(p => p.name?.toLowerCase().trim() === item.product_name?.toLowerCase().trim())?.image;
           const saleRows = getSaleRowsForItem(order, item);
           const hasSales = saleRows.length > 0;
 
