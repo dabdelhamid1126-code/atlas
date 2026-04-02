@@ -79,33 +79,43 @@ function ProductThumb({ src, name, size = 38 }) {
 }
 
 // ─── product grid card ────────────────────────────────────────────────────────
-function ProductCard({ product, onEdit, onDelete }) {
+function ProductCard({ product, onEdit, onDelete, selected, onToggleSelect }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => onToggleSelect(product.id)}
       style={{
-        background: hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)'}`,
+        background: selected ? 'rgba(16,185,129,0.07)' : hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${selected ? 'rgba(16,185,129,0.35)' : hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)'}`,
         borderRadius: 12, padding: '12px 10px',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         gap: 8, textAlign: 'center', position: 'relative',
-        transition: 'all 0.15s', cursor: 'default',
+        transition: 'all 0.15s', cursor: 'pointer',
       }}
     >
-      {hovered && (
+      {/* checkbox top-left */}
+      <div style={{ position: 'absolute', top: 7, left: 7 }}>
+        <input type="checkbox" checked={selected} onChange={() => onToggleSelect(product.id)}
+          onClick={e => e.stopPropagation()}
+          style={{ accentColor: '#10b981', width: 13, height: 13, cursor: 'pointer' }} />
+      </div>
+
+      {/* action buttons — show on hover, only when not in bulk selection */}
+      {hovered && !selected && (
         <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3 }}>
-          <button onClick={() => onEdit(product)} title="Edit"
+          <button onClick={e => { e.stopPropagation(); onEdit(product); }} title="Edit"
             style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
             <Pencil style={{ width: 11, height: 11 }} />
           </button>
-          <button onClick={() => onDelete(product)} title="Delete"
+          <button onClick={e => { e.stopPropagation(); onDelete(product); }} title="Delete"
             style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer' }}>
             <Trash2 style={{ width: 11, height: 11 }} />
           </button>
         </div>
       )}
+
       <ProductImage src={product.image} name={product.name} size={60} />
       <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, maxWidth: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
         {product.name}
@@ -127,6 +137,7 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dialogOpen, setDialogOpen]       = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedIds, setSelectedIds]     = useState(new Set());
   const [loadingUPC, setLoadingUPC]       = useState(false);
   const [formData, setFormData]           = useState({ name: '', upc: '', image: '', category: '' });
   const [importOpen, setImportOpen]       = useState(false);
@@ -224,6 +235,23 @@ export default function Products() {
     setImporting(false); setImportOpen(false); setUpcInput(''); setImportRows([]);
   };
 
+  // ── bulk delete ──────────────────────────────────────────────────────────
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedIds.size} product${selectedIds.size !== 1 ? 's' : ''}?`)) return;
+    for (const id of selectedIds) {
+      await base44.entities.Product.delete(id);
+    }
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    toast.success(`Deleted ${selectedIds.size} product${selectedIds.size !== 1 ? 's' : ''}`);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect    = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filtered.map(p => p.id)));
+  };
+
   const toggleRow       = (upc) => setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, selected: !r.selected } : r));
   const toggleAll       = () => { const allSel = importRows.filter(r => r.status === 'new').every(r => r.selected); setImportRows(prev => prev.map(r => r.status === 'new' ? { ...r, selected: !allSel } : r)); };
   const updateImportRow = (upc, field, value) => setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, [field]: value } : r));
@@ -293,6 +321,24 @@ export default function Products() {
         </div>
       </div>
 
+      {/* ── Bulk action bar ── */}
+      {selectedIds.size > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input type="checkbox" checked={selectedIds.size === filtered.length} onChange={toggleSelectAll} style={{ accentColor: '#10b981', width: 14, height: 14, cursor: 'pointer' }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#10b981' }}>{selectedIds.size} selected</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setSelectedIds(new Set())} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer' }}>
+              Deselect all
+            </button>
+            <button onClick={handleBulkDelete} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Trash2 style={{ width: 13, height: 13 }} /> Delete {selectedIds.size}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Grid ── */}
       {isLoading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
@@ -306,7 +352,7 @@ export default function Products() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
           {filtered.map(product => (
-            <ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete} />
+            <ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete} selected={selectedIds.has(product.id)} onToggleSelect={toggleSelect} />
           ))}
         </div>
       )}
