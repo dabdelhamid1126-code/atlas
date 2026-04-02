@@ -35,7 +35,12 @@ const unsoldQty = (order, productName) => {
 
   const totalQty = (order.items || [])
     .filter(i => (i.product_name || '').toLowerCase() === name)
-    .reduce((s, i) => s + (parseInt(i.quantity_received ?? i.quantity_ordered) || 0), 0);
+    .reduce((s, i) => {
+      // For received/paid orders prefer quantity_received; for others (ordered/shipped) use quantity_ordered
+      const received = parseInt(i.quantity_received) || 0;
+      const ordered  = parseInt(i.quantity_ordered)  || 0;
+      return s + (received > 0 ? received : ordered);
+    }, 0);
 
   const soldQty = (order.sale_events || []).reduce((s, ev) =>
     s + (ev.items || [])
