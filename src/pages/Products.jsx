@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Pencil, Trash2, Package, Upload, X, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Package, Upload, X, Loader, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['phones', 'tablets', 'laptops', 'gaming', 'accessories', 'wearables', 'audio', 'other'];
@@ -10,13 +10,13 @@ const PAGE_SIZE = 24;
 // ─── auto category guesser ────────────────────────────────────────────────────
 const guessCategory = (name) => {
   const n = String(name || '').toLowerCase();
-  if (n.includes('ipad') || n.includes('tablet') || n.includes('galaxy tab') || n.includes('fire hd') || n.includes('fire tablet')) return 'tablets';
-  if (n.includes('iphone') || n.includes('galaxy s') || n.includes('galaxy a') || n.includes('pixel') || n.includes('smartphone') || n.includes('cell phone')) return 'phones';
-  if (n.includes('macbook') || n.includes('laptop') || n.includes('notebook') || n.includes('chromebook') || n.includes('thinkpad') || n.includes('ideapad') || n.includes('inspiron') || n.includes('pavilion') || n.includes('spectre') || n.includes('envy') || n.includes('surface pro') || n.includes('omnibook') || n.includes('mac mini') || n.includes('imac') || n.includes('mac pro') || n.includes('nuc') || n.includes('mini pc') || n.includes('desktop')) return 'laptops';
-  if (n.includes('airpods') || n.includes('earbuds') || n.includes('headphone') || n.includes('headset') || n.includes('earphone') || n.includes('speaker') || n.includes('soundbar') || n.includes('buds') || n.includes('tws')) return 'audio';
-  if (n.includes('apple watch') || n.includes('galaxy watch') || n.includes('watch se') || n.includes('watch series') || n.includes('watch ultra') || n.includes('fitbit') || n.includes('garmin') || n.includes('smartwatch') || n.includes('sport band') || n.includes('watch band')) return 'wearables';
-  if (n.includes('nintendo') || n.includes('playstation') || n.includes('xbox') || n.includes('gaming') || n.includes('switch') || n.includes('ps5') || n.includes('ps4') || n.includes('mario')) return 'gaming';
-  if (n.includes('airtag') || n.includes('case') || n.includes('cable') || n.includes('charger') || n.includes('adapter') || n.includes('screen protector') || n.includes('stand') || n.includes('hub') || n.includes('dock') || n.includes('keyboard') || n.includes('mouse') || n.includes('webcam') || n.includes('pencil') || n.includes('stylus') || n.includes('cover') || n.includes('hdmi') || n.includes('usb') || n.includes('ssd') || n.includes('hard drive') || n.includes('fire stick') || n.includes('firestick') || n.includes('fire tv') || n.includes('roku') || n.includes('echo') || n.includes('alexa') || n.includes('ring')) return 'accessories';
+  if (n.includes('ipad') || n.includes('tablet') || n.includes('galaxy tab') || n.includes('fire hd')) return 'tablets';
+  if (n.includes('iphone') || n.includes('galaxy s') || n.includes('galaxy a') || n.includes('pixel') || n.includes('smartphone')) return 'phones';
+  if (n.includes('macbook') || n.includes('laptop') || n.includes('notebook') || n.includes('chromebook') || n.includes('thinkpad') || n.includes('inspiron') || n.includes('omnibook') || n.includes('mac mini') || n.includes('imac') || n.includes('mac pro') || n.includes('nuc') || n.includes('desktop') || n.includes('surface pro')) return 'laptops';
+  if (n.includes('airpods') || n.includes('earbuds') || n.includes('headphone') || n.includes('headset') || n.includes('speaker') || n.includes('soundbar') || n.includes('buds') || n.includes('tws')) return 'audio';
+  if (n.includes('apple watch') || n.includes('galaxy watch') || n.includes('watch se') || n.includes('watch series') || n.includes('watch ultra') || n.includes('fitbit') || n.includes('garmin') || n.includes('smartwatch') || n.includes('sport band')) return 'wearables';
+  if (n.includes('nintendo') || n.includes('playstation') || n.includes('xbox') || n.includes('switch') || n.includes('ps5') || n.includes('ps4') || n.includes('mario')) return 'gaming';
+  if (n.includes('airtag') || n.includes('case') || n.includes('cable') || n.includes('charger') || n.includes('adapter') || n.includes('hub') || n.includes('keyboard') || n.includes('mouse') || n.includes('webcam') || n.includes('pencil') || n.includes('stylus') || n.includes('hdmi') || n.includes('usb') || n.includes('ssd') || n.includes('fire stick') || n.includes('firestick') || n.includes('fire tv') || n.includes('roku') || n.includes('echo') || n.includes('alexa') || n.includes('ring')) return 'accessories';
   return 'other';
 };
 
@@ -44,11 +44,26 @@ const CAT_COLORS = {
   other:       { bg: 'rgba(255,255,255,0.05)', color: '#94a3b8',  border: 'rgba(255,255,255,0.1)'  },
 };
 
+const SOURCE_STYLES = {
+  'UPCitemdb': { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa',  border: 'rgba(96,165,250,0.2)'  },
+  'Best Buy':  { bg: 'rgba(255,190,0,0.12)',   color: '#fbbf24',  border: 'rgba(255,190,0,0.2)'   },
+  'Google':    { bg: 'rgba(16,185,129,0.12)',  color: '#10b981',  border: 'rgba(16,185,129,0.2)'  },
+};
+
 function CategoryBadge({ category }) {
   const s = CAT_COLORS[category] || CAT_COLORS.other;
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 7px', borderRadius: 99, fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
       {category || 'other'}
+    </span>
+  );
+}
+
+function SourceBadge({ source }) {
+  const s = SOURCE_STYLES[source] || SOURCE_STYLES['Google'];
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 7px', borderRadius: 99, fontSize: 9, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+      {source}
     </span>
   );
 }
@@ -73,95 +88,104 @@ function ProductThumb({ src, name, size = 38 }) {
   );
 }
 
-function ProductCard({ product, onEdit, onDelete }) {
-  const [hovered, setHovered] = useState(false);
+// ─── UPC result picker modal ──────────────────────────────────────────────────
+function UPCPickerModal({ upc, results, onSelect, onManual, onClose }) {
+  const [selected, setSelected] = useState(0);
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)'}`,
-        borderRadius: 12, padding: '12px 10px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: 8, textAlign: 'center', position: 'relative',
-        transition: 'all 0.15s',
-      }}
-    >
-      {hovered && (
-        <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3 }}>
-          <button onClick={() => onEdit(product)}
-            style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
-            <Pencil style={{ width: 11, height: 11 }} />
-          </button>
-          <button onClick={() => onDelete(product)}
-            style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer' }}>
-            <Trash2 style={{ width: 11, height: 11 }} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 520, background: '#111827', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 60px rgba(0,0,0,0.7)', color: 'white', overflow: 'hidden' }}>
+        {/* header */}
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>
+              {results.length > 1 ? 'Multiple results found' : 'Result found'}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+              UPC <span style={{ fontFamily: 'monospace', background: 'rgba(255,255,255,0.05)', padding: '1px 6px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.08)' }}>{upc}</span>
+              {results.length > 1 ? ' · pick the correct product' : ' · confirm or enter manually'}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}><X style={{ width: 16, height: 16 }} /></button>
+        </div>
+        {/* results */}
+        <div style={{ padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 7, maxHeight: '60vh', overflowY: 'auto' }}>
+          {results.map((r, i) => (
+            <div key={i} onClick={() => setSelected(i)}
+              style={{ borderRadius: 10, padding: '10px 12px', border: '1px solid', borderColor: selected === i ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.07)', background: selected === i ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', transition: 'all 0.12s' }}>
+              <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, border: selected === i ? 'none' : '1.5px solid rgba(255,255,255,0.15)', background: selected === i ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {selected === i && <Check style={{ width: 11, height: 11, color: 'white' }} />}
+              </div>
+              <ProductThumb src={r.image} name={r.title} size={40} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                  {r.title}
+                </div>
+              </div>
+              <SourceBadge source={r.source} />
+            </div>
+          ))}
+          <div onClick={onManual}
+            style={{ borderRadius: 10, padding: '9px 12px', border: '1px solid rgba(239,68,68,0.15)', background: 'rgba(239,68,68,0.04)', fontSize: 11, color: '#f87171', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s' }}>
+            None of these — I'll enter manually
+          </div>
+        </div>
+        {/* footer */}
+        <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button onClick={onClose} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => onSelect(results[selected])}
+            style={{ padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer' }}>
+            Use selected →
           </button>
         </div>
-      )}
-      <ProductImage src={product.image} name={product.name} size={60} />
-      <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, maxWidth: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-        {product.name}
       </div>
-      <CategoryBadge category={product.category} />
-      {product.upc && (
-        <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{product.upc}</span>
-      )}
     </div>
   );
 }
 
-// ─── pagination controls ──────────────────────────────────────────────────────
+// ─── product card ─────────────────────────────────────────────────────────────
+function ProductCard({ product, onEdit, onDelete }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      style={{ background: hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: '12px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', position: 'relative', transition: 'all 0.15s' }}>
+      {hovered && (
+        <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3 }}>
+          <button onClick={() => onEdit(product)} style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}><Pencil style={{ width: 11, height: 11 }} /></button>
+          <button onClick={() => onDelete(product)} style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer' }}><Trash2 style={{ width: 11, height: 11 }} /></button>
+        </div>
+      )}
+      <ProductImage src={product.image} name={product.name} size={60} />
+      <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, maxWidth: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{product.name}</div>
+      <CategoryBadge category={product.category} />
+      {product.upc && <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{product.upc}</span>}
+    </div>
+  );
+}
+
+// ─── pagination ───────────────────────────────────────────────────────────────
 function Pagination({ page, totalPages, total, onPage }) {
   if (totalPages <= 1) return null;
   const start = (page - 1) * PAGE_SIZE + 1;
   const end   = Math.min(page * PAGE_SIZE, total);
-
   const pages = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
+  if (totalPages <= 7) { for (let i = 1; i <= totalPages; i++) pages.push(i); }
+  else {
     pages.push(1);
     if (page > 3) pages.push('...');
     for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
     if (page < totalPages - 2) pages.push('...');
     pages.push(totalPages);
   }
-
-  const btnStyle = (active) => ({
-    width: 32, height: 32, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 12, fontWeight: active ? 700 : 400, cursor: 'pointer', border: '1px solid',
-    background: active ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)',
-    borderColor: active ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.08)',
-    color: active ? '#10b981' : 'rgba(255,255,255,0.5)',
-    transition: 'all 0.1s',
-  });
-
-  const navStyle = (disabled) => ({
-    width: 32, height: 32, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 12, cursor: disabled ? 'not-allowed' : 'pointer', border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.03)', color: disabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
-    opacity: disabled ? 0.4 : 1,
-  });
-
+  const btnStyle = (active) => ({ width: 32, height: 32, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: active ? 700 : 400, cursor: 'pointer', border: '1px solid', background: active ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)', borderColor: active ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.08)', color: active ? '#10b981' : 'rgba(255,255,255,0.5)' });
+  const navStyle = (disabled) => ({ width: 32, height: 32, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'not-allowed' : 'pointer', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: disabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)', opacity: disabled ? 0.4 : 1 });
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, flexWrap: 'wrap', gap: 10 }}>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-        Showing {start}–{end} of {total} products
-      </span>
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Showing {start}–{end} of {total} products</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <button onClick={() => onPage(page - 1)} disabled={page === 1} style={navStyle(page === 1)}>
-          <ChevronLeft style={{ width: 14, height: 14 }} />
-        </button>
-        {pages.map((p, i) =>
-          p === '...'
-            ? <span key={`e${i}`} style={{ width: 32, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>…</span>
-            : <button key={p} onClick={() => onPage(p)} style={btnStyle(p === page)}>{p}</button>
-        )}
-        <button onClick={() => onPage(page + 1)} disabled={page === totalPages} style={navStyle(page === totalPages)}>
-          <ChevronRight style={{ width: 14, height: 14 }} />
-        </button>
+        <button onClick={() => onPage(page - 1)} disabled={page === 1} style={navStyle(page === 1)}><ChevronLeft style={{ width: 14, height: 14 }} /></button>
+        {pages.map((p, i) => p === '...' ? <span key={`e${i}`} style={{ width: 32, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>…</span> : <button key={p} onClick={() => onPage(p)} style={btnStyle(p === page)}>{p}</button>)}
+        <button onClick={() => onPage(page + 1)} disabled={page === totalPages} style={navStyle(page === totalPages)}><ChevronRight style={{ width: 14, height: 14 }} /></button>
       </div>
     </div>
   );
@@ -177,6 +201,8 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [loadingUPC, setLoadingUPC]       = useState(false);
   const [formData, setFormData]           = useState({ name: '', upc: '', image: '', category: '' });
+  const [pickerResults, setPickerResults] = useState(null);
+  const [pickerUPC, setPickerUPC]         = useState('');
   const [importOpen, setImportOpen]       = useState(false);
   const [upcInput, setUpcInput]           = useState('');
   const [importRows, setImportRows]       = useState([]);
@@ -203,9 +229,7 @@ export default function Products() {
 
   const openDialog = (product = null) => {
     setEditingProduct(product);
-    setFormData(product
-      ? { name: product.name || '', upc: product.upc || '', image: product.image || '', category: product.category || '' }
-      : { name: '', upc: '', image: '', category: '' });
+    setFormData(product ? { name: product.name || '', upc: product.upc || '', image: product.image || '', category: product.category || '' } : { name: '', upc: '', image: '', category: '' });
     setDialogOpen(true);
   };
   const closeDialog = () => { setDialogOpen(false); setEditingProduct(null); };
@@ -214,42 +238,32 @@ export default function Products() {
     if (editingProduct) updateMutation.mutate({ id: editingProduct.id, data: { ...formData } });
     else createMutation.mutate({ ...formData });
   };
-  const handleDelete = (product) => {
-    if (confirm(`Delete "${product.name}"?`)) deleteMutation.mutate(product.id);
-  };
-
-  // reset to page 1 when filters change
+  const handleDelete = (product) => { if (confirm(`Delete "${product.name}"?`)) deleteMutation.mutate(product.id); };
   const handleSearch = (val) => { setSearch(val); setPage(1); };
   const handleCat    = (cat) => { setCategoryFilter(cat); setPage(1); };
 
-  // filter → sort → paginate
-  const filtered = useMemo(() =>
-    products
-      .filter(p => {
-        const matchSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.upc?.toLowerCase().includes(search.toLowerCase());
-        const matchCat    = categoryFilter === 'all' || p.category === categoryFilter;
-        return matchSearch && matchCat;
-      })
-      .sort((a, b) => (a.name || '').localeCompare(b.name || '')),
-    [products, search, categoryFilter]
-  );
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // ── single UPC lookup ────────────────────────────────────────────────────
+  // ── single UPC lookup — shows picker ────────────────────────────────────
   const lookupSingleUPC = async () => {
     if (!formData.upc) { toast.error('Enter a UPC first'); return; }
     setLoadingUPC(true);
     try {
       const { data } = await base44.functions.invoke('lookupUPC', { upc: formData.upc });
-      if (data.title || data.image) {
-        const autoCategory = guessCategory(data.title || '');
-        setFormData(prev => ({ ...prev, name: data.title || prev.name, image: data.image || prev.image, category: prev.category || autoCategory }));
-        toast.success(`Found! Category auto-set to "${autoCategory}"`);
-      } else { toast.error('No info found for this UPC'); }
+      const results = data.results || [];
+      if (results.length === 0) {
+        toast.error('No results found — enter manually');
+      } else {
+        setPickerUPC(formData.upc);
+        setPickerResults(results);
+      }
     } catch { toast.error('Lookup failed. Enter manually.'); }
     finally { setLoadingUPC(false); }
+  };
+
+  const handlePickerSelect = (result) => {
+    const autoCategory = guessCategory(result.title);
+    setFormData(prev => ({ ...prev, name: result.title, image: result.image || prev.image, category: prev.category || autoCategory }));
+    setPickerResults(null);
+    toast.success(`Applied from ${result.source} · category auto-set to "${autoCategory}"`);
   };
 
   // ── bulk UPC lookup ──────────────────────────────────────────────────────
@@ -266,8 +280,14 @@ export default function Products() {
       }
       try {
         const { data } = await base44.functions.invoke('lookupUPC', { upc });
-        const autoCategory = guessCategory(data.title || '');
-        setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, name: data.title || '', image: data.image || '', category: autoCategory, status: data.title ? 'new' : 'not_found', selected: !!data.title } : r));
+        const results = data.results || [];
+        const best = results.find(r => r.source === 'Best Buy') || results[0];
+        if (best) {
+          const autoCategory = guessCategory(best.title);
+          setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, name: best.title, image: best.image || '', category: autoCategory, source: best.source, status: 'new', selected: true } : r));
+        } else {
+          setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, status: 'not_found', selected: false } : r));
+        }
       } catch {
         setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, status: 'not_found', selected: false } : r));
       }
@@ -293,10 +313,21 @@ export default function Products() {
   const toggleAll       = () => { const allSel = importRows.filter(r => r.status === 'new').every(r => r.selected); setImportRows(prev => prev.map(r => r.status === 'new' ? { ...r, selected: !allSel } : r)); };
   const updateImportRow = (upc, field, value) => setImportRows(prev => prev.map(r => r.upc === upc ? { ...r, [field]: value } : r));
 
-  const newCount  = importRows.filter(r => r.status === 'new').length;
-  const dupCount  = importRows.filter(r => r.status === 'duplicate').length;
-  const failCount = importRows.filter(r => r.status === 'not_found').length;
-  const selCount  = importRows.filter(r => r.selected && r.status === 'new').length;
+  const filtered = useMemo(() =>
+    products.filter(p => {
+      const matchSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.upc?.toLowerCase().includes(search.toLowerCase());
+      const matchCat    = categoryFilter === 'all' || p.category === categoryFilter;
+      return matchSearch && matchCat;
+    }).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [products, search, categoryFilter]
+  );
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const newCount   = importRows.filter(r => r.status === 'new').length;
+  const dupCount   = importRows.filter(r => r.status === 'duplicate').length;
+  const failCount  = importRows.filter(r => r.status === 'not_found').length;
+  const selCount   = importRows.filter(r => r.selected && r.status === 'new').length;
 
   const th  = { color: 'rgba(255,255,255,0.28)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.07)', fontWeight: 600 };
   const tdS = { padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.04)', verticalAlign: 'middle' };
@@ -362,6 +393,17 @@ export default function Products() {
         </>
       )}
 
+      {/* ══ UPC PICKER MODAL ════════════════════════════════════════════════ */}
+      {pickerResults && (
+        <UPCPickerModal
+          upc={pickerUPC}
+          results={pickerResults}
+          onSelect={handlePickerSelect}
+          onManual={() => { setPickerResults(null); toast('Enter the product name manually'); }}
+          onClose={() => setPickerResults(null)}
+        />
+      )}
+
       {/* ══ ADD/EDIT MODAL ═══════════════════════════════════════════════════ */}
       {dialogOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -376,15 +418,15 @@ export default function Products() {
                 {formData.image && <div style={{ display: 'flex', justifyContent: 'center' }}><ProductThumb src={formData.image} name={formData.name} size={80} /></div>}
                 <div>
                   <LBL>Product Name *</LBL>
-                  <input style={inp} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. Fire TV Stick 4K Max" />
+                  <input style={inp} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required placeholder="e.g. MacBook Air M5" />
                 </div>
                 <div>
                   <LBL>UPC</LBL>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input style={{ ...inp, flex: 1 }} value={formData.upc} onChange={e => setFormData({ ...formData, upc: e.target.value })} placeholder="Barcode number" />
                     <button type="button" disabled={loadingUPC} onClick={lookupSingleUPC}
-                      style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', cursor: 'pointer', whiteSpace: 'nowrap', opacity: loadingUPC ? 0.5 : 1 }}>
-                      {loadingUPC ? 'Looking...' : '🔍 Lookup'}
+                      style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981', cursor: 'pointer', whiteSpace: 'nowrap', opacity: loadingUPC ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      {loadingUPC ? <><div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(16,185,129,0.3)', borderTopColor: '#10b981', animation: 'spin 0.8s linear infinite' }} /> Looking...</> : '🔍 Lookup'}
                     </button>
                   </div>
                 </div>
@@ -414,13 +456,12 @@ export default function Products() {
       {/* ══ BULK UPC IMPORT MODAL ════════════════════════════════════════════ */}
       {importOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div onClick={() => { if (!lookingUp && !importing) { setImportOpen(false); setImportRows([]); setUpcInput(''); } }}
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', width: '100%', maxWidth: 760, maxHeight: '88vh', background: '#111827', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 60px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: 'white', overflow: 'hidden' }}>
+          <div onClick={() => { if (!lookingUp && !importing) { setImportOpen(false); setImportRows([]); setUpcInput(''); } }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'relative', width: '100%', maxWidth: 780, maxHeight: '88vh', background: '#111827', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 60px rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', color: 'white', overflow: 'hidden' }}>
             <div style={{ padding: '18px 24px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Import UPCs</h2>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Category auto-detected · duplicates skipped</p>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Best Buy preferred · category auto-detected · duplicates skipped</p>
               </div>
               <button onClick={() => { setImportOpen(false); setImportRows([]); setUpcInput(''); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}><X style={{ width: 16, height: 16 }} /></button>
             </div>
@@ -429,7 +470,7 @@ export default function Products() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <LBL>Paste UPCs (one per line or comma separated · max 60)</LBL>
                   <textarea value={upcInput} onChange={e => setUpcInput(e.target.value)} placeholder={'840268963422\n195949836251\n045496885311\n...'} rows={10} style={{ ...inp, resize: 'vertical', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.6 }} />
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Category will be auto-detected · you can override before importing</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Tries UPCitemdb → Best Buy → Google · category auto-detected · you can override before importing</div>
                 </div>
               ) : (
                 <div>
@@ -440,14 +481,15 @@ export default function Products() {
                     {lookingUp    && <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600, background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>Looking up...</span>}
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, tableLayout: 'fixed' }}>
-                    <colgroup><col style={{ width: 32 }} /><col style={{ width: 44 }} /><col /><col style={{ width: 130 }} /><col style={{ width: 120 }} /><col style={{ width: 80 }} /></colgroup>
+                    <colgroup><col style={{ width: 32 }} /><col style={{ width: 44 }} /><col /><col style={{ width: 120 }} /><col style={{ width: 110 }} /><col style={{ width: 70 }} /><col style={{ width: 70 }} /></colgroup>
                     <thead>
                       <tr>
                         <th style={{ ...th, padding: '6px 8px' }}><input type="checkbox" onChange={toggleAll} checked={importRows.filter(r => r.status === 'new').every(r => r.selected) && newCount > 0} style={{ accentColor: '#10b981' }} /></th>
                         <th style={th}>img</th>
                         <th style={th}>name</th>
                         <th style={th}>upc</th>
-                        <th style={th}>category <span style={{ color: '#10b981', fontWeight: 400 }}>auto</span></th>
+                        <th style={th}>category</th>
+                        <th style={th}>source</th>
                         <th style={th}>status</th>
                       </tr>
                     </thead>
@@ -458,24 +500,21 @@ export default function Products() {
                           <tr key={row.upc} style={{ opacity: (isDup || isFail) ? 0.4 : 1 }}>
                             <td style={{ ...tdS, textAlign: 'center' }}>{isNew && <input type="checkbox" checked={row.selected} onChange={() => toggleRow(row.upc)} style={{ accentColor: '#10b981' }} />}</td>
                             <td style={tdS}>
-                              {isLoad
-                                ? <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader style={{ width: 14, height: 14, color: '#60a5fa', animation: 'spin 1s linear infinite' }} /></div>
+                              {isLoad ? <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader style={{ width: 14, height: 14, color: '#60a5fa', animation: 'spin 1s linear infinite' }} /></div>
                                 : <ProductThumb src={row.image} name={row.name} size={32} />}
                             </td>
                             <td style={tdS}>
-                              {isNew
-                                ? <input value={row.name} onChange={e => updateImportRow(row.upc, 'name', e.target.value)} style={{ ...inp, padding: '4px 8px', fontSize: 11 }} />
+                              {isNew ? <input value={row.name} onChange={e => updateImportRow(row.upc, 'name', e.target.value)} style={{ ...inp, padding: '4px 8px', fontSize: 11 }} />
                                 : <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{row.name || '—'}</span>}
                             </td>
                             <td style={tdS}><span style={{ fontFamily: 'monospace', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{row.upc}</span></td>
                             <td style={tdS}>
-                              {isNew
-                                ? <select value={row.category} onChange={e => updateImportRow(row.upc, 'category', e.target.value)} style={{ ...inp, padding: '4px 8px', fontSize: 11, background: '#0d1117', cursor: 'pointer' }}>
-                                    <option value="">—</option>
-                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                  </select>
-                                : null}
+                              {isNew ? <select value={row.category} onChange={e => updateImportRow(row.upc, 'category', e.target.value)} style={{ ...inp, padding: '4px 6px', fontSize: 11, background: '#0d1117', cursor: 'pointer' }}>
+                                  <option value="">—</option>
+                                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select> : null}
                             </td>
+                            <td style={tdS}>{row.source && <SourceBadge source={row.source} />}</td>
                             <td style={tdS}>
                               {isLoad && <span style={{ fontSize: 10, color: '#60a5fa' }}>Looking...</span>}
                               {isNew  && <span style={{ fontSize: 10, fontWeight: 700, color: '#10b981' }}>✓ New</span>}
@@ -494,18 +533,8 @@ export default function Products() {
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{importRows.length > 0 && !lookingUp && `${selCount} product${selCount !== 1 ? 's' : ''} selected`}</div>
               <div style={{ display: 'flex', gap: 10 }}>
                 {importRows.length > 0 && !lookingUp && <button onClick={() => { setImportRows([]); setUpcInput(''); }} style={{ padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer' }}>← Back</button>}
-                {importRows.length === 0 && (
-                  <button onClick={handleBulkLookup} disabled={!upcInput.trim() || lookingUp}
-                    style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: upcInput.trim() ? 'linear-gradient(135deg,#10b981,#06b6d4)' : 'rgba(255,255,255,0.05)', border: 'none', color: upcInput.trim() ? 'white' : '#64748b', cursor: upcInput.trim() ? 'pointer' : 'not-allowed' }}>
-                    Look up UPCs →
-                  </button>
-                )}
-                {importRows.length > 0 && !lookingUp && selCount > 0 && (
-                  <button onClick={handleBulkImport} disabled={importing}
-                    style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer', opacity: importing ? 0.7 : 1 }}>
-                    {importing ? 'Importing...' : `Import ${selCount} product${selCount !== 1 ? 's' : ''}`}
-                  </button>
-                )}
+                {importRows.length === 0 && <button onClick={handleBulkLookup} disabled={!upcInput.trim() || lookingUp} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: upcInput.trim() ? 'linear-gradient(135deg,#10b981,#06b6d4)' : 'rgba(255,255,255,0.05)', border: 'none', color: upcInput.trim() ? 'white' : '#64748b', cursor: upcInput.trim() ? 'pointer' : 'not-allowed' }}>Look up UPCs →</button>}
+                {importRows.length > 0 && !lookingUp && selCount > 0 && <button onClick={handleBulkImport} disabled={importing} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer', opacity: importing ? 0.7 : 1 }}>{importing ? 'Importing...' : `Import ${selCount} product${selCount !== 1 ? 's' : ''}`}</button>}
               </div>
             </div>
           </div>
