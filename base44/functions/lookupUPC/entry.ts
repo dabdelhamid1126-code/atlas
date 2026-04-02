@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
                 console.log('BB response:', text.slice(0, 300));
                 const d = JSON.parse(text);
                 if (d.products?.length > 0) {
-                    d.products.slice(0, 3).forEach(p => {
+                    d.products.slice(0, 1).forEach(p => {
                         results.push({ title: p.name, image: p.image || p.thumbnailImage || '', source: 'Best Buy' });
                     });
                 }
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
             });
             const d = await r.json();
             if (d.items?.length > 0) {
-                d.items.slice(0, 3).forEach(item => {
+                d.items.slice(0, 1).forEach(item => {
                     results.push({ title: item.title, image: item.images?.[0] || '', source: 'UPCitemdb' });
                 });
             }
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
                 const d = await r.json();
                 console.log('SerpApi response:', JSON.stringify(d).slice(0, 300));
                 const items = d.shopping_results || [];
-                items.slice(0, 3).forEach(item => {
+                items.slice(0, 1).forEach(item => {
                     results.push({ title: item.title, image: item.thumbnail || '', source: 'Google' });
                 });
             } catch (e) {
