@@ -20,13 +20,17 @@ Deno.serve(async (req) => {
                 const r = await fetch(
                     `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,image,thumbnailImage,upc&apiKey=${BB_KEY}`
                 );
-                const d = await r.json();
+                const text = await r.text();
+                console.log('BB response:', text.slice(0, 300));
+                const d = JSON.parse(text);
                 if (d.products?.length > 0) {
                     d.products.slice(0, 3).forEach(p => {
                         results.push({ title: p.name, image: p.image || p.thumbnailImage || '', source: 'Best Buy' });
                     });
                 }
-            } catch {}
+            } catch (e) {
+                console.log('BB error:', e.message);
+            }
         }
 
         // ── 2. UPCitemdb (fallback — good for common items) ────────────────
