@@ -347,6 +347,13 @@ export default function Inventory() {
     [orders]
   );
 
+  // Build a quick lookup: product_name → image from the Product entity
+  const productImageMap = useMemo(() => {
+    const m = {};
+    products.forEach(p => { if (p.name) m[p.name.trim().toLowerCase()] = p.image || null; });
+    return m;
+  }, [products]);
+
   const groups = useMemo(() => {
     const map = {};
     relevantOrders.forEach((order) => {
@@ -356,9 +363,12 @@ export default function Inventory() {
         if (qty <= 0) return;
         const costPerUnit = parseFloat(item.unit_cost || 0);
         if (!map[name]) {
+          // Prefer Product entity image, then item-level image
+          const imageUrl = productImageMap[name.toLowerCase()]
+            || item.product_image_url || item.product_image || item.image_url || null;
           map[name] = {
             productName: name,
-            imageUrl:  item.product_image_url || item.product_image || item.image_url || null,
+            imageUrl,
             listPrice: item.list_price || item.listing_price || null,
             sources: [], totalQty: 0, totalCost: 0, statuses: [],
           };
