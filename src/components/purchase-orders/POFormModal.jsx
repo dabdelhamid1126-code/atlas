@@ -576,7 +576,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             <ItemThumb src={item.product_image_url} name={item.product_name} />
                             <div style={{ flex: 1 }}>
                               <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
-                                  onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); updateItem(idx,'product_image_url',p.image||p.image); if(idx===0) set('product_category',p.category||formData.product_category); }}
+                                  onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); updateItem(idx,'product_image_url',p.image||''); if(idx===0) set('product_category',p.category||formData.product_category); }}
                                   onChangeName={val => updateItem(idx,'product_name',val)} placeholder="e.g. iPad Air" />
                             </div>
                           </div>
