@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Pencil, Trash2, Package, Upload, X, Loader } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Package, Upload, X, Loader, AlertTriangle, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['phones', 'tablets', 'laptops', 'gaming', 'accessories', 'wearables', 'audio', 'other'];
@@ -79,7 +79,7 @@ function ProductThumb({ src, name, size = 38 }) {
 }
 
 // ─── product grid card ────────────────────────────────────────────────────────
-function ProductCard({ product, onEdit, onDelete, selected, onToggleSelect }) {
+function ProductCard({ product, onEdit, onDelete, selected, onToggleSelect, stockCount, orderCount, isDuplicate }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -121,9 +121,22 @@ function ProductCard({ product, onEdit, onDelete, selected, onToggleSelect }) {
         {product.name}
       </div>
       <CategoryBadge category={product.category} />
+      {/* stock / order counts */}
+      {(stockCount > 0 || orderCount > 0) && (
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {stockCount > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'rgba(6,182,212,0.12)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)' }}>📦 {stockCount}</span>}
+          {orderCount > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>🛒 {orderCount}</span>}
+        </div>
+      )}
       {product.upc && (
         <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em' }}>
           {product.upc}
+        </span>
+      )}
+      {/* duplicate warning */}
+      {isDuplicate && (
+        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', gap: 3 }}>
+          <AlertTriangle style={{ width: 8, height: 8 }} /> possible dup
         </span>
       )}
     </div>
@@ -138,6 +151,8 @@ export default function Products() {
   const [dialogOpen, setDialogOpen]       = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedIds, setSelectedIds]     = useState(new Set());
+  const [sortBy, setSortBy]               = useState('alpha');
+  const [showDuplicates, setShowDuplicates] = useState(false);
   const [loadingUPC, setLoadingUPC]       = useState(false);
   const [formData, setFormData]           = useState({ name: '', upc: '', image: '', category: '' });
   const [importOpen, setImportOpen]       = useState(false);
@@ -150,6 +165,59 @@ export default function Products() {
     queryKey: ['products'],
     queryFn: () => base44.entities.Product.list(),
   });
+
+  const { data: inventoryItems = [] } = useQuery({
+    queryKey: ['inventoryItems'],
+    queryFn: () => base44.entities.InventoryItem.list(),
+  });
+
+  const { data: purchaseOrders = [] } = useQuery({
+    queryKey: ['purchaseOrders'],
+    queryFn: () => base44.entities.PurchaseOrder.list(),
+  });
+
+  // ── stock & order count maps ─────────────────────────────────────────────
+  const stockCountMap = useMemo(() => {
+    const map = {};
+    inventoryItems.forEach(item => {
+      if (item.product_id) map[item.product_id] = (map[item.product_id] || 0) + (item.quantity || 0);
+    });
+    return map;
+  }, [inventoryItems]);
+
+  const orderCountMap = useMemo(() => {
+    const map = {};
+    purchaseOrders.forEach(order => {
+      (order.items || []).forEach(item => {
+        if (item.product_id) map[item.product_id] = (map[item.product_id] || 0) + (parseInt(item.quantity_ordered) || 1);
+      });
+    });
+    return map;
+  }, [purchaseOrders]);
+
+  // ── duplicate detection (fuzzy name similarity) ──────────────────────────
+  const duplicateGroups = useMemo(() => {
+    const normalize = (s) => (s || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+    const getWords = (s) => new Set(normalize(s).split(' ').filter(w => w.length > 2));
+    const groups = [];
+    const used = new Set();
+    for (let i = 0; i < products.length; i++) {
+      if (used.has(products[i].id)) continue;
+      const group = [products[i]];
+      const wordsI = getWords(products[i].name);
+      for (let j = i + 1; j < products.length; j++) {
+        if (used.has(products[j].id)) continue;
+        const wordsJ = getWords(products[j].name);
+        const shared = [...wordsI].filter(w => wordsJ.has(w)).length;
+        const score = shared / Math.max(wordsI.size, wordsJ.size);
+        if (score >= 0.6) { group.push(products[j]); used.add(products[j].id); }
+      }
+      if (group.length > 1) { group.forEach(p => used.add(p.id)); groups.push(group); }
+    }
+    return groups;
+  }, [products]);
+
+  const duplicateIds = useMemo(() => new Set(duplicateGroups.flat().map(p => p.id)), [duplicateGroups]);
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Product.create(data),
@@ -260,9 +328,14 @@ export default function Products() {
     .filter(p => {
       const matchSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.upc?.toLowerCase().includes(search.toLowerCase());
       const matchCat    = categoryFilter === 'all' || p.category === categoryFilter;
-      return matchSearch && matchCat;
+      const matchDup    = !showDuplicates || duplicateIds.has(p.id);
+      return matchSearch && matchCat && matchDup;
     })
-    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    .sort((a, b) => {
+      if (sortBy === 'stock')   return (stockCountMap[b.id] || 0) - (stockCountMap[a.id] || 0);
+      if (sortBy === 'ordered') return (orderCountMap[b.id] || 0) - (orderCountMap[a.id] || 0);
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
   const newCount  = importRows.filter(r => r.status === 'new').length;
   const dupCount  = importRows.filter(r => r.status === 'duplicate').length;
@@ -316,8 +389,31 @@ export default function Products() {
             );
           })}
         </div>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
-          {filtered.length} product{filtered.length !== 1 ? 's' : ''}
+        <div style={{ display: 'flex', gap: 4, marginLeft: 'auto', alignItems: 'center' }}>
+          {/* Sort */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 4px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <ArrowUpDown style={{ width: 11, height: 11, color: 'rgba(255,255,255,0.3)', flexShrink: 0, marginLeft: 4 }} />
+            {[['alpha','A–Z'],['stock','In Stock'],['ordered','Most Ordered']].map(([val, label]) => (
+              <button key={val} onClick={() => setSortBy(val)}
+                style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: 'none',
+                  background: sortBy === val ? 'rgba(16,185,129,0.15)' : 'transparent',
+                  color: sortBy === val ? '#10b981' : 'rgba(255,255,255,0.35)' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* Duplicates toggle */}
+          <button onClick={() => setShowDuplicates(d => !d)}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: '1px solid',
+              background: showDuplicates ? 'rgba(245,158,11,0.12)' : 'transparent',
+              color: showDuplicates ? '#f59e0b' : 'rgba(255,255,255,0.35)',
+              borderColor: showDuplicates ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.08)' }}>
+            <AlertTriangle style={{ width: 10, height: 10 }} />
+            Dupes {duplicateIds.size > 0 ? `(${duplicateIds.size})` : ''}
+          </button>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', whiteSpace: 'nowrap', paddingLeft: 4 }}>
+            {filtered.length} product{filtered.length !== 1 ? 's' : ''}
+          </span>
         </div>
       </div>
 
@@ -352,7 +448,7 @@ export default function Products() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
           {filtered.map(product => (
-            <ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete} selected={selectedIds.has(product.id)} onToggleSelect={toggleSelect} />
+            <ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete} selected={selectedIds.has(product.id)} onToggleSelect={toggleSelect} stockCount={stockCountMap[product.id] || 0} orderCount={orderCountMap[product.id] || 0} isDuplicate={duplicateIds.has(product.id)} />
           ))}
         </div>
       )}
