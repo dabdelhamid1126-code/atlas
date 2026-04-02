@@ -4,76 +4,57 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        if (!isAuth) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { upc } = await req.json();
-        if (!upc) {
-            return Response.json({ error: 'UPC is required' }, { status: 400 });
-        }
+        if (!upc) return Response.json({ error: 'UPC is required' }, { status: 400 });
 
-        const BESTBUY_API_KEY = Deno.env.get('BESTBUY_API_KEY');
+        const BB_KEY   = Deno.env.get('BESTBUY_API_KEY');
+        const SERP_KEY = Deno.env.get('SERPAPI_KEY');
 
-        // ── 1. Best Buy API (best quality for electronics) ──────────────────
-        if (BESTBUY_API_KEY) {
+        // ── 1. UPCitemdb ────────────────────────────────────────────────────
+        try {
+            const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`, {
+                headers: { 'Accept': 'application/json', 'User-Agent': 'DaliaDistro/1.0' }
+            });
+            const d = await r.json();
+            if (d.items?.[0]?.title) {
+                const item = d.items[0];
+                return Response.json({ title: item.title, image: item.images?.[0] || '', source: 'upcitemdb' });
+            }
+        } catch {}
+
+        // ── 2. Best Buy API ─────────────────────────────────────────────────
+        if (BB_KEY) {
             try {
-                const bbRes = await fetch(
-                    `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,salePrice,image,thumbnailImage&apiKey=${BESTBUY_API_KEY}`
+                const r = await fetch(
+                    `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,salePrice,image,thumbnailImage&apiKey=${BB_KEY}`
                 );
-                if (bbRes.ok) {
-                    const bbData = await bbRes.json();
-                    if (bbData.products && bbData.products.length > 0) {
-                        const p = bbData.products[0];
-                        return Response.json({
-                            title: p.name || null,
-                            image: p.image || p.thumbnailImage || null,
-                            price: p.salePrice || null,
-                            source: 'bestbuy'
-                        });
-                    }
+                const d = await r.json();
+                if (d.products?.[0]?.name) {
+                    const p = d.products[0];
+                    return Response.json({ title: p.name, image: p.image || p.thumbnailImage || '', source: 'bestbuy' });
                 }
             } catch {}
         }
 
-        // ── 2. UPCitemdb ────────────────────────────────────────────────────
-        try {
-            const upcRes = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`, {
-                headers: { 'Accept': 'application/json', 'User-Agent': 'DaliaDistro/1.0' }
-            });
-            if (upcRes.ok) {
-                const upcData = await upcRes.json();
-                if (upcData.code === 'OK' && upcData.items?.length > 0) {
-                    const item = upcData.items[0];
-                    return Response.json({
-                        title: item.title || null,
-                        image: item.images?.[0] || null,
-                        source: 'upcitemdb'
-                    });
+        // ── 3. SerpApi (Google Shopping) ────────────────────────────────────
+        if (SERP_KEY) {
+            try {
+                const r = await fetch(
+                    `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(upc)}&api_key=${SERP_KEY}`
+                );
+                const d = await r.json();
+                const first = d.shopping_results?.[0];
+                if (first?.title) {
+                    return Response.json({ title: first.title, image: first.thumbnail || '', source: 'serpapi' });
                 }
-            }
-        } catch {}
+            } catch {}
+        }
 
-        // ── 3. Open Food Facts ──────────────────────────────────────────────
-        try {
-            const offRes = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(upc)}.json`);
-            const offData = await offRes.json();
-            if (offData.status === 1 && offData.product) {
-                const p = offData.product;
-                return Response.json({
-                    title: p.product_name || p.product_name_en || null,
-                    image: p.image_url || null,
-                    source: 'openfoodfacts'
-                });
-            }
-        } catch {}
-
-        return Response.json({ error: 'Product not found. Please enter manually.' }, { status: 404 });
+        return Response.json({ title: '', image: '' });
 
     } catch (error) {
-        return Response.json({
-            error: 'Product not found. Please enter manually.',
-            details: error.message
-        }, { status: 500 });
+        return Response.json({ error: 'Lookup failed', details: error.message }, { status: 500 });
     }
 });
