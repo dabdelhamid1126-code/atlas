@@ -80,7 +80,7 @@ function ProductImage({ src, name, size = 60 }) {
 
 function ProductThumb({ src, name, size = 38 }) {
   const [err, setErr] = useState(false);
-  if (src && !err) return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />;
+  if (src && !err) return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 8, objectFit: 'contain', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', padding: 2 }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: 8, flexShrink: 0, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ fontSize: size * 0.38, fontWeight: 700, color: '#10b981' }}>{name?.charAt(0)?.toUpperCase() || '?'}</span>
