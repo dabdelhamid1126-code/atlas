@@ -50,14 +50,17 @@ Deno.serve(async (req) => {
         if (SERP_KEY) {
             try {
                 const r = await fetch(
-                    `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(upc)}+barcode+product&api_key=${SERP_KEY}`
+                    `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(upc)}&api_key=${SERP_KEY}`
                 );
                 const d = await r.json();
+                console.log('SerpApi response:', JSON.stringify(d).slice(0, 300));
                 const items = d.shopping_results || [];
                 items.slice(0, 3).forEach(item => {
                     results.push({ title: item.title, image: item.thumbnail || '', source: 'Google' });
                 });
-            } catch {}
+            } catch (e) {
+                console.log('SerpApi error:', e.message);
+            }
         }
 
         // ── Deduplicate by title similarity ────────────────────────────────
