@@ -573,7 +573,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                         </div>
                         <div style={{ marginBottom: 8 }}><LBL>Product</LBL>
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                            <ItemThumb src={item.product_image_url} name={item.product_name} />
+                            <ItemThumb src={item.product_image_url || products.find(p => p.id === item.product_id)?.image || products.find(p => p.name?.toLowerCase().trim() === item.product_name?.toLowerCase().trim())?.image} name={item.product_name} />
                             <div style={{ flex: 1 }}>
                               <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
                                   onSelect={p => { updateItem(idx,'product_id',p.id); updateItem(idx,'product_name',p.name); updateItem(idx,'upc',p.upc||''); updateItem(idx,'product_image_url',p.image||''); if(idx===0) set('product_category',p.category||formData.product_category); }}
