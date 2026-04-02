@@ -12,7 +12,9 @@ Deno.serve(async (req) => {
         const BB_KEY   = Deno.env.get('BESTBUY_API_KEY');
         const SERP_KEY = Deno.env.get('SERPAPI_KEY');
 
-        // ── 1. UPCitemdb (fast, free) ───────────────────────────────────────
+        const results = [];
+
+        // ── 1. UPCitemdb ────────────────────────────────────────────────────
         try {
             const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`, {
                 headers: { 'Accept': 'application/json', 'User-Agent': 'DaliaDistro/1.0' }
@@ -20,7 +22,7 @@ Deno.serve(async (req) => {
             const d = await r.json();
             if (d.items?.[0]?.title) {
                 const item = d.items[0];
-                return Response.json({ title: item.title, image: item.images?.[0] || '' });
+                results.push({ title: item.title, image: item.images?.[0] || '', source: 'UPCitemdb' });
             }
         } catch {}
 
@@ -31,32 +33,40 @@ Deno.serve(async (req) => {
                     `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,image,thumbnailImage&apiKey=${BB_KEY}`
                 );
                 const d = await r.json();
-                if (d.products?.[0]?.name) {
-                    const p = d.products[0];
-                    return Response.json({ title: p.name, image: p.image || p.thumbnailImage || '' });
+                if (d.products?.length > 0) {
+                    d.products.slice(0, 3).forEach(p => {
+                        results.push({ title: p.name, image: p.image || p.thumbnailImage || '', source: 'Best Buy' });
+                    });
                 }
             } catch {}
         }
 
-        // ── 3. SerpApi — search UPC as product barcode ─────────────────────
+        // ── 3. SerpApi ──────────────────────────────────────────────────────
         if (SERP_KEY) {
             try {
                 const r = await fetch(
                     `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(upc)}+barcode+product&api_key=${SERP_KEY}`
                 );
                 const d = await r.json();
-                const results = d.shopping_results || [];
-                const electronics = ['apple','macbook','ipad','iphone','watch','airpods','samsung','fire tv','kindle','roku','nintendo','xbox','playstation','laptop','tablet','phone','earbuds','speaker','monitor','camera','starlink'];
-                const best = results.find(r =>
-                    electronics.some(kw => r.title?.toLowerCase().includes(kw))
-                ) || results[0];
-                if (best?.title) {
-                    return Response.json({ title: best.title, image: best.thumbnail || '' });
-                }
+                const items = d.shopping_results || [];
+                items.slice(0, 3).forEach(item => {
+                    results.push({ title: item.title, image: item.thumbnail || '', source: 'Google' });
+                });
             } catch {}
         }
 
-        return Response.json({ title: '', image: '' });
+        // Deduplicate by title similarity
+        const seen = new Set();
+        const deduped = results.filter(r => {
+            const key = r.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
+        // Backwards compat: also return top result as title/image
+        const top = deduped[0] || {};
+        return Response.json({ title: top.title || '', image: top.image || '', results: deduped });
 
     } catch (error) {
         return Response.json({ error: 'Lookup failed', details: error.message }, { status: 500 });
