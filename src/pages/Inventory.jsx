@@ -52,6 +52,32 @@ const unsoldQty = (order, productName) => {
   return Math.max(0, totalQty - soldQty);
 };
 
+// ─── fuzzy product matcher ───────────────────────────────────────────────────
+
+const STOP_WORDS = new Set(['the','a','an','and','or','with','for','of','in','to','by','gb','free','live','tv','wi','fi','black','white','silver','pink','blue','streaming','device','cable','satellite','experience','out','w']);
+const getKeywords = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+
+const findMatchedProduct = (itemName, itemProductId, products) => {
+  if (itemProductId) {
+    const byId = products.find(p => p.id === itemProductId);
+    if (byId) return byId;
+  }
+  const exactName = (itemName || '').toLowerCase();
+  const byExact = products.find(p => p.name?.toLowerCase() === exactName);
+  if (byExact) return byExact;
+  const itemWords = new Set(getKeywords(itemName || ''));
+  if (itemWords.size === 0) return null;
+  let bestScore = 0, bestProduct = null;
+  products.forEach(p => {
+    if (!p.name) return;
+    const productWords = new Set(getKeywords(p.name));
+    const shared = [...itemWords].filter(w => productWords.has(w)).length;
+    const score = shared / Math.max(itemWords.size, productWords.size);
+    if (score > bestScore) { bestScore = score; bestProduct = p; }
+  });
+  return bestScore >= 0.4 ? bestProduct : null;
+};
+
 // ─── status badge ────────────────────────────────────────────────────────────
 
 const STATUS_STYLES = {
@@ -347,29 +373,6 @@ export default function Inventory() {
     [orders]
   );
 
-  // Fuzzy product matcher
-  const findMatchedProduct = (itemName, itemProductId) => {
-    if (itemProductId) {
-      const byId = products.find(p => p.id === itemProductId);
-      if (byId) return byId;
-    }
-    const exactName = (itemName || '').toLowerCase();
-    const byExact = products.find(p => p.name?.toLowerCase() === exactName);
-    if (byExact) return byExact;
-    const stopWords = new Set(['the','a','an','and','or','with','for','of','in','to','by','gb','free','live','tv','wi','fi','black','white','silver','pink','blue','streaming','device','cable','satellite','experience','out','w']);
-    const keywords = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
-    const itemWords = new Set(keywords(itemName || ''));
-    let bestScore = 0, bestProduct = null;
-    products.forEach(p => {
-      if (!p.name) return;
-      const productWords = new Set(keywords(p.name));
-      const shared = [...itemWords].filter(w => productWords.has(w)).length;
-      const score = shared / Math.max(itemWords.size, productWords.size);
-      if (score > bestScore) { bestScore = score; bestProduct = p; }
-    });
-    return bestScore >= 0.4 ? bestProduct : null;
-  };
-
   const groups = useMemo(() => {
     const map = {};
     relevantOrders.forEach((order) => {
@@ -380,7 +383,7 @@ export default function Inventory() {
         const costPerUnit = parseFloat(item.unit_cost || 0);
         if (!map[name]) {
           // Prefer Product entity image (fuzzy), then item-level image
-          const matchedProduct = findMatchedProduct(name, item.product_id);
+          const matchedProduct = findMatchedProduct(name, item.product_id, products);
           const imageUrl = matchedProduct?.image
             || item.product_image_url || item.product_image || item.image_url || null;
           map[name] = {
@@ -402,7 +405,7 @@ export default function Inventory() {
       avgCostPerUnit: g.totalQty > 0 ? g.totalCost / g.totalQty : 0,
       dominantStatus: [...g.statuses].sort((a,b) => priority.indexOf(a) - priority.indexOf(b))[0] || 'received',
     }));
-  }, [relevantOrders]);
+  }, [relevantOrders, products]);
 
   const stats = useMemo(() => {
     const inHand = groups.filter(g => ['received','partially_received','paid','completed'].includes(g.dominantStatus));
