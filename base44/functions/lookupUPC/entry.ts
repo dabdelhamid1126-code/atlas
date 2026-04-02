@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
         const BB_KEY   = Deno.env.get('BESTBUY_API_KEY');
         const SERP_KEY = Deno.env.get('SERPAPI_KEY');
 
-        // ── 1. UPCitemdb ────────────────────────────────────────────────────
+        // ── 1. UPCitemdb (fast, free) ───────────────────────────────────────
         try {
             const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`, {
                 headers: { 'Accept': 'application/json', 'User-Agent': 'DaliaDistro/1.0' }
@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
             const d = await r.json();
             if (d.items?.[0]?.title) {
                 const item = d.items[0];
-                return Response.json({ title: item.title, image: item.images?.[0] || '', source: 'upcitemdb' });
+                return Response.json({ title: item.title, image: item.images?.[0] || '' });
             }
         } catch {}
 
@@ -28,17 +28,17 @@ Deno.serve(async (req) => {
         if (BB_KEY) {
             try {
                 const r = await fetch(
-                    `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,salePrice,image,thumbnailImage&apiKey=${BB_KEY}`
+                    `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,image,thumbnailImage&apiKey=${BB_KEY}`
                 );
                 const d = await r.json();
                 if (d.products?.[0]?.name) {
                     const p = d.products[0];
-                    return Response.json({ title: p.name, image: p.image || p.thumbnailImage || '', source: 'bestbuy' });
+                    return Response.json({ title: p.name, image: p.image || p.thumbnailImage || '' });
                 }
             } catch {}
         }
 
-        // ── 3. SerpApi (Google Shopping) ────────────────────────────────────
+        // ── 3. SerpApi — Google Shopping (catches everything else) ──────────
         if (SERP_KEY) {
             try {
                 const r = await fetch(
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
                 const d = await r.json();
                 const first = d.shopping_results?.[0];
                 if (first?.title) {
-                    return Response.json({ title: first.title, image: first.thumbnail || '', source: 'serpapi' });
+                    return Response.json({ title: first.title, image: first.thumbnail || '' });
                 }
             } catch {}
         }
