@@ -14,23 +14,11 @@ Deno.serve(async (req) => {
 
         const results = [];
 
-        // ── 1. UPCitemdb ────────────────────────────────────────────────────
-        try {
-            const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`, {
-                headers: { 'Accept': 'application/json', 'User-Agent': 'DaliaDistro/1.0' }
-            });
-            const d = await r.json();
-            if (d.items?.[0]?.title) {
-                const item = d.items[0];
-                results.push({ title: item.title, image: item.images?.[0] || '', source: 'UPCitemdb' });
-            }
-        } catch {}
-
-        // ── 2. Best Buy API ─────────────────────────────────────────────────
+        // ── 1. Best Buy (primary — best for electronics) ───────────────────
         if (BB_KEY) {
             try {
                 const r = await fetch(
-                    `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,image,thumbnailImage&apiKey=${BB_KEY}`
+                    `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,image,thumbnailImage,upc&apiKey=${BB_KEY}`
                 );
                 const d = await r.json();
                 if (d.products?.length > 0) {
@@ -41,7 +29,20 @@ Deno.serve(async (req) => {
             } catch {}
         }
 
-        // ── 3. SerpApi ──────────────────────────────────────────────────────
+        // ── 2. UPCitemdb (fallback — good for common items) ────────────────
+        try {
+            const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`, {
+                headers: { 'Accept': 'application/json', 'User-Agent': 'DaliaDistro/1.0' }
+            });
+            const d = await r.json();
+            if (d.items?.length > 0) {
+                d.items.slice(0, 2).forEach(item => {
+                    results.push({ title: item.title, image: item.images?.[0] || '', source: 'UPCitemdb' });
+                });
+            }
+        } catch {}
+
+        // ── 3. SerpApi — Google Shopping (last resort) ─────────────────────
         if (SERP_KEY) {
             try {
                 const r = await fetch(
@@ -55,16 +56,15 @@ Deno.serve(async (req) => {
             } catch {}
         }
 
-        // Deduplicate by title similarity
+        // ── Deduplicate by title similarity ────────────────────────────────
         const seen = new Set();
         const deduped = results.filter(r => {
-            const key = r.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
-            if (seen.has(key)) return false;
+            const key = r.title?.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+            if (!key || seen.has(key)) return false;
             seen.add(key);
             return true;
         });
 
-        // Backwards compat: also return top result as title/image
         const top = deduped[0] || {};
         return Response.json({ title: top.title || '', image: top.image || '', results: deduped });
 
