@@ -38,16 +38,20 @@ Deno.serve(async (req) => {
             } catch {}
         }
 
-        // ── 3. SerpApi — Google Shopping (catches everything else) ──────────
+        // ── 3. SerpApi — search UPC as product barcode ─────────────────────
         if (SERP_KEY) {
             try {
                 const r = await fetch(
-                    `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(upc)}&api_key=${SERP_KEY}`
+                    `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(upc)}+barcode+product&api_key=${SERP_KEY}`
                 );
                 const d = await r.json();
-                const first = d.shopping_results?.[0];
-                if (first?.title) {
-                    return Response.json({ title: first.title, image: first.thumbnail || '' });
+                const results = d.shopping_results || [];
+                const electronics = ['apple','macbook','ipad','iphone','watch','airpods','samsung','fire tv','kindle','roku','nintendo','xbox','playstation','laptop','tablet','phone','earbuds','speaker','monitor','camera','starlink'];
+                const best = results.find(r =>
+                    electronics.some(kw => r.title?.toLowerCase().includes(kw))
+                ) || results[0];
+                if (best?.title) {
+                    return Response.json({ title: best.title, image: best.thumbnail || '' });
                 }
             } catch {}
         }
