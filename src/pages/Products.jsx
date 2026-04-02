@@ -70,7 +70,14 @@ function SourceBadge({ source }) {
 
 function ProductImage({ src, name, size = 60 }) {
   const [err, setErr] = useState(false);
-  if (src && !err) return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 10, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />;
+  if (src && !err) return (
+    <img src={src} alt={name} onError={() => setErr(true)}
+      style={{
+        width: size, height: size, borderRadius: 10,
+        objectFit: 'contain', objectPosition: 'center',
+        flexShrink: 0, padding: 4,
+      }} />
+  );
   return (
     <div style={{ width: size, height: size, borderRadius: 10, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ fontSize: size * 0.4, fontWeight: 700, color: '#10b981' }}>{name?.charAt(0)?.toUpperCase() || '?'}</span>
@@ -80,7 +87,16 @@ function ProductImage({ src, name, size = 60 }) {
 
 function ProductThumb({ src, name, size = 38 }) {
   const [err, setErr] = useState(false);
-  if (src && !err) return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: 8, objectFit: 'contain', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', padding: 2 }} />;
+  if (src && !err) return (
+    <img src={src} alt={name} onError={() => setErr(true)}
+      style={{
+        width: size, height: size, borderRadius: 8,
+        objectFit: 'contain', objectPosition: 'center',
+        flexShrink: 0, padding: size > 50 ? 6 : 3,
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }} />
+  );
   return (
     <div style={{ width: size, height: size, borderRadius: 8, flexShrink: 0, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ fontSize: size * 0.38, fontWeight: 700, color: '#10b981' }}>{name?.charAt(0)?.toUpperCase() || '?'}</span>
