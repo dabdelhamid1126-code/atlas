@@ -43,7 +43,7 @@ const NAV_GROUPS = [
     items: [
       { name: 'Inventory On Hand',  page: 'Inventory',    icon: Package },
       { name: 'Add Order',          page: 'NewOrders',    icon: CirclePlus },
-
+      { name: 'Products',           page: 'Products',     icon: Inbox },
       { name: 'Import Orders',      page: 'ImportOrders', icon: ArrowLeftRight },
     ],
   },
