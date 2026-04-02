@@ -358,7 +358,7 @@ export default function Inventory() {
         if (!map[name]) {
           map[name] = {
             productName: name,
-            imageUrl:  item.product_image || item.image_url || null,
+            imageUrl:  item.product_image_url || item.product_image || item.image_url || null,
             listPrice: item.list_price || item.listing_price || null,
             sources: [], totalQty: 0, totalCost: 0, statuses: [],
           };
