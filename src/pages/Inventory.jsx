@@ -347,12 +347,28 @@ export default function Inventory() {
     [orders]
   );
 
-  // Build a quick lookup: product_name → image from the Product entity
-  const productImageMap = useMemo(() => {
-    const m = {};
-    products.forEach(p => { if (p.name) m[p.name.trim().toLowerCase()] = p.image || null; });
-    return m;
-  }, [products]);
+  // Fuzzy product matcher
+  const findMatchedProduct = (itemName, itemProductId) => {
+    if (itemProductId) {
+      const byId = products.find(p => p.id === itemProductId);
+      if (byId) return byId;
+    }
+    const exactName = (itemName || '').toLowerCase();
+    const byExact = products.find(p => p.name?.toLowerCase() === exactName);
+    if (byExact) return byExact;
+    const stopWords = new Set(['the','a','an','and','or','with','for','of','in','to','by','gb','free','live','tv','wi','fi','black','white','silver','pink','blue','streaming','device','cable','satellite','experience','out','w']);
+    const keywords = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+    const itemWords = new Set(keywords(itemName || ''));
+    let bestScore = 0, bestProduct = null;
+    products.forEach(p => {
+      if (!p.name) return;
+      const productWords = new Set(keywords(p.name));
+      const shared = [...itemWords].filter(w => productWords.has(w)).length;
+      const score = shared / Math.max(itemWords.size, productWords.size);
+      if (score > bestScore) { bestScore = score; bestProduct = p; }
+    });
+    return bestScore >= 0.4 ? bestProduct : null;
+  };
 
   const groups = useMemo(() => {
     const map = {};
@@ -363,8 +379,9 @@ export default function Inventory() {
         if (qty <= 0) return;
         const costPerUnit = parseFloat(item.unit_cost || 0);
         if (!map[name]) {
-          // Prefer Product entity image, then item-level image
-          const imageUrl = productImageMap[name.toLowerCase()]
+          // Prefer Product entity image (fuzzy), then item-level image
+          const matchedProduct = findMatchedProduct(name, item.product_id);
+          const imageUrl = matchedProduct?.image
             || item.product_image_url || item.product_image || item.image_url || null;
           map[name] = {
             productName: name,
