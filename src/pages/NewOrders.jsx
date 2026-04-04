@@ -21,8 +21,8 @@ const CHURNING_STATUSES  = [{ value: 'pending', label: 'Pending' }, { value: 'or
 const MARKETPLACE_STATUSES = [{ value: 'pending', label: 'Pending' }, { value: 'ordered', label: 'Listed' }, { value: 'shipped', label: 'Sold' }, { value: 'received', label: 'Completed' }];
 const fmt$ = (v) => `$${(parseFloat(v) || 0).toFixed(2)}`;
 
-const inp = { background: '#0d1117', color: 'white', borderColor: 'rgba(255,255,255,0.1)' };
-const inpReadonly = { background: 'rgba(255,255,255,0.04)', color: '#94a3b8', borderColor: 'rgba(255,255,255,0.1)' };
+const inp = { background: 'var(--parch-warm)', color: 'var(--ink)', borderColor: 'var(--parch-line)' };
+const inpReadonly = { background: 'var(--parch-card)', color: 'var(--ink-ghost)', borderColor: 'var(--parch-line)' };
 
 // Logo domain mappers
 const getStoreDomain = (vendorName) => {
@@ -128,7 +128,7 @@ const defaultForm = () => ({
 });
 
 const LBL = ({ children }) => (
-  <label style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+  <label style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-dim)', display: 'block', marginBottom: 4 }}>
     {children}
   </label>
 );
@@ -304,8 +304,8 @@ export default function NewOrders() {
     <div className="max-w-6xl mx-auto pb-10">
       {previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={() => setPreviewImg(null)} />}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-100">Add Order</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Record a new purchase</p>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Add Order</h1>
+        <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Record a new purchase</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -374,9 +374,9 @@ export default function NewOrders() {
                   <div><LBL>Vendor *</LBL>
                     <Select value={form.retailer} onValueChange={(v) => set('retailer', v)}>
                       <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
-                      <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                      <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
                         {RETAILERS.map(r => (
-                          <SelectItem key={r} value={r} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>
+                          <SelectItem key={r} value={r}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <BrandLogo domain={getStoreDomain(r)} size={16} fallbackInitials={r} />
                               {r}
@@ -389,8 +389,8 @@ export default function NewOrders() {
                   <div><LBL>Status</LBL>
                     <Select value={form.status} onValueChange={(v) => set('status', v)}>
                       <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue /></SelectTrigger>
-                      <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                        {statuses.map(s => <SelectItem key={s.value} value={s.value} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{s.label}</SelectItem>)}
+                      <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+                        {statuses.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -452,8 +452,8 @@ export default function NewOrders() {
                     <LBL>Ship To (Buyer)</LBL>
                     <Select value={form.dropship_to} onValueChange={(v) => set('dropship_to', v)}>
                       <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
-                      <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                        {sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{s.name}</SelectItem>)}
+                      <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+                          {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -580,9 +580,9 @@ export default function NewOrders() {
                             </div>
                           ) : <SelectValue placeholder="Select..." />}
                         </SelectTrigger>
-                        <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                        <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
                           {creditCards.filter(c => c.active !== false).map(c => (
-                            <SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>
+                            <SelectItem key={c.id} value={c.id}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <BrandLogo domain={getCardDomain(c.card_name)} size={18} fallbackInitials={c.card_name} />
                                 <span>{c.card_name}{c.last_4_digits ? ` •${c.last_4_digits}` : ''}</span>
@@ -621,9 +621,9 @@ export default function NewOrders() {
                                   </div>
                                 ) : <SelectValue placeholder="Card..." />}
                               </SelectTrigger>
-                              <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                                {creditCards.filter(c => c.active !== false).map(c => (
-                                  <SelectItem key={c.id} value={c.id} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>
+                              <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+                                 {creditCards.filter(c => c.active !== false).map(c => (
+                                   <SelectItem key={c.id} value={c.id}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                       <BrandLogo domain={getCardDomain(c.card_name)} size={18} />
                                       <span>{c.card_name}</span>
@@ -661,12 +661,12 @@ export default function NewOrders() {
                 <GiftCardPicker giftCards={giftCards} selectedIds={form.gift_card_ids} onChange={(ids) => set('gift_card_ids', ids)} retailer={form.retailer} />
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={form.include_tax_in_cashback} onChange={e => set('include_tax_in_cashback', e.target.checked)} />
-                    Tax in cashback
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#cbd5e1', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={form.include_shipping_in_cashback} onChange={e => set('include_shipping_in_cashback', e.target.checked)} />
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-faded)', cursor: 'pointer' }}>
+                           <input type="checkbox" checked={form.include_tax_in_cashback} onChange={e => set('include_tax_in_cashback', e.target.checked)} />
+                           Tax in cashback
+                         </label>
+                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-faded)', cursor: 'pointer' }}>
+                           <input type="checkbox" checked={form.include_shipping_in_cashback} onChange={e => set('include_shipping_in_cashback', e.target.checked)} />
                     Shipping in cashback
                   </label>
                   {isAmazon && (
@@ -718,9 +718,9 @@ export default function NewOrders() {
                           <div><LBL>Buyer / Platform</LBL>
                             <Select value={ev.buyer || ''} onValueChange={(v) => updateSaleEvent(ev.id, 'buyer', v)}>
                               <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
-                              <SelectContent style={{ background: '#1a2234', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                                {sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{s.name}</SelectItem>)}
-                                {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp'].map(p => <SelectItem key={p} value={p} style={{ color: '#94a3b8', background: 'transparent', padding: '8px 12px' }}>{p}</SelectItem>)}
+                              <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+                                       {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                                       {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -775,11 +775,11 @@ export default function NewOrders() {
           <div>
             <div className="lg:sticky lg:top-6 space-y-3">
               <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2">
+                 <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid var(--parch-line)' }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#10b981', marginBottom: 8 }}>
                     {hasSales ? 'Estimated Profit' : 'Cashback Profit'}
                   </p>
-                  <p className={`text-4xl leading-tight ${hasSales ? profitColor : 'text-cyan-400'}`} style={{ fontWeight: 800 }}>
+                  <p style={{ fontSize: 36, fontWeight: 800, color: hasSales ? (netProfit >= 0 ? '#10b981' : '#f87171') : '#06b6d4' }}>
                     {fmt$(netProfit)}
                   </p>
                   <p className="text-xs mt-1.5 flex items-center gap-1.5">
@@ -827,9 +827,9 @@ export default function NewOrders() {
                       <span className="text-slate-100 font-medium">{fmt$(totalSalePrice)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                    <span className="font-semibold text-slate-200">{hasSales ? 'Net profit' : 'Cashback'}</span>
-                    <span className={`font-extrabold text-base ${hasSales ? profitColor : 'text-cyan-400'}`}>{fmt$(netProfit)}</span>
+                  <div className="flex justify-between pt-2" style={{ borderTop: '1px solid var(--parch-line)', paddingTop: 8 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{hasSales ? 'Net profit' : 'Cashback'}</span>
+                    <span style={{ fontWeight: 800, fontSize: 15, color: hasSales ? (netProfit >= 0 ? '#10b981' : '#f87171') : '#06b6d4' }}>{fmt$(netProfit)}</span>
                   </div>
                 </div>
               </div>
@@ -845,8 +845,7 @@ export default function NewOrders() {
               </button>
 
               <button type="button" onClick={() => window.history.back()}
-                className="w-full py-2.5 rounded-xl text-sm text-slate-400 hover:text-slate-200 transition"
-                style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, color: 'var(--ink-ghost)', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', cursor: 'pointer' }}>
                 Cancel
               </button>
             </div>

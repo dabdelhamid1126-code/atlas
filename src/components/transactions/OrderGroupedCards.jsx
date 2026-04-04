@@ -266,7 +266,7 @@ function ItemImg({ src, name, qty = 1 }) {
 function StatCol({ label, value, color = '#e2e8f0' }) {
   return (
     <div style={{ textAlign: 'right', minWidth: 0 }}>
-      <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#64748b', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--ink-ghost)', marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 13, fontWeight: 700, color, whiteSpace: 'nowrap' }}>{value}</div>
     </div>
   );
@@ -313,12 +313,12 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
       <div
         onClick={() => setExpanded(p => !p)}
         style={{
-          background: 'rgba(255,255,255,0.02)', padding: '12px 16px',
+          background: 'var(--parch-warm)', padding: '12px 16px',
           display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none',
           transition: 'background 0.15s',
         }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--gold-bg)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--parch-warm)'}
       >
         {/* Checkbox */}
         <div onClick={e => { e.stopPropagation(); onToggleSelect(order.id); }}
@@ -339,7 +339,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
               </span>
             ) : (order.retailer || 'Unknown')}
           </div>
-          <span style={{ fontSize: 10, color: '#64748b', fontWeight: 400, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 10, color: 'var(--ink-ghost)', fontWeight: 400, whiteSpace: 'nowrap' }}>
             {order.order_number && order.retailer ? `${order.retailer} · ` : ''}{orderDate}
           </span>
         </div>
@@ -359,14 +359,14 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           {hasSales && (
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748b' }}>Profit</div>
+              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-ghost)' }}>Profit</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: profitColor }}>{fmt$(profit)}</div>
             </div>
           )}
           {order.credit_card_id && card?.last_4_digits && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <CardLogo cardName={paymentLabel} size={16} />
-              <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', fontWeight: 700 }}>••••{card.last_4_digits}</span>
+              <span style={{ fontSize: 11, color: 'var(--ink-dim)', fontFamily: 'monospace', fontWeight: 700 }}>••••{card.last_4_digits}</span>
             </div>
           )}
           <StatusBadge status={order.status} />
@@ -414,7 +414,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                  <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                    {item.product_name || '—'}
                  </div>
-                 {item.upc && <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{item.upc}</div>}
+                 {item.upc && <div style={{ fontSize: 10, color: 'var(--ink-ghost)', marginTop: 1 }}>{item.upc}</div>}
                </div>
                <div style={{ display: 'flex', gap: 18, flexShrink: 0 }}>
                  <StatCol label="Qty" value={qty} color="#e2e8f0" />
@@ -523,12 +523,12 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
 
       {/* ── Footer ── */}
       <div style={{
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(255,255,255,0.01)',
+        borderTop: '1px solid var(--parch-line)',
+        background: 'var(--parch-warm)',
         padding: '8px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <div style={{ fontSize: 11, color: '#475569', display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 2 }}>
+        <div style={{ fontSize: 11, color: 'var(--ink-dim)', display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 2 }}>
           <span>Total: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{fmt$(totalCost)}</span></span>
           {totalRevenue > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>Revenue: <span style={{ color: '#10b981', fontWeight: 600 }}>{fmt$(totalRevenue)}</span></span></>}
           {cashback > 0 && <><span style={{ margin: '0 6px' }}>·</span><span>CB: <span style={{ color: '#06b6d4', fontWeight: 600 }}>{fmt$(cashback)}</span></span></>}
@@ -543,7 +543,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
             onClick={e => { e.stopPropagation(); onEdit(order); }}
             style={{
               fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, cursor: 'pointer',
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8',
+              background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)',
               display: 'flex', alignItems: 'center', gap: 4,
             }}>
             <Edit2 style={{ width: 11, height: 11 }} /> Edit
@@ -641,9 +641,9 @@ export default function OrderGroupedCards({
               style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: page === 1 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: page === 1 ? '#475569' : '#94a3b8' }}>
               ← Prev
             </button>
-            <span style={{ padding: '6px 12px', fontSize: 12, color: '#64748b' }}>{page} / {totalPages}</span>
+            <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--ink-ghost)' }}>{page} / {totalPages}</span>
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: page === totalPages ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: page === totalPages ? '#475569' : '#94a3b8' }}>
+              style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: page === totalPages ? 'not-allowed' : 'pointer', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: page === totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)' }}>
               Next →
             </button>
           </div>

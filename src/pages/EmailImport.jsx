@@ -95,10 +95,12 @@ function OrderGroup({ group, checked, onCheck, existingOrders }) {
   const cs = confStyle(group.confidence);
 
   return (
-    <div className={`bg-white rounded-2xl border overflow-hidden transition-all ${checked ? "border-purple-300 ring-1 ring-purple-200" : "border-gray-200"}`}>
+    <div style={{ background: 'var(--parch-card)', border: `1px solid ${checked ? 'rgba(16,185,129,0.35)' : 'var(--parch-line)'}`, borderRadius: 16, overflow: 'hidden' }}>
       {/* Header */}
       <div
-        className="flex items-center gap-3 px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
+        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', cursor: 'pointer', background: 'var(--parch-warm)' }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--gold-bg)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--parch-warm)'}
         onClick={() => setOpen(o => !o)}
       >
         <input
@@ -117,7 +119,7 @@ function OrderGroup({ group, checked, onCheck, existingOrders }) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <span className="text-[13.5px] font-semibold text-gray-900">{group.store || "Unknown store"}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{group.store || "Unknown store"}</span>
             {group.orderNumber && (
               <code className="text-[11px] text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md font-mono">
                 {group.orderNumber}
@@ -150,10 +152,9 @@ function OrderGroup({ group, checked, onCheck, existingOrders }) {
 
       {/* Body */}
       {open && (
-        <div className="border-t border-gray-100">
-          {/* Parsed fields */}
-          <div className="px-4 py-4 bg-gray-50">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-3">Parsed order data</p>
+      <div style={{ borderTop: '1px solid var(--parch-line)' }}>
+        <div style={{ padding: '14px 16px', background: 'var(--parch-warm)' }}>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 10 }}>Parsed order data</p>
             <div className="grid grid-cols-5 gap-2 mb-3">
               <ParsedField label="Order #"  value={group.orderNumber} found={!!group.orderNumber} />
               <ParsedField label="Store"    value={group.store}       found={!!group.store} />
@@ -204,8 +205,8 @@ function OrderGroup({ group, checked, onCheck, existingOrders }) {
           </div>
 
           {/* Email thread */}
-          <div className="px-4 py-3 border-t border-gray-100">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--parch-line)' }}>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>
               {group.emails.length} email{group.emails.length !== 1 ? "s" : ""} in this order thread
             </p>
             <div className="space-y-0">
@@ -221,7 +222,7 @@ function OrderGroup({ group, checked, onCheck, existingOrders }) {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', borderTop: '1px solid var(--parch-line)', background: 'var(--parch-warm)' }}>
             <div className="flex items-center gap-3">
               {group.storeMatched ? (
                 <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
@@ -365,13 +366,13 @@ function IntegrationsTab() {
       <GmailAuthModal open={showGmailModal} onClose={() => setShowGmailModal(false)} onConnect={handleConnectGmail} />
       <div className="space-y-5">
       {/* Forwarding address */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5">
-        <h3 className="text-sm font-semibold text-gray-900 mb-1">Your forwarding address</h3>
+      <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 16, padding: 20 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 4 }}>Your forwarding address</h3>
         <p className="text-xs text-gray-500 mb-4 leading-relaxed">
           Forward any order confirmation email to this address and it'll appear in your inbox for review. Works with any email provider — no account connection required.
         </p>
         <div className="flex gap-2">
-          <code className="flex-1 text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 font-mono select-all">
+          <code style={{ flex: 1, fontSize: 11, color: 'var(--ink-faded)', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, padding: '9px 12px', fontFamily: 'monospace' }}>
             {FWD}
           </code>
           <button
@@ -386,12 +387,12 @@ function IntegrationsTab() {
       {/* Integration cards */}
       <div className="grid grid-cols-2 gap-4">
         {CARDS.map((c) => (
-          <div key={c.name} className={`bg-white rounded-2xl border p-5 ${c.connected ? "border-green-200" : "border-gray-200"}`}>
+          <div key={c.name} style={{ background: 'var(--parch-card)', borderRadius: 16, border: `1px solid ${c.connected ? 'var(--terrain-bdr)' : 'var(--parch-line)'}`, padding: 20 }}>
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${c.icBg}`}>
               <IcMail className={`w-5 h-5 ${c.icStroke}`} />
             </div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-1.5">{c.name}</h4>
-            <p className="text-xs text-gray-500 leading-relaxed mb-4">{c.desc}</p>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>{c.name}</h4>
+            <p style={{ fontSize: 11, color: 'var(--ink-dim)', lineHeight: 1.5, marginBottom: 14 }}>{c.desc}</p>
             <div className="flex items-center justify-between">
               {c.connected ? (
                 <>
@@ -416,13 +417,13 @@ function IntegrationsTab() {
       </div>
 
       {/* Parse settings */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5">
-        <p className="text-[10.5px] font-bold uppercase tracking-wider text-gray-400 mb-4">Parse settings</p>
+      <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 16, padding: 20 }}>
+        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 16 }}>Parse settings</p>
         {PS_ITEMS.map((s, i) => (
           <div key={i} className={`flex items-center justify-between py-3 ${i < PS_ITEMS.length - 1 ? "border-b border-gray-100" : ""}`}>
             <div>
-              <p className="text-[13.5px] font-medium text-gray-900">{s.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+              <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}>{s.label}</p>
+              <p style={{ fontSize: 11, color: 'var(--ink-ghost)', marginTop: 2 }}>{s.sub}</p>
             </div>
             <Toggle checked={ps[i]} onChange={e => setPs(prev => ({ ...prev, [i]: e.target.checked }))} />
           </div>
@@ -500,11 +501,11 @@ function PDFInvoiceTab() {
 
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-5">
+      <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 16, padding: 20 }}>
           <p className="text-sm font-semibold text-gray-900 mb-3">Uploaded Invoices</p>
           <div className="space-y-2">
             {uploadedFiles.map((file, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--parch-warm)', borderRadius: 10, border: '1px solid var(--parch-line)' }}>
                 <IcPkg className="w-4 h-4 text-gray-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
@@ -649,24 +650,24 @@ export default function EmailImport() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: 'var(--ink)' }}>Inbox</h1>
             {counts.review > 0 && (
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                 {counts.review} need{counts.review === 1 ? "s" : ""} review
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500">
+          <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>
             Forwarded order emails — grouped by order number, review and import as transactions
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 10, padding: '7px 12px' }}>
             <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-              className="bg-transparent text-xs text-gray-600 outline-none" />
-            <span className="text-gray-300">→</span>
+              style={{ background: 'transparent', fontSize: 11, color: 'var(--ink)', outline: 'none', border: 'none' }} />
+            <span style={{ color: 'var(--parch-deep)' }}>→</span>
             <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-              className="bg-transparent text-xs text-gray-600 outline-none" />
+              style={{ background: 'transparent', fontSize: 11, color: 'var(--ink)', outline: 'none', border: 'none' }} />
           </div>
           <button onClick={fetchInbox} disabled={loading}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-60 transition-colors border-0">
@@ -680,7 +681,7 @@ export default function EmailImport() {
       </div>
 
       {/* Main tabs */}
-      <div className="flex gap-1 p-1 bg-gray-100 border border-gray-200 rounded-xl w-fit mb-6">
+      <div style={{ display: 'flex', gap: 2, padding: 3, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 10, width: 'fit-content', marginBottom: 20 }}>
         {[
           { key: "inbox", label: "Order inbox", Icon: IcInbox },
           { key: "integrations", label: "Email integrations", Icon: IcPlug },
@@ -689,11 +690,9 @@ export default function EmailImport() {
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === key
-                ? "bg-purple-600 text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
+              background: activeTab === key ? 'var(--ink)' : 'transparent',
+              color: activeTab === key ? 'var(--gold)' : 'var(--ink-dim)' }}
           >
             <Icon className="w-3.5 h-3.5" />
             {label}
@@ -735,7 +734,7 @@ export default function EmailImport() {
               )}
             </div>
 
-            <div className="flex gap-1 p-1 bg-gray-100 border border-gray-200 rounded-xl">
+            <div style={{ display: 'flex', gap: 2, padding: 3, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 10 }}>
               {SUB_TABS.map(({ key, label, count, countStyle }) => (
                 <button key={key} onClick={() => setSubFilter(key)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
