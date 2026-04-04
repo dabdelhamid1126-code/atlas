@@ -131,7 +131,7 @@ function CreditCardsTab({ queryClient }) {
     return matchSearch && matchIssuer && matchType;
   }), [cards, search, issuerFilter, typeFilter]);
 
-  const inp = { background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', fontSize: 13 };
+  const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', fontSize: 13 };
 
   return (
     <>
@@ -416,7 +416,7 @@ function GiftCardsTab({ queryClient }) {
   const totalValue = filteredCards.filter(c => c.status === 'available').reduce((s, c) => s + (c.value || 0), 0);
   const totalProfit = filteredCards.filter(c => c.purchase_cost).reduce((s, c) => s + (c.value - c.purchase_cost), 0);
 
-  const inp = { background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', fontSize: 13 };
+  const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', fontSize: 13 };
 
   const columns = [
     { header: 'Brand', accessor: 'brand', cell: r => <span className="font-medium text-slate-200">{r.brand}</span> },

@@ -22,8 +22,8 @@ const guessCategory = (name) => {
 
 // ─── styles ───────────────────────────────────────────────────────────────────
 const inp = {
-  background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 8, color: 'white', padding: '8px 12px',
+  background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
+  borderRadius: 8, color: 'var(--ink)', padding: '8px 12px',
   fontSize: 13, outline: 'none', width: '100%',
 };
 
