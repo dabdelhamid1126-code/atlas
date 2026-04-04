@@ -7,19 +7,19 @@ import {
   Download, Upload, Trash2, Loader, X, Inbox,
 } from 'lucide-react';
 
-// ─── dark-theme helpers ───────────────────────────────────────────────────────
-const card = { background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 24, marginBottom: 20 };
-const inp = { background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%' };
-const labelStyle = { fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: 4 };
+// ─── parchment-theme helpers ──────────────────────────────────────────────────
+const card = { background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 24, marginBottom: 20 };
+const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%' };
+const labelStyle = { fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-dim)', display: 'block', marginBottom: 4, fontFamily: "'Playfair Display', serif" };
 
 function SectionRow({ icon: Icon, title, description, children, noBorder = false }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: noBorder ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: noBorder ? 'none' : '1px solid var(--parch-line)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, paddingRight: 16 }}>
-        {Icon && <Icon style={{ width: 16, height: 16, color: '#64748b', flexShrink: 0 }} />}
+        {Icon && <Icon style={{ width: 16, height: 16, color: 'var(--ink-dim)', flexShrink: 0 }} />}
         <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: 13, fontWeight: 500, color: '#e2e8f0', margin: 0 }}>{title}</p>
-          {description && <p style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{description}</p>}
+          <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', margin: 0 }}>{title}</p>
+          {description && <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 2 }}>{description}</p>}
         </div>
       </div>
       {children}
@@ -30,39 +30,39 @@ function SectionRow({ icon: Icon, title, description, children, noBorder = false
 function Toggle({ on, onToggle }) {
   return (
     <button onClick={onToggle}
-      style={{ position: 'relative', width: 40, height: 22, borderRadius: 99, border: 'none', cursor: 'pointer', background: on ? 'linear-gradient(135deg,#10b981,#06b6d4)' : 'rgba(255,255,255,0.12)', transition: 'all 0.2s', flexShrink: 0 }}>
-      <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 16, height: 16, borderRadius: '50%', background: 'white', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
+      style={{ position: 'relative', width: 40, height: 22, borderRadius: 99, border: 'none', cursor: 'pointer', background: on ? 'linear-gradient(135deg,#8b6914,#b8860b)' : 'var(--parch-deep)', transition: 'all 0.2s', flexShrink: 0 }}>
+      <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 16, height: 16, borderRadius: '50%', background: 'white', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
     </button>
   );
 }
 
 function SectionLabel({ children }) {
-  return <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b', marginBottom: 12, marginTop: 8 }}>{children}</p>;
+  return <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 12, marginTop: 8 }}>{children}</p>;
 }
 
 // ── Profile ────────────────────────────────────────────────────────────────
 function ProfileTab({ user }) {
   return (
     <div style={card}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0', marginBottom: 20 }}>Profile</h2>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Profile</h2>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
-        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#10b981,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#8b6914,#b8860b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: 'white', flexShrink: 0 }}>
           {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
         </div>
         <div>
-          <p style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0' }}>{user?.full_name || 'User'}</p>
-          <p style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>Connected via Base44</p>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{user?.full_name || 'User'}</p>
+          <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 2 }}>Connected via Base44</p>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
         {[['Full Name', user?.full_name], ['Email', user?.email], ['Role', user?.role || 'user']].map(([label, val]) => (
           <div key={label}>
             <label style={labelStyle}>{label}</label>
-            <div style={{ ...inp, color: '#64748b', cursor: 'not-allowed', width: 'auto' }}>{val || '—'}</div>
+            <div style={{ ...inp, color: 'var(--ink-faded)', cursor: 'not-allowed', width: 'auto' }}>{val || '—'}</div>
           </div>
         ))}
       </div>
-      <p style={{ fontSize: 11, color: '#475569' }}>Profile information is managed through your Base44 account.</p>
+      <p style={{ fontSize: 11, color: 'var(--ink-dim)' }}>Profile information is managed through your Base44 account.</p>
     </div>
   );
 }
@@ -76,16 +76,16 @@ function DataSetupTab() {
   ];
   return (
     <div style={card}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0', marginBottom: 8 }}>Data Setup</h2>
-      <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>Quick links to setup pages.</p>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Data Setup</h2>
+      <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginBottom: 16 }}>Quick links to setup pages.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {pages.map(p => (
           <Link key={p.page} to={`/${p.page}`}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500, color: '#e2e8f0', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.25)'; e.currentTarget.style.color = '#10b981'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#e2e8f0'; }}>
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500, color: 'var(--ink)', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', textDecoration: 'none' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--gold-bg)'; e.currentTarget.style.borderColor = 'var(--gold-border)'; e.currentTarget.style.color = 'var(--gold)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--parch-warm)'; e.currentTarget.style.borderColor = 'var(--parch-line)'; e.currentTarget.style.color = 'var(--ink)'; }}>
             <span>{p.label}</span>
-            <ExternalLink style={{ width: 13, height: 13, color: '#64748b', flexShrink: 0 }} />
+            <ExternalLink style={{ width: 13, height: 13, color: 'var(--ink-dim)', flexShrink: 0 }} />
           </Link>
         ))}
       </div>
@@ -140,7 +140,7 @@ function GoalsTab() {
               <div style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 {['WEEKLY', 'MONTHLY'].map(p => (
                   <button key={p} onClick={() => update(idx, { period: p })}
-                    style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none', background: goal.period === p ? 'rgba(16,185,129,0.15)' : 'transparent', color: goal.period === p ? '#10b981' : '#64748b' }}>
+                    style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none', background: goal.period === p ? 'var(--gold-bg)' : 'transparent', color: goal.period === p ? 'var(--gold)' : 'var(--ink-dim)' }}>
                     {p === 'WEEKLY' ? 'Weekly' : 'Monthly'}
                   </button>
                 ))}
@@ -158,10 +158,10 @@ function GoalsTab() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
         <button onClick={handleSave} disabled={saving}
-          style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer' }}>
+          style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#8b6914,#b8860b)', border: 'none', color: 'white', cursor: 'pointer', fontFamily: "'Playfair Display', serif" }}>
           {saving ? 'Saving...' : 'Save Goals'}
         </button>
-        {saved && <span style={{ fontSize: 12, color: '#10b981', display: 'flex', alignItems: 'center', gap: 4 }}><Check style={{ width: 13, height: 13 }} /> Saved</span>}
+        {saved && <span style={{ fontSize: 12, color: 'var(--terrain)', display: 'flex', alignItems: 'center', gap: 4 }}><Check style={{ width: 13, height: 13 }} /> Saved</span>}
       </div>
     </div>
   );
@@ -230,8 +230,8 @@ function DataTab() {
 
   const resetAll = () => { setStage('idle'); setRI(''); setDeleted(null); };
 
-  const btnPrimary = { padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer' };
-  const btnGhost = { padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer' };
+  const btnPrimary = { padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#8b6914,#b8860b)', border: 'none', color: 'white', cursor: 'pointer', fontFamily: "'Playfair Display', serif" };
+  const btnGhost = { padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer' };
 
   return (
     <div>
@@ -369,7 +369,7 @@ function ApiKeysTab() {
       <div style={{ padding: 16, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>17TRACK</p>
-          {connected && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)' }}>Connected</span>}
+          {connected && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }}>Connected</span>}
         </div>
         {connected && masked && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 12 }}>
@@ -386,10 +386,10 @@ function ApiKeysTab() {
           </button>
         </div>
         <button onClick={save} disabled={!apiKey.trim()}
-          style={{ padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer', opacity: !apiKey.trim() ? 0.4 : 1 }}>
+          style={{ padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#8b6914,#b8860b)', border: 'none', color: 'white', cursor: 'pointer', opacity: !apiKey.trim() ? 0.4 : 1, fontFamily: "'Playfair Display', serif" }}>
           {connected ? 'Update Key' : 'Save Key'}
         </button>
-        {message && <p style={{ marginTop: 10, fontSize: 12, color: '#10b981', display: 'flex', alignItems: 'center', gap: 4 }}><Check style={{ width: 12, height: 12 }} /> {message.text}</p>}
+        {message && <p style={{ marginTop: 10, fontSize: 12, color: 'var(--terrain)', display: 'flex', alignItems: 'center', gap: 4 }}><Check style={{ width: 12, height: 12 }} /> {message.text}</p>}
       </div>
     </div>
   );
@@ -399,9 +399,9 @@ function ApiKeysTab() {
 function SecurityTab({ user }) {
   return (
     <div style={card}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0', marginBottom: 16 }}>Security</h2>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 16 }}>Security</h2>
       <SectionRow title="Authentication" description="Signed in via Base44">
-        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)' }}>Active</span>
+        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }}>Active</span>
       </SectionRow>
       <SectionRow title="Session" description="Your current browser session">
         <span style={{ fontSize: 11, color: '#64748b' }}>Current</span>
@@ -428,7 +428,7 @@ function AppearanceTab() {
 
   return (
     <div style={card}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0', marginBottom: 20 }}>Appearance</h2>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Appearance</h2>
       <SectionLabel>Dashboard & Analytics</SectionLabel>
       {dashToggles.map((t, i) => (
         <SectionRow key={t.key} icon={t.icon} title={t.label} description={t.description} noBorder={i === dashToggles.length - 1}>
@@ -482,18 +482,19 @@ export default function Settings() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'rgba(255,255,255,0.95)', margin: 0 }}>Settings</h1>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>Manage your account preferences</p>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>Settings</h1>
+        <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Manage your account preferences</p>
       </div>
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
         <div style={{ width: 200, flexShrink: 0 }}>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {TABS.map(tab => (
               <button key={tab.key} onClick={() => switchTab(tab.key)}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1px solid', textAlign: 'left',
-                  background: activeTab === tab.key ? 'rgba(16,185,129,0.08)' : 'transparent',
-                  borderColor: activeTab === tab.key ? 'rgba(16,185,129,0.2)' : 'transparent',
-                  color: activeTab === tab.key ? '#10b981' : '#64748b',
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 10, fontSize: 12, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
+                  borderLeft: activeTab === tab.key ? '2px solid var(--gold)' : '2px solid transparent',
+                  border: activeTab === tab.key ? '1px solid var(--gold-border)' : '1px solid transparent',
+                  background: activeTab === tab.key ? 'var(--gold-bg)' : 'transparent',
+                  color: activeTab === tab.key ? 'var(--gold)' : 'var(--ink-dim)',
                 }}>
                 <tab.icon style={{ width: 14, height: 14, flexShrink: 0 }} />
                 {tab.label}

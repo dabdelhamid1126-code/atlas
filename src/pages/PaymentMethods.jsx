@@ -27,29 +27,23 @@ export default function PaymentMethods() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-100">Payment Methods</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Manage cards, cashback rates, and per-store rate overrides</p>
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Payment Methods</h1>
+        <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Manage cards, cashback rates, and per-store rate overrides</p>
       </div>
 
-      <div className="flex items-center gap-0.5 rounded-xl p-1 mb-6 w-fit" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <button
-          onClick={() => setTab('credit-cards')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'credit-cards' ? 'bg-emerald-500 text-white shadow' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
-        >
-          <CreditCard className="h-4 w-4" /> Credit Cards
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 3, borderRadius: 10, marginBottom: 22, width: 'fit-content', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+        <button onClick={() => setTab('credit-cards')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: tab === 'credit-cards' ? 'var(--ink)' : 'transparent', color: tab === 'credit-cards' ? 'var(--gold)' : 'var(--ink-dim)' }}>
+          <CreditCard className="h-3.5 w-3.5" /> Credit Cards
         </button>
-        <button
-          onClick={() => setTab('gift-cards')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'gift-cards' ? 'bg-emerald-500 text-white shadow' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
-        >
-          <Gift className="h-4 w-4" /> Gift Cards
+        <button onClick={() => setTab('gift-cards')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: tab === 'gift-cards' ? 'var(--ink)' : 'transparent', color: tab === 'gift-cards' ? 'var(--gold)' : 'var(--ink-dim)' }}>
+          <Gift className="h-3.5 w-3.5" /> Gift Cards
         </button>
-        <button
-          onClick={() => setTab('ya-cashback')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'ya-cashback' ? 'bg-amber-500 text-white shadow' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
-        >
-          <Star className="h-4 w-4" /> YA Cashback
+        <button onClick={() => setTab('ya-cashback')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: tab === 'ya-cashback' ? 'var(--gold)' : 'transparent', color: tab === 'ya-cashback' ? '#fff' : 'var(--ink-dim)' }}>
+          <Star className="h-3.5 w-3.5" /> YA Cashback
         </button>
       </div>
 
@@ -143,20 +137,20 @@ function CreditCardsTab({ queryClient }) {
     <>
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">Active Cards</p>
-          <p className="text-3xl font-bold text-blue-400">{activeCards.length}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{cards.length} total</p>
+        <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--ocean)' }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ocean)', marginBottom: 4 }}>Active Cards</p>
+          <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--ocean)' }}>{activeCards.length}</p>
+          <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{cards.length} total</p>
         </div>
-        <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-          <p className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">Spent This Month</p>
-          <p className="text-3xl font-bold text-cyan-400">${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{monthOrders.length} orders</p>
+        <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--gold)' }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 4 }}>Spent This Month</p>
+          <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--gold)' }}>${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+          <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{monthOrders.length} orders</p>
         </div>
-        <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-          <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Avg Cashback</p>
-          <p className="text-3xl font-bold text-emerald-400">{avgCashback.toFixed(1)}%</p>
-          <p className="text-xs text-slate-500 mt-0.5">across active cards</p>
+        <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--terrain)' }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 4 }}>Avg Cashback</p>
+          <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--terrain)' }}>{avgCashback.toFixed(1)}%</p>
+          <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>across active cards</p>
         </div>
       </div>
 

@@ -21,65 +21,29 @@ export default function TransactionsStatsBar({ orders = [] }) {
   }, 0);
 
   const hasAnySales = orders.some(o => (o.sale_events || []).length > 0);
-  const profitValueColor = hasAnySales ? (totalProfit > 0 ? '#10b981' : '#ef4444') : '#94a3b8';
-  const profitBg = hasAnySales ? (totalProfit > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)') : 'rgba(148,163,184,0.08)';
+  const profitColor = hasAnySales ? (totalProfit > 0 ? 'var(--terrain)' : 'var(--crimson)') : 'var(--ink-ghost)';
 
   const stats = [
-    {
-      label: 'Items',
-      value: totalItems.toLocaleString(),
-      icon: Package,
-      iconBg: 'rgba(96,165,250,0.1)',
-      iconColor: '#60a5fa',
-      valueColor: '#60a5fa',
-    },
-    {
-      label: 'Listed',
-      value: listedCount.toLocaleString(),
-      icon: Tag,
-      iconBg: 'rgba(168,85,247,0.1)',
-      iconColor: '#c084fc',
-      valueColor: '#c084fc',
-    },
-    {
-      label: 'Sold',
-      value: soldCount.toLocaleString(),
-      icon: CheckCircle2,
-      iconBg: 'rgba(16,185,129,0.1)',
-      iconColor: '#10b981',
-      valueColor: '#10b981',
-    },
-    {
-      label: 'Cost',
-      value: `$${totalCost.toFixed(2)}`,
-      icon: CreditCard,
-      iconBg: 'rgba(96,165,250,0.1)',
-      iconColor: '#60a5fa',
-      valueColor: '#60a5fa',
-    },
-    {
-      label: 'Profit',
-      value: hasAnySales ? `$${totalProfit.toFixed(2)}` : '$0.00',
-      icon: TrendingUp,
-      iconBg: profitBg,
-      iconColor: profitValueColor,
-      valueColor: profitValueColor,
-    },
+    { label: 'Items',  value: totalItems.toLocaleString(),        icon: Package,     color: 'var(--ocean)'  },
+    { label: 'Listed', value: listedCount.toLocaleString(),       icon: Tag,         color: 'var(--violet)' },
+    { label: 'Sold',   value: soldCount.toLocaleString(),         icon: CheckCircle2,color: 'var(--terrain)'},
+    { label: 'Cost',   value: `$${totalCost.toFixed(2)}`,         icon: CreditCard,  color: 'var(--gold)'   },
+    { label: 'Profit', value: hasAnySales ? `$${totalProfit.toFixed(2)}` : '$0.00', icon: TrendingUp, color: profitColor },
   ];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginBottom: '20px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 20 }}>
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={stat.label} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px', overflow: 'hidden', borderLeft: `3px solid ${stat.iconColor}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: stat.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon style={{ width: 16, height: 16, color: stat.iconColor }} />
+          <div key={stat.label} style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 12, padding: 12, borderTop: `3px solid ${stat.color}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, flexShrink: 0, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon style={{ width: 13, height: 13, color: stat.color }} />
               </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#64748b', marginBottom: 1, whiteSpace: 'nowrap', overflow: 'visible' }}>{stat.label}</p>
-                <p style={{ fontSize: 14, fontWeight: 700, color: stat.valueColor, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stat.value}</p>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 1 }}>{stat.label}</p>
+                <p style={{ fontSize: 14, fontWeight: 800, color: stat.color, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stat.value}</p>
               </div>
             </div>
           </div>

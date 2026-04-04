@@ -22,26 +22,22 @@ const fmtPct = (v) => `${(v || 0).toFixed(2)}%`;
 const COLORS = ['#10b981', '#06b6d4', '#60a5fa', '#f59e0b', '#f472b6', '#34d399', '#a78bfa', '#facc15'];
 
 const TOOLTIP_STYLE = {
-  borderRadius: 12,
-  border: '1px solid rgba(255,255,255,0.1)',
-  fontSize: 12,
-  background: '#1e2738',
-  color: '#e2e8f0',
+  borderRadius: 10,
+  border: '1px solid var(--parch-line)',
+  fontSize: 11,
+  background: 'var(--parch-card)',
+  color: 'var(--ink)',
 };
 
+const CARD_STYLE = { background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14 };
+
 // ─── KPI CARD ─────────────────────────────────────────────────────────────────
-function KpiCard({ label, value, icon: Icon, colorClass, iconBg, iconBorder, subtext }) {
+function KpiCard({ label, value, icon: Icon, color, subtext }) {
   return (
-    <div className="rounded-2xl border p-4 flex flex-col gap-1 min-w-0 overflow-hidden"
-      style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-      <div className="flex items-center justify-between mb-1">
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${iconBg} border ${iconBorder}`}>
-          <Icon className={`h-3.5 w-3.5 ${colorClass}`} />
-        </div>
-      </div>
-      <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 leading-tight">{label}</span>
-      <span className={`text-lg font-bold leading-tight ${colorClass}`}>{value}</span>
-      {subtext && <span className="text-[10px] text-slate-500">{subtext}</span>}
+    <div style={{ ...CARD_STYLE, padding: 14, borderTop: `3px solid ${color}` }}>
+      <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color, marginBottom: 6 }}>{label}</p>
+      <p style={{ fontSize: 18, fontWeight: 800, color, lineHeight: 1 }}>{value}</p>
+      {subtext && <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 4 }}>{subtext}</p>}
     </div>
   );
 }
@@ -49,13 +45,13 @@ function KpiCard({ label, value, icon: Icon, colorClass, iconBg, iconBorder, sub
 // ─── CHART SECTION CARD ───────────────────────────────────────────────────────
 function ChartCard({ title, subtitle, badge, children }) {
   return (
-    <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-      <div className="flex items-center justify-between mb-0.5">
-        <p className="text-xs font-bold tracking-widest uppercase text-slate-500">{title}</p>
-        {badge && <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold uppercase">{badge}</span>}
+    <div style={{ ...CARD_STYLE, padding: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>{title}</p>
+        {badge && <span style={{ fontSize: 9, background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', color: 'var(--gold)', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>{badge}</span>}
       </div>
-      {subtitle && <p className="text-[10px] text-slate-500 mb-4">{subtitle}</p>}
-      {!subtitle && <div className="mb-4" />}
+      {subtitle && <p style={{ fontSize: 10, color: 'var(--ink-ghost)', marginBottom: 14 }}>{subtitle}</p>}
+      {!subtitle && <div style={{ marginBottom: 14 }} />}
       {children}
     </div>
   );
@@ -64,11 +60,11 @@ function ChartCard({ title, subtitle, badge, children }) {
 // ─── CUSTOM LEGEND ────────────────────────────────────────────────────────────
 function ChartLegend({ items }) {
   return (
-    <div className="flex items-center gap-5 mt-3 flex-wrap">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
       {items.map(item => (
-        <div key={item.label} className="flex items-center gap-1.5">
-          <div className="h-2.5 w-7 rounded-full" style={{ backgroundColor: item.color }} />
-          <span className="text-[11px] font-semibold text-slate-500">{item.label}</span>
+        <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 20, height: 3, borderRadius: 99, backgroundColor: item.color }} />
+          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-faded)' }}>{item.label}</span>
         </div>
       ))}
     </div>
@@ -78,14 +74,14 @@ function ChartLegend({ items }) {
 // ─── DONUT LEGEND ─────────────────────────────────────────────────────────────
 function DonutLegend({ data, colors, fmt }) {
   return (
-    <div className="flex flex-col gap-2 flex-1 min-w-0">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 0 }}>
       {data.map((d, i) => (
-        <div key={d.name} className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-            <span className="text-xs text-slate-400 truncate">{d.name}</span>
+        <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: colors[i % colors.length], flexShrink: 0 }} />
+            <span style={{ fontSize: 10, color: 'var(--ink-faded)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
           </div>
-          <span className="text-xs font-bold text-slate-300 shrink-0">{fmt ? fmt(d.value) : d.value}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink)', flexShrink: 0 }}>{fmt ? fmt(d.value) : d.value}</span>
         </div>
       ))}
     </div>
@@ -274,125 +270,118 @@ export default function Analytics() {
   ];
 
   const KPI_CARDS = [
-    { label: 'Revenue', value: fmt$(kpis.revenue), icon: DollarSign, colorClass: 'text-blue-400', iconBg: 'bg-blue-500/10', iconBorder: 'border-blue-500/20' },
-    { label: 'Cost', value: fmt$(kpis.cost), icon: ShoppingCart, colorClass: 'text-pink-400', iconBg: 'bg-pink-500/10', iconBorder: 'border-pink-500/20' },
-    { label: profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Profit', value: fmt$(kpis.profit), icon: TrendingUp, colorClass: kpis.profit >= 0 ? 'text-emerald-400' : 'text-red-400', iconBg: kpis.profit >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10', iconBorder: kpis.profit >= 0 ? 'border-emerald-500/20' : 'border-red-500/20', subtext: kpis.cost > 0 ? `${fmtPct((kpis.profit / kpis.cost) * 100)} margin` : '' },
-    { label: 'ROI', value: fmtPct(kpis.roi), icon: Percent, colorClass: 'text-cyan-400', iconBg: 'bg-cyan-500/10', iconBorder: 'border-cyan-500/20' },
-    { label: 'Cashback', value: fmt$(kpis.cashback), icon: CreditCard, colorClass: 'text-pink-400', iconBg: 'bg-pink-500/10', iconBorder: 'border-pink-500/20' },
-    { label: 'YA Cashback', value: fmt$(kpis.yaCashback), icon: Star, colorClass: 'text-amber-400', iconBg: 'bg-amber-500/10', iconBorder: 'border-amber-500/20', subtext: 'Young Adult CB' },
-    { label: 'Top Store', value: kpis.topStore, icon: Store, colorClass: 'text-teal-400', iconBg: 'bg-teal-500/10', iconBorder: 'border-teal-500/20' },
-    { label: 'Inventory', value: kpis.inventory.toString(), icon: Package, colorClass: 'text-purple-400', iconBg: 'bg-purple-500/10', iconBorder: 'border-purple-500/20', subtext: 'items ordered' },
+    { label: 'Revenue',    value: fmt$(kpis.revenue),   color: 'var(--ocean)'  },
+    { label: 'Cost',       value: fmt$(kpis.cost),       color: 'var(--crimson)'},
+    { label: profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Profit', value: fmt$(kpis.profit), color: kpis.profit >= 0 ? 'var(--terrain)' : 'var(--crimson)', subtext: kpis.cost > 0 ? `${fmtPct((kpis.profit / kpis.cost) * 100)} margin` : '' },
+    { label: 'ROI',        value: fmtPct(kpis.roi),     color: 'var(--ocean2)' },
+    { label: 'Cashback',   value: fmt$(kpis.cashback),  color: 'var(--violet)' },
+    { label: 'YA Cashback',value: fmt$(kpis.yaCashback),color: 'var(--gold)',  subtext: 'Young Adult CB' },
+    { label: 'Top Store',  value: kpis.topStore,        color: 'var(--terrain)'},
+    { label: 'Inventory',  value: kpis.inventory.toString(), color: 'var(--violet)', subtext: 'items ordered' },
   ];
 
-  const inp = { background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'white', padding: '6px 10px', fontSize: 12, outline: 'none' };
+  const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '6px 10px', fontSize: 12, outline: 'none' };
+  const SD = ({ title }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+      <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
+      <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--gold)' }}>{title}</span>
+      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(184,134,11,0.25), transparent)' }} />
+    </div>
+  );
 
   return (
-    <div className="space-y-5 pb-10">
+    <div style={{ paddingBottom: 40, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── HEADER ── */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Analytics & Insights</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Analytics & Insights</h1>
+          <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
             {mode === 'all' ? 'Combined overview' : mode === 'churning' ? 'Churning performance' : 'Marketplace performance'}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 3, borderRadius: 9, background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
             {MODES.map(m => (
               <button key={m.id} onClick={() => setMode(m.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${mode === m.id ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}>
+                style={{ padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none', background: mode === m.id ? 'var(--ink)' : 'transparent', color: mode === m.id ? 'var(--gold)' : 'var(--ink-dim)' }}>
                 {m.label}
               </button>
             ))}
           </div>
           <button onClick={() => refetch()} disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-400 transition"
-            style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer', fontFamily: "'Playfair Display', serif" }}>
+            <RefreshCw style={{ width: 13, height: 13 }} className={isLoading ? 'animate-spin' : ''} /> Refresh
           </button>
         </div>
       </div>
 
       {/* ── FILTER CARD ── */}
-      <div className="rounded-2xl border px-5 py-4 flex flex-wrap items-end gap-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+      <div style={{ ...CARD_STYLE, padding: '14px 18px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 20 }}>
         <div>
-          <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-2">Period</p>
-          <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>Period</p>
+          <div style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 8, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
             {['monthly', 'quarterly', 'yearly'].map(p => (
               <button key={p} onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition ${period === p ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+                style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none', background: period === p ? 'var(--ink)' : 'transparent', color: period === p ? 'var(--gold)' : 'var(--ink-dim)', textTransform: 'capitalize' }}>
                 {p.charAt(0).toUpperCase() + p.slice(1)}
               </button>
             ))}
           </div>
         </div>
         <div>
-          <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-2">Date Range</p>
-          <div className="flex items-center gap-2">
+          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>Date Range</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={inp} />
-            <span className="text-slate-500 text-xs">→</span>
+            <span style={{ color: 'var(--ink-ghost)', fontSize: 12 }}>→</span>
             <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} style={inp} />
           </div>
         </div>
       </div>
 
       {/* ── KPI CARDS ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <SD title="Survey Markers" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
         {KPI_CARDS.map(k => <KpiCard key={k.label} {...k} />)}
       </div>
 
       {/* ── PROFIT DETAILS BOX ── */}
-      <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-        <button
-          onClick={() => setShowProfitDetails(p => !p)}
-          className="w-full flex items-center justify-between px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-white/5 transition"
-        >
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 text-emerald-400" />
-            Profit Breakdown
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 capitalize">
+      <div style={{ ...CARD_STYLE, overflow: 'hidden' }}>
+        <button onClick={() => setShowProfitDetails(p => !p)}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', background: 'transparent', borderBottom: showProfitDetails ? '1px solid var(--parch-line)' : 'none', cursor: 'pointer', border: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Info style={{ width: 14, height: 14, color: 'var(--gold)' }} />
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>Profit Breakdown</span>
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: 'var(--gold-bg)', color: 'var(--gold)', border: '1px solid var(--gold-border)' }}>
               {profitMode === 'cashback_wallet' ? 'Cashback Wallet Mode' : 'Accounting Mode'}
             </span>
           </div>
-          {showProfitDetails ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
+          {showProfitDetails ? <ChevronUp style={{ width: 14, height: 14, color: 'var(--ink-dim)' }} /> : <ChevronDown style={{ width: 14, height: 14, color: 'var(--ink-dim)' }} />}
         </button>
         {showProfitDetails && (
-          <div className="px-5 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t pt-4" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
-              <p className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">Revenue</p>
-              <p className="text-base font-bold text-emerald-400">{fmt$(kpis.revenue)}</p>
-            </div>
-            <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
-              <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider">Card Spend</p>
-              <p className="text-base font-bold text-red-400">−{fmt$(kpis.cost)}</p>
-            </div>
-            <div className="rounded-xl bg-pink-500/10 border border-pink-500/20 p-3">
-              <p className="text-[10px] text-pink-400 font-semibold uppercase tracking-wider">Cashback</p>
-              <p className="text-base font-bold text-pink-400">+{fmt$(kpis.cashback)}</p>
-            </div>
-            {profitMode === 'cashback_wallet' && kpis.yaCashback > 0 ? (
-              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
-                <p className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">YA Adjustment</p>
-                <p className="text-base font-bold text-amber-400">−{fmt$(kpis.yaCashback)}</p>
-                <p className="text-[9px] text-amber-500 mt-0.5">Wallet mode deduction</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, padding: '14px 18px' }}>
+            {[
+              { label: 'Revenue',    value: fmt$(kpis.revenue),   color: 'var(--terrain)',  bg: 'var(--terrain-bg)', border: 'var(--terrain-bdr)', prefix: '' },
+              { label: 'Card Spend', value: fmt$(kpis.cost),       color: 'var(--crimson)',  bg: 'var(--crimson-bg)', border: 'var(--crimson-bdr)', prefix: '−' },
+              { label: 'Cashback',   value: fmt$(kpis.cashback),  color: 'var(--violet)',   bg: 'var(--violet-bg)',  border: 'var(--violet-bdr)',  prefix: '+' },
+              { label: profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Net Profit', value: fmt$(kpis.profit), color: 'var(--gold)', bg: 'var(--gold-bg)', border: 'var(--gold-border)', prefix: '' },
+            ].map(b => (
+              <div key={b.label} style={{ borderRadius: 10, padding: 12, background: b.bg, border: `1px solid ${b.border}` }}>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: b.color, marginBottom: 4 }}>{b.label}</p>
+                <p style={{ fontSize: 16, fontWeight: 800, color: b.color }}>{b.prefix}{b.value}</p>
               </div>
-            ) : (
-              <div className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-3">
-                <p className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider">YA Cashback</p>
-                <p className="text-base font-bold text-purple-400">{fmt$(kpis.yaCashback)}</p>
-                <p className="text-[9px] text-purple-500 mt-0.5">Included in total</p>
-              </div>
-            )}
+            ))}
           </div>
         )}
       </div>
 
       {/* ── TAB NAV ── */}
-      <div className="flex items-center gap-0.5 rounded-2xl p-1 w-fit" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 3, borderRadius: 10, width: 'fit-content', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${activeTab === t.id ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none',
+              background: activeTab === t.id ? 'var(--ink)' : 'transparent',
+              color: activeTab === t.id ? 'var(--gold)' : 'var(--ink-dim)' }}>
             {t.icon} {t.label}
           </button>
         ))}
@@ -405,9 +394,9 @@ export default function Analytics() {
             <ChartCard title="Revenue & Profit Trend" subtitle="Revenue and profit over time" badge="Monthly">
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={periodData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "'Playfair Display',serif" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Line type="monotone" dataKey="revenue" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3, fill: '#60a5fa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Revenue" />
                   <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Profit" />
@@ -446,9 +435,9 @@ export default function Analytics() {
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0.03} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "'Playfair Display',serif" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Area type="monotone" dataKey="cumProfit" stroke="#10b981" fill="url(#cumGrad)" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Cumulative Profit" />
                 </AreaChart>
@@ -459,9 +448,9 @@ export default function Analytics() {
             <ChartCard title="Period P&L" subtitle="Profit & loss by period">
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={periodData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "'Playfair Display',serif" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Line type="monotone" dataKey="revenue" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3, fill: '#60a5fa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Revenue" />
                   <Line type="monotone" dataKey="cost" stroke="#f472b6" strokeWidth={2.5} dot={{ r: 3, fill: '#f472b6', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Cost" />
@@ -481,9 +470,9 @@ export default function Analytics() {
             <ChartCard title="Store Performance" subtitle="Sales & profit by store" badge={`${storeData.length} Stores`}>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={storeData.slice(0, 8).map(s => ({ name: s.store, sales: s.sales, profit: s.profit }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Line type="monotone" dataKey="sales" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3, fill: '#60a5fa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Sales" />
                   <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Profit" />
@@ -515,9 +504,9 @@ export default function Analytics() {
             <ChartCard title="Platform Performance" subtitle="Revenue & profit by platform" badge={`${platformData.length} Platforms`}>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={platformData.slice(0, 8)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="platform" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
+                  <XAxis dataKey="platform" tick={{ fontSize: 9, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Line type="monotone" dataKey="sales" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3, fill: '#60a5fa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Sales" />
                   <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Profit" />
@@ -527,7 +516,7 @@ export default function Analytics() {
               <ChartLegend items={[{ label: 'Sales', color: '#60a5fa' }, { label: 'Profit', color: '#10b981' }, { label: 'Cashback', color: '#a78bfa' }]} />
             </ChartCard>
 
-            <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+            <div className="rounded-2xl border p-5" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
               <p className="text-xs font-bold tracking-widest uppercase text-slate-500 mb-4">Store Summary</p>
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -554,9 +543,9 @@ export default function Analytics() {
             <ChartCard title="Spend by Payment Method" subtitle="Spend and cashback per card">
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={paymentData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Line type="monotone" dataKey="spent" stroke="#a78bfa" strokeWidth={2.5} dot={{ r: 3, fill: '#a78bfa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Spent" />
                   <Line type="monotone" dataKey="cashback" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Cashback" />
@@ -589,7 +578,7 @@ export default function Analytics() {
               <LineChart data={paymentData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={v => `${v.toFixed(1)}%`} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `${v.toFixed(1)}%`} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => `${Number(v).toFixed(2)}%`} />
                 <Line type="monotone" dataKey="statedRate" stroke="#a78bfa" strokeWidth={2.5} dot={{ r: 3, fill: '#a78bfa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Stated Rate" />
                 <Line type="monotone" dataKey="effectiveRate" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Effective Rate" />
@@ -598,23 +587,23 @@ export default function Analytics() {
             <ChartLegend items={[{ label: 'Stated Rate', color: '#a78bfa' }, { label: 'Effective Rate', color: '#10b981' }]} />
           </ChartCard>
 
-          <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-            <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--parch-line)' }}>
               <p className="text-xs font-bold tracking-widest uppercase text-slate-500">Payment Method Performance</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <tr className="border-b" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
                     {['Payment Method', 'Transactions', 'Total Spent', 'Cashback', 'Stated Rate', 'Effective Rate', 'Variance'].map(h => (
-                      <th key={h} className="pb-3 pt-3 px-4 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">{h}</th>
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {paymentData.map(p => (
-                    <tr key={p.id} className="border-b transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    <tr key={p.id} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.03)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td className="py-3 px-4 font-semibold text-slate-200">{p.name}</td>
                       <td className="py-3 px-4 text-slate-400">{p.txns}</td>
@@ -630,7 +619,7 @@ export default function Analytics() {
                 </tbody>
               </table>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-5 border-t" style={{ borderColor: 'var(--parch-line)' }}>
               {[
                 { label: 'Total Spent', value: fmt$(paymentData.reduce((s, p) => s + p.spent, 0)), colorClass: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
                 { label: 'Total Cashback', value: fmt$(paymentData.reduce((s, p) => s + p.cashback, 0)), colorClass: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
@@ -651,24 +640,24 @@ export default function Analytics() {
       {activeTab === 'tables' && (
         <div className="space-y-5">
           {/* Store breakdown */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+          <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
+            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
               <p className="text-xs font-bold tracking-widest uppercase text-slate-500">Store Breakdown</p>
               <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold">{storeData.length} Stores</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <tr className="border-b" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
                     {['Store', 'Purchases', 'Sales', 'Profit', 'Cashback', 'Spread', 'ROI', 'TXNs'].map(h => (
-                      <th key={h} className="pb-3 pt-3 px-4 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">{h}</th>
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {storeData.map(s => (
-                    <tr key={s.store} className="border-b transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    <tr key={s.store} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.03)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td className="py-3 px-4 font-bold text-slate-200">{s.store}</td>
                       <td className="py-3 px-4 text-blue-400 font-semibold">{fmt$(s.purchases)}</td>
@@ -680,7 +669,7 @@ export default function Analytics() {
                       <td className="py-3 px-4 text-slate-400">{s.txns}</td>
                     </tr>
                   ))}
-                  <tr className="border-t-2" style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)' }}>
+                  <tr className="border-t-2" style={{ borderColor: 'var(--parch-deep)', background: 'var(--parch-warm)' }}>
                     <td className="py-3 px-4 font-bold text-slate-100">TOTAL</td>
                     <td className="py-3 px-4 text-blue-400 font-bold">{fmt$(storeData.reduce((s, x) => s + x.purchases, 0))}</td>
                     <td className="py-3 px-4 text-emerald-400 font-bold">{fmt$(storeData.reduce((s, x) => s + x.sales, 0))}</td>
@@ -696,24 +685,24 @@ export default function Analytics() {
           </div>
 
           {/* Platform breakdown */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+          <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
+            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
               <p className="text-xs font-bold tracking-widest uppercase text-slate-500">Platform Breakdown</p>
               <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold">{platformData.length} Platforms</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <tr className="border-b" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
                     {['Platform', 'Purchases', 'Sales', 'Cashback', 'Profit', '# Buys', 'Margin'].map(h => (
-                      <th key={h} className="pb-3 pt-3 px-4 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">{h}</th>
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {platformData.map(p => (
-                    <tr key={p.platform} className="border-b transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    <tr key={p.platform} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.03)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td className="py-3 px-4 font-bold text-slate-200">{p.platform}</td>
                       <td className="py-3 px-4 text-blue-400 font-semibold">{fmt$(p.purchases)}</td>
@@ -730,23 +719,23 @@ export default function Analytics() {
           </div>
 
           {/* Period breakdown */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-            <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+          <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
               <p className="text-xs font-bold tracking-widest uppercase text-slate-500">Period-by-Period Data</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <tr className="border-b" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
                     {['Period', 'Purchases', 'Sales', 'Cashback', 'Net Profit', 'Margin'].map(h => (
-                      <th key={h} className="pb-3 pt-3 px-4 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">{h}</th>
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {periodData.map(p => (
-                    <tr key={p.period} className="border-b transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    <tr key={p.period} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.03)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td className="py-3 px-4 font-semibold text-slate-300">{p.period}</td>
                       <td className="py-3 px-4 text-blue-400 font-semibold">{fmt$(p.cost)}</td>

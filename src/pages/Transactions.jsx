@@ -530,50 +530,47 @@ export default function Transactions() {
     { id: 'split_payments', label: 'Split Payments' },
   ];
 
+  const modeStyles = {
+    all:         { active: { background: 'var(--gold-bg)', color: 'var(--gold)',    border: '1px solid var(--gold-border)' } },
+    churning:    { active: { background: 'var(--gold-bg)', color: 'var(--gold)',    border: '1px solid var(--gold-border)' } },
+    marketplace: { active: { background: 'var(--ocean-bg)', color: 'var(--ocean)', border: '1px solid var(--ocean-bdr)'  } },
+  };
+
   return (
     <div>
-      <div className="flex items-start justify-between mb-6">
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 14 }}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Transactions</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Track and manage your purchases</p>
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Transactions</h1>
+          <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Track and manage your purchases</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleCSVDownload}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 transition"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Download className="h-4 w-4" /> CSV
-          </button>
-        </div>
+        <button onClick={handleCSVDownload}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer', fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' }}>
+          <Download className="h-3.5 w-3.5" /> Export CSV
+        </button>
       </div>
 
       {/* Mode Tabs */}
-      <div className="flex items-center gap-1 mb-5 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-         {modes.map(m => (
-           <button key={m.id} onClick={() => setMode(m.id)}
-             className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm transition"
-             style={mode === m.id
-               ? m.activeStyle
-               : { background: 'transparent', color: '#94a3b8', border: '1px solid transparent' }}>
-             <m.Icon className="w-3.5 h-3.5" />
-             {m.label}
-             <span style={{ fontSize: '10px', fontWeight: 600, color: 'inherit', opacity: 0.7, marginLeft: '4px' }}>
-               ({modeCounts[m.id]})
-             </span>
-           </button>
-         ))}
-       </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 20, padding: 3, borderRadius: 10, width: 'fit-content', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+        {modes.map(m => (
+          <button key={m.id} onClick={() => setMode(m.id)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
+              ...(mode === m.id ? (modeStyles[m.id]?.active || modeStyles.all.active) : { background: 'transparent', color: 'var(--ink-dim)' }) }}>
+            <m.Icon className="w-3.5 h-3.5" />
+            {m.label}
+            <span style={{ fontSize: 10, opacity: 0.7 }}>({modeCounts[m.id]})</span>
+          </button>
+        ))}
+      </div>
 
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <span className="font-semibold text-emerald-400 text-sm">{selectedIds.size} selected</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, padding: '10px 16px', borderRadius: 10, background: 'var(--gold-bg)', border: '1px solid var(--gold-border)' }}>
+          <span style={{ fontWeight: 700, color: 'var(--gold)', fontSize: 13 }}>{selectedIds.size} selected</span>
           <button onClick={handleBulkDelete}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
-            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600, background: 'var(--crimson-bg)', border: '1px solid var(--crimson-bdr)', color: 'var(--crimson)', cursor: 'pointer' }}>
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </button>
           <button onClick={() => setSelectedIds(new Set())}
-            className="ml-auto text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition">
+            style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
             <X className="h-3.5 w-3.5" /> Clear
           </button>
         </div>

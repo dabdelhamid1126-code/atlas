@@ -349,14 +349,14 @@ export default function Products() {
   const tdS = { padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.04)', verticalAlign: 'middle' };
 
   return (
-    <div style={{ padding: 24, minHeight: '100vh', background: '#080c12' }}>
+    <div style={{ paddingBottom: 24 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'rgba(255,255,255,0.95)', margin: 0 }}>Products</h1>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>Master product catalog · {products.length} total</p>
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>Products</h1>
+          <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 4 }}>Master product catalog · {products.length} total</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setImportOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>

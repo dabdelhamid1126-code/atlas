@@ -2,19 +2,19 @@ import React from 'react';
 
 export default function PageHeader({ title, description, actions }) {
   return (
-    <div className="mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{title}</h1>
-          {description && (
-            <p className="mt-1 text-sm text-slate-400">{description}</p>
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>{title}</h1>
+            {description && <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>{description}</p>}
+          </div>
+          {actions && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {actions}
+            </div>
           )}
         </div>
-        {actions && (
-          <div className="flex items-center gap-3">
-            {actions}
-          </div>
-        )}
       </div>
     </div>
   );
