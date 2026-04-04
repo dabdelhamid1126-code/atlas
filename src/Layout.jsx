@@ -71,10 +71,7 @@ function AtlasLogo({ size = 36 }) {
 // ── Sidebar color tokens ─────────────────────────────────────────────────────
 const SIDEBAR_BG     = '#2a2218';
 const SIDEBAR_BORDER = 'rgba(201,168,76,0.22)';
-const SIDEBAR_GRID   = `
-  repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(201,168,76,0.07) 23px, rgba(201,168,76,0.07) 24px),
-  repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(201,168,76,0.07) 23px, rgba(201,168,76,0.07) 24px)
-`;
+const SIDEBAR_GRID   = 'none';
 
 const NAV_LABEL_COLOR  = '#7a6a4e';
 const NAV_ITEM_COLOR   = '#c4a96a';
