@@ -312,7 +312,7 @@ export default function NewOrders() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
           <div className="space-y-4">
             {/* ── MODE TOGGLE ── */}
-            <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 16 }}>
+            <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 16, padding: 16 }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <button type="button" onClick={() => set('order_type', 'churning')}
