@@ -39,7 +39,6 @@ const NAV_GROUPS = [
   },
 ];
 
-// ── Atlas Compass Logo ───────────────────────────────────────────────────────
 function AtlasLogo({ size = 36 }) {
   const s = size;
   const cx = s / 2;
@@ -54,8 +53,8 @@ function AtlasLogo({ size = 36 }) {
 
   return (
     <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} style={{ flexShrink: 0 }}>
-      <rect width={s} height={s} rx={s * 0.25} fill="#12100d"/>
-      <rect width={s} height={s} rx={s * 0.25} fill="none" stroke="#c9a84c" strokeWidth="0.8" opacity="0.35"/>
+      <rect width={s} height={s} rx={s * 0.25} fill="#1e1a14"/>
+      <rect width={s} height={s} rx={s * 0.25} fill="none" stroke="#c9a84c" strokeWidth="0.8" opacity="0.5"/>
       <polygon points={hex} fill="none" stroke="#c9a84c" strokeWidth={s * 0.048}/>
       <line x1={cx} y1={cy - r + 2} x2={cx} y2={cy + r - 2} stroke="#c9a84c" strokeWidth={s * 0.028} strokeDasharray={`${s*0.1} ${s*0.1}`} opacity="0.4"/>
       <line x1={cx - r + 2} y1={cy} x2={cx + r - 2} y2={cy} stroke="#c9a84c" strokeWidth={s * 0.028} strokeDasharray={`${s*0.1} ${s*0.1}`} opacity="0.4"/>
@@ -63,18 +62,25 @@ function AtlasLogo({ size = 36 }) {
       <polygon points={`${cx},${cy + r - s*0.04} ${cx - arrowN},${cy + r*0.42} ${cx + arrowN},${cy + r*0.42}`} fill="#c9a84c" opacity="0.2"/>
       <polygon points={`${cx + r - s*0.04},${cy} ${cx + r*0.42},${cy - arrowE} ${cx + r*0.42},${cy + arrowE}`} fill="#f5e09a"/>
       <polygon points={`${cx - r + s*0.04},${cy} ${cx - r*0.42},${cy - arrowE} ${cx - r*0.42},${cy + arrowE}`} fill="#c9a84c" opacity="0.2"/>
-      <circle cx={cx} cy={cy} r={s * 0.14} fill="#12100d" stroke="#c9a84c" strokeWidth={s * 0.038}/>
+      <circle cx={cx} cy={cy} r={s * 0.14} fill="#1e1a14" stroke="#c9a84c" strokeWidth={s * 0.038}/>
       <circle cx={cx} cy={cy} r={s * 0.06} fill="#c9a84c"/>
     </svg>
   );
 }
 
-const SIDEBAR_BG = '#12100d';
-const SIDEBAR_BORDER = 'rgba(201,168,76,0.1)';
-const SIDEBAR_GRID = `
-  repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(201,168,76,0.04) 23px, rgba(201,168,76,0.04) 24px),
-  repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(201,168,76,0.04) 23px, rgba(201,168,76,0.04) 24px)
+// ── Sidebar color tokens ─────────────────────────────────────────────────────
+const SIDEBAR_BG     = '#2a2218';
+const SIDEBAR_BORDER = 'rgba(201,168,76,0.22)';
+const SIDEBAR_GRID   = `
+  repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(201,168,76,0.07) 23px, rgba(201,168,76,0.07) 24px),
+  repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(201,168,76,0.07) 23px, rgba(201,168,76,0.07) 24px)
 `;
+
+const NAV_LABEL_COLOR  = '#7a6a4e';
+const NAV_ITEM_COLOR   = '#c4a96a';
+const NAV_ITEM_HOVER   = '#e0c878';
+const NAV_ACTIVE_COLOR = '#f0d070';
+const NAV_ICON_OPACITY = 0.65;
 
 export default function Layout({ children, currentPageName }) {
   const [user, setUser]                 = useState(null);
@@ -107,7 +113,7 @@ export default function Layout({ children, currentPageName }) {
         style={{ borderBottom: `1px solid ${SIDEBAR_BORDER}` }}
       >
         {collapsed ? (
-          <button className="hidden lg:flex p-1.5 rounded-lg transition-colors" style={{ color: '#3d3529' }}
+          <button className="hidden lg:flex p-1.5 rounded-lg transition-colors" style={{ color: NAV_ITEM_COLOR }}
             onClick={() => setCollapsed(false)} title="Expand sidebar">
             <PanelLeftOpen className="w-[18px] h-[18px]" />
           </button>
@@ -119,16 +125,16 @@ export default function Layout({ children, currentPageName }) {
                 background: 'linear-gradient(135deg, #c9a84c, #f5e09a, #c9a84c)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               }}>Atlas</p>
-              <p className="text-[8px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: '#2a2520' }}>Reselling, Quantified</p>
+              <p className="text-[8px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: '#8a7a5e' }}>Reselling, Quantified</p>
             </div>
-            <button onClick={openCmd} title="Search (⌘K)" className="p-1.5 rounded-lg transition-colors" style={{ color: '#3d3529' }}>
+            <button onClick={openCmd} title="Search (⌘K)" className="p-1.5 rounded-lg transition-colors" style={{ color: NAV_ITEM_COLOR }}>
               <Search className="w-[15px] h-[15px]" />
             </button>
-            <button className="hidden lg:flex p-1.5 rounded-lg transition-colors" style={{ color: '#3d3529' }}
+            <button className="hidden lg:flex p-1.5 rounded-lg transition-colors" style={{ color: NAV_ITEM_COLOR }}
               onClick={() => setCollapsed(true)} title="Collapse sidebar">
               <PanelLeftClose className="w-[17px] h-[17px]" />
             </button>
-            <button className="lg:hidden" style={{ color: '#3d3529' }} onClick={() => setSidebarOpen(false)}>
+            <button className="lg:hidden" style={{ color: NAV_ITEM_COLOR }} onClick={() => setSidebarOpen(false)}>
               <X className="w-5 h-5" />
             </button>
           </>
@@ -139,10 +145,10 @@ export default function Layout({ children, currentPageName }) {
       {!collapsed && (
         <button onClick={openCmd}
           className="mx-3 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-xl text-xs w-[calc(100%-24px)] transition-colors"
-          style={{ border: '1px solid rgba(201,168,76,0.08)', background: 'rgba(201,168,76,0.03)', color: '#2a2520' }}>
+          style={{ border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.06)', color: NAV_ITEM_COLOR }}>
           <Search className="w-3.5 h-3.5 shrink-0" />
           <span className="flex-1 text-left">Search the map...</span>
-          <kbd className="text-[10px] rounded px-1 py-0.5 font-medium" style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.08)', color: '#2a2520' }}>⌘K</kbd>
+          <kbd className="text-[10px] rounded px-1 py-0.5 font-medium" style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.15)', color: NAV_LABEL_COLOR }}>⌘K</kbd>
         </button>
       )}
 
@@ -151,7 +157,7 @@ export default function Layout({ children, currentPageName }) {
         {NAV_GROUPS.map(group => (
           <div key={group.label} className="space-y-0.5">
             {!collapsed && (
-              <p className="px-2 pt-1 pb-1 font-display text-[8px] font-bold uppercase tracking-[0.18em]" style={{ color: '#221e18' }}>
+              <p className="px-2 pt-1 pb-1 font-display text-[8px] font-bold uppercase tracking-[0.18em]" style={{ color: NAV_LABEL_COLOR }}>
                 {group.label}
               </p>
             )}
@@ -164,16 +170,19 @@ export default function Layout({ children, currentPageName }) {
                   title={collapsed ? item.name : undefined}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 9,
-                    padding: collapsed ? '7px 10px' : '7px 10px',
+                    padding: '7px 10px',
                     borderRadius: 8, fontSize: 12, fontWeight: 500,
                     marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
                     justifyContent: collapsed ? 'center' : undefined,
                     borderLeft: isActive ? '2px solid #c9a84c' : '2px solid transparent',
-                    background: isActive ? 'linear-gradient(90deg, rgba(201,168,76,0.12), transparent)' : 'transparent',
-                    color: isActive ? '#c9a84c' : '#3d3529',
+                    background: isActive ? 'linear-gradient(90deg, rgba(201,168,76,0.18), transparent)' : 'transparent',
+                    color: isActive ? NAV_ACTIVE_COLOR : NAV_ITEM_COLOR,
+                    transition: 'color 0.15s, background 0.15s',
                   }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = NAV_ITEM_HOVER; e.currentTarget.style.background = 'rgba(201,168,76,0.07)'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = NAV_ITEM_COLOR; e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: isActive ? 1 : 0.45 }} />
+                  <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: isActive ? 1 : NAV_ICON_OPACITY }} />
                   {!collapsed && <span className="truncate flex-1">{item.name}</span>}
                 </Link>
               );
@@ -184,12 +193,12 @@ export default function Layout({ children, currentPageName }) {
 
       {/* User profile */}
       {user && (
-        <div className="p-2.5" style={{ borderTop: `1px solid rgba(201,168,76,0.08)` }}>
+        <div className="p-2.5" style={{ borderTop: `1px solid rgba(201,168,76,0.18)` }}>
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className={cn('w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-colors', collapsed && 'justify-center px-1')}
-              style={{ border: '1px solid rgba(201,168,76,0.1)', background: 'rgba(201,168,76,0.04)', cursor: 'pointer' }}
+              style={{ border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.07)', cursor: 'pointer' }}
             >
               <div className="relative flex-shrink-0">
                 <Avatar className="h-8 w-8">
@@ -206,9 +215,9 @@ export default function Layout({ children, currentPageName }) {
                     <p className="font-display text-[13px] font-bold leading-tight truncate" style={{ color: '#c9a84c' }}>
                       {user.full_name || user.email?.split('@')[0] || 'User'}
                     </p>
-                    <p className="text-[9px] leading-tight" style={{ color: '#3d3529', letterSpacing: '0.04em' }}>● Charting</p>
+                    <p className="text-[9px] leading-tight" style={{ color: '#8a7a5e', letterSpacing: '0.04em' }}>● Charting</p>
                   </div>
-                  <ChevronDown style={{ width: 13, height: 13, color: '#3d3529', flexShrink: 0 }} />
+                  <ChevronDown style={{ width: 13, height: 13, color: NAV_ITEM_COLOR, flexShrink: 0 }} />
                 </>
               )}
             </button>
@@ -216,11 +225,11 @@ export default function Layout({ children, currentPageName }) {
             {userMenuOpen && (
               <div
                 className={cn('absolute overflow-hidden mb-1', collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-0 right-0')}
-                style={{ background: '#1a1712', border: '1px solid rgba(201,168,76,0.15)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', minWidth: collapsed ? 160 : undefined }}
+                style={{ background: '#1a1712', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', minWidth: collapsed ? 160 : undefined }}
               >
                 <Link to={createPageUrl('Settings')} onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 px-4 py-3 text-sm transition-colors"
-                  style={{ borderBottom: '1px solid rgba(201,168,76,0.08)', color: '#6b5f4e', textDecoration: 'none' }}>
+                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: NAV_ITEM_COLOR, textDecoration: 'none' }}>
                   <SettingsIcon style={{ width: 14, height: 14 }} /> Settings
                 </Link>
                 <button onClick={() => { setUserMenuOpen(false); handleLogout(); }}
@@ -237,27 +246,31 @@ export default function Layout({ children, currentPageName }) {
   );
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--parch-bg)' }}>
+    <div className="h-screen flex overflow-hidden" style={{ background: 'var(--parch-bg)' }}>
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
+      {/* Sidebar — fixed height, never scrolls with page */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out lg:static lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out lg:relative lg:translate-x-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         collapsed ? 'lg:w-[72px]' : 'lg:w-[248px]',
-        'w-[248px]'
+        'w-[248px]',
+        'h-screen flex-shrink-0'
       )}>
         <SidebarContent />
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0">
+      {/* Main content — scrolls independently */}
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Mobile topbar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b"
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
           style={{ background: SIDEBAR_BG, borderColor: SIDEBAR_BORDER }}>
-          <button onClick={() => setSidebarOpen(true)} style={{ color: '#3d3529' }}>
+          <button onClick={() => setSidebarOpen(true)} style={{ color: NAV_ITEM_COLOR }}>
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
@@ -269,6 +282,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </div>
 
+        {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto" style={{
           background: 'var(--parch-bg)',
           backgroundImage: `
