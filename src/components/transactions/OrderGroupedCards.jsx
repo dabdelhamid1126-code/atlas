@@ -303,7 +303,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
 
   return (
     <div style={{
-      background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14,
+      background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14,
       marginBottom: 10, transition: 'border-color 0.15s ease', overflow: 'hidden',
     }}
       onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'}
@@ -590,7 +590,7 @@ export default function OrderGroupedCards({
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {[...Array(5)].map((_, i) => (
-          <div key={i} style={{ height: 72, borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', animation: 'pulse 1.5s infinite' }} />
+          <div key={i} style={{ height: 72, borderRadius: 14, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', animation: 'pulse 1.5s infinite' }} />
         ))}
       </div>
     );
@@ -598,7 +598,7 @@ export default function OrderGroupedCards({
 
   if (data.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '48px 0', borderRadius: 14, background: '#111827', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ textAlign: 'center', padding: '48px 0', borderRadius: 14, background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
         <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
         <p style={{ color: '#64748b', fontSize: 15, fontWeight: 500, marginBottom: 8 }}>No orders found</p>
         <p style={{ color: '#475569', fontSize: 13, marginBottom: 16 }}>Try adjusting your filters</p>

@@ -774,7 +774,7 @@ export default function NewOrders() {
           {/* ── RIGHT COLUMN ── */}
           <div>
             <div className="lg:sticky lg:top-6 space-y-3">
-              <div className="rounded-2xl overflow-hidden" style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
                 <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-2">
                     {hasSales ? 'Estimated Profit' : 'Cashback Profit'}
