@@ -164,7 +164,7 @@ function ProductCard({ product, onEdit, onDelete }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      style={{ background: hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: '12px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', position: 'relative', transition: 'all 0.15s' }}>
+      style={{ background: hovered ? 'var(--gold-bg)' : 'var(--parch-card)', border: `1px solid ${hovered ? 'var(--gold-border)' : 'var(--parch-line)'}`, borderRadius: 12, padding: '12px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', position: 'relative', transition: 'all 0.15s' }}>
       {hovered && (
         <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3 }}>
           <button onClick={() => onEdit(product)} style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}><Pencil style={{ width: 11, height: 11 }} /></button>
