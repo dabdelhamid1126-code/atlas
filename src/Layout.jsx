@@ -24,7 +24,6 @@ import {
   Settings as SettingsIcon,
   PanelLeftClose,
   PanelLeftOpen,
-  Zap,
   Search,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -47,12 +46,7 @@ const NAV_GROUPS = [
       { name: 'Import Orders',      page: 'ImportOrders', icon: ArrowLeftRight },
     ],
   },
-  {
-    label: 'Marketplace',
-    items: [
-      { name: 'Deals Dashboard', page: 'Deals', icon: Zap },
-    ],
-  },
+
   {
     label: 'Records',
     items: [
