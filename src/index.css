@@ -57,52 +57,52 @@
     --rose-bdr:    rgba(94,16,32,0.22);
 
     /* ── SHADCN TOKENS — synced to parchment ── */
-    --background:          38 25% 87%;
-    --foreground:          25 35% 5%;
+    --background:          38 25% 87%;      /* #ede6d8 parchment */
+    --foreground:          25 35% 5%;       /* #0f0d09 near-black ink */
 
-    --card:                38 40% 95%;
+    --card:                38 40% 95%;      /* #f7f2e8 card parchment */
     --card-foreground:     25 35% 5%;
 
     --popover:             38 40% 95%;
     --popover-foreground:  25 35% 5%;
 
-    --primary:             38 100% 27%;
+    --primary:             38 100% 27%;     /* #8a5e00 dark gold */
     --primary-foreground:  38 100% 97%;
 
-    --secondary:           36 22% 85%;
+    --secondary:           36 22% 85%;      /* #e0d9c8 warm fill */
     --secondary-foreground: 25 30% 12%;
 
     --muted:               36 22% 85%;
-    --muted-foreground:    28 22% 35%;
+    --muted-foreground:    28 22% 35%;      /* #5a4a34 readable dim */
 
     --accent:              38 100% 27%;
     --accent-foreground:   38 100% 97%;
 
-    --destructive:         4 72% 20%;
+    --destructive:         4 72% 20%;       /* #580e0e deep crimson */
     --destructive-foreground: 0 0% 98%;
 
-    --border:              36 22% 70%;
+    --border:              36 22% 70%;      /* #b8aa90 visible border */
     --input:               36 22% 85%;
     --ring:                38 100% 27%;
 
     --radius: 0.75rem;
 
     /* ── SHADCN SIDEBAR TOKENS ── */
-    --sidebar-background:          24 22% 13%;
-    --sidebar-foreground:          38 40% 65%;
-    --sidebar-primary:             43 82% 54%;
+    --sidebar-background:          24 22% 13%;   /* #2a2218 warm dark brown */
+    --sidebar-foreground:          38 40% 65%;   /* #c4a96a gold nav text */
+    --sidebar-primary:             43 82% 54%;   /* #c9a84c bright gold */
     --sidebar-primary-foreground:  24 20% 5%;
-    --sidebar-accent:              24 18% 18%;
-    --sidebar-accent-foreground:   38 60% 75%;
-    --sidebar-border:              43 40% 28%;
+    --sidebar-accent:              24 18% 18%;   /* slightly lighter for hover */
+    --sidebar-accent-foreground:   38 60% 75%;   /* hover text */
+    --sidebar-border:              43 40% 28%;   /* visible gold border */
     --sidebar-ring:                43 82% 54%;
 
     /* ── CHART TOKENS ── */
-    --chart-1: 38 100% 27%;
-    --chart-2: 209 84% 30%;
-    --chart-3: 274 52% 25%;
-    --chart-4: 118 43% 24%;
-    --chart-5: 4 72% 20%;
+    --chart-1: 38 100% 27%;    /* gold */
+    --chart-2: 209 84% 30%;    /* ocean */
+    --chart-3: 274 52% 25%;    /* violet */
+    --chart-4: 118 43% 24%;    /* terrain */
+    --chart-5: 4 72% 20%;      /* crimson */
   }
 }
 
@@ -132,6 +132,78 @@
     background-color: var(--parch-card) !important;
     color: var(--ink) !important;
   }
+
+  /* ── Override hardcoded dark page shells ── */
+  [style*="background: #080c12"],
+  [style*="background:#080c12"] {
+    background: var(--parch-bg) !important;
+  }
+  [style*="background: #111827"],
+  [style*="background:#111827"] {
+    background: var(--parch-card) !important;
+    border-color: var(--parch-line) !important;
+  }
+  [style*="background: #0d1117"],
+  [style*="background:#0d1117"] {
+    background: var(--parch-warm) !important;
+    color: var(--ink) !important;
+  }
+  [style*="background: #1a2234"],
+  [style*="background:#1a2234"],
+  [style*="background: #12100d"],
+  [style*="background:#12100d"] {
+    background: var(--parch-card) !important;
+    color: var(--ink) !important;
+  }
+
+  /* ── Tailwind slate/white overrides ── */
+  .bg-white       { background-color: var(--parch-card) !important; }
+  .bg-slate-50    { background-color: var(--parch-warm) !important; }
+  .bg-slate-100   { background-color: var(--parch-warm) !important; }
+  .bg-slate-800   { background-color: var(--ink-mid) !important; }
+  .bg-slate-900   { background-color: var(--ink) !important; }
+  .bg-gray-50     { background-color: var(--parch-warm) !important; }
+  .bg-gray-100    { background-color: var(--parch-warm) !important; }
+  .text-slate-900 { color: var(--ink) !important; }
+  .text-slate-800 { color: var(--ink-mid) !important; }
+  .text-slate-700 { color: var(--ink-faded) !important; }
+  .text-slate-600 { color: var(--ink-dim) !important; }
+  .text-slate-500 { color: var(--ink-ghost) !important; }
+  .text-gray-900  { color: var(--ink) !important; }
+  .text-gray-700  { color: var(--ink-faded) !important; }
+  .border-slate-200 { border-color: var(--parch-line) !important; }
+  .border-slate-100 { border-color: var(--parch-line) !important; }
+  .border-gray-200  { border-color: var(--parch-line) !important; }
+  .divide-y > *     { border-color: var(--parch-line) !important; }
+
+  /* ── Shadcn dialog/popover/sheet ── */
+  [data-radix-popper-content-wrapper] [class*="bg-"],
+  [role="dialog"] { background-color: var(--parch-card) !important; color: var(--ink) !important; }
+
+  /* ── rgba white text overrides (dark page text) ── */
+  [style*="color: rgba(255,255,255,0.95)"],
+  [style*="color: rgba(255,255,255,0.9)"],
+  [style*="color: rgba(255,255,255,0.88)"],
+  [style*="color: rgba(255,255,255,0.85)"],
+  [style*="color: rgba(255,255,255,0.8)"],
+  [style*="color: rgba(255,255,255,0.7)"],
+  [style*="color: rgba(255,255,255,0.6)"],
+  [style*="color: rgba(255,255,255,0.55)"],
+  [style*="color: rgba(255,255,255,0.5)"] {
+    color: var(--ink) !important;
+  }
+  [style*="color: rgba(255,255,255,0.4)"],
+  [style*="color: rgba(255,255,255,0.35)"],
+  [style*="color: rgba(255,255,255,0.3)"],
+  [style*="color: rgba(255,255,255,0.28)"],
+  [style*="color: rgba(255,255,255,0.25)"],
+  [style*="color: rgba(255,255,255,0.2)"] {
+    color: var(--ink-dim) !important;
+  }
+  [style*="color: #94a3b8"] { color: var(--ink-dim) !important; }
+  [style*="color: #64748b"] { color: var(--ink-ghost) !important; }
+  [style*="color: #cbd5e1"] { color: var(--ink-faded) !important; }
+  [style*="color: #e2e8f0"] { color: var(--ink-dim) !important; }
 
   /* ── Tables ── */
   table {
