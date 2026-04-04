@@ -2,7 +2,13 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Target } from 'lucide-react';
-import { abbrevDollar } from '@/components/dashboard/MetricCard';
+
+function abbrevDollar(n) {
+  const abs = Math.abs(n || 0);
+  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (abs >= 10_000)    return `$${(n / 1_000).toFixed(1)}K`;
+  return `$${(n || 0).toFixed(2)}`;
+}
 
 const goalConfig = {
   profit:       { label: 'Net Profit',   color: 'text-emerald-400', barColor: 'linear-gradient(90deg, #10b981, #06b6d4)' },

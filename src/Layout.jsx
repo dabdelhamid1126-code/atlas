@@ -10,11 +10,9 @@ import {
   Package,
   CirclePlus,
   Inbox,
-  Truck,
   ArrowLeftRight,
   Hash,
   Receipt,
-  Calculator,
   FileText,
   TrendingUp,
   Menu,
@@ -46,46 +44,58 @@ const NAV_GROUPS = [
       { name: 'Import Orders',      page: 'ImportOrders', icon: ArrowLeftRight },
     ],
   },
-
   {
     label: 'Records',
     items: [
       { name: 'Transactions',            page: 'Transactions',   icon: Hash },
       { name: 'Expenses',                page: 'PaymentMethods', icon: Receipt },
-      { name: 'Business Tax Calculator', page: 'Analytics',      icon: Calculator },
+      { name: 'Business Tax Calculator', page: 'Analytics',      icon: BarChart3 },
       { name: 'Receipts',                page: 'Invoices',       icon: FileText },
     ],
   },
 ];
 
-function LogoMark({ size = 36 }) {
+// ── Atlas Compass Logo ───────────────────────────────────────────────────────
+function AtlasLogo({ size = 34 }) {
+  const s = size;
+  const cx = s / 2;
+  const cy = s / 2;
+  const r = s * 0.36;
+  const arrowN = s * 0.08;
+  const arrowE = s * 0.09;
+
+  const hex = Array.from({ length: 6 }, (_, i) => {
+    const angle = (Math.PI / 180) * (60 * i - 30);
+    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+  }).map(p => p.join(',')).join(' ');
+
   return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: 10,
-        background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 55%, #ec4899 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
+    <svg
+      width={s} height={s} viewBox={`0 0 ${s} ${s}`}
+      style={{ flexShrink: 0 }}
+      xmlns="http://www.w3.org/2000/svg"
     >
-      <svg width={size * 0.48} height={size * 0.48} viewBox="0 0 20 20" fill="none">
-        <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" stroke="white" strokeWidth="1.5" fill="rgba(255,255,255,0.15)" />
-        <path d="M10 6L14 8.5V13.5L10 16L6 13.5V8.5L10 6Z" fill="white" opacity="0.9" />
-      </svg>
-    </div>
+      <rect width={s} height={s} rx={s * 0.24} fill="#0d1a12"/>
+      <rect width={s} height={s} rx={s * 0.24} fill="none" stroke="#10b981" strokeWidth="0.8" opacity="0.3"/>
+      <polygon points={hex} fill="none" stroke="#10b981" strokeWidth={s * 0.054}/>
+      <line x1={cx} y1={cy - r + 2} x2={cx} y2={cy + r - 2} stroke="#10b981" strokeWidth={s * 0.03} strokeDasharray={`${s*0.1} ${s*0.1}`} opacity="0.45"/>
+      <line x1={cx - r + 2} y1={cy} x2={cx + r - 2} y2={cy} stroke="#10b981" strokeWidth={s * 0.03} strokeDasharray={`${s*0.1} ${s*0.1}`} opacity="0.45"/>
+      <polygon points={`${cx},${cy - r + s*0.04} ${cx - arrowN},${cy - r*0.42} ${cx + arrowN},${cy - r*0.42}`} fill="#10b981"/>
+      <polygon points={`${cx},${cy + r - s*0.04} ${cx - arrowN},${cy + r*0.42} ${cx + arrowN},${cy + r*0.42}`} fill="#10b981" opacity="0.2"/>
+      <polygon points={`${cx + r - s*0.04},${cy} ${cx + r*0.42},${cy - arrowE} ${cx + r*0.42},${cy + arrowE}`} fill="#06b6d4"/>
+      <polygon points={`${cx - r + s*0.04},${cy} ${cx - r*0.42},${cy - arrowE} ${cx - r*0.42},${cy + arrowE}`} fill="#06b6d4" opacity="0.2"/>
+      <circle cx={cx} cy={cy} r={s * 0.13} fill="#0d1a12" stroke="#10b981" strokeWidth={s * 0.04}/>
+      <circle cx={cx} cy={cy} r={s * 0.055} fill="#10b981"/>
+    </svg>
   );
 }
 
 export default function Layout({ children, currentPageName }) {
-  const [user, setUser]               = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed]     = useState(false);
+  const [user, setUser]                 = useState(null);
+  const [sidebarOpen, setSidebarOpen]   = useState(false);
+  const [collapsed, setCollapsed]       = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [cmdOpen, setCmdOpen]         = useState(false);
+  const [cmdOpen, setCmdOpen]           = useState(false);
   const location = useLocation();
 
   const openCmd = useCallback(() => setCmdOpen(true), []);
@@ -107,7 +117,7 @@ export default function Layout({ children, currentPageName }) {
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
-  const userRole     = user?.role || 'user';
+  const userRole = user?.role || 'user';
   const filteredGroups = NAV_GROUPS
     .map(g => ({ ...g, items: g.items.filter(i => !i.roles || i.roles.includes(userRole)) }))
     .filter(g => g.items.length > 0);
@@ -126,7 +136,7 @@ export default function Layout({ children, currentPageName }) {
       >
         {collapsed ? (
           <button
-            className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-white/5 transition-colors"
             onClick={() => setCollapsed(false)}
             title="Expand sidebar"
           >
@@ -134,9 +144,9 @@ export default function Layout({ children, currentPageName }) {
           </button>
         ) : (
           <>
-            <LogoMark size={34} />
+            <AtlasLogo size={34} />
             <div className="min-w-0 flex-1">
-              <p className="text-[13.5px] font-bold text-emerald-400 tracking-tight leading-tight">Dalia Distro</p>
+              <p className="text-[15px] font-bold text-emerald-400 tracking-tight leading-tight">Atlas</p>
               <p className="text-[8.5px] text-slate-500 uppercase tracking-[0.14em] mt-0.5 font-semibold">Reselling, Quantified</p>
             </div>
             <button
@@ -164,11 +174,15 @@ export default function Layout({ children, currentPageName }) {
       {!collapsed && (
         <button
           onClick={openCmd}
-          className="mx-3 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/8 hover:border-emerald-500/30 transition-colors text-slate-500 text-xs w-[calc(100%-24px)]"
+          className="mx-3 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-xl text-slate-500 text-xs w-[calc(100%-24px)] transition-colors hover:border-emerald-500/30"
+          style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
         >
           <Search className="w-3.5 h-3.5 shrink-0" />
           <span className="flex-1 text-left">Search...</span>
-          <kbd className="text-[10px] bg-white/10 border border-white/10 rounded px-1 py-0.5 font-medium text-slate-400">⌘K</kbd>
+          <kbd className="text-[10px] rounded px-1 py-0.5 font-medium text-slate-500"
+            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            ⌘K
+          </kbd>
         </button>
       )}
 
@@ -197,10 +211,7 @@ export default function Layout({ children, currentPageName }) {
                   )}
                 >
                   <item.icon
-                    className={cn(
-                      'flex-shrink-0',
-                      isActive ? 'text-emerald-400' : 'text-slate-500'
-                    )}
+                    className={cn('flex-shrink-0', isActive ? 'text-emerald-400' : 'text-slate-500')}
                     style={{ width: 16, height: 16 }}
                   />
                   {!collapsed && <span className="truncate flex-1">{item.name}</span>}
@@ -210,8 +221,6 @@ export default function Layout({ children, currentPageName }) {
           </div>
         ))}
       </nav>
-
-
 
       {/* ── User profile ── */}
       {user && (
@@ -227,7 +236,8 @@ export default function Layout({ children, currentPageName }) {
               <div className="relative flex-shrink-0">
                 <Avatar className="h-8 w-8">
                   {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
-                  <AvatarFallback className="text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)' }}>
+                  <AvatarFallback className="text-xs font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)' }}>
                     {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -285,12 +295,10 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen flex" style={{ background: '#080c12' }}>
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out lg:static lg:translate-x-0',
@@ -302,20 +310,19 @@ export default function Layout({ children, currentPageName }) {
         <SidebarContent />
       </aside>
 
-      {/* Main */}
-      <main className={cn('flex-1 flex flex-col min-w-0', collapsed ? 'lg:ml-0' : 'lg:ml-0')}>
+      <main className="flex-1 flex flex-col min-w-0">
         {/* Mobile topbar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b" style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b"
+          style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.06)' }}>
           <button onClick={() => setSidebarOpen(true)} className="text-slate-400">
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <LogoMark size={26} />
-            <span className="font-bold text-emerald-400 text-sm">Dalia Distro</span>
+            <AtlasLogo size={26} />
+            <span className="font-bold text-emerald-400 text-sm">Atlas</span>
           </div>
         </div>
 
-        {/* Page content */}
         <div className="flex-1 p-4 lg:p-8">
           {children}
         </div>
