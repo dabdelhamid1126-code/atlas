@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DollarSign, TrendingUp, CreditCard, Percent, Star,
   ChevronDown, ChevronUp, Info, ShoppingBag, Send,
-  Package, CheckCircle, ListChecks, RefreshCw, X, ImageOff
+  Package, CheckCircle, ListChecks, RefreshCw, X, ImageOff,
+  AlertTriangle, Truck, Activity, Gift, Boxes,
+  FileWarning, Clock, ArrowRight
 } from 'lucide-react';
 import {
   format, startOfMonth, endOfMonth, subMonths,
@@ -21,13 +23,25 @@ const TIME_FILTERS = ['Today', '7 Days', '30 Days', 'YTD', 'All Time'];
 const MODE_FILTERS = ['All', 'Churning', 'Resell'];
 
 const STATUS_CONFIG = {
-  purchased:  { label: 'Purchased',  icon: ShoppingBag,  color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20'    },
-  shipped:    { label: 'Shipped',    icon: Send,          color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20'   },
-  received:   { label: 'Received',   icon: Package,       color: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/20'  },
-  paid:       { label: 'Paid',       icon: CheckCircle,   color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-  listed:     { label: 'Listed',     icon: ListChecks,    color: 'text-purple-400',  bg: 'bg-purple-500/10',  border: 'border-purple-500/20'  },
-  sold:       { label: 'Sold',       icon: DollarSign,    color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-  completed:  { label: 'Completed',  icon: CheckCircle,   color: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/20'    },
+  pending:    { label: 'Pending',    icon: Clock,        color: 'text-slate-400',   bg: 'bg-slate-500/10',   border: 'border-slate-500/20'   },
+  ordered:    { label: 'Ordered',    icon: ShoppingBag,  color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20'    },
+  shipped:    { label: 'Shipped',    icon: Send,         color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20'   },
+  received:   { label: 'Received',   icon: Package,      color: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/20'  },
+  partially_received: { label: 'Partial', icon: Package, color: 'text-yellow-400', bg: 'bg-yellow-500/10',  border: 'border-yellow-500/20'  },
+  paid:       { label: 'Paid',       icon: CheckCircle,  color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  completed:  { label: 'Completed',  icon: CheckCircle,  color: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/20'    },
+  cancelled:  { label: 'Cancelled',  icon: X,            color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/20'     },
+};
+
+const ENTITY_ICON = {
+  purchase_order: ShoppingBag,
+  inventory:      Boxes,
+  product:        Package,
+  gift_card:      Gift,
+  invoice:        FileWarning,
+  export:         Send,
+  user:           Activity,
+  other:          Activity,
 };
 
 const PIE_COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#3b82f6', '#ef4444'];
@@ -39,10 +53,18 @@ function fmt(n) {
   }).format(n);
 }
 
+function abbrev(n) {
+  const abs = Math.abs(n || 0);
+  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (abs >= 10_000)    return `$${(n / 1_000).toFixed(1)}K`;
+  return fmt(n);
+}
+
 // ── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({ label, value, sub, icon: Icon, colorClass, iconBg, iconBorder }) {
   return (
-    <div className="rounded-2xl border p-4 flex flex-col gap-3 min-w-0" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+    <div className="rounded-2xl border p-4 flex flex-col gap-3 min-w-0"
+      style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</p>
@@ -57,18 +79,22 @@ function KpiCard({ label, value, sub, icon: Icon, colorClass, iconBg, iconBorder
   );
 }
 
-// ── Image Modal ─────────────────────────────────────────────────────────────
-function ImageModal({ src, alt, onClose }) {
-  if (!src) return null;
+// ── Alert Banner ─────────────────────────────────────────────────────────────
+function AlertBanner({ icon: Icon, color, bg, border, title, value, onClick }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div className="relative max-w-lg w-full mx-4" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-slate-100 transition">
-          <X className="w-4 h-4 text-slate-600" />
-        </button>
-        <img src={src} alt={alt} className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh] bg-white" />
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left w-full transition-all hover:opacity-80 ${bg} ${border}`}
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bg} border ${border}`}>
+        <Icon className={`h-4 w-4 ${color}`} />
       </div>
-    </div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-xs font-semibold ${color}`}>{title}</p>
+        <p className="text-[11px] text-slate-400 mt-0.5">{value}</p>
+      </div>
+      <ArrowRight className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
+    </button>
   );
 }
 
@@ -89,7 +115,7 @@ function PipelineCard({ status, count, onClick }) {
       <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
         <Icon className={`h-4 w-4 ${cfg.color}`} />
       </div>
-      <p className={`hidden lg:block text-[10px] text-slate-500 font-medium w-full truncate`}>{cfg.label}</p>
+      <p className="hidden lg:block text-[10px] text-slate-500 font-medium w-full truncate">{cfg.label}</p>
       <p className={`text-base lg:text-lg font-bold ${cfg.color}`}>{count}</p>
     </button>
   );
@@ -112,26 +138,67 @@ function ChartTooltip({ active, payload, label }) {
   );
 }
 
-// ── Main Dashboard ──────────────────────────────────────────────────────────
+// ── Activity Feed Item ───────────────────────────────────────────────────────
+function ActivityItem({ log }) {
+  const Icon = ENTITY_ICON[log.entity_type] || Activity;
+  const timeAgo = log.created_date
+    ? formatDistanceToNow(new Date(log.created_date), { addSuffix: true })
+    : '';
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b last:border-0"
+      style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Icon className="h-3.5 w-3.5 text-emerald-400" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-slate-300 leading-snug truncate">{log.details || log.action}</p>
+        {log.user_name && <p className="text-[10px] text-slate-500 mt-0.5">{log.user_name}</p>}
+      </div>
+      {timeAgo && <p className="text-[10px] text-slate-600 flex-shrink-0 mt-0.5">{timeAgo}</p>}
+    </div>
+  );
+}
+
+// ── Image Modal ─────────────────────────────────────────────────────────────
+function ImageModal({ src, alt, onClose }) {
+  if (!src) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="relative max-w-lg w-full mx-4" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose}
+          className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-slate-100 transition">
+          <X className="w-4 h-4 text-slate-600" />
+        </button>
+        <img src={src} alt={alt} className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh] bg-white" />
+      </div>
+    </div>
+  );
+}
+
+// ── Main Dashboard ───────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState(null);
-  const [user, setUser] = useState(null);
-  const [allOrders, setAllOrders] = useState([]);
-  const [metrics, setMetrics] = useState({
+  const [loading, setLoading]               = useState(true);
+  const [refreshing, setRefreshing]         = useState(false);
+  const [lastRefreshed, setLastRefreshed]   = useState(null);
+  const [user, setUser]                     = useState(null);
+  const [allOrders, setAllOrders]           = useState([]);
+  const [metrics, setMetrics]               = useState({
     totalCost: 0, saleRevenue: 0, cashback: 0,
     points: 0, netProfit: 0, avgRoi: 0,
-    yaCashback: 0, accountingProfit: 0
+    yaCashback: 0, accountingProfit: 0,
+    inStockUnits: 0, giftCardValue: 0,
   });
-  const [trendData, setTrendData] = useState([]);
-  const [byStatusData, setByStatusData] = useState([]);
-  const [topCards, setTopCards] = useState([]);
-  const [timeFilter, setTimeFilter] = useState('30 Days');
-  const [modeFilter, setModeFilter] = useState('All');
+  const [trendData, setTrendData]           = useState([]);
+  const [byStatusData, setByStatusData]     = useState([]);
+  const [topCards, setTopCards]             = useState([]);
+  const [activityLogs, setActivityLogs]     = useState([]);
+  const [alerts, setAlerts]                 = useState({ overdueInvoices: 0, damagedItems: 0, inTransit: 0, pendingApprovals: 0 });
+  const [shipments, setShipments]           = useState([]);
+  const [timeFilter, setTimeFilter]         = useState('30 Days');
+  const [modeFilter, setModeFilter]         = useState('All');
   const [showProfitDetails, setShowProfitDetails] = useState(true);
-  const [modalImage, setModalImage] = useState(null);
+  const [modalImage, setModalImage]         = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -140,9 +207,7 @@ export default function Dashboard() {
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
-    const interval = setInterval(() => {
-      silentRefresh();
-    }, 5 * 60 * 1000);
+    const interval = setInterval(() => silentRefresh(), 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [timeFilter, modeFilter]);
 
@@ -188,68 +253,69 @@ export default function Dashboard() {
 
   const loadData = async (silent = false) => {
     try {
-      const [orders, rewards, creditCards] = await Promise.all([
+      const [orders, rewards, creditCards, inventoryItems, giftCards, invoices, damagedItems, shipmentsData, activityData] = await Promise.all([
         base44.entities.PurchaseOrder.list(),
         base44.entities.Reward.list(),
         base44.entities.CreditCard.list(),
+        base44.entities.InventoryItem.list().catch(() => []),
+        base44.entities.GiftCard.list().catch(() => []),
+        base44.entities.Invoice.list().catch(() => []),
+        base44.entities.DamagedItem.list().catch(() => []),
+        base44.entities.Shipment.list().catch(() => []),
+        base44.entities.ActivityLog.list().catch(() => []),
       ]);
 
       setAllOrders(orders);
 
-      const filteredOrders = filterByTime(filterByMode(orders), 'order_date');
+      const filteredOrders  = filterByTime(filterByMode(orders), 'order_date');
       const filteredRewards = filterByTime(rewards, 'date_earned');
 
-      // Calculate from PurchaseOrder totals
-      const totalCost = filteredOrders.reduce((s, o) => s + parseFloat(o.total_cost || 0), 0);
-
-      // Calculate sale revenue from sale_events
-      const saleRevenue = filteredOrders.reduce((sum, order) =>
+      // Core metrics
+      const totalCost    = filteredOrders.reduce((s, o) => s + parseFloat(o.total_cost || 0), 0);
+      const saleRevenue  = filteredOrders.reduce((sum, order) =>
         sum + (order.sale_events || []).reduce((s, ev) =>
           s + (ev.items || []).reduce((is, item) =>
             is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0), 0);
 
-      const allCashback = filteredRewards.filter(r => r.currency === 'USD');
-      const cashback = allCashback.reduce((s, r) => s + (r.amount || 0), 0);
-      const yaCashback = allCashback
+      const allCashback      = filteredRewards.filter(r => r.currency === 'USD');
+      const cashback         = allCashback.reduce((s, r) => s + (r.amount || 0), 0);
+      const yaCashback       = allCashback
         .filter(r => r.notes?.includes('Young Adult') || r.notes?.includes('YACB') || r.notes?.includes('Prime Young Adult'))
         .reduce((s, r) => s + (r.amount || 0), 0);
-      const points = filteredRewards.filter(r => r.currency === 'points').reduce((s, r) => s + (r.amount || 0), 0);
+      const points           = filteredRewards.filter(r => r.currency === 'points').reduce((s, r) => s + (r.amount || 0), 0);
       const accountingProfit = saleRevenue - totalCost + cashback;
-      const netProfit = profitMode === 'cashback_wallet' ? accountingProfit - yaCashback : accountingProfit;
-      const avgRoi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
+      const netProfit        = profitMode === 'cashback_wallet' ? accountingProfit - yaCashback : accountingProfit;
+      const avgRoi           = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
 
-      setMetrics({ totalCost, saleRevenue, cashback, points, netProfit, avgRoi, yaCashback, accountingProfit });
+      // Inventory & gift cards
+      const inStockUnits = inventoryItems
+        .filter(i => i.status === 'in_stock' || i.status === 'received')
+        .reduce((s, i) => s + (i.quantity || 1), 0);
+      const giftCardValue = giftCards
+        .filter(gc => gc.status === 'available')
+        .reduce((s, gc) => s + parseFloat(gc.value || 0), 0);
+
+      setMetrics({ totalCost, saleRevenue, cashback, points, netProfit, avgRoi, yaCashback, accountingProfit, inStockUnits, giftCardValue });
 
       // Trend (6 months)
       const now = new Date();
       const trend = [];
       for (let i = 5; i >= 0; i--) {
-        const md = subMonths(now, i);
+        const md     = subMonths(now, i);
         const mStart = startOfMonth(md);
-        const mEnd = endOfMonth(md);
-        const mOrders = filteredOrders.filter(o => {
-          const d = o.order_date ? parseISO(o.order_date) : null;
-          return d && d >= mStart && d <= mEnd;
-        });
-        const mRewards = filteredRewards.filter(r => {
-          const d = r.date_earned ? parseISO(r.date_earned) : null;
-          return d && d >= mStart && d <= mEnd;
-        });
-        const spent = mOrders.reduce((s, o) => s + parseFloat(o.total_cost || 0), 0);
-        const revenue = mOrders.reduce((sum, order) =>
-          sum + (order.sale_events || []).reduce((s, ev) =>
-            s + (ev.items || []).reduce((is, item) =>
-              is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0), 0);
-        const cashbackM = mRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
+        const mEnd   = endOfMonth(md);
+        const mOrders  = filteredOrders.filter(o => { const d = o.order_date ? parseISO(o.order_date) : null; return d && d >= mStart && d <= mEnd; });
+        const mRewards = filteredRewards.filter(r => { const d = r.date_earned ? parseISO(r.date_earned) : null; return d && d >= mStart && d <= mEnd; });
+        const spent      = mOrders.reduce((s, o) => s + parseFloat(o.total_cost || 0), 0);
+        const revenue    = mOrders.reduce((sum, order) => sum + (order.sale_events || []).reduce((s, ev) => s + (ev.items || []).reduce((is, item) => is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0), 0);
+        const cashbackM  = mRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + (r.amount || 0), 0);
         trend.push({ month: format(md, 'MMM'), spent, revenue, profit: revenue - spent, cashback: cashbackM });
       }
       setTrendData(trend);
 
-      // By status
+      // By status pie
       const statusCounts = {};
-      filteredOrders.forEach(o => {
-        statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
-      });
+      filteredOrders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
       setByStatusData(Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
 
       // Top cards
@@ -260,11 +326,33 @@ export default function Dashboard() {
             const card = creditCards.find(c => c.id === o.credit_card_id);
             cardMap[o.credit_card_id] = { name: card?.card_name || o.card_name || 'Unknown', spent: 0, orders: 0 };
           }
-          cardMap[o.credit_card_id].spent += (o.final_cost || o.total_cost || 0);
+          cardMap[o.credit_card_id].spent  += (o.final_cost || o.total_cost || 0);
           cardMap[o.credit_card_id].orders += 1;
         }
       });
       setTopCards(Object.values(cardMap).sort((a, b) => b.spent - a.spent).slice(0, 5));
+
+      // Alerts
+      const today = new Date().toISOString().slice(0, 10);
+      setAlerts({
+        overdueInvoices:  invoices.filter(inv => inv.status === 'overdue' || (inv.status === 'sent' && inv.due_date && inv.due_date < today)).length,
+        damagedItems:     damagedItems.filter(d => d.status === 'reported' || d.status === 'assessed').length,
+        inTransit:        shipmentsData.filter(s => !s.delivered_date && s.status && !s.status.toLowerCase().includes('delivered')).length,
+        pendingApprovals: 0,
+      });
+
+      // In-transit shipments (up to 3)
+      setShipments(
+        shipmentsData
+          .filter(s => !s.delivered_date)
+          .sort((a, b) => new Date(a.estimated_delivery || '9999') - new Date(b.estimated_delivery || '9999'))
+          .slice(0, 3)
+      );
+
+      // Activity feed (last 15 logs)
+      const sorted = [...activityData].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0)).slice(0, 15);
+      setActivityLogs(sorted);
+
       setLastRefreshed(new Date());
     } catch (e) {
       console.error(e);
@@ -280,9 +368,9 @@ export default function Dashboard() {
     return 'Good evening';
   };
 
-  const firstName = user?.full_name?.split(' ')[0] || 'there';
+  const firstName      = user?.full_name?.split(' ')[0] || 'there';
   const filteredOrders = filterByTime(filterByMode(allOrders), 'order_date');
-  const sortedRecent = [...filteredOrders]
+  const sortedRecent   = [...filteredOrders]
     .sort((a, b) => new Date(b.order_date || b.created_date) - new Date(a.order_date || a.created_date))
     .slice(0, 10);
 
@@ -291,12 +379,33 @@ export default function Dashboard() {
     if (o.status) statusCounts[o.status.toLowerCase()] = (statusCounts[o.status.toLowerCase()] || 0) + 1;
   });
 
+  const activeAlerts = [
+    alerts.overdueInvoices > 0 && {
+      icon: FileWarning, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20',
+      title: `${alerts.overdueInvoices} Overdue Invoice${alerts.overdueInvoices > 1 ? 's' : ''}`,
+      value: 'Payment past due — action required',
+      onClick: () => navigate('/Invoices'),
+    },
+    alerts.damagedItems > 0 && {
+      icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20',
+      title: `${alerts.damagedItems} Unresolved Damaged Item${alerts.damagedItems > 1 ? 's' : ''}`,
+      value: 'Items reported or assessed — review needed',
+      onClick: () => navigate('/Inventory'),
+    },
+    alerts.inTransit > 0 && {
+      icon: Truck, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20',
+      title: `${alerts.inTransit} Shipment${alerts.inTransit > 1 ? 's' : ''} In Transit`,
+      value: 'Packages currently on the way',
+      onClick: () => navigate('/Transactions'),
+    },
+  ].filter(Boolean);
+
   if (loading) {
     return (
       <div className="space-y-5">
         <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
         </div>
         <Skeleton className="h-32 rounded-2xl" />
         <Skeleton className="h-28 rounded-2xl" />
@@ -323,12 +432,21 @@ export default function Dashboard() {
             <p className="text-sm text-slate-400 mt-0.5">
               Here's what's happening across your accounts.
               {lastRefreshed && (
-                <span className="ml-2 text-[11px] text-slate-300">
+                <span className="ml-2 text-[11px] text-slate-500">
                   Updated {formatDistanceToNow(lastRefreshed, { addSuffix: true })}
                 </span>
               )}
             </p>
           </div>
+          <button
+            onClick={() => silentRefresh()}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-emerald-400 transition-colors"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-0.5 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -354,12 +472,21 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Alerts Row ── */}
+      {activeAlerts.length > 0 && (
+        <div className={`grid gap-3 ${activeAlerts.length === 1 ? 'grid-cols-1' : activeAlerts.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
+          {activeAlerts.map((alert, i) => (
+            <AlertBanner key={i} {...alert} />
+          ))}
+        </div>
+      )}
+
       {/* ── KPI Cards Row 1 ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           label="Total Cost"
-          value={fmt(metrics.totalCost)}
-          sub={`${filteredOrders.length} orders (incl. tax & shipping)`}
+          value={abbrev(metrics.totalCost)}
+          sub={`${filteredOrders.length} orders`}
           icon={ShoppingBag}
           colorClass="text-blue-400"
           iconBg="bg-blue-500/10"
@@ -367,8 +494,8 @@ export default function Dashboard() {
         />
         <KpiCard
           label="Sale Revenue"
-          value={fmt(metrics.saleRevenue)}
-          sub={`${filteredOrders.filter(o => o.sale_events?.length > 0).length} orders with sales`}
+          value={abbrev(metrics.saleRevenue)}
+          sub={`${filteredOrders.filter(o => o.sale_events?.length > 0).length} sold`}
           icon={TrendingUp}
           colorClass="text-emerald-400"
           iconBg="bg-emerald-500/10"
@@ -376,43 +503,61 @@ export default function Dashboard() {
         />
         <KpiCard
           label="Cashback Earned"
-          value={fmt(metrics.cashback)}
+          value={abbrev(metrics.cashback)}
           sub={`${metrics.points.toLocaleString()} pts`}
           icon={CreditCard}
           colorClass={metrics.cashback > 0 ? 'text-cyan-400' : 'text-slate-400'}
           iconBg={metrics.cashback > 0 ? 'bg-cyan-500/10' : 'bg-slate-500/10'}
           iconBorder={metrics.cashback > 0 ? 'border-cyan-500/20' : 'border-slate-500/20'}
         />
-      </div>
-
-      {/* ── KPI Cards Row 2 ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <KpiCard
-          label="YA Cashback"
-          value={fmt(metrics.yaCashback)}
-          sub="Young Adult CB"
-          icon={Star}
-          colorClass={metrics.yaCashback > 0 ? 'text-cyan-400' : 'text-slate-400'}
-          iconBg={metrics.yaCashback > 0 ? 'bg-cyan-500/10' : 'bg-slate-500/10'}
-          iconBorder={metrics.yaCashback > 0 ? 'border-cyan-500/20' : 'border-slate-500/20'}
-        />
         <KpiCard
           label={profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Net Profit'}
-          value={fmt(metrics.netProfit)}
-          sub={profitMode === 'cashback_wallet' ? 'excl. YA used' : 'accounting mode'}
+          value={abbrev(metrics.netProfit)}
+          sub={`${metrics.avgRoi.toFixed(1)}% ROI`}
           icon={TrendingUp}
           colorClass={metrics.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}
           iconBg={metrics.netProfit >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'}
           iconBorder={metrics.netProfit >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'}
         />
+      </div>
+
+      {/* ── KPI Cards Row 2 ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          label="YA Cashback"
+          value={abbrev(metrics.yaCashback)}
+          sub="Young Adult CB"
+          icon={Star}
+          colorClass={metrics.yaCashback > 0 ? 'text-amber-400' : 'text-slate-400'}
+          iconBg={metrics.yaCashback > 0 ? 'bg-amber-500/10' : 'bg-slate-500/10'}
+          iconBorder={metrics.yaCashback > 0 ? 'border-amber-500/20' : 'border-slate-500/20'}
+        />
         <KpiCard
           label="Avg ROI"
-          value={`${metrics.avgRoi.toFixed(2)}%`}
+          value={`${metrics.avgRoi.toFixed(1)}%`}
           sub="return on investment"
           icon={Percent}
           colorClass={metrics.avgRoi < 0 ? 'text-red-400' : 'text-cyan-400'}
           iconBg={metrics.avgRoi < 0 ? 'bg-red-500/10' : 'bg-cyan-500/10'}
           iconBorder={metrics.avgRoi < 0 ? 'border-red-500/20' : 'border-cyan-500/20'}
+        />
+        <KpiCard
+          label="Units In Stock"
+          value={metrics.inStockUnits.toLocaleString()}
+          sub="in_stock + received"
+          icon={Boxes}
+          colorClass="text-purple-400"
+          iconBg="bg-purple-500/10"
+          iconBorder="border-purple-500/20"
+        />
+        <KpiCard
+          label="Gift Card Value"
+          value={abbrev(metrics.giftCardValue)}
+          sub="available cards"
+          icon={Gift}
+          colorClass={metrics.giftCardValue > 0 ? 'text-pink-400' : 'text-slate-400'}
+          iconBg={metrics.giftCardValue > 0 ? 'bg-pink-500/10' : 'bg-slate-500/10'}
+          iconBorder={metrics.giftCardValue > 0 ? 'border-pink-500/20' : 'border-slate-500/20'}
         />
       </div>
 
@@ -426,7 +571,7 @@ export default function Dashboard() {
             <Info className="h-4 w-4 text-emerald-400" />
             Profit Breakdown
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 capitalize">
-              {profitMode === 'cashback_wallet' ? 'Cashback Wallet Mode' : 'Accounting Mode'}
+              {profitMode === 'cashback_wallet' ? 'CB Wallet Mode' : 'Accounting Mode'}
             </span>
           </div>
           {showProfitDetails
@@ -435,28 +580,28 @@ export default function Dashboard() {
         </button>
         {showProfitDetails && (
           <div className="px-5 pb-5 pt-4 border-t grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <div className={`rounded-xl p-3 ${metrics.saleRevenue < 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'}`}>
-              <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${metrics.saleRevenue < 0 ? 'text-red-400' : 'text-emerald-500'}`}>Revenue</p>
-              <p className={`text-lg font-bold ${metrics.saleRevenue < 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmt(metrics.saleRevenue)}</p>
+            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
+              <p className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider mb-1">Revenue</p>
+              <p className="text-lg font-bold text-emerald-400">{abbrev(metrics.saleRevenue)}</p>
             </div>
             <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
               <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider mb-1">Card Spend</p>
-              <p className="text-lg font-bold text-red-400">−{fmt(metrics.totalCost)}</p>
+              <p className="text-lg font-bold text-red-400">−{abbrev(metrics.totalCost)}</p>
             </div>
             <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/20 p-3">
               <p className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider mb-1">Cashback</p>
-              <p className="text-lg font-bold text-cyan-400">+{fmt(metrics.cashback)}</p>
+              <p className="text-lg font-bold text-cyan-400">+{abbrev(metrics.cashback)}</p>
             </div>
             {profitMode === 'cashback_wallet' && metrics.yaCashback > 0 ? (
               <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
                 <p className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider mb-1">YA Adjustment</p>
-                <p className="text-lg font-bold text-amber-400">−{fmt(metrics.yaCashback)}</p>
-                <p className="text-[9px] text-amber-500 mt-0.5">Wallet mode deduction</p>
+                <p className="text-lg font-bold text-amber-400">−{abbrev(metrics.yaCashback)}</p>
+                <p className="text-[9px] text-amber-500 mt-0.5">Wallet deduction</p>
               </div>
             ) : (
               <div className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-3">
                 <p className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider mb-1">YA Cashback</p>
-                <p className="text-lg font-bold text-purple-400">{fmt(metrics.yaCashback)}</p>
+                <p className="text-lg font-bold text-purple-400">{abbrev(metrics.yaCashback)}</p>
                 <p className="text-[9px] text-purple-500 mt-0.5">Included in total</p>
               </div>
             )}
@@ -473,24 +618,23 @@ export default function Dashboard() {
         {Object.keys(statusCounts).length === 0 ? (
           <p className="text-sm text-slate-400">No orders in this range.</p>
         ) : (
-          <div className="grid grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
+          <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3">
             {Object.keys(STATUS_CONFIG).map(status => (
               <PipelineCard
                 key={status}
                 status={status}
                 count={statusCounts[status] || 0}
-                onClick={() => {
-                  const params = new URLSearchParams({ status });
-                  navigate(`/Transactions?${params.toString()}`);
-                }}
+                onClick={() => navigate(`/Transactions?status=${status}`)}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* ── Charts Row ── */}
+      {/* ── Charts + Sidebar ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Trend Chart */}
         <div className="lg:col-span-2 rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
             Profit &amp; Revenue Trend (6 Months)
@@ -520,7 +664,7 @@ export default function Dashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
                 <Tooltip content={<ChartTooltip />} />
                 <Area type="monotone" dataKey="revenue"  stroke="#10b981" fill="url(#gradRevenue)"  strokeWidth={2} name="Revenue"  dot={{ r: 3, fill: '#10b981' }} />
                 <Area type="monotone" dataKey="profit"   stroke="#06b6d4" fill="url(#gradProfit)"   strokeWidth={2} name="Profit"   dot={{ r: 3, fill: '#06b6d4' }} />
@@ -539,6 +683,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Sidebar: By Status + Top Cards */}
         <div className="space-y-4">
           <div className="rounded-2xl border p-5" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
             <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">By Status</h2>
@@ -558,7 +703,7 @@ export default function Dashboard() {
                     <div key={d.name} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                        <span className="text-slate-400 uppercase text-[10px] font-medium">{d.name}</span>
+                        <span className="text-slate-400 uppercase text-[10px] font-medium">{d.name?.replace(/_/g, ' ')}</span>
                       </div>
                       <span className="font-semibold text-slate-200">{d.value}</span>
                     </div>
@@ -585,7 +730,7 @@ export default function Dashboard() {
                         <p className="text-[10px] text-slate-500">{card.orders} txns</p>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-emerald-400 flex-shrink-0 ml-2">{fmt(card.spent)}</span>
+                    <span className="text-sm font-semibold text-emerald-400 flex-shrink-0 ml-2">{abbrev(card.spent)}</span>
                   </div>
                 ))}
               </div>
@@ -594,11 +739,72 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Activity Feed + In-Transit ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        {/* Activity Feed */}
+        <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+          <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+            <Activity className="h-4 w-4 text-emerald-400" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Recent Activity</h2>
+          </div>
+          <div className="px-5 py-2 overflow-y-auto" style={{ maxHeight: 320 }}>
+            {activityLogs.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-8">No recent activity</p>
+            ) : (
+              activityLogs.map((log, i) => <ActivityItem key={log.id || i} log={log} />)
+            )}
+          </div>
+        </div>
+
+        {/* In-Transit Shipments */}
+        <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+          <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+            <Truck className="h-4 w-4 text-cyan-400" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">In Transit</h2>
+            {alerts.inTransit > 0 && (
+              <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                {alerts.inTransit} active
+              </span>
+            )}
+          </div>
+          <div className="p-5 space-y-3">
+            {shipments.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-8">No shipments in transit</p>
+            ) : (
+              shipments.map((s, i) => (
+                <div key={s.id || i} className="rounded-xl border p-3" style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className="text-xs font-semibold text-slate-200 font-mono">{s.tracking_number}</p>
+                    <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full flex-shrink-0">{s.carrier || 'Unknown'}</span>
+                  </div>
+                  {s.latest_event && <p className="text-[11px] text-slate-400 mb-1 truncate">{s.latest_event}</p>}
+                  {s.current_location && <p className="text-[10px] text-slate-500">📍 {s.current_location}</p>}
+                  {s.estimated_delivery && (
+                    <p className="text-[10px] text-amber-400 mt-1">
+                      Est. delivery: {s.estimated_delivery}
+                    </p>
+                  )}
+                </div>
+              ))
+            )}
+            {alerts.inTransit > 3 && (
+              <button onClick={() => navigate('/Transactions')} className="w-full text-center text-xs text-emerald-400 hover:text-emerald-300 transition-colors py-1">
+                View all {alerts.inTransit} shipments →
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* ── Recent Transactions ── */}
       {modalImage && <ImageModal src={modalImage.src} alt={modalImage.alt} onClose={() => setModalImage(null)} />}
       <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-        <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
+        <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Recent Transactions</h2>
+          <button onClick={() => navigate('/Transactions')} className="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium transition-colors flex items-center gap-1">
+            View all <ArrowRight className="h-3 w-3" />
+          </button>
         </div>
         {sortedRecent.length === 0 ? (
           <div className="px-5 py-8 text-sm text-slate-500 text-center">No transactions in this range.</div>
@@ -607,63 +813,54 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                  {['','Product','Retailer','Buyer','Cost','Cashback','Profit','Status','Date'].map((h, i) => (
+                  {['', 'Product', 'Retailer', 'Buyer', 'Cost', 'Cashback', 'Profit', 'Status', 'Date'].map((h, i) => (
                     <th key={i} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {sortedRecent.map((order, i) => {
-                   const cost = order.final_cost || order.total_cost || 0;
-                   const cashbackAmt = parseFloat(order.cashback_amount || 0);
-                   const orderProfit = (() => {
-                     const events = order.sale_events || [];
-                     if (events.length === 0) return null;
-                     const revenue = events.reduce((s, ev) =>
-                       s + (ev.items || []).reduce((is, item) =>
-                         is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0);
-                     const orderCost = parseFloat(order.total_cost || order.final_cost || 0);
-                     const cb = parseFloat(order.cashback_amount || 0);
-                     return revenue - orderCost + cb;
-                   })();
-                   const statusKey = order.status?.toLowerCase();
-                   const statusCfg = STATUS_CONFIG[statusKey];
-                   const productName = order.product_name || order.items?.[0]?.product_name || '—';
-                   const imageUrl = order.image_url || order.product_image_url || order.items?.[0]?.image_url || order.items?.[0]?.product_image_url || null;
-                   const buyer = order.sale_events?.length > 0 ? order.sale_events.map(ev => ev.buyer).filter(Boolean).join(', ') : order.sale_platform || '—';
+                  const cost         = order.final_cost || order.total_cost || 0;
+                  const cashbackAmt  = parseFloat(order.cashback_amount || 0);
+                  const orderProfit  = (() => {
+                    const events = order.sale_events || [];
+                    if (!events.length) return null;
+                    const revenue = events.reduce((s, ev) =>
+                      s + (ev.items || []).reduce((is, item) =>
+                        is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity) || 1), 0), 0);
+                    return revenue - parseFloat(order.total_cost || order.final_cost || 0) + parseFloat(order.cashback_amount || 0);
+                  })();
+                  const statusKey  = order.status?.toLowerCase();
+                  const statusCfg  = STATUS_CONFIG[statusKey];
+                  const productName = order.product_name || order.items?.[0]?.product_name || '—';
+                  const imageUrl    = order.image_url || order.product_image_url || order.items?.[0]?.image_url || order.items?.[0]?.product_image_url || null;
+                  const buyer       = order.sale_events?.length > 0 ? order.sale_events.map(ev => ev.buyer).filter(Boolean).join(', ') : order.sale_platform || '—';
                   return (
-                    <tr key={order.id || i} className="border-b hover:bg-white/3 transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-                      {/* Image */}
+                    <tr key={order.id || i} className="border-b transition-colors"
+                      style={{ borderColor: 'rgba(255,255,255,0.04)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td className="pl-4 pr-2 py-2.5">
                         <div
                           className="w-9 h-9 rounded-lg border overflow-hidden flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition"
                           style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}
                           onClick={() => imageUrl && setModalImage({ src: imageUrl, alt: productName })}
                         >
-                          {imageUrl ? (
-                            <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
-                          ) : (
-                            <ImageOff className="w-4 h-4 text-slate-600" />
-                          )}
+                          {imageUrl
+                            ? <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
+                            : <ImageOff className="w-4 h-4 text-slate-600" />}
                         </div>
                       </td>
-                      {/* Product */}
                       <td className="px-4 py-2.5 font-medium text-slate-200 max-w-[160px]">
                         <span className="truncate block">{productName}</span>
                       </td>
-                      {/* Retailer */}
                       <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap">{order.retailer || '—'}</td>
-                      {/* Buyer */}
-                      <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap">{buyer}</td>
-                      {/* Cost */}
+                      <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap max-w-[100px] truncate">{buyer}</td>
                       <td className="px-4 py-2.5 text-blue-400 font-medium whitespace-nowrap">{fmt(cost)}</td>
-                      {/* Cashback */}
-                      <td className="px-4 py-2.5 text-pink-400 font-medium whitespace-nowrap">{fmt(cashbackAmt)}</td>
-                      {/* Profit */}
+                      <td className="px-4 py-2.5 text-pink-400 font-medium whitespace-nowrap">{cashbackAmt > 0 ? fmt(cashbackAmt) : '—'}</td>
                       <td className={`px-4 py-2.5 font-semibold whitespace-nowrap ${orderProfit === null ? 'text-slate-500' : orderProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {orderProfit === null ? '—' : fmt(orderProfit)}
                       </td>
-                      {/* Status */}
                       <td className="px-4 py-2.5">
                         {statusCfg ? (
                           <span className={`inline-flex items-center text-[10px] font-semibold px-2.5 py-1 rounded-full ${statusCfg.bg} ${statusCfg.color} border ${statusCfg.border}`}>
@@ -673,7 +870,6 @@ export default function Dashboard() {
                           <span className="text-xs text-slate-500 capitalize">{order.status || '—'}</span>
                         )}
                       </td>
-                      {/* Date */}
                       <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">
                         {order.order_date ? format(parseISO(order.order_date), 'M/d/yyyy') : '—'}
                       </td>
