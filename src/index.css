@@ -1,42 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 213 31% 89%;
-    --card: 222 47% 8%;
-    --card-foreground: 213 31% 89%;
-    --popover: 222 47% 8%;
-    --popover-foreground: 213 31% 89%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 40% 11%;
-    --secondary-foreground: 213 31% 89%;
-    --muted: 222 40% 11%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 186 94% 43%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    /* Parchment palette */
+    --parch-bg:    #f5f0e8;
+    --parch-card:  #fdfaf4;
+    --parch-warm:  #ede8dc;
+    --parch-line:  #d4cbb8;
+    --parch-deep:  #c8bfa8;
+
+    /* Ink colors */
+    --ink:         #1a1612;
+    --ink-mid:     #3d3529;
+    --ink-faded:   #6b5f4e;
+    --ink-dim:     #9c8f7e;
+    --ink-ghost:   #c4b9a8;
+
+    /* Map accent colors */
+    --gold:        #b8860b;
+    --gold2:       #d4a017;
+    --gold3:       #f0c040;
+    --gold-bg:     #fdf6dc;
+    --gold-border: rgba(184,134,11,0.2);
+
+    --terrain:     #2d5a27;
+    --terrain2:    #4a8c42;
+    --terrain-bg:  #eef7ed;
+    --terrain-bdr: rgba(45,90,39,0.18);
+
+    --ocean:       #1a5276;
+    --ocean2:      #2980b9;
+    --ocean-bg:    #eaf4fb;
+    --ocean-bdr:   rgba(26,82,118,0.18);
+
+    --violet:      #5b2c6f;
+    --violet2:     #8e44ad;
+    --violet-bg:   #f5eef8;
+    --violet-bdr:  rgba(91,44,111,0.15);
+
+    --crimson:     #922b21;
+    --crimson2:    #c0392b;
+    --crimson-bg:  #fdedec;
+    --crimson-bdr: rgba(146,43,33,0.18);
+
+    --rose:        #922b45;
+    --rose-bg:     #fdf0f3;
+    --rose-bdr:    rgba(146,43,69,0.15);
+
+    /* CSS variable tokens for shadcn */
+    --background: 38 33% 92%;
+    --foreground: 20 20% 9%;
+    --card: 38 60% 99%;
+    --card-foreground: 20 20% 9%;
+    --popover: 38 60% 99%;
+    --popover-foreground: 20 20% 9%;
+    --primary: 39 86% 37%;
+    --primary-foreground: 38 100% 97%;
+    --secondary: 36 20% 88%;
+    --secondary-foreground: 20 20% 20%;
+    --muted: 36 20% 88%;
+    --muted-foreground: 28 15% 45%;
+    --accent: 39 86% 37%;
+    --accent-foreground: 38 100% 97%;
+    --destructive: 4 65% 36%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 100% / 0.06;
-    --input: 222 40% 13%;
-    --ring: 160 84% 39%;
-    --chart-1: 160 84% 39%;
-    --chart-2: 186 94% 43%;
-    --chart-3: 213 93% 68%;
-    --chart-4: 330 81% 60%;
-    --chart-5: 43 96% 56%;
+    --border: 36 22% 82%;
+    --input: 36 22% 86%;
+    --ring: 39 86% 37%;
     --radius: 0.75rem;
-    --sidebar-background: 222 47% 7%;
-    --sidebar-foreground: 213 31% 89%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 40% 11%;
-    --sidebar-accent-foreground: 213 31% 89%;
-    --sidebar-border: 0 0% 100% / 0.06;
-    --sidebar-ring: 160 84% 39%;
+
+    --sidebar-background: 24 20% 7%;
+    --sidebar-foreground: 38 33% 85%;
+    --sidebar-primary: 43 82% 54%;
+    --sidebar-primary-foreground: 24 20% 5%;
+    --sidebar-accent: 24 15% 12%;
+    --sidebar-accent-foreground: 38 33% 75%;
+    --sidebar-border: 43 40% 20%;
+    --sidebar-ring: 43 82% 54%;
+
+    --chart-1: 43 82% 37%;
+    --chart-2: 209 74% 30%;
+    --chart-3: 274 42% 30%;
+    --chart-4: 118 33% 30%;
+    --chart-5: 4 65% 36%;
   }
 }
 
@@ -47,34 +97,51 @@
 
   body {
     @apply bg-background text-foreground;
-    background-color: #080c12;
-    color: #e2e8f0;
+    background-color: var(--parch-bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
-  /* Custom scrollbar */
+  /* Parchment scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #0d1117; }
-  ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.3); border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(16,185,129,0.5); }
+  ::-webkit-scrollbar-track { background: var(--parch-warm); }
+  ::-webkit-scrollbar-thumb { background: var(--parch-deep); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 }
 
 @layer utilities {
-  .gradient-accent {
-    background: linear-gradient(135deg, #10b981, #06b6d4);
+  .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
   }
-  .gradient-accent-text {
-    background: linear-gradient(135deg, #10b981, #06b6d4);
+  .gradient-gold {
+    background: linear-gradient(135deg, #c9a84c, #f5e09a, #c9a84c);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .glow-emerald {
-    box-shadow: 0 0 20px rgba(16,185,129,0.15);
+  .sec-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
   }
-  .glow-emerald-sm {
-    box-shadow: 0 0 12px rgba(16,185,129,0.12);
+  .sec-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    white-space: nowrap;
   }
-  .border-glow {
-    border-color: rgba(16,185,129,0.3);
+  .sec-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(184,134,11,0.25), rgba(184,134,11,0.06), transparent);
+  }
+  .parch-card {
+    background: var(--parch-card);
+    border: 1px solid var(--parch-line);
+    border-radius: 14px;
   }
 }
