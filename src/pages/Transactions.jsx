@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, Trash2, Tag, Globe, X, Zap, LayoutGrid } from 'lucide-react';
+import { Plus, Download, Trash2, Tag, Globe, X, Zap, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/shared/PageHeader';
 import TransactionsStatsBar from '@/components/transactions/TransactionsStatsBar.jsx';
@@ -11,13 +11,14 @@ import OrderGroupedCards from '@/components/transactions/OrderGroupedCards';
 import POFormModal from '@/components/purchase-orders/POFormModal';
 import PODetailsModal from '@/components/purchase-orders/PODetailsModal';
 
+const PAGE_SIZE = 20; // orders per page
+
 export default function Transactions() {
   const queryClient = useQueryClient();
   const [mode, setMode] = useState('all');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
-
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
@@ -34,6 +35,7 @@ export default function Transactions() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Data queries
   const { data: orders = [], isLoading } = useQuery({
@@ -72,10 +74,7 @@ export default function Transactions() {
       const newOrder = await base44.entities.PurchaseOrder.create(data);
       if (data.gift_card_ids?.length > 0) {
         for (const cardId of data.gift_card_ids) {
-          await base44.entities.GiftCard.update(cardId, {
-            status: 'used',
-            used_order_number: data.order_number
-          });
+          await base44.entities.GiftCard.update(cardId, { status: 'used', used_order_number: data.order_number });
         }
         queryClient.invalidateQueries({ queryKey: ['giftCards'] });
       }
@@ -89,26 +88,18 @@ export default function Transactions() {
           const qtyReceived = parseInt(item.quantity_received) || 0;
           if (qtyReceived > 0 && item.product_id) {
             await base44.entities.InventoryItem.create({
-              product_id: item.product_id,
-              product_name: item.product_name,
-              quantity: qtyReceived,
-              status: 'in_stock',
-              purchase_order_id: newOrder.id,
-              unit_cost: parseFloat(item.unit_cost) || 0
+              product_id: item.product_id, product_name: item.product_name,
+              quantity: qtyReceived, status: 'in_stock',
+              purchase_order_id: newOrder.id, unit_cost: parseFloat(item.unit_cost) || 0
             });
           }
         }
         queryClient.invalidateQueries({ queryKey: ['inventory'] });
       }
-      if (newOrder.credit_card_id && newOrder.total_cost) {
-        await createRewardForOrder(newOrder);
-      }
-      setFormOpen(false);
-      setEditingOrder(null);
+      if (newOrder.credit_card_id && newOrder.total_cost) await createRewardForOrder(newOrder);
+      setFormOpen(false); setEditingOrder(null);
     },
-    onError: () => {
-      toast.error('Failed to save order');
-    }
+    onError: () => toast.error('Failed to save order')
   });
 
   const updateMutation = useMutation({
@@ -116,10 +107,7 @@ export default function Transactions() {
       const updatedOrder = await base44.entities.PurchaseOrder.update(id, data);
       if (data.gift_card_ids?.length > 0) {
         for (const cardId of data.gift_card_ids) {
-          await base44.entities.GiftCard.update(cardId, {
-            status: 'used',
-            used_order_number: data.order_number
-          });
+          await base44.entities.GiftCard.update(cardId, { status: 'used', used_order_number: data.order_number });
         }
         queryClient.invalidateQueries({ queryKey: ['giftCards'] });
       }
@@ -129,36 +117,22 @@ export default function Transactions() {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Order updated successfully');
       if (updatedOrder.credit_card_id && updatedOrder.total_cost) {
-        const existingRewards = await base44.entities.Reward.filter({
-          purchase_order_id: updatedOrder.id
-        });
-        for (const reward of existingRewards) {
-          await base44.entities.Reward.delete(reward.id);
-        }
+        const existingRewards = await base44.entities.Reward.filter({ purchase_order_id: updatedOrder.id });
+        for (const reward of existingRewards) await base44.entities.Reward.delete(reward.id);
         await createRewardForOrder(updatedOrder);
       }
-      setFormOpen(false);
-      setEditingOrder(null);
+      setFormOpen(false); setEditingOrder(null);
     },
-    onError: () => {
-      toast.error('Failed to save order');
-    }
+    onError: () => toast.error('Failed to save order')
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (order) => {
-      const orderRewards = await base44.entities.Reward.filter({
-        purchase_order_id: order.id
-      });
-      for (const reward of orderRewards) {
-        await base44.entities.Reward.delete(reward.id);
-      }
+      const orderRewards = await base44.entities.Reward.filter({ purchase_order_id: order.id });
+      for (const reward of orderRewards) await base44.entities.Reward.delete(reward.id);
       if (order.gift_card_ids?.length > 0) {
         for (const cardId of order.gift_card_ids) {
-          await base44.entities.GiftCard.update(cardId, {
-            status: 'available',
-            used_order_number: null
-          });
+          await base44.entities.GiftCard.update(cardId, { status: 'available', used_order_number: null });
         }
       }
       await base44.entities.PurchaseOrder.delete(order.id);
@@ -169,106 +143,46 @@ export default function Transactions() {
       queryClient.invalidateQueries({ queryKey: ['giftCards'] });
       toast.success('Order deleted successfully');
     },
-    onError: () => {
-      toast.error('Failed to delete order');
-    }
+    onError: () => toast.error('Failed to delete order')
   });
 
   const createRewardForOrder = async (order) => {
     const card = creditCards.find(c => c.id === order.credit_card_id);
     if (!card) return;
-
-    // Use original price for % calculation if flag is set (e.g. Amazon promos)
     const baseAmount = order.rewards_on_original_price
       ? (order.original_price || order.total_cost)
       : (order.final_cost || order.total_cost);
-
     const category = order.category || 'other';
     let pointsMultiplier = card.points_rate || 1;
     let cashbackRate = card.cashback_rate || 0;
-    if (category === 'dining') {
-      if (card.dining_points_rate) pointsMultiplier = card.dining_points_rate;
-      if (card.dining_cashback_rate) cashbackRate = card.dining_cashback_rate;
-    } else if (category === 'travel') {
-      if (card.travel_points_rate) pointsMultiplier = card.travel_points_rate;
-      if (card.travel_cashback_rate) cashbackRate = card.travel_cashback_rate;
-    } else if (category === 'groceries') {
-      if (card.groceries_points_rate) pointsMultiplier = card.groceries_points_rate;
-      if (card.groceries_cashback_rate) cashbackRate = card.groceries_cashback_rate;
-    } else if (category === 'gas') {
-      if (card.gas_points_rate) pointsMultiplier = card.gas_points_rate;
-      if (card.gas_cashback_rate) cashbackRate = card.gas_cashback_rate;
-    } else if (category === 'streaming') {
-      if (card.streaming_points_rate) pointsMultiplier = card.streaming_points_rate;
-      if (card.streaming_cashback_rate) cashbackRate = card.streaming_cashback_rate;
-    }
-
+    if (category === 'dining') { if (card.dining_points_rate) pointsMultiplier = card.dining_points_rate; if (card.dining_cashback_rate) cashbackRate = card.dining_cashback_rate; }
+    else if (category === 'travel') { if (card.travel_points_rate) pointsMultiplier = card.travel_points_rate; if (card.travel_cashback_rate) cashbackRate = card.travel_cashback_rate; }
+    else if (category === 'groceries') { if (card.groceries_points_rate) pointsMultiplier = card.groceries_points_rate; if (card.groceries_cashback_rate) cashbackRate = card.groceries_cashback_rate; }
+    else if (category === 'gas') { if (card.gas_points_rate) pointsMultiplier = card.gas_points_rate; if (card.gas_cashback_rate) cashbackRate = card.gas_cashback_rate; }
+    else if (category === 'streaming') { if (card.streaming_points_rate) pointsMultiplier = card.streaming_points_rate; if (card.streaming_cashback_rate) cashbackRate = card.streaming_cashback_rate; }
     const rewardsToCreate = [];
-
-    // Base card reward
     if (card.reward_type === 'cashback' && cashbackRate > 0) {
-      rewardsToCreate.push({
-        type: 'cashback', currency: 'USD',
-        amount: parseFloat((baseAmount * cashbackRate / 100).toFixed(2)),
-        notes: `Auto-generated from order ${order.order_number}`
-      });
+      rewardsToCreate.push({ type: 'cashback', currency: 'USD', amount: parseFloat((baseAmount * cashbackRate / 100).toFixed(2)), notes: `Auto-generated from order ${order.order_number}` });
     } else if (card.reward_type === 'points' && pointsMultiplier > 0) {
-      rewardsToCreate.push({
-        type: 'points', currency: 'points',
-        amount: Math.round(baseAmount * pointsMultiplier),
-        notes: `Auto-generated from order ${order.order_number}`
-      });
+      rewardsToCreate.push({ type: 'points', currency: 'points', amount: Math.round(baseAmount * pointsMultiplier), notes: `Auto-generated from order ${order.order_number}` });
     } else if (card.reward_type === 'both') {
-      if (cashbackRate > 0) {
-        rewardsToCreate.push({
-          type: 'cashback', currency: 'USD',
-          amount: parseFloat((baseAmount * cashbackRate / 100).toFixed(2)),
-          notes: `Auto-generated from order ${order.order_number}`
-        });
-      } else if (pointsMultiplier > 0) {
-        rewardsToCreate.push({
-          type: 'points', currency: 'points',
-          amount: Math.round(baseAmount * pointsMultiplier),
-          notes: `Auto-generated from order ${order.order_number}`
-        });
-      }
+      if (cashbackRate > 0) rewardsToCreate.push({ type: 'cashback', currency: 'USD', amount: parseFloat((baseAmount * cashbackRate / 100).toFixed(2)), notes: `Auto-generated from order ${order.order_number}` });
+      else if (pointsMultiplier > 0) rewardsToCreate.push({ type: 'points', currency: 'points', amount: Math.round(baseAmount * pointsMultiplier), notes: `Auto-generated from order ${order.order_number}` });
     }
-
-    // Extra cashback % (e.g. 5% Amazon extra)
     if (order.extra_cashback_percent > 0) {
-      rewardsToCreate.push({
-        type: 'cashback', currency: 'USD',
-        amount: parseFloat((baseAmount * order.extra_cashback_percent / 100).toFixed(2)),
-        notes: `Extra ${order.extra_cashback_percent}% cashback on order ${order.order_number}`
-      });
+      rewardsToCreate.push({ type: 'cashback', currency: 'USD', amount: parseFloat((baseAmount * order.extra_cashback_percent / 100).toFixed(2)), notes: `Extra ${order.extra_cashback_percent}% cashback on order ${order.order_number}` });
     }
-
-    // Bonus amount (e.g. Prime Young Adult cashback, flat bonus points)
     if (order.bonus_amount > 0) {
       const isPrimeYoungAdult = order.bonus_notes?.toLowerCase().includes('prime young adult');
-      rewardsToCreate.push({
-        type: isPrimeYoungAdult ? 'cashback' : 'loyalty_rewards',
-        currency: isPrimeYoungAdult ? 'USD' : 'points',
-        amount: order.bonus_amount,
-        notes: order.bonus_notes || `Bonus from order ${order.order_number}`
-      });
+      rewardsToCreate.push({ type: isPrimeYoungAdult ? 'cashback' : 'loyalty_rewards', currency: isPrimeYoungAdult ? 'USD' : 'points', amount: order.bonus_amount, notes: order.bonus_notes || `Bonus from order ${order.order_number}` });
     }
-
     for (const r of rewardsToCreate) {
       if (r.amount > 0) {
         await base44.entities.Reward.create({
-          credit_card_id: order.credit_card_id,
-          card_name: card.card_name,
-          source: card.card_name,
-          type: r.type,
-          purchase_amount: baseAmount,
-          amount: r.amount,
-          currency: r.currency,
-          purchase_order_id: order.id,
-          order_number: order.order_number,
-          date_earned: order.order_date,
-          status: order.status === 'received' ? 'earned' : 'pending',
-          notes: r.notes
+          credit_card_id: order.credit_card_id, card_name: card.card_name, source: card.card_name,
+          type: r.type, purchase_amount: baseAmount, amount: r.amount, currency: r.currency,
+          purchase_order_id: order.id, order_number: order.order_number, date_earned: order.order_date,
+          status: order.status === 'received' ? 'earned' : 'pending', notes: r.notes
         });
       }
     }
@@ -278,61 +192,31 @@ export default function Transactions() {
   // Filter logic
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      // Tab filter
       let matchesMode = true;
-      if (mode === 'churning') {
-        matchesMode = order.order_type === 'churning';
-      } else if (mode === 'marketplace') {
-        matchesMode = order.order_type === 'marketplace';
-      }
-
-      // Other filters
-      const matchesSearch = !search || 
+      if (mode === 'churning') matchesMode = order.order_type === 'churning';
+      else if (mode === 'marketplace') matchesMode = order.order_type === 'marketplace';
+      const matchesSearch = !search ||
         order.order_number?.toLowerCase().includes(search.toLowerCase()) ||
         order.retailer?.toLowerCase().includes(search.toLowerCase()) ||
         order.items?.some(item => item.product_name?.toLowerCase().includes(search.toLowerCase()));
-
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       const matchesVendor = vendorFilter === 'all' || order.retailer === vendorFilter;
       const matchesPayment = paymentMethodFilter === 'all' || order.credit_card_id === paymentMethodFilter;
       const matchesCategory = categoryFilter === 'all' || order.category === categoryFilter;
-
       let matchesDateRange = true;
-      if (fromDate) {
-        const fromD = new Date(fromDate);
-        const orderD = new Date(order.order_date || order.created_date);
-        matchesDateRange = orderD >= fromD;
-      }
-      if (toDate && matchesDateRange) {
-        const toD = new Date(toDate);
-        toD.setHours(23, 59, 59, 999);
-        const orderD = new Date(order.order_date || order.created_date);
-        matchesDateRange = orderD <= toD;
-      }
-
-      return matchesMode && matchesSearch && matchesStatus && matchesVendor && 
-             matchesPayment && matchesCategory && matchesDateRange;
+      if (fromDate) { const fromD = new Date(fromDate); const orderD = new Date(order.order_date || order.created_date); matchesDateRange = orderD >= fromD; }
+      if (toDate && matchesDateRange) { const toD = new Date(toDate); toD.setHours(23,59,59,999); const orderD = new Date(order.order_date || order.created_date); matchesDateRange = orderD <= toD; }
+      return matchesMode && matchesSearch && matchesStatus && matchesVendor && matchesPayment && matchesCategory && matchesDateRange;
     });
-  }, [orders, mode, search, statusFilter, vendorFilter,
-      paymentMethodFilter, categoryFilter, fromDate, toDate]);
+  }, [orders, mode, search, statusFilter, vendorFilter, paymentMethodFilter, categoryFilter, fromDate, toDate]);
 
   // Sorting
   const sortedOrders = useMemo(() => {
     const sorted = [...filteredOrders].sort((a, b) => {
-      let aVal = a[sortColumn];
-      let bVal = b[sortColumn];
-
-      if (sortColumn === 'date') {
-        aVal = new Date(a.order_date || a.created_date);
-        bVal = new Date(b.order_date || b.created_date);
-      } else if (sortColumn === 'product') {
-        aVal = a.product_name || a.items?.[0]?.product_name || '';
-        bVal = b.product_name || b.items?.[0]?.product_name || '';
-      } else if (sortColumn === 'vendor') {
-        aVal = a.retailer || '';
-        bVal = b.retailer || '';
-      }
-
+      let aVal = a[sortColumn]; let bVal = b[sortColumn];
+      if (sortColumn === 'date') { aVal = new Date(a.order_date || a.created_date); bVal = new Date(b.order_date || b.created_date); }
+      else if (sortColumn === 'product') { aVal = a.product_name || a.items?.[0]?.product_name || ''; bVal = b.product_name || b.items?.[0]?.product_name || ''; }
+      else if (sortColumn === 'vendor') { aVal = a.retailer || ''; bVal = b.retailer || ''; }
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -340,140 +224,70 @@ export default function Transactions() {
     return sorted;
   }, [filteredOrders, sortColumn, sortDirection]);
 
+  // Pagination — reset to page 1 whenever filters/sort change
+  const totalPages = Math.max(1, Math.ceil(sortedOrders.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedOrders = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return sortedOrders.slice(start, start + PAGE_SIZE);
+  }, [sortedOrders, safePage]);
+
+  // Reset to page 1 on filter changes
+  useMemo(() => { setCurrentPage(1); }, [mode, search, statusFilter, vendorFilter, paymentMethodFilter, categoryFilter, fromDate, toDate, sortColumn, sortDirection]);
+
   const handleSort = (colId) => {
-    if (sortColumn === colId) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(colId);
-      setSortDirection('asc');
-    }
+    if (sortColumn === colId) setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    else { setSortColumn(colId); setSortDirection('asc'); }
   };
 
   const toggleColumn = (colId) => {
-    setVisibleColumns(prev =>
-      prev.includes(colId) ? prev.filter(c => c !== colId) : [...prev, colId]
-    );
-  };
-
-  const showAllColumns = () => {
-    setVisibleColumns([
-      'date', 'product', 'vendor', 'qty', 'cost', 'sale',
-      'profit', 'cashback', 'orderNum', 'tracking', 'payment', 'status', 'actions'
-    ]);
+    setVisibleColumns(prev => prev.includes(colId) ? prev.filter(c => c !== colId) : [...prev, colId]);
   };
 
   const handleCSVDownload = () => {
-    const columnMap = {
-      date: 'DATE',
-      product: 'PRODUCT',
-      vendor: 'VENDOR',
-      qty: 'QTY',
-      cost: 'COST',
-      sale: 'SALE',
-      profit: 'PROFIT',
-      cashback: 'CASHBACK',
-      orderNum: 'ORDER #',
-      tracking: 'TRACKING #',
-      payment: 'PAYMENT',
-      status: 'STATUS',
-      split_payments: 'SPLIT_PAYMENTS',
-    };
-
-    const headers = visibleColumns
-      .filter(col => col !== 'actions' && columnMap[col])
-      .map(col => columnMap[col])
-      .join(',');
-
+    const columnMap = { date:'DATE', product:'PRODUCT', vendor:'VENDOR', qty:'QTY', cost:'COST', sale:'SALE', profit:'PROFIT', cashback:'CASHBACK', orderNum:'ORDER #', tracking:'TRACKING #', payment:'PAYMENT', status:'STATUS', split_payments:'SPLIT_PAYMENTS' };
+    const headers = visibleColumns.filter(col => col !== 'actions' && columnMap[col]).map(col => columnMap[col]).join(',');
     const rows = sortedOrders.map(order => {
       const values = [];
       visibleColumns.forEach(col => {
         if (col === 'actions') return;
         let val = '';
         switch (col) {
-          case 'date':
-            val = order.order_date ? new Date(order.order_date).toLocaleDateString() : '';
-            break;
-          case 'product':
-            val = order.product_name || order.items?.[0]?.product_name || '';
-            break;
-          case 'vendor':
-            val = order.retailer || '';
-            break;
-
-          case 'qty':
-            val = order.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || '0';
-            break;
-          case 'cost':
-            val = (order.total_cost || order.original_price || 0).toFixed(2);
-            break;
-          case 'sale':
-            val = (order.final_cost || order.total_cost || 0).toFixed(2);
-            break;
-          case 'profit':
-            val = ((order.final_cost || order.total_cost || 0) - (order.total_cost || 0)).toFixed(2);
-            break;
-          case 'cashback':
-            val = order.bonus_amount || '';
-            break;
-          case 'orderNum':
-            val = order.order_number || '';
-            break;
-          case 'tracking':
-            val = order.tracking_number || '';
-            break;
-          case 'payment':
-            const card = creditCards.find(c => c.id === order.credit_card_id);
-            val = card ? `${card.card_name} (${card.id?.slice(-4) || 'XXXX'})` : order.card_name || '';
-            break;
-          case 'status':
-            val = order.status || '';
-            break;
-          case 'split_payments':
-            if (order.payment_splits?.length > 1) {
-              val = order.payment_splits.map(sp => `${sp.card_name}:${sp.amount}`).join('|');
-            }
-            break;
+          case 'date': val = order.order_date ? new Date(order.order_date).toLocaleDateString() : ''; break;
+          case 'product': val = order.product_name || order.items?.[0]?.product_name || ''; break;
+          case 'vendor': val = order.retailer || ''; break;
+          case 'qty': val = order.items?.reduce((sum, i) => sum + (i.quantity_ordered || 0), 0) || '0'; break;
+          case 'cost': val = (order.total_cost || order.original_price || 0).toFixed(2); break;
+          case 'sale': val = (order.final_cost || order.total_cost || 0).toFixed(2); break;
+          case 'profit': val = ((order.final_cost || order.total_cost || 0) - (order.total_cost || 0)).toFixed(2); break;
+          case 'cashback': val = order.bonus_amount || ''; break;
+          case 'orderNum': val = order.order_number || ''; break;
+          case 'tracking': val = order.tracking_number || ''; break;
+          case 'payment': const card = creditCards.find(c => c.id === order.credit_card_id); val = card ? `${card.card_name} (${card.id?.slice(-4) || 'XXXX'})` : order.card_name || ''; break;
+          case 'status': val = order.status || ''; break;
+          case 'split_payments': if (order.payment_splits?.length > 1) val = order.payment_splits.map(sp => `${sp.card_name}:${sp.amount}`).join('|'); break;
         }
         values.push(`"${String(val).replace(/"/g, '""')}"`);
       });
       return values.join(',');
     }).join('\n');
-
     const csv = [headers, rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const a = document.createElement('a'); a.href = url;
     a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   };
 
   const handleBulkDelete = async () => {
     if (!confirm(`Delete ${selectedIds.size} selected order(s)?`)) return;
     const toDelete = orders.filter(o => selectedIds.has(o.id));
-    for (const order of toDelete) {
-      await deleteMutation.mutateAsync(order);
-    }
+    for (const order of toDelete) await deleteMutation.mutateAsync(order);
     setSelectedIds(new Set());
   };
 
-  const handleBulkSetType = async (orderType) => {
-    const toUpdate = orders.filter(o => selectedIds.has(o.id));
-    for (const order of toUpdate) {
-      await base44.entities.PurchaseOrder.update(order.id, { order_type: orderType });
-    }
-    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-    toast.success(`Updated ${toUpdate.length} order(s) to ${orderType}`);
-    setSelectedIds(new Set());
-  };
-
-  const vendors = useMemo(() => {
-    return [...new Set(orders.map(o => o.retailer).filter(Boolean))].sort();
-  }, [orders]);
-
+  const vendors = useMemo(() => [...new Set(orders.map(o => o.retailer).filter(Boolean))].sort(), [orders]);
   const modeCounts = useMemo(() => ({
     all: orders.length,
     churning: orders.filter(o => o.order_type === 'churning').length,
@@ -481,96 +295,60 @@ export default function Transactions() {
   }), [orders]);
 
   const modes = [
-    {
-      id: 'all',
-      label: 'All',
-      Icon: LayoutGrid,
-      activeStyle: {
-        background: 'rgba(168,85,247,0.2)',
-        color: '#c084fc',
-        border: '1px solid rgba(168,85,247,0.3)',
-      },
-    },
-    {
-      id: 'churning',
-      label: 'Churning',
-      Icon: Zap,
-      activeStyle: {
-        background: 'rgba(245,158,11,0.15)',
-        color: '#fbbf24',
-        border: '1px solid rgba(245,158,11,0.3)',
-      },
-    },
-    {
-      id: 'marketplace',
-      label: 'Marketplace',
-      Icon: Globe,
-      activeStyle: {
-        background: 'rgba(96,165,250,0.15)',
-        color: '#60a5fa',
-        border: '1px solid rgba(96,165,250,0.3)',
-      },
-    },
-  ];
-
-  const columnOptions = [
-    { id: 'date', label: 'Date' },
-    { id: 'product', label: 'Product' },
-    { id: 'vendor', label: 'Vendor' },
-
-    { id: 'qty', label: 'Qty' },
-    { id: 'cost', label: 'Cost' },
-    { id: 'sale', label: 'Sale' },
-    { id: 'profit', label: 'Profit' },
-    { id: 'cashback', label: 'Cashback' },
-    { id: 'orderNum', label: 'Order #' },
-    { id: 'tracking', label: 'Tracking #' },
-    { id: 'payment', label: 'Payment' },
-    { id: 'status', label: 'Status' },
-    { id: 'split_payments', label: 'Split Payments' },
+    { id: 'all', label: 'All', Icon: LayoutGrid },
+    { id: 'churning', label: 'Churning', Icon: Zap },
+    { id: 'marketplace', label: 'Marketplace', Icon: Globe },
   ];
 
   const modeStyles = {
-    all:         { active: { background: 'var(--gold-bg)', color: 'var(--gold)',    border: '1px solid var(--gold-border)' } },
-    churning:    { active: { background: 'var(--gold-bg)', color: 'var(--gold)',    border: '1px solid var(--gold-border)' } },
-    marketplace: { active: { background: 'var(--ocean-bg)', color: 'var(--ocean)', border: '1px solid var(--ocean-bdr)'  } },
+    all:         { active: { background: 'var(--gold-bg)', color: 'var(--gold)', border: '1px solid var(--gold-border)' } },
+    churning:    { active: { background: 'var(--gold-bg)', color: 'var(--gold)', border: '1px solid var(--gold-border)' } },
+    marketplace: { active: { background: 'var(--ocean-bg)', color: 'var(--ocean)', border: '1px solid var(--ocean-bdr)' } },
+  };
+
+  const clearFilters = () => {
+    setSearch(''); setStatusFilter('all'); setVendorFilter('all');
+    setFromDate(''); setToDate(''); setPaymentMethodFilter('all');
+    setCategoryFilter('all'); setAccountFilter('all');
   };
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 14 }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:22, flexWrap:'wrap', gap:14 }}>
         <div>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Transactions</h1>
-          <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Track and manage your purchases</p>
+          <h1 style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px' }}>Transactions</h1>
+          <p style={{ fontSize:12, color:'var(--ink-dim)', marginTop:4 }}>Track and manage your purchases</p>
         </div>
         <button onClick={handleCSVDownload}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer', fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' }}>
+          style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'var(--parch-card)', border:'1px solid var(--parch-line)', color:'var(--ink-faded)', cursor:'pointer' }}>
           <Download className="h-3.5 w-3.5" /> Export CSV
         </button>
       </div>
 
       {/* Mode Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 20, padding: 3, borderRadius: 10, width: 'fit-content', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:2, marginBottom:20, padding:3, borderRadius:10, width:'fit-content', background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
         {modes.map(m => (
           <button key={m.id} onClick={() => setMode(m.id)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
-              ...(mode === m.id ? (modeStyles[m.id]?.active || modeStyles.all.active) : { background: 'transparent', color: 'var(--ink-dim)' }) }}>
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', border:'none',
+              ...(mode === m.id ? (modeStyles[m.id]?.active || modeStyles.all.active) : { background:'transparent', color:'var(--ink-dim)' }) }}>
             <m.Icon className="w-3.5 h-3.5" />
             {m.label}
-            <span style={{ fontSize: 10, opacity: 0.7 }}>({modeCounts[m.id]})</span>
+            <span style={{ fontSize:10, opacity:0.7 }}>({modeCounts[m.id]})</span>
           </button>
         ))}
       </div>
 
+      {/* Bulk actions */}
       {selectedIds.size > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, padding: '10px 16px', borderRadius: 10, background: 'var(--gold-bg)', border: '1px solid var(--gold-border)' }}>
-          <span style={{ fontWeight: 700, color: 'var(--gold)', fontSize: 13 }}>{selectedIds.size} selected</span>
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16, padding:'10px 16px', borderRadius:10, background:'var(--gold-bg)', border:'1px solid var(--gold-border)' }}>
+          <span style={{ fontWeight:700, color:'var(--gold)', fontSize:13 }}>{selectedIds.size} selected</span>
           <button onClick={handleBulkDelete}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600, background: 'var(--crimson-bg)', border: '1px solid var(--crimson-bdr)', color: 'var(--crimson)', cursor: 'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:7, fontSize:11, fontWeight:600, background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', color:'var(--crimson)', cursor:'pointer' }}>
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </button>
           <button onClick={() => setSelectedIds(new Set())}
-            style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            style={{ marginLeft:'auto', fontSize:11, color:'var(--ink-dim)', background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
             <X className="h-3.5 w-3.5" /> Clear
           </button>
         </div>
@@ -579,29 +357,30 @@ export default function Transactions() {
       <TransactionsStatsBar orders={filteredOrders} />
 
       <TransactionsFilters
-        search={search}
-        onSearchChange={setSearch}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        vendorFilter={vendorFilter}
-        onVendorChange={setVendorFilter}
-
-        fromDate={fromDate}
-        onFromDateChange={setFromDate}
-        toDate={toDate}
-        onToDateChange={setToDate}
-        paymentMethodFilter={paymentMethodFilter}
-        onPaymentMethodChange={setPaymentMethodFilter}
-        categoryFilter={categoryFilter}
-        onCategoryChange={setCategoryFilter}
-        accountFilter={accountFilter}
-        onAccountChange={setAccountFilter}
-        vendors={vendors}
-        creditCards={creditCards}
+        search={search} onSearchChange={setSearch}
+        statusFilter={statusFilter} onStatusChange={setStatusFilter}
+        vendorFilter={vendorFilter} onVendorChange={setVendorFilter}
+        fromDate={fromDate} onFromDateChange={setFromDate}
+        toDate={toDate} onToDateChange={setToDate}
+        paymentMethodFilter={paymentMethodFilter} onPaymentMethodChange={setPaymentMethodFilter}
+        categoryFilter={categoryFilter} onCategoryChange={setCategoryFilter}
+        accountFilter={accountFilter} onAccountChange={setAccountFilter}
+        vendors={vendors} creditCards={creditCards}
       />
 
+      {/* Results count */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+        <span style={{ fontSize:11, color:'var(--ink-dim)' }}>
+          Showing <strong style={{ color:'var(--ink)' }}>{(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, sortedOrders.length)}</strong> of <strong style={{ color:'var(--ink)' }}>{sortedOrders.length}</strong> orders
+        </span>
+        {totalPages > 1 && (
+          <span style={{ fontSize:11, color:'var(--ink-dim)' }}>Page {safePage} of {totalPages}</span>
+        )}
+      </div>
+
+      {/* Orders — paginated */}
       <OrderGroupedCards
-        data={sortedOrders}
+        data={pagedOrders}
         creditCards={creditCards}
         rewards={rewards}
         products={products}
@@ -610,38 +389,61 @@ export default function Transactions() {
         isLoading={isLoading}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
-        onClearFilters={() => {
-          setSearch(''); setStatusFilter('all'); setVendorFilter('all');
-          setFromDate(''); setToDate(''); setPaymentMethodFilter('all');
-          setCategoryFilter('all'); setAccountFilter('all');
-        }}
+        onClearFilters={clearFilters}
       />
 
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:24, paddingBottom:8 }}>
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', color: safePage === 1 ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage === 1 ? 'not-allowed' : 'pointer' }}>
+            <ChevronLeft className="h-3.5 w-3.5" /> Prev
+          </button>
+
+          {/* Page number pills */}
+          <div style={{ display:'flex', gap:4 }}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+              .reduce((acc, p, i, arr) => {
+                if (i > 0 && p - arr[i-1] > 1) acc.push('...');
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === '...'
+                  ? <span key={`ellipsis-${i}`} style={{ padding:'7px 6px', fontSize:12, color:'var(--ink-ghost)' }}>…</span>
+                  : <button key={p} onClick={() => setCurrentPage(p)}
+                      style={{ width:34, height:34, borderRadius:8, fontSize:12, fontWeight: p === safePage ? 700 : 500, border:'1px solid', cursor:'pointer',
+                        borderColor: p === safePage ? 'var(--gold-border)' : 'var(--parch-line)',
+                        background: p === safePage ? 'var(--gold-bg)' : 'var(--parch-card)',
+                        color: p === safePage ? 'var(--gold)' : 'var(--ink-faded)' }}>
+                      {p}
+                    </button>
+              )
+            }
+          </div>
+
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', color: safePage === totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage === totalPages ? 'not-allowed' : 'pointer' }}>
+            Next <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
       <POFormModal
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        order={editingOrder}
-        onSubmit={(data) => {
-          if (editingOrder) {
-            updateMutation.mutate({ id: editingOrder.id, data });
-          } else {
-            createMutation.mutate(data);
-          }
-        }}
-        products={products}
-        creditCards={creditCards}
-        giftCards={giftCards}
-        sellers={sellers}
+        open={formOpen} onOpenChange={setFormOpen} order={editingOrder}
+        onSubmit={(data) => { if (editingOrder) updateMutation.mutate({ id: editingOrder.id, data }); else createMutation.mutate(data); }}
+        products={products} creditCards={creditCards} giftCards={giftCards} sellers={sellers}
         isPending={createMutation.isPending || updateMutation.isPending}
       />
 
       <PODetailsModal
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-        order={selectedOrder}
-        products={products}
-        rewards={rewards}
-        creditCards={creditCards}
+        open={detailsOpen} onOpenChange={setDetailsOpen} order={selectedOrder}
+        products={products} rewards={rewards} creditCards={creditCards}
       />
     </div>
   );
