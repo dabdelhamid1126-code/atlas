@@ -184,8 +184,9 @@ function DropZone({ onFiles, loading }) {
     <div onDragOver={e => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)}
       onDrop={handleDrop} onClick={() => !loading && inputRef.current?.click()}
       className={`relative flex flex-col items-center justify-center gap-3 p-10 rounded-2xl border-2 border-dashed cursor-pointer transition-all
-        ${dragging ? 'border-violet-400 bg-violet-50' : 'border-slate-200 bg-slate-50 hover:border-violet-300 hover:bg-violet-50/50'}
-        ${loading ? 'pointer-events-none opacity-60' : ''}`}>
+        ${dragging ? 'border-violet-400 bg-violet-50' : 'hover:border-violet-300 hover:bg-violet-50/50'}
+        ${loading ? 'pointer-events-none opacity-60' : ''}`}
+      style={!dragging ? { background: 'var(--parch-warm)', borderColor: 'var(--parch-line)' } : {}}>
       <input ref={inputRef} type="file" multiple accept=".pdf,image/*" className="hidden"
         onChange={e => { if (e.target.files?.length) onFiles(Array.from(e.target.files)); e.target.value = ''; }} />
       {loading ? (
