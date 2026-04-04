@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/shared/PageHeader';
-import POStatsBar from '@/components/purchase-orders/POStatsBar';
 import POFilters from '@/components/purchase-orders/POFilters';
 import POTable from '@/components/purchase-orders/POTable';
 import POFormModal from '@/components/purchase-orders/POFormModal';
@@ -479,8 +478,6 @@ export default function PurchaseOrders() {
           </button>
         ))}
       </div>
-
-      <POStatsBar orders={filteredOrders} />
 
       <POFilters
         search={search}
