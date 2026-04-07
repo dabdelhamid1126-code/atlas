@@ -70,7 +70,7 @@ function BrandLogo({ domain, size = 18, fallbackInitials = 'X' }) {
   }
   return (
     <img src={logoUrl} alt="logo" onError={() => setErr(true)}
-      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)', display: 'block' }} />
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid var(--parch-line)', display: 'block' }} />
   );
 }
 
@@ -79,31 +79,26 @@ function ItemThumb({ src, name, onClick }) {
   React.useEffect(() => setErr(false), [src]);
   if (!src || err) {
     return (
-      <div
-        onClick={onClick}
-        className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center cursor-pointer text-slate-400 text-sm font-bold select-none"
-        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-      >
-        {name?.charAt(0)?.toUpperCase() || <ImageOff className="h-4 w-4" />}
+      <div onClick={onClick} style={{ width: 40, height: 40, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', color: 'var(--terrain)', fontSize: 13, fontWeight: 700 }}>
+        {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 14, height: 14 }} />}
       </div>
     );
   }
   return (
     <img src={src} alt={name} onClick={onClick} onError={() => setErr(true)}
-      className="w-10 h-10 rounded-lg object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition"
-      style={{ border: '1px solid rgba(255,255,255,0.1)' }} />
+      style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0, cursor: 'pointer', border: '1px solid var(--parch-line)' }} />
   );
 }
 
 function ImagePreviewModal({ src, alt, onClose }) {
   if (!src) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
-      <div className="relative max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg hover:bg-slate-100 transition">
-          <X className="w-4 h-4 text-slate-700" />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
+      <div style={{ position: 'relative', maxWidth: 384, width: '100%', margin: '0 16px' }} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} style={{ position: 'absolute', top: -12, right: -12, zIndex: 10, width: 32, height: 32, borderRadius: '50%', background: 'var(--parch-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--parch-line)', cursor: 'pointer' }}>
+          <X style={{ width: 14, height: 14, color: 'var(--ink-dim)' }} />
         </button>
-        <img src={src} alt={alt} className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh]" />
+        <img src={src} alt={alt} style={{ width: '100%', borderRadius: 16, maxHeight: '80vh', objectFit: 'contain' }} />
       </div>
     </div>
   );
@@ -207,6 +202,7 @@ export default function NewOrders() {
   const netProfit = totalSalePrice > 0 ? totalSalePrice - totalCost + totalCB : totalCB;
   const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
   const validItemCount = form.items.filter(it => it.product_name?.trim() && parseFloat(it.unit_cost) > 0).length;
+  const hasSales = totalSalePrice > 0;
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
@@ -249,7 +245,7 @@ export default function NewOrders() {
     }
     const pcId = isSplit ? (form.payment_splits[0]?.card_id || null) : (form.credit_card_id || null);
     const pc = creditCards.find(c => c.id === pcId);
-    
+
     const normalizedSaleEvents = form.sale_events.map(ev => ({
       ...ev,
       items: ev.items.map(it => ({
@@ -290,8 +286,9 @@ export default function NewOrders() {
     });
   };
 
-  const profitColor = netProfit >= 0 ? 'text-emerald-400' : 'text-red-400';
-  const hasSales = totalSalePrice > 0;
+  // Profit color using CSS vars
+  const profitColor = hasSales ? (netProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)') : 'var(--violet)';
+  const roiColor = roi !== 0 ? (roi >= 0 ? 'var(--terrain)' : 'var(--crimson)') : 'var(--ink-ghost)';
 
   const TABS = [
     { id: 'details', label: 'Details', icon: ClipboardList },
@@ -301,59 +298,48 @@ export default function NewOrders() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto pb-10">
+    <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
       {previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={() => setPreviewImg(null)} />}
-      <div className="mb-6">
+      <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Add Order</h1>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Record a new purchase</p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
-          <div className="space-y-4">
-            {/* ── MODE TOGGLE ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20, alignItems: 'start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* ── MODE TOGGLE + TAB BAR ── */}
             <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 16, padding: 16 }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
                   <button type="button" onClick={() => set('order_type', 'churning')}
-                    className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all border"
-                    style={form.order_type === 'churning'
-                      ? { background: 'rgba(245,158,11,0.15)', color: '#fbbf24', borderColor: 'rgba(245,158,11,0.4)' }
-                      : { background: 'transparent', color: '#94a3b8', borderColor: 'transparent' }}>
-                    <Tag className="h-3.5 w-3.5" /> Churning
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
+                      ...(form.order_type === 'churning'
+                        ? { background: 'var(--gold-bg)', color: 'var(--gold)', borderColor: 'var(--gold-border)' }
+                        : { background: 'transparent', color: 'var(--ink-dim)', borderColor: 'transparent' }) }}>
+                    <Tag style={{ width: 13, height: 13 }} /> Churning
                   </button>
                   <button type="button" onClick={() => set('order_type', 'marketplace')}
-                    className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all border"
-                    style={form.order_type === 'marketplace'
-                      ? { background: 'rgba(59,130,246,0.15)', color: '#60a5fa', borderColor: 'rgba(59,130,246,0.4)' }
-                      : { background: 'transparent', color: '#94a3b8', borderColor: 'transparent' }}>
-                    <Globe className="h-3.5 w-3.5" /> Marketplace
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
+                      ...(form.order_type === 'marketplace'
+                        ? { background: 'var(--ocean-bg)', color: 'var(--ocean)', borderColor: 'var(--ocean-bdr)' }
+                        : { background: 'transparent', color: 'var(--ink-dim)', borderColor: 'transparent' }) }}>
+                    <Globe style={{ width: 13, height: 13 }} /> Marketplace
                   </button>
                 </div>
               </div>
 
-              {/* ── TAB BAR ── */}
-              <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              {/* Tab bar */}
+              <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--parch-line)' }}>
                 {TABS.map(tab => {
                   const TabIcon = tab.icon;
                   return (
                     <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
-                      style={{
-                        padding: '10px 16px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        borderBottom: activeTab === tab.id ? '2px solid #10b981' : '2px solid transparent',
-                        color: activeTab === tab.id ? '#10b981' : '#94a3b8',
-                        transition: 'all 0.15s',
-                        marginBottom: -1,
-                      }}>
+                      style={{ padding: '10px 16px', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', outline: 'none',
+                        borderBottom: activeTab === tab.id ? '2px solid var(--terrain)' : '2px solid transparent',
+                        color: activeTab === tab.id ? 'var(--terrain)' : 'var(--ink-dim)',
+                        transition: 'all 0.15s', marginBottom: -1 }}>
                       <TabIcon style={{ width: 14, height: 14 }} />
                       {tab.label}
                     </button>
@@ -364,19 +350,18 @@ export default function NewOrders() {
 
             {/* ── TAB: DETAILS ── */}
             {activeTab === 'details' && (
-              <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 16, padding: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#f59e0b', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', borderRadius: 16, padding: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
                   🏪 Vendor & Order
                 </div>
 
-                {/* Row 1: Vendor | Status | Order Number */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div><LBL>Vendor *</LBL>
                     <Select value={form.retailer} onValueChange={(v) => set('retailer', v)}>
-                      <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
+                      <SelectTrigger className="h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
                       <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
                         {RETAILERS.map(r => (
-                          <SelectItem key={r} value={r}>
+                          <SelectItem key={r} value={r} style={{ color: 'var(--ink)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <BrandLogo domain={getStoreDomain(r)} size={16} fallbackInitials={r} />
                               {r}
@@ -388,9 +373,9 @@ export default function NewOrders() {
                   </div>
                   <div><LBL>Status</LBL>
                     <Select value={form.status} onValueChange={(v) => set('status', v)}>
-                      <SelectTrigger className="text-slate-200 h-9" style={inp}><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-9" style={inp}><SelectValue /></SelectTrigger>
                       <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                        {statuses.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                        {statuses.map(s => <SelectItem key={s.value} value={s.value} style={{ color: 'var(--ink)' }}>{s.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -399,7 +384,6 @@ export default function NewOrders() {
                   </div>
                 </div>
 
-                {/* Row 2: Order Date | Account */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div><LBL>Order Date</LBL>
                     <Input type="date" style={inp} className="h-9" value={form.order_date} onChange={e => set('order_date', e.target.value)} />
@@ -409,39 +393,34 @@ export default function NewOrders() {
                   </div>
                 </div>
 
-                {/* Tracking Numbers */}
                 <div><LBL>Tracking Number(s)</LBL>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {form.tracking_numbers.map((tn, idx) => (
                       <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <Input style={{ ...inp, flex: 1 }} className="h-8" value={tn} onChange={e => updateTracking(idx, e.target.value)} placeholder="1Z999AA1..." />
                         {form.tracking_numbers.length > 1 && (
-                          <button type="button" onClick={() => removeTracking(idx)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                          <button type="button" onClick={() => removeTracking(idx)} style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                             <Minus style={{ width: 14, height: 14 }} />
                           </button>
                         )}
                       </div>
                     ))}
-                    <button type="button" onClick={addTracking} style={{ fontSize: 12, color: '#10b981', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button type="button" onClick={addTracking} style={{ fontSize: 12, color: 'var(--terrain)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <Plus style={{ width: 12, height: 12 }} /> Add tracking number
                     </button>
                   </div>
                 </div>
 
                 {/* Fulfillment Type */}
-                <div style={{ display: 'flex', gap: 6, marginTop: 12, padding: 4, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', width: 'fit-content' }}>
+                <div style={{ display: 'flex', gap: 6, marginTop: 12, padding: 4, borderRadius: 12, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', width: 'fit-content' }}>
                   {[
-                    { v: 'ship_to_me', label: '📦 Ship to Me', color: '#60a5fa', bgActive: 'rgba(96,165,250,0.15)', borderActive: 'rgba(96,165,250,0.3)' },
-                    { v: 'store_pickup', label: '📍 Store Pickup', color: '#a855f7', bgActive: 'rgba(168,85,247,0.15)', borderActive: 'rgba(168,85,247,0.3)' },
-                    { v: 'direct_dropship', label: '🚛 Dropship', color: '#f59e0b', bgActive: 'rgba(245,158,11,0.15)', borderActive: 'rgba(245,158,11,0.3)' }
-                  ].map(({ v, label, color, bgActive, borderActive }) => (
+                    { v: 'ship_to_me', label: '📦 Ship to Me', color: 'var(--ocean)', bg: 'var(--ocean-bg)', border: 'var(--ocean-bdr)' },
+                    { v: 'store_pickup', label: '📍 Store Pickup', color: 'var(--violet)', bg: 'var(--violet-bg)', border: 'var(--violet-bdr)' },
+                    { v: 'direct_dropship', label: '🚛 Dropship', color: 'var(--gold)', bg: 'var(--gold-bg)', border: 'var(--gold-border)' },
+                  ].map(({ v, label, color, bg, border }) => (
                     <button key={v} type="button" onClick={() => set('fulfillment_type', v)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
-                        ...(form.fulfillment_type === v
-                          ? { background: bgActive, borderColor: borderActive, color }
-                          : { background: 'transparent', borderColor: 'transparent', color: '#94a3b8' })
-                      }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
+                        ...(form.fulfillment_type === v ? { background: bg, borderColor: border, color } : { background: 'transparent', borderColor: 'transparent', color: 'var(--ink-dim)' }) }}>
                       {label}
                     </button>
                   ))}
@@ -451,9 +430,9 @@ export default function NewOrders() {
                   <div style={{ marginTop: 10 }}>
                     <LBL>Ship To (Buyer)</LBL>
                     <Select value={form.dropship_to} onValueChange={(v) => set('dropship_to', v)}>
-                      <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
                       <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                          {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                        {sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: 'var(--ink)' }}>{s.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -466,7 +445,6 @@ export default function NewOrders() {
                   </div>
                 )}
 
-                {/* Notes */}
                 <div style={{ marginTop: 12 }}><LBL>Notes</LBL>
                   <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Any notes..." rows={2}
                     style={{ ...inp, width: '100%', padding: '8px 12px', resize: 'vertical', fontSize: 13 }} />
@@ -476,12 +454,12 @@ export default function NewOrders() {
 
             {/* ── TAB: ITEMS ── */}
             {activeTab === 'items' && (
-              <div style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)', borderRadius: 16, padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ background: 'var(--ocean-bg)', border: '1px solid var(--ocean-bdr)', borderRadius: 16, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Package style={{ width: 14, height: 14, color: '#06b6d4' }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#06b6d4' }}>Order Items</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(6,182,212,0.15)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.25)' }}>
+                    <Package style={{ width: 14, height: 14, color: 'var(--ocean)' }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ocean)' }}>Order Items</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--parch-card)', color: 'var(--ocean)', border: '1px solid var(--ocean-bdr)' }}>
                       {form.items.length}
                     </span>
                   </div>
@@ -489,17 +467,17 @@ export default function NewOrders() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {form.items.map((item, idx) => (
-                    <div key={item.id} style={{ borderRadius: 10, padding: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div key={item.id} style={{ borderRadius: 10, padding: 12, background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#06b6d4', background: 'rgba(6,182,212,0.12)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(6,182,212,0.2)' }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ocean)', background: 'var(--ocean-bg)', padding: '2px 8px', borderRadius: 20, border: '1px solid var(--ocean-bdr)' }}>
                           Item {idx + 1}
                         </span>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button type="button" onClick={() => duplicateItem(item.id)} style={{ padding: 4, borderRadius: 6, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+                          <button type="button" onClick={() => duplicateItem(item.id)} style={{ padding: 4, borderRadius: 6, color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer' }}>
                             <Copy style={{ width: 13, height: 13 }} />
                           </button>
                           {form.items.length > 1 && (
-                            <button type="button" onClick={() => removeItem(item.id)} style={{ padding: 4, borderRadius: 6, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>
+                            <button type="button" onClick={() => removeItem(item.id)} style={{ padding: 4, borderRadius: 6, color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer' }}>
                               <Trash2 style={{ width: 13, height: 13 }} />
                             </button>
                           )}
@@ -508,7 +486,7 @@ export default function NewOrders() {
 
                       <div style={{ marginBottom: 8 }}><LBL>Product</LBL>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          <ItemThumb src={item.product_image_url} name={item.product_name} />
+                          <ItemThumb src={item.product_image_url} name={item.product_name} onClick={() => item.product_image_url && setPreviewImg({ src: item.product_image_url, alt: item.product_name })} />
                           <div style={{ flex: 1 }}>
                             <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
                               onSelect={(p) => { updateItem(item.id, 'product_id', p.id); updateItem(item.id, 'product_name', p.name); updateItem(item.id, 'upc', p.upc || ''); updateItem(item.id, 'product_image_url', p.image || ''); }}
@@ -520,7 +498,7 @@ export default function NewOrders() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                         <div><LBL>Unit Price</LBL>
                           <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
+                            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
                             <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={item.unit_cost || ''} onChange={(e) => updateItem(item.id, 'unit_cost', e.target.value)} placeholder="0.00" />
                           </div>
                         </div>
@@ -528,7 +506,7 @@ export default function NewOrders() {
                           <Input className="h-8 text-sm text-center" style={inp} type="number" min="1" value={item.quantity_ordered || 1} onChange={(e) => updateItem(item.id, 'quantity_ordered', e.target.value)} />
                         </div>
                         <div><LBL>Total</LBL>
-                          <div style={{ height: 32, display: 'flex', alignItems: 'center', paddingLeft: 9, fontSize: 13, color: '#60a5fa', fontWeight: 600 }}>
+                          <div style={{ height: 32, display: 'flex', alignItems: 'center', paddingLeft: 9, fontSize: 13, color: 'var(--ocean)', fontWeight: 600 }}>
                             {fmt$((parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity_ordered) || 1))}
                           </div>
                         </div>
@@ -538,7 +516,7 @@ export default function NewOrders() {
                 </div>
 
                 <button type="button" onClick={addItem}
-                  style={{ marginTop: 12, width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, color: '#10b981', background: 'none', border: '1px dashed rgba(16,185,129,0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  style={{ marginTop: 12, width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, color: 'var(--terrain)', background: 'none', border: '1px dashed var(--terrain-bdr)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <Plus style={{ width: 14, height: 14 }} /> Add Item
                 </button>
               </div>
@@ -546,43 +524,45 @@ export default function NewOrders() {
 
             {/* ── TAB: PAYMENT ── */}
             {activeTab === 'payment' && (
-              <div style={{ background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.15)', borderRadius: 16, padding: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#ec4899', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ background: 'var(--ocean-bg)', border: '1px solid var(--ocean-bdr)', borderRadius: 16, padding: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ocean)', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
                   💳 Costs & Payment
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 10, marginBottom: 14 }} className="sm:grid-cols-[1fr_1fr_1fr_1.8fr]">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 10, marginBottom: 14 }}>
                   <div><LBL>Tax</LBL>
-                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
+                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
                       <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.tax} onChange={e => set('tax', e.target.value)} placeholder="0.00" /></div>
                   </div>
                   <div><LBL>Shipping</LBL>
-                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
+                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
                       <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.shipping_cost} onChange={e => set('shipping_cost', e.target.value)} placeholder="0.00" /></div>
                   </div>
                   <div><LBL>Fees</LBL>
-                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 12 }}>$</span>
+                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
                       <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.fees} onChange={e => set('fees', e.target.value)} placeholder="0.00" /></div>
                   </div>
-                  <div className="sm:col-auto"><LBL>Card</LBL>
+                  <div><LBL>Card</LBL>
                     {!isSplit ? (
                       <Select value={form.credit_card_id || ''} onValueChange={(v) => set('credit_card_id', v)}>
-                        <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}>
+                        <SelectTrigger className="h-8 text-xs" style={inp}>
                           {form.credit_card_id ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
                               <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} fallbackInitials={selectedCard?.card_name || 'X'} />
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                                 {selectedCard?.card_name}
                               </span>
-                              <span style={{ flexShrink: 0, color: '#64748b', fontSize: '11px', fontFamily: 'monospace', marginLeft: '4px' }}>
-                                ••••{selectedCard?.last_4_digits}
-                              </span>
+                              {selectedCard?.last_4_digits && (
+                                <span style={{ flexShrink: 0, color: 'var(--ink-ghost)', fontSize: 11, fontFamily: 'monospace', marginLeft: 4 }}>
+                                  ••••{selectedCard.last_4_digits}
+                                </span>
+                              )}
                             </div>
                           ) : <SelectValue placeholder="Select..." />}
                         </SelectTrigger>
                         <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
                           {creditCards.filter(c => c.active !== false).map(c => (
-                            <SelectItem key={c.id} value={c.id}>
+                            <SelectItem key={c.id} value={c.id} style={{ color: 'var(--ink)' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <BrandLogo domain={getCardDomain(c.card_name)} size={18} fallbackInitials={c.card_name} />
                                 <span>{c.card_name}{c.last_4_digits ? ` •${c.last_4_digits}` : ''}</span>
@@ -591,14 +571,14 @@ export default function NewOrders() {
                           ))}
                         </SelectContent>
                       </Select>
-                    ) : <span style={{ fontSize: 11, color: '#64748b' }}>Split</span>}
+                    ) : <span style={{ fontSize: 11, color: 'var(--ink-dim)' }}>Split</span>}
                   </div>
                 </div>
 
                 {!isSplit && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500, minHeight: 32,
-                      ...(cardRate > 0 ? { background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981' } : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748b' }) }}>
+                      ...(cardRate > 0 ? { background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', color: 'var(--terrain)' } : { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-dim)' }) }}>
                       {cardRate > 0 ? <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} /> : <CreditCard style={{ width: 13, height: 13 }} />}
                       {cardRate > 0 ? `${cardRate}% → ${fmt$(totalCB)} est.` : 'Select a card'}
                     </div>
@@ -610,10 +590,10 @@ export default function NewOrders() {
                     {form.payment_splits.map((sp, idx) => {
                       const spCard = creditCards.find(c => c.id === sp.card_id);
                       return (
-                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '5fr 3fr 2fr 32px', gap: 8, alignItems: 'end', padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '5fr 3fr 2fr 32px', gap: 8, alignItems: 'end', padding: '10px 12px', borderRadius: 10, background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
                           <div><LBL>Card</LBL>
                             <Select value={sp.card_id || ''} onValueChange={(v) => { const card = creditCards.find(c => c.id === v); setForm(prev => ({ ...prev, payment_splits: prev.payment_splits.map((s, i) => i === idx ? { ...s, card_id: v, card_name: card?.card_name || '' } : s) })); }}>
-                              <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}>
+                              <SelectTrigger className="h-8 text-xs" style={inp}>
                                 {sp.card_id ? (
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                     <BrandLogo domain={getCardDomain(spCard?.card_name)} size={14} />
@@ -622,8 +602,8 @@ export default function NewOrders() {
                                 ) : <SelectValue placeholder="Card..." />}
                               </SelectTrigger>
                               <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                                 {creditCards.filter(c => c.active !== false).map(c => (
-                                   <SelectItem key={c.id} value={c.id}>
+                                {creditCards.filter(c => c.active !== false).map(c => (
+                                  <SelectItem key={c.id} value={c.id} style={{ color: 'var(--ink)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                       <BrandLogo domain={getCardDomain(c.card_name)} size={18} />
                                       <span>{c.card_name}</span>
@@ -634,15 +614,15 @@ export default function NewOrders() {
                             </Select>
                           </div>
                           <div><LBL>Amount</LBL>
-                            <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 11 }}>$</span>
+                            <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 11 }}>$</span>
                               <Input className="h-8 text-xs" style={{ ...inp, paddingLeft: 20 }} type="number" step="0.01" min="0" value={sp.amount} onChange={(e) => setForm(prev => ({ ...prev, payment_splits: prev.payment_splits.map((s, i) => i === idx ? { ...s, amount: e.target.value } : s) }))} placeholder="0.00" /></div>
                           </div>
                           <div><LBL>CB</LBL>
-                            <div style={{ position: 'relative', height: 32, display: 'flex', alignItems: 'center', paddingLeft: 8, color: '#10b981', fontWeight: 600, fontSize: 12 }}>
-                              {fmt$((parseFloat(sp.amount) || 0) * (spCard?.cashback_rate || 0) / 100)}
+                            <div style={{ height: 32, display: 'flex', alignItems: 'center', paddingLeft: 8, color: 'var(--terrain)', fontWeight: 600, fontSize: 12 }}>
+                              {fmt$((parseFloat(sp.amount) || 0) * (creditCards.find(c => c.id === sp.card_id)?.cashback_rate || 0) / 100)}
                             </div>
                           </div>
-                          <button type="button" onClick={() => setForm(prev => ({ ...prev, payment_splits: prev.payment_splits.filter((_, i) => i !== idx) }))} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', padding: 4, marginTop: 16 }}>
+                          <button type="button" onClick={() => setForm(prev => ({ ...prev, payment_splits: prev.payment_splits.filter((_, i) => i !== idx) }))} style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, marginTop: 16 }}>
                             <Trash2 style={{ width: 13, height: 13 }} />
                           </button>
                         </div>
@@ -653,25 +633,28 @@ export default function NewOrders() {
 
                 <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
                   <button type="button" onClick={() => setForm(prev => ({ ...prev, payment_splits: [...(prev.payment_splits || []), { card_id: '', card_name: '', amount: '' }] }))}
-                    style={{ fontSize: 12, fontWeight: 600, color: '#ec4899', padding: '6px 12px', borderRadius: 8, background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    style={{ fontSize: 12, fontWeight: 600, color: 'var(--violet)', padding: '6px 12px', borderRadius: 8, background: 'var(--violet-bg)', border: '1px solid var(--violet-bdr)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Plus style={{ width: 12, height: 12 }} /> Split payment
                   </button>
+                  {isSplit && (
+                    <button type="button" onClick={() => set('payment_splits', [])} style={{ fontSize: 12, color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Single card</button>
+                  )}
                 </div>
 
                 <GiftCardPicker giftCards={giftCards} selectedIds={form.gift_card_ids} onChange={(ids) => set('gift_card_ids', ids)} retailer={form.retailer} />
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 12 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-faded)', cursor: 'pointer' }}>
-                           <input type="checkbox" checked={form.include_tax_in_cashback} onChange={e => set('include_tax_in_cashback', e.target.checked)} />
-                           Tax in cashback
-                         </label>
-                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-faded)', cursor: 'pointer' }}>
-                           <input type="checkbox" checked={form.include_shipping_in_cashback} onChange={e => set('include_shipping_in_cashback', e.target.checked)} />
+                    <input type="checkbox" checked={form.include_tax_in_cashback} onChange={e => set('include_tax_in_cashback', e.target.checked)} />
+                    Tax in cashback
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-faded)', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={form.include_shipping_in_cashback} onChange={e => set('include_shipping_in_cashback', e.target.checked)} />
                     Shipping in cashback
                   </label>
                   {isAmazon && (
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', padding: '4px 10px', borderRadius: 8, border: '1px solid',
-                      ...(form.amazon_yacb ? { background: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.4)', color: '#fbbf24' } : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }) }}>
+                      ...(form.amazon_yacb ? { background: 'var(--gold-bg)', borderColor: 'var(--gold-border)', color: 'var(--gold)' } : { background: 'var(--parch-warm)', borderColor: 'var(--parch-line)', color: 'var(--ink-dim)' }) }}>
                       <input type="checkbox" checked={form.amazon_yacb} onChange={e => set('amazon_yacb', e.target.checked)} />
                       ✨ Amazon YA 5%
                     </label>
@@ -682,34 +665,34 @@ export default function NewOrders() {
 
             {/* ── TAB: SALES ── */}
             {activeTab === 'sales' && (
-              <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 16, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <DollarSign style={{ width: 14, height: 14, color: '#10b981' }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#10b981' }}>Sale Events</span>
+                    <DollarSign style={{ width: 14, height: 14, color: 'var(--terrain)' }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--terrain)' }}>Sale Events</span>
                   </div>
                   <button type="button" onClick={addSaleEvent}
-                    style={{ fontSize: 12, fontWeight: 600, color: '#10b981', padding: '6px 12px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    style={{ fontSize: 12, fontWeight: 600, color: 'var(--terrain)', padding: '6px 12px', borderRadius: 8, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Plus style={{ width: 12, height: 12 }} /> Record Sale
                   </button>
                 </div>
 
                 {form.sale_events.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                    <DollarSign style={{ width: 32, height: 32, color: 'rgba(16,185,129,0.3)', margin: '0 auto 8px' }} />
-                    <p style={{ color: '#64748b', fontSize: 13, marginBottom: 12 }}>No sale events yet</p>
+                    <DollarSign style={{ width: 32, height: 32, color: 'var(--terrain-bdr)', margin: '0 auto 8px' }} />
+                    <p style={{ color: 'var(--ink-dim)', fontSize: 13, marginBottom: 12 }}>No sale events yet</p>
                     <button type="button" onClick={addSaleEvent}
-                      style={{ fontSize: 13, fontWeight: 600, color: '#10b981', padding: '8px 20px', borderRadius: 10, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', cursor: 'pointer' }}>
+                      style={{ fontSize: 13, fontWeight: 600, color: 'var(--terrain)', padding: '8px 20px', borderRadius: 10, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)', cursor: 'pointer' }}>
                       + Record First Sale
                     </button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {form.sale_events.map((ev, evIdx) => (
-                      <div key={ev.id} style={{ borderRadius: 10, padding: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                      <div key={ev.id} style={{ borderRadius: 10, padding: 12, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#10b981' }}>Sale {evIdx + 1}</span>
-                          <button type="button" onClick={() => removeSaleEvent(ev.id)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--terrain)' }}>Sale {evIdx + 1}</span>
+                          <button type="button" onClick={() => removeSaleEvent(ev.id)} style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                             <Trash2 style={{ width: 13, height: 13 }} />
                           </button>
                         </div>
@@ -717,10 +700,10 @@ export default function NewOrders() {
                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
                           <div><LBL>Buyer / Platform</LBL>
                             <Select value={ev.buyer || ''} onValueChange={(v) => updateSaleEvent(ev.id, 'buyer', v)}>
-                              <SelectTrigger className="text-slate-200 h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
+                              <SelectTrigger className="h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
                               <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                                       {sellers.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
-                                       {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                {sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: 'var(--ink)' }}>{s.name}</SelectItem>)}
+                                {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp'].map(p => <SelectItem key={p} value={p} style={{ color: 'var(--ink)' }}>{p}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -738,16 +721,16 @@ export default function NewOrders() {
                               <div key={itIdx} style={{ display: 'grid', gridTemplateColumns: '5fr 2fr 3fr 28px', gap: 6, alignItems: 'center' }}>
                                 <Input className="h-7 text-xs" style={inp} value={it.product_name || ''} placeholder="Product" onChange={(e) => updateSaleEventItem(ev.id, itIdx, 'product_name', e.target.value)} />
                                 <Input className="h-7 text-xs text-center" style={inp} type="number" min="1" value={it.quantity ?? 1} placeholder="1" onChange={(e) => updateSaleEventItem(ev.id, itIdx, 'quantity', parseInt(e.target.value) || 1)} />
-                                <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 11 }}>$</span>
+                                <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 11 }}>$</span>
                                   <Input className="h-7 text-xs" style={{ ...inp, paddingLeft: 18 }} type="number" step="0.01" min="0" value={it.sale_price || ''} placeholder="Price" onChange={(e) => updateSaleEventItem(ev.id, itIdx, 'sale_price', e.target.value)} />
                                 </div>
-                                <button type="button" onClick={() => updateSaleEvent(ev.id, 'items', ev.items.filter((_, i) => i !== itIdx))} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                                <button type="button" onClick={() => updateSaleEvent(ev.id, 'items', ev.items.filter((_, i) => i !== itIdx))} style={{ color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
                                   <X style={{ width: 12, height: 12 }} />
                                 </button>
                               </div>
                             ))}
                             <button type="button" onClick={() => { updateSaleEvent(ev.id, 'items', [...ev.items, { product_name: '', quantity: 1, sale_price: 0 }]); }}
-                              style={{ fontSize: 11, color: '#10b981', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              style={{ fontSize: 11, color: 'var(--terrain)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <Plus style={{ width: 11, height: 11 }} /> Add item
                             </button>
                           </div>
@@ -756,11 +739,11 @@ export default function NewOrders() {
                     ))}
 
                     {totalSalePrice > 0 && (
-                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, color: '#10b981', fontWeight: 500 }}>
+                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, color: 'var(--terrain)', fontWeight: 500 }}>
                           {form.sale_events.reduce((s, ev) => s + (ev.items?.reduce((ss, it) => ss + (parseInt(it.quantity ?? 1) || 1), 0) || 0), 0)} items sold
                         </span>
-                        <span style={{ fontSize: 13, color: '#10b981', fontWeight: 700 }}>
+                        <span style={{ fontSize: 13, color: 'var(--terrain)', fontWeight: 700 }}>
                           {fmt$(totalSalePrice)} revenue
                         </span>
                       </div>
@@ -772,83 +755,79 @@ export default function NewOrders() {
           </div>
 
           {/* ── RIGHT COLUMN ── */}
-          <div>
-            <div className="lg:sticky lg:top-6 space-y-3">
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                 <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid var(--parch-line)' }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#10b981', marginBottom: 8 }}>
-                    {hasSales ? 'Estimated Profit' : 'Cashback Profit'}
-                  </p>
-                  <p style={{ fontSize: 36, fontWeight: 800, color: hasSales ? (netProfit >= 0 ? '#10b981' : '#f87171') : '#06b6d4' }}>
-                    {fmt$(netProfit)}
-                  </p>
-                  <p className="text-xs mt-1.5 flex items-center gap-1.5">
-                    <span className={`font-semibold ${roi !== 0 ? (roi >= 0 ? 'text-cyan-400' : 'text-red-400') : 'text-slate-500'}`}>
-                      {roi.toFixed(1)}% ROI
-                    </span>
-                    <span className="text-slate-600">·</span>
-                    <span className="text-slate-500">{validItemCount} item{validItemCount !== 1 ? 's' : ''}</span>
-                  </p>
-                  {!hasSales && (
-                    <p style={{ fontSize: 11, color: '#64748b', marginTop: 8 }}>Record sales in Sales tab or after saving</p>
-                  )}
-                </div>
-
-                <div className="px-5 py-4 space-y-2.5 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Items subtotal</span>
-                    <span className="text-slate-100 font-medium">{fmt$(itemsSubtotal)}</span>
-                  </div>
-                  {(tax + shipping + fees) > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Tax + ship + fees</span>
-                      <span className="text-slate-300">+{fmt$(tax + shipping + fees)}</span>
-                    </div>
-                  )}
-                  {giftCardTotal > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Gift cards</span>
-                      <span className="text-amber-400">−{fmt$(giftCardTotal)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                    <span className="text-slate-300 font-medium">Total cost</span>
-                    <span className="text-slate-100 font-semibold">{fmt$(finalCost)}</span>
-                  </div>
-                  {totalCB > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Cashback</span>
-                      <span className="text-cyan-400 font-semibold">+{fmt$(totalCB)}</span>
-                    </div>
-                  )}
-                  {totalSalePrice > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Sale total</span>
-                      <span className="text-slate-100 font-medium">{fmt$(totalSalePrice)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2" style={{ borderTop: '1px solid var(--parch-line)', paddingTop: 8 }}>
-                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{hasSales ? 'Net profit' : 'Cashback'}</span>
-                    <span style={{ fontWeight: 800, fontSize: 15, color: hasSales ? (netProfit >= 0 ? '#10b981' : '#f87171') : '#06b6d4' }}>{fmt$(netProfit)}</span>
-                  </div>
-                </div>
+          <div style={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Profit summary card */}
+            <div style={{ borderRadius: 16, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+              <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--parch-line)' }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: hasSales ? 'var(--terrain)' : 'var(--violet)', marginBottom: 8 }}>
+                  {hasSales ? 'Estimated Profit' : 'Cashback Profit'}
+                </p>
+                <p style={{ fontSize: 36, fontWeight: 800, lineHeight: 1, color: profitColor }}>
+                  {fmt$(netProfit)}
+                </p>
+                <p style={{ fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontWeight: 600, color: roiColor }}>{roi.toFixed(1)}% ROI</span>
+                  <span style={{ color: 'var(--parch-deep)' }}>·</span>
+                  <span style={{ color: 'var(--ink-ghost)' }}>{validItemCount} item{validItemCount !== 1 ? 's' : ''}</span>
+                </p>
+                {!hasSales && (
+                  <p style={{ fontSize: 11, color: 'var(--ink-ghost)', marginTop: 8 }}>Record sales in Sales tab or after saving</p>
+                )}
               </div>
 
-              <button type="submit" disabled={createMutation.isPending}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white text-sm font-extrabold tracking-wide transition disabled:opacity-50 uppercase"
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', boxShadow: '0 4px 24px rgba(16,185,129,0.3)' }}>
-                {createMutation.isPending ? (
-                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creating...</>
-                ) : (
-                  <><Plus className="h-4 w-4" /> Add Order{validItemCount > 1 ? ` (${validItemCount} items)` : ''}</>
+              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                  <span style={{ color: 'var(--ink-dim)' }}>Items subtotal</span>
+                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{fmt$(itemsSubtotal)}</span>
+                </div>
+                {(tax + shipping + fees) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'var(--ink-dim)' }}>Tax + ship + fees</span>
+                    <span style={{ color: 'var(--ink-faded)' }}>+{fmt$(tax + shipping + fees)}</span>
+                  </div>
                 )}
-              </button>
-
-              <button type="button" onClick={() => window.history.back()}
-                style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, color: 'var(--ink-ghost)', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', cursor: 'pointer' }}>
-                Cancel
-              </button>
+                {giftCardTotal > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'var(--ink-dim)' }}>Gift cards</span>
+                    <span style={{ color: 'var(--rose)', fontWeight: 600 }}>−{fmt$(giftCardTotal)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingTop: 8, borderTop: '1px solid var(--parch-line)' }}>
+                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>Total cost</span>
+                  <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{fmt$(finalCost)}</span>
+                </div>
+                {totalCB > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'var(--ink-dim)' }}>Cashback</span>
+                    <span style={{ color: 'var(--violet)', fontWeight: 600 }}>+{fmt$(totalCB)}</span>
+                  </div>
+                )}
+                {totalSalePrice > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'var(--ink-dim)' }}>Sale total</span>
+                    <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{fmt$(totalSalePrice)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--parch-line)' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 13 }}>{hasSales ? 'Net profit' : 'Cashback'}</span>
+                  <span style={{ fontWeight: 800, fontSize: 15, color: profitColor }}>{fmt$(netProfit)}</span>
+                </div>
+              </div>
             </div>
+
+            <button type="submit" disabled={createMutation.isPending}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 0', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', opacity: createMutation.isPending ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+              {createMutation.isPending ? (
+                <><div style={{ width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Creating...</>
+              ) : (
+                <><Plus style={{ width: 16, height: 16 }} /> Add Order{validItemCount > 1 ? ` (${validItemCount} items)` : ''}</>
+              )}
+            </button>
+
+            <button type="button" onClick={() => window.history.back()}
+              style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, color: 'var(--ink-ghost)', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', cursor: 'pointer' }}>
+              Cancel
+            </button>
           </div>
         </div>
       </form>
