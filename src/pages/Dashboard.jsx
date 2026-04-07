@@ -50,7 +50,6 @@ function abbrev(n) {
   return fmt(n);
 }
 
-// ── Section Divider ──────────────────────────────────────────────────────────
 function SectionDivider({ title, dotColor = 'var(--gold)', lineColor = 'rgba(184,134,11,0.25)' }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -61,19 +60,32 @@ function SectionDivider({ title, dotColor = 'var(--gold)', lineColor = 'rgba(184
   );
 }
 
-// ── KPI Card ─────────────────────────────────────────────────────────────────
-function KpiCard({ label, value, sub, topColor, valueCss, bgGrad, borderColor }) {
+function KpiCard({ label, value, sub, accentColor, valueColor }) {
+  const color = valueColor || accentColor || 'var(--ink)';
   return (
-    <div style={{ borderRadius: 14, padding: 16, background: bgGrad || 'var(--parch-card)', border: `1px solid ${borderColor || 'var(--parch-line)'}`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, borderRadius: '14px 14px 0 0', background: topColor }} />
-      <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8, color: valueCss || 'var(--ink-dim)' }}>{label}</p>
-      <p style={{ fontSize: 24, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.5px', color: valueCss || 'var(--ink)' }}>{value}</p>
-      {sub && <p style={{ fontSize: 10, marginTop: 6, color: 'var(--ink-dim)' }}>{sub}</p>}
+    <div style={{
+      borderRadius: 14,
+      padding: 16,
+      background: 'var(--parch-card)',
+      border: '1px solid var(--parch-line)',
+      borderTop: `3px solid ${accentColor || 'var(--parch-line)'}`,
+      position: 'relative',
+    }}>
+      <p style={{
+        fontFamily: "'Playfair Display', serif",
+        fontSize: 8, fontWeight: 700, letterSpacing: '0.14em',
+        textTransform: 'uppercase', marginBottom: 8,
+        color: 'var(--ink-dim)',
+      }}>{label}</p>
+      <p style={{
+        fontSize: 24, fontWeight: 800, lineHeight: 1,
+        letterSpacing: '-0.5px', color,
+      }}>{value}</p>
+      {sub && <p style={{ fontSize: 10, marginTop: 6, color: 'var(--ink-ghost)' }}>{sub}</p>}
     </div>
   );
 }
 
-// ── Alert Banner ─────────────────────────────────────────────────────────────
 function AlertBanner({ icon: Icon, color, bg, border, title, value, onClick }) {
   return (
     <button onClick={onClick}
@@ -90,7 +102,6 @@ function AlertBanner({ icon: Icon, color, bg, border, title, value, onClick }) {
   );
 }
 
-// ── Pipeline Card ─────────────────────────────────────────────────────────────
 function PipelineCard({ status, count, onClick }) {
   const cfg = STATUS_CONFIG[status?.toLowerCase()] || { label: status, icon: Package, color: 'var(--ink-dim)', bg: 'var(--parch-warm)', border: 'var(--parch-line)' };
   const Icon = cfg.icon;
@@ -104,7 +115,6 @@ function PipelineCard({ status, count, onClick }) {
   );
 }
 
-// ── Chart Tooltip ─────────────────────────────────────────────────────────────
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -121,7 +131,6 @@ function ChartTooltip({ active, payload, label }) {
   );
 }
 
-// ── Activity Item ─────────────────────────────────────────────────────────────
 function ActivityItem({ log }) {
   const Icon = ENTITY_ICON[log.entity_type] || Activity;
   const timeAgo = log.created_date ? formatDistanceToNow(new Date(log.created_date), { addSuffix: true }) : '';
@@ -139,7 +148,6 @@ function ActivityItem({ log }) {
   );
 }
 
-// ── Main Dashboard ─────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading]             = useState(true);
@@ -214,7 +222,6 @@ export default function Dashboard() {
 
       setMetrics({ totalCost, saleRevenue, cashback, points, netProfit, avgRoi, yaCashback, inStockUnits, giftCardValue });
 
-      // Trend (6 months)
       const now = new Date();
       const trend = [];
       for (let i = 5; i >= 0; i--) {
@@ -269,7 +276,6 @@ export default function Dashboard() {
     alerts.inTransit > 0       && { icon: Truck,         color: 'var(--ocean)',   bg: 'var(--ocean-bg)',  border: 'var(--ocean-bdr)',   title: `${alerts.inTransit} Shipment${alerts.inTransit > 1 ? 's' : ''} In Transit`, value: 'Packages on the way', onClick: () => navigate('/Transactions') },
   ].filter(Boolean);
 
-  // Card styles
   const BTN_FILTER = (active) => ({
     padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: active ? 700 : 600, cursor: 'pointer', border: 'none',
     background: active ? 'var(--ink)' : 'transparent', color: active ? 'var(--gold)' : 'var(--ink-dim)',
@@ -327,42 +333,27 @@ export default function Dashboard() {
       {/* ── KPI Row 1 ── */}
       <SectionDivider title="Performance" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 10 }}>
-        <KpiCard label="Total Cost" value={abbrev(metrics.totalCost)} sub={`${filteredOrders.length} orders`}
-          topColor="linear-gradient(90deg, var(--ocean), var(--ocean2))"
-          valueCss="var(--ocean)" bgGrad="linear-gradient(180deg, var(--ocean-bg), var(--parch-card))" borderColor="var(--ocean-bdr)" />
-        <KpiCard label="Sale Revenue" value={abbrev(metrics.saleRevenue)} sub={`${filteredOrders.filter(o => o.sale_events?.length > 0).length} sold`}
-          topColor="linear-gradient(90deg, var(--terrain), var(--terrain2))"
-          valueCss="var(--terrain)" bgGrad="linear-gradient(180deg, var(--terrain-bg), var(--parch-card))" borderColor="var(--terrain-bdr)" />
-        <KpiCard label="Cashback" value={abbrev(metrics.cashback)} sub={`${metrics.points.toLocaleString()} pts earned`}
-          topColor="linear-gradient(90deg, var(--violet), var(--violet2))"
-          valueCss="var(--violet)" bgGrad="linear-gradient(180deg, var(--violet-bg), var(--parch-card))" borderColor="var(--violet-bdr)" />
-        <div style={{ borderRadius: 14, padding: 16, background: 'linear-gradient(135deg, var(--gold-bg), #fef9ec)', border: '1px solid var(--gold-border)', position: 'relative', overflow: 'hidden', boxShadow: '0 2px 12px rgba(184,134,11,0.08)' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, borderRadius: '14px 14px 0 0', background: 'linear-gradient(90deg, #8b6914, #b8860b, #d4a017, #f0c040, #d4a017, #8b6914)' }} />
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8, color: '#8b6914' }}>Net Profit</p>
-          <p style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: 'var(--gold)' }}>{abbrev(metrics.netProfit)}</p>
-          <p style={{ fontSize: 10, marginTop: 6, color: 'var(--gold2)' }}>{metrics.avgRoi.toFixed(1)}% ROI</p>
-        </div>
+        <KpiCard label="Total Cost" value={abbrev(metrics.totalCost)} sub={`${filteredOrders.length} orders`} accentColor="var(--ocean)" valueColor="var(--ocean)" />
+        <KpiCard label="Sale Revenue" value={abbrev(metrics.saleRevenue)} sub={`${filteredOrders.filter(o => o.sale_events?.length > 0).length} sold`} accentColor="var(--terrain)" valueColor="var(--terrain)" />
+        <KpiCard label="Cashback" value={abbrev(metrics.cashback)} sub={`${metrics.points.toLocaleString()} pts earned`} accentColor="var(--violet)" valueColor="var(--violet)" />
+        <KpiCard label={profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Net Profit'} value={abbrev(metrics.netProfit)} sub={`${metrics.avgRoi.toFixed(1)}% ROI`} accentColor={metrics.netProfit >= 0 ? 'var(--gold)' : 'var(--crimson)'} valueColor={metrics.netProfit >= 0 ? 'var(--gold)' : 'var(--crimson)'} />
       </div>
 
       {/* ── KPI Row 2 ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 20 }}>
-        <KpiCard label="YA Cashback" value={abbrev(metrics.yaCashback)} sub="Young Adult CB"
-          topColor="linear-gradient(90deg, #8b6914, var(--gold))" valueCss="var(--gold)" bgGrad="linear-gradient(180deg, #fef8e6, var(--parch-card))" borderColor="rgba(184,134,11,0.14)" />
-        <KpiCard label="Avg ROI" value={`${metrics.avgRoi.toFixed(1)}%`} sub="return on investment"
-          topColor="linear-gradient(90deg, var(--ocean), var(--ocean2))" valueCss="var(--ocean)" bgGrad="linear-gradient(180deg, var(--ocean-bg), var(--parch-card))" borderColor="var(--ocean-bdr)" />
-        <KpiCard label="Units In Stock" value={metrics.inStockUnits.toLocaleString()} sub="in_stock + received"
-          topColor="linear-gradient(90deg, var(--terrain), var(--terrain2))" valueCss="var(--terrain)" bgGrad="linear-gradient(180deg, var(--terrain-bg), var(--parch-card))" borderColor="var(--terrain-bdr)" />
-        <KpiCard label="Gift Card Value" value={abbrev(metrics.giftCardValue)} sub="available cards"
-          topColor="linear-gradient(90deg, var(--rose), #c0536a)" valueCss="var(--rose)" bgGrad="linear-gradient(180deg, var(--rose-bg), var(--parch-card))" borderColor="var(--rose-bdr)" />
+        <KpiCard label="YA Cashback" value={abbrev(metrics.yaCashback)} sub="Young Adult CB" accentColor="var(--gold2)" valueColor="var(--gold)" />
+        <KpiCard label="Avg ROI" value={`${metrics.avgRoi.toFixed(1)}%`} sub="return on investment" accentColor="var(--ocean)" valueColor={metrics.avgRoi >= 0 ? 'var(--ocean)' : 'var(--crimson)'} />
+        <KpiCard label="Units In Stock" value={metrics.inStockUnits.toLocaleString()} sub="in_stock + received" accentColor="var(--terrain)" valueColor="var(--terrain)" />
+        <KpiCard label="Gift Card Value" value={abbrev(metrics.giftCardValue)} sub="available cards" accentColor="var(--rose)" valueColor="var(--rose)" />
       </div>
 
       {/* ── Profit Breakdown ── */}
-      <div style={{ borderRadius: 14, background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', marginBottom: 20, overflow: 'hidden', boxShadow: '0 2px 16px rgba(184,134,11,0.06)' }}>
-        <button onClick={() => setShowProfitDetails(p => !p)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: 'rgba(184,134,11,0.04)', borderBottom: showProfitDetails ? '1px solid rgba(184,134,11,0.12)' : 'none', cursor: 'pointer', border: 'none' }}>
+      <div style={{ borderRadius: 14, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', marginBottom: 20, overflow: 'hidden' }}>
+        <button onClick={() => setShowProfitDetails(p => !p)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: 'var(--parch-warm)', borderBottom: showProfitDetails ? '1px solid var(--parch-line)' : 'none', cursor: 'pointer', border: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Info style={{ width: 14, height: 14, color: 'var(--gold)' }} />
             <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>Profit Breakdown</span>
-            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: 'rgba(184,134,11,0.1)', color: 'var(--gold)', border: '1px solid rgba(184,134,11,0.2)' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: 'var(--gold-bg)', color: 'var(--gold)', border: '1px solid var(--gold-border)' }}>
               {profitMode === 'cashback_wallet' ? 'Cashback Wallet Mode' : 'Accounting Mode'}
             </span>
           </div>
@@ -374,7 +365,7 @@ export default function Dashboard() {
               { label: 'Revenue',    value: abbrev(metrics.saleRevenue), color: 'var(--terrain)',  bg: 'var(--terrain-bg)', border: 'var(--terrain-bdr)', prefix: '' },
               { label: 'Card Spend', value: abbrev(metrics.totalCost),   color: 'var(--crimson)',  bg: 'var(--crimson-bg)', border: 'var(--crimson-bdr)', prefix: '−' },
               { label: 'Cashback',   value: abbrev(metrics.cashback),    color: 'var(--violet)',   bg: 'var(--violet-bg)',  border: 'var(--violet-bdr)',  prefix: '+' },
-              { label: 'Net Profit', value: abbrev(metrics.netProfit),   color: 'var(--gold)',     bg: 'var(--gold-bg)',    border: 'var(--gold-border)', prefix: '' },
+              { label: 'Net Profit', value: abbrev(metrics.netProfit),   color: metrics.netProfit >= 0 ? 'var(--gold)' : 'var(--crimson)', bg: metrics.netProfit >= 0 ? 'var(--gold-bg)' : 'var(--crimson-bg)', border: metrics.netProfit >= 0 ? 'var(--gold-border)' : 'var(--crimson-bdr)', prefix: '' },
             ].map(b => (
               <div key={b.label} style={{ borderRadius: 10, padding: 12, background: b.bg, border: `1px solid ${b.border}` }}>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: b.color, marginBottom: 4 }}>{b.label}</p>
@@ -444,7 +435,6 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* By Status */}
           <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', flex: 1 }}>
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>By Status</p>
             {byStatusData.length === 0 ? <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>No data</p> : (
@@ -470,7 +460,6 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          {/* Top Cards */}
           <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', flex: 1 }}>
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>Top Cards</p>
             {topCards.length === 0 ? <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>No data</p> : (
@@ -498,7 +487,6 @@ export default function Dashboard() {
       {/* ── Activity + Shipments ── */}
       <SectionDivider title="Live Dispatch" dotColor="var(--ocean2)" lineColor="rgba(26,82,118,0.25)" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-        {/* Activity Feed */}
         <div style={{ borderRadius: 14, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
           <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
@@ -513,7 +501,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Shipments */}
         <div style={{ borderRadius: 14, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
           <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
@@ -550,7 +537,7 @@ export default function Dashboard() {
       <SectionDivider title="Recent Expeditions" dotColor="var(--terrain2)" lineColor="rgba(45,90,39,0.25)" />
       <div style={{ borderRadius: 14, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
         <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
             Recent Transactions
           </div>
           <button onClick={() => navigate('/Transactions')} style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.04em' }}>View all →</button>
