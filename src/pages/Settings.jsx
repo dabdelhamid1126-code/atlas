@@ -150,11 +150,11 @@ function GoalsTab() {
                   </button>
                 ))}
               </div>
-              <div style={{ position: 'relative', width: 160 }}>
+              <div style={{ position: 'relative', width: 140 }}>
                 {isCurrency && <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>}
                 <input type="number" min="0" placeholder={isCurrency ? '0.00' : '0'} value={goal.target}
                   onChange={e => update(idx, { target: e.target.value })}
-                  style={{ ...inp, width: 'auto', paddingLeft: isCurrency ? 26 : 12 }} />
+                  style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%', paddingLeft: isCurrency ? 26 : 12 }} />
               </div>
               <Toggle on={goal.isActive} onToggle={() => update(idx, { isActive: !goal.isActive })} />
             </div>
@@ -164,7 +164,7 @@ function GoalsTab() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
         <button onClick={handleSave} disabled={saving}
-          style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' }}>
+          style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer' }}>
           {saving ? 'Saving...' : 'Save Goals'}
         </button>
         {saved && <span style={{ fontSize: 12, color: 'var(--terrain)', display: 'flex', alignItems: 'center', gap: 4 }}><Check style={{ width: 13, height: 13 }} /> Saved</span>}
@@ -237,7 +237,7 @@ function DataTab() {
   const resetAll = () => { setStage('idle'); setRI(''); setDeleted(null); };
 
   const btnGhost = { padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer' };
-  const btnCta   = { padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' };
+  const btnCta   = { padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 };
 
   return (
     <div>
@@ -265,8 +265,8 @@ function DataTab() {
               style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 4, textAlign: 'left' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--parch-warm)'}
               onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-              <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: sel[item.key] ? 'var(--ink)' : 'transparent', border: sel[item.key] ? 'none' : '1.5px solid var(--parch-line)' }}>
-                {sel[item.key] && <Check style={{ width: 10, height: 10, color: 'var(--gold)' }} />}
+              <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: sel[item.key] ? 'linear-gradient(135deg,#10b981,#06b6d4)' : 'transparent', border: sel[item.key] ? 'none' : '1.5px solid var(--parch-line)' }}>
+                {sel[item.key] && <Check style={{ width: 10, height: 10, color: 'white' }} />}
               </div>
               <div>
                 <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', margin: 0 }}>{item.label}</p>
@@ -418,7 +418,7 @@ function ApiKeysTab() {
         </div>
 
         <button onClick={save} disabled={!apiKey.trim()}
-          style={{ padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', opacity: !apiKey.trim() ? 0.4 : 1, fontFamily: "'Playfair Display', serif" }}>
+          style={{ padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none', color: 'white', cursor: 'pointer', opacity: !apiKey.trim() ? 0.4 : 1 }}>
           {connected ? 'Update Key' : 'Save Key'}
         </button>
 
