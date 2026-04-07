@@ -4,11 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Package, TrendingUp, ArrowUpRight, ChevronDown, ChevronRight, Boxes, DollarSign, ShoppingCart } from 'lucide-react';
 import POFormModal from '@/components/purchase-orders/POFormModal';
 
-const fmt = (n) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
-
-const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
 const getStoreDomain = (vendorName) => {
   const n = String(vendorName || '').toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
@@ -99,7 +96,7 @@ function StoreLogo({ retailer, size = 24 }) {
 }
 
 function ProductImage({ src, name, qty, retailer }) {
-  const [imgErr, setImgErr] = useState(false);
+  const [imgErr, setImgErr]     = useState(false);
   const [brandErr, setBrandErr] = useState(false);
   const brandUrl = retailer ? brandfetch(getStoreDomain(retailer)) : null;
   const initials = (name || '?').slice(0, 2).toUpperCase();
@@ -121,12 +118,12 @@ function ProductImage({ src, name, qty, retailer }) {
 
 function StatCard({ label, value, color = 'var(--ink)', icon: Icon }) {
   return (
-    <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:12, padding:'10px 14px' }}>
+    <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:12, padding:'10px 14px', borderTop:`3px solid ${color}` }}>
       <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:4 }}>
         {Icon && <Icon style={{ width:11, height:11, color:'var(--ink-dim)' }} />}
-        <span style={{ fontSize:9, color:'var(--ink-dim)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{label}</span>
+        <span style={{ fontSize:9, color:'var(--ink-dim)', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:"'Playfair Display', serif", fontWeight:700 }}>{label}</span>
       </div>
-      <div style={{ fontSize:16, fontWeight:700, color }}>{value}</div>
+      <div style={{ fontSize:16, fontWeight:800, color }}>{value}</div>
     </div>
   );
 }
@@ -280,6 +277,7 @@ export default function Inventory() {
   return (
     <div style={{ paddingBottom:24 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
       <div style={{ marginBottom:18 }}>
         <h1 style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:22, fontWeight:900, color:'var(--ink)', margin:0 }}>Inventory On Hand</h1>
         <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:3 }}>Grouped by product · derived from your purchase orders</p>
@@ -287,11 +285,11 @@ export default function Inventory() {
 
       {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(5, minmax(0,1fr))', gap:8, marginBottom:14 }}>
-        <StatCard label="Unique Products"  value={stats.uniqueProducts}                              color="var(--ink)"      icon={Boxes}        />
-        <StatCard label="Units In Hand"    value={stats.unitsInHand}                                 color="var(--ocean)"    icon={Package}      />
-        <StatCard label="Units On the Way" value={stats.unitsOnWay}                                  color="var(--ocean2)"   icon={ShoppingCart} />
-        <StatCard label="Cost Basis"       value={fmt(stats.costBasis)}                              color="var(--gold)"     icon={DollarSign}   />
-        <StatCard label="Est. Profit"      value={stats.estProfit > 0 ? fmt(stats.estProfit) : '—'}  color="var(--terrain)"  icon={TrendingUp}   />
+        <StatCard label="Unique Products"  value={stats.uniqueProducts}                             color="var(--ink)"     icon={Boxes}        />
+        <StatCard label="Units In Hand"    value={stats.unitsInHand}                                color="var(--ocean)"   icon={Package}      />
+        <StatCard label="Units On the Way" value={stats.unitsOnWay}                                 color="var(--ocean2)"  icon={ShoppingCart} />
+        <StatCard label="Cost Basis"       value={fmt(stats.costBasis)}                             color="var(--gold)"    icon={DollarSign}   />
+        <StatCard label="Est. Profit"      value={stats.estProfit > 0 ? fmt(stats.estProfit) : '—'} color="var(--terrain)" icon={TrendingUp}   />
       </div>
 
       {/* Filters */}
