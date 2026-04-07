@@ -433,10 +433,10 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
               </div>
             )}
 
-            {/* ══ PAYMENT ══ */}
+            {/* ══ PAYMENT ══ — ocean/blue (cost/spend semantic) */}
             {activeTab==='payment' && (
-              <div style={sectionCard('var(--rose-bdr)','var(--rose-bg)')}>
-                <div style={sectionTitle('var(--rose)')}>💳 Costs & Payment</div>
+              <div style={sectionCard('var(--ocean-bdr)','var(--ocean-bg)')}>
+                <div style={sectionTitle('var(--ocean)')}>💳 Costs & Payment</div>
 
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10,marginBottom:14}}>
                   {[['tax','Tax'],['shipping_cost','Shipping'],['fees','Fees']].map(([k,label])=>(
