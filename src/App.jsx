@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import SplashScreen from '@/components/SplashScreen';
 import { base44 } from '@/api/base44Client';
@@ -106,10 +106,10 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-  const [splashDone, setSplashDone] = React.useState(false);
-  const [userName, setUserName] = React.useState('');
+  const [splashDone, setSplashDone] = useState(false);
+  const [userName, setUserName] = useState('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     base44.auth.me().then(u => { if (u?.full_name) setUserName(u.full_name.split(' ')[0]); }).catch(() => {});
   }, []);
 
