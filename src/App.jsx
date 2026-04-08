@@ -11,6 +11,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Settings from './pages/Settings';
+import { ThemeProvider } from '@/lib/ThemeContext';
 import Goals from './pages/Goals';
 import Transactions from './pages/Transactions';
 import NewOrders from './pages/NewOrders';
@@ -118,6 +119,7 @@ function App() {
   }
 
   return (
+    <ThemeProvider>
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
@@ -127,6 +129,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
+    </ThemeProvider>
   )
 }
 
