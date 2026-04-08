@@ -194,8 +194,15 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
 
   const addSaleEvent = () => {
     const ev = defaultSaleEvent();
-    ev.items = formData.items.filter(it=>it.product_name?.trim()).map(it=>({product_name:it.product_name,quantity:1,sale_price:it.sale_price||0}));
-    setFormData(prev=>({...prev,sale_events:[...prev.sale_events,ev]}));
+    ev.items = formData.items
+      .filter(it => it.product_name?.trim())
+      .map(it => ({
+        product_name: it.product_name,
+        quantity: parseInt(it.quantity_ordered) || 1,
+        sale_price: it.sale_price || 0,
+      }));
+    if (ev.items.length === 0) ev.items = [{ product_name: '', quantity: 1, sale_price: 0 }];
+    setFormData(prev => ({ ...prev, sale_events: [...prev.sale_events, ev] }));
   };
   const removeSaleEvent    = (id) => setFormData(prev=>({...prev,sale_events:prev.sale_events.filter(e=>e.id!==id)}));
   const updateSaleEvent    = (id,field,value) => setFormData(prev=>({...prev,sale_events:prev.sale_events.map(e=>e.id!==id?e:{...e,[field]:value})}));
