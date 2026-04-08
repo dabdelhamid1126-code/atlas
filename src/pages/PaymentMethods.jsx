@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List, SlidersHorizontal, Star } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List,
+SlidersHorizontal, Star } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
 import DataTable from '@/components/shared/DataTable';
 import CardVisual from '@/components/payment-methods/CardVisual';
@@ -92,16 +93,12 @@ function CreditCardsTab({ queryClient }) {
   });
 
   const handleCreate = async (data) => { await createMutation.mutateAsync(data); };
-
   const handleEdit = (card) => { setEditingCard(card); setCustomCardOpen(true); };
-
   const handleSaveCustom = (data) => {
     if (editingCard) { updateMutation.mutate({ id: editingCard.id, data }); }
     else { createMutation.mutate(data); setCustomCardOpen(false); }
   };
-
   const handleInlineUpdate = (id, data) => { updateMutation.mutate({ id, data }); };
-
   const handleDelete = (card) => { if (confirm(`Delete "${card.card_name}"?`)) deleteMutation.mutate(card.id); };
 
   const now = new Date();
@@ -157,7 +154,7 @@ function CreditCardsTab({ queryClient }) {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--ink-faded)' }} />
           <input
             placeholder="Search cards..."
             value={search}
@@ -179,34 +176,38 @@ function CreditCardsTab({ queryClient }) {
         </select>
 
         {/* View toggle */}
-        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded transition ${viewMode === 'grid' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'rgba(184,134,11,0.04)', border: '1px solid var(--parch-line)' }}>
+          <button onClick={() => setViewMode('grid')} className="p-1.5 rounded transition"
+            style={{ background: viewMode === 'grid' ? 'var(--terrain)' : 'transparent', color: viewMode === 'grid' ? 'white' : 'var(--ink-faded)' }}>
             <LayoutGrid className="h-4 w-4" />
           </button>
-          <button onClick={() => setViewMode('list')} className={`p-1.5 rounded transition ${viewMode === 'list' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+          <button onClick={() => setViewMode('list')} className="p-1.5 rounded transition"
+            style={{ background: viewMode === 'list' ? 'var(--terrain)' : 'transparent', color: viewMode === 'list' ? 'white' : 'var(--ink-faded)' }}>
             <List className="h-4 w-4" />
           </button>
         </div>
 
         {/* Cards / Analytics toggle */}
-        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <button onClick={() => setActiveView('cards')} className={`px-3 py-1.5 rounded text-xs font-semibold transition ${activeView === 'cards' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'rgba(184,134,11,0.04)', border: '1px solid var(--parch-line)' }}>
+          <button onClick={() => setActiveView('cards')} className="px-3 py-1.5 rounded text-xs font-semibold transition"
+            style={{ background: activeView === 'cards' ? 'var(--terrain)' : 'transparent', color: activeView === 'cards' ? 'white' : 'var(--ink-faded)' }}>
             Cards View
           </button>
-          <button onClick={() => setActiveView('analytics')} className={`px-3 py-1.5 rounded text-xs font-semibold transition ${activeView === 'analytics' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+          <button onClick={() => setActiveView('analytics')} className="px-3 py-1.5 rounded text-xs font-semibold transition"
+            style={{ background: activeView === 'analytics' ? 'var(--terrain)' : 'transparent', color: activeView === 'analytics' ? 'white' : 'var(--ink-faded)' }}>
             Analytics
           </button>
         </div>
 
         <div className="flex gap-2 ml-auto">
           <button onClick={() => setQuickAddOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-amber-400 transition"
-            style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
+            style={{ background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', color: 'var(--gold)' }}>
             <Zap className="h-4 w-4" /> Quick Add
           </button>
           <button onClick={() => { setEditingCard(null); setCustomCardOpen(true); }}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-white transition"
-            style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', border: 'none' }}>
+            style={{ background: 'linear-gradient(135deg, var(--terrain), var(--ocean))', border: 'none' }}>
             <Plus className="h-4 w-4" /> Custom Card
           </button>
         </div>
@@ -218,13 +219,13 @@ function CreditCardsTab({ queryClient }) {
       {/* Cards */}
       {activeView === 'cards' && (isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-64 rounded-2xl animate-pulse" style={{ background: 'rgba(255,255,255,0.05)' }} />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-64 rounded-2xl animate-pulse" style={{ background: 'var(--parch-warm)' }} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border p-12 text-center" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-          <CreditCard className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400 font-medium">No cards found</p>
-          <p className="text-sm text-slate-500 mt-1">Try adjusting filters or add a new card</p>
+        <div className="rounded-2xl border p-12 text-center" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
+          <CreditCard className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--ink-faded)' }} />
+          <p className="font-medium" style={{ color: 'var(--ink-ghost)' }}>No cards found</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--ink-ghost)' }}>Try adjusting filters or add a new card</p>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -241,12 +242,12 @@ function CreditCardsTab({ queryClient }) {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+        <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
           <table className="w-full text-sm">
-            <thead className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+            <thead className="border-b" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
               <tr>
                 {['Card', 'Issuer', 'Type', 'Base Rate', 'Store Rates', 'Monthly Spend', 'Status', ''].map(h => (
-                  <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">{h}</th>
+                  <th key={h} className="text-left text-xs font-semibold uppercase tracking-wider px-4 py-3" style={{ color: 'var(--ink-dim)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -254,24 +255,36 @@ function CreditCardsTab({ queryClient }) {
               {filtered.map(card => {
                 const spent = orders.filter(o => o.credit_card_id === card.id && (() => { const d = o.order_date ? parseISO(o.order_date) : null; return d && d >= monthStart && d <= monthEnd; })()).reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
                 return (
-                  <tr key={card.id} className="border-b transition-colors" style={{ borderColor: 'rgba(255,255,255,0.04)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                  <tr key={card.id} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.04)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <td className="px-4 py-3 font-semibold text-slate-200">{card.card_name}</td>
-                    <td className="px-4 py-3 text-slate-400">{card.issuer || '—'}</td>
-                    <td className="px-4 py-3"><span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium capitalize">{card.reward_type}</span></td>
-                    <td className="px-4 py-3 font-bold text-emerald-400">{card.cashback_rate || 0}%</td>
-                    <td className="px-4 py-3 text-slate-400">{(card.store_rates || []).length} rates</td>
-                    <td className="px-4 py-3 font-semibold text-slate-200">${spent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--ink)' }}>{card.card_name}</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--ink-ghost)' }}>{card.issuer || '—'}</td>
+                    <td className="px-4 py-3"><span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }}>{card.reward_type}</span></td>
+                    <td className="px-4 py-3 font-bold" style={{ color: 'var(--terrain)' }}>{card.cashback_rate || 0}%</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--ink-ghost)' }}>{(card.store_rates || []).length} rates</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--ink)' }}>${spent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${card.active !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full" style={card.active !== false
+                        ? { background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }
+                        : { background: 'var(--parch-warm)', color: 'var(--ink-ghost)', border: '1px solid var(--parch-line)' }}>
                         {card.active !== false ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => handleEdit(card)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition"><Pencil className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => handleDelete(card)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => handleEdit(card)} className="p-1.5 rounded-lg transition"
+                          style={{ color: 'var(--ink-faded)' }}
+                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--ink)'; e.currentTarget.style.background = 'rgba(184,134,11,0.06)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-faded)'; e.currentTarget.style.background = 'transparent'; }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => handleDelete(card)} className="p-1.5 rounded-lg transition"
+                          style={{ color: 'var(--ink-faded)' }}
+                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--crimson)'; e.currentTarget.style.background = 'var(--crimson-bg)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-faded)'; e.currentTarget.style.background = 'transparent'; }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -419,31 +432,31 @@ function GiftCardsTab({ queryClient }) {
   const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', fontSize: 13 };
 
   const columns = [
-    { header: 'Brand', accessor: 'brand', cell: r => <span className="font-medium text-slate-200">{r.brand}</span> },
-    { header: 'Retailer', accessor: 'retailer', cell: r => <span className="text-sm text-slate-400">{r.retailer || '—'}</span> },
-    { header: 'Value', accessor: 'value', cell: r => <span className="font-semibold text-slate-200">${r.value?.toFixed(2)}</span> },
-    { header: 'Cost', accessor: 'purchase_cost', cell: r => <span className="text-sm text-slate-400">{r.purchase_cost ? `$${r.purchase_cost.toFixed(2)}` : '—'}</span> },
+    { header: 'Brand', accessor: 'brand', cell: r => <span className="font-medium" style={{ color: 'var(--ink)' }}>{r.brand}</span> },
+    { header: 'Retailer', accessor: 'retailer', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.retailer || '—'}</span> },
+    { header: 'Value', accessor: 'value', cell: r => <span className="font-semibold" style={{ color: 'var(--ink)' }}>${r.value?.toFixed(2)}</span> },
+    { header: 'Cost', accessor: 'purchase_cost', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.purchase_cost ? `$${r.purchase_cost.toFixed(2)}` : '—'}</span> },
     { header: 'Profit', cell: r => {
-      if (!r.purchase_cost) return <span className="text-slate-500">—</span>;
+      if (!r.purchase_cost) return <span style={{ color: 'var(--ink-ghost)' }}>—</span>;
       const p = r.value - r.purchase_cost;
-      return <span className={`font-semibold ${p > 0 ? 'text-emerald-400' : 'text-red-400'}`}>${p.toFixed(2)}</span>;
+      return <span className="font-semibold" style={{ color: p > 0 ? 'var(--terrain)' : 'var(--crimson)' }}>${p.toFixed(2)}</span>;
     }},
     { header: 'Code', accessor: 'code', cell: r => (
       <div className="flex items-center gap-2">
-        <span className="font-mono text-sm text-slate-300">{showCode[r.id] ? r.code : maskCode(r.code)}</span>
-        <button className="h-6 w-6 flex items-center justify-center text-slate-500 hover:text-slate-300 transition" onClick={() => toggleShowCode(r.id)}>
+        <span className="font-mono text-sm" style={{ color: 'var(--ink-dim)' }}>{showCode[r.id] ? r.code : maskCode(r.code)}</span>
+        <button className="h-6 w-6 flex items-center justify-center transition" style={{ color: 'var(--ink-ghost)' }} onClick={() => toggleShowCode(r.id)}>
           {showCode[r.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
         </button>
       </div>
     )},
     { header: 'Status', cell: r => <StatusBadge status={r.status} /> },
-    { header: 'Added', cell: r => <span className="text-slate-400">{format(new Date(r.created_date), 'MMM d, yyyy')}</span> },
+    { header: 'Added', cell: r => <span style={{ color: 'var(--ink-ghost)' }}>{format(new Date(r.created_date), 'MMM d, yyyy')}</span> },
     { header: '', cell: r => (
       <div className="flex items-center gap-1">
-        <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition" onClick={() => { setSelectedCard(r); setBarcodeDialogOpen(true); }}><Barcode className="h-4 w-4" /></button>
-        {r.status === 'available' && <button className="px-2 py-1 rounded-lg text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 transition" onClick={() => markAsUsed(r)}>Mark Used</button>}
-        <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition" onClick={() => openDialog(r)}><Pencil className="h-4 w-4" /></button>
-        <button className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition" onClick={() => { if (confirm('Delete?')) deleteMutation.mutate(r.id); }}><Trash2 className="h-4 w-4" /></button>
+        <button className="p-1.5 rounded-lg transition" style={{ color: 'var(--ink-faded)' }} onClick={() => { setSelectedCard(r); setBarcodeDialogOpen(true); }}><Barcode className="h-4 w-4" /></button>
+        {r.status === 'available' && <button className="px-2 py-1 rounded-lg text-xs font-semibold transition" style={{ color: 'var(--terrain)' }} onClick={() => markAsUsed(r)}>Mark Used</button>}
+        <button className="p-1.5 rounded-lg transition" style={{ color: 'var(--ink-faded)' }} onClick={() => openDialog(r)}><Pencil className="h-4 w-4" /></button>
+        <button className="p-1.5 rounded-lg transition" style={{ color: 'var(--ink-faded)' }} onClick={() => { if (confirm('Delete?')) deleteMutation.mutate(r.id); }}><Trash2 className="h-4 w-4" /></button>
       </div>
     )},
   ];
@@ -453,26 +466,26 @@ function GiftCardsTab({ queryClient }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'Total Cards', value: filteredCards.length, color: 'text-slate-200' },
-            { label: 'Available', value: filteredCards.filter(c => c.status === 'available').length, color: 'text-emerald-400' },
-            { label: 'Available Value', value: `$${totalValue.toLocaleString()}`, color: 'text-cyan-400' },
-            { label: 'Total Profit', value: `$${totalProfit.toFixed(2)}`, color: 'text-emerald-400' },
+            { label: 'Total Cards', value: filteredCards.length, cssColor: 'var(--ink)' },
+            { label: 'Available', value: filteredCards.filter(c => c.status === 'available').length, cssColor: 'var(--terrain)' },
+            { label: 'Available Value', value: `$${totalValue.toLocaleString()}`, cssColor: 'var(--ocean2)' },
+            { label: 'Total Profit', value: `$${totalProfit.toFixed(2)}`, cssColor: 'var(--terrain)' },
           ].map(s => (
-            <div key={s.label} className="rounded-xl border p-4" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
-              <p className="text-xs text-slate-500">{s.label}</p>
-              <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+            <div key={s.label} className="rounded-xl border p-4" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
+              <p className="text-xs" style={{ color: 'var(--ink-faded)' }}>{s.label}</p>
+              <p className="text-xl font-bold" style={{ color: s.cssColor }}>{s.value}</p>
             </div>
           ))}
         </div>
         <div className="flex gap-2 shrink-0">
           <button onClick={() => setBulkDialogOpen(true)}
-            className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-300 transition"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            className="px-3 py-2 rounded-lg text-sm font-semibold transition"
+            style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-dim)' }}>
             Bulk Add
           </button>
           <button onClick={() => openDialog()}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-white transition"
-            style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)' }}>
+            style={{ background: 'linear-gradient(135deg, var(--terrain), var(--ocean))' }}>
             <Plus className="h-4 w-4" /> Add Card
           </button>
         </div>
@@ -480,7 +493,7 @@ function GiftCardsTab({ queryClient }) {
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--ink-faded)' }} />
           <input placeholder="Search gift cards..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9 w-full rounded-lg text-sm" style={inp} />
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 px-3 rounded-lg text-sm w-40" style={inp}>
@@ -566,7 +579,7 @@ function GiftCardsTab({ queryClient }) {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white">{editingCard ? 'Update' : 'Add'}</Button>
+              <Button type="submit" style={{ background: 'var(--terrain)', color: '#fff' }}>{editingCard ? 'Update' : 'Add'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -579,17 +592,17 @@ function GiftCardsTab({ queryClient }) {
           {selectedCard && (
             <div className="space-y-4 text-center">
               <p className="font-bold text-lg">{selectedCard.brand} — ${selectedCard.value}</p>
-              <div className="flex justify-center bg-white p-8 rounded-lg border-2 border-slate-300">
+              <div className="flex justify-center bg-white p-8 rounded-lg" style={{ border: '2px solid var(--parch-line)' }}>
                 <ReactBarcode value={selectedCard.code} format="CODE128" displayValue height={120} width={3} fontSize={18} margin={10} />
               </div>
-              <div className="p-4 bg-slate-50 rounded">
-                <p className="text-xs text-slate-500 uppercase">Card Code</p>
-                <p className="font-mono font-bold text-lg mt-1">{selectedCard.code}</p>
+              <div className="p-4 rounded" style={{ background: 'var(--parch-warm)' }}>
+                <p className="text-xs uppercase" style={{ color: 'var(--ink-faded)' }}>Card Code</p>
+                <p className="font-mono font-bold text-lg mt-1" style={{ color: 'var(--ink)' }}>{selectedCard.code}</p>
               </div>
               {selectedCard.pin && (
-                <div className="p-4 bg-slate-50 rounded">
-                  <p className="text-xs text-slate-500 uppercase">PIN</p>
-                  <p className="font-mono font-bold text-lg mt-1">{selectedCard.pin}</p>
+                <div className="p-4 rounded" style={{ background: 'var(--parch-warm)' }}>
+                  <p className="text-xs uppercase" style={{ color: 'var(--ink-faded)' }}>PIN</p>
+                  <p className="font-mono font-bold text-lg mt-1" style={{ color: 'var(--ink)' }}>{selectedCard.pin}</p>
                 </div>
               )}
             </div>
@@ -606,15 +619,15 @@ function GiftCardsTab({ queryClient }) {
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Bulk Add Gift Cards</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="p-4 bg-slate-800 rounded-lg text-sm border border-slate-700">
-              <p className="font-medium mb-1 text-slate-300">Format (one per line):</p>
-              <code className="text-xs text-slate-400">Brand, Retailer, Value, Code, PIN, PurchaseCost</code>
+            <div className="p-4 rounded-lg text-sm" style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
+              <p className="font-medium mb-1" style={{ color: 'var(--ink-dim)' }}>Format (one per line):</p>
+              <code className="text-xs" style={{ color: 'var(--ink-ghost)' }}>Brand, Retailer, Value, Code, PIN, PurchaseCost</code>
             </div>
             <Textarea value={bulkInput} onChange={e => setBulkInput(e.target.value)} rows={8} placeholder="Amazon, Target, 100, AMZN1234, 5678, 92" className="font-mono text-xs" />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleBulkAdd} className="bg-emerald-600 hover:bg-emerald-700 text-white">Add Cards</Button>
+            <Button onClick={handleBulkAdd} style={{ background: 'var(--terrain)', color: '#fff' }}>Add Cards</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
