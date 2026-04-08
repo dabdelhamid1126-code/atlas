@@ -774,8 +774,10 @@ export default function ImportOrders() {
           { key: 'gmail',  label: 'Gmail Sync',     icon: Mail },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all border ${
-              tab === t.key ? 'bg-violet-600 text-white border-violet-600 shadow-sm' : 'text-slate-500 border-slate-200 bg-white hover:bg-slate-50'}`}>
+            style={tab === t.key
+              ? { background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }
+              : { background: 'var(--parch-warm)', color: 'var(--ink-dim)', border: '1px solid var(--parch-line)' }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all">
             <t.icon className="h-4 w-4" />
             {t.label}
             {t.badge && (
