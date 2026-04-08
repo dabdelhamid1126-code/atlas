@@ -34,18 +34,19 @@ export default function PaymentMethods() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 3, borderRadius: 10, marginBottom: 22, width: 'fit-content', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-        <button onClick={() => setTab('credit-cards')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: tab === 'credit-cards' ? 'var(--ink)' : 'transparent', color: tab === 'credit-cards' ? 'var(--gold)' : 'var(--ink-dim)' }}>
-          <CreditCard className="h-3.5 w-3.5" /> Credit Cards
-        </button>
-        <button onClick={() => setTab('gift-cards')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: tab === 'gift-cards' ? 'var(--ink)' : 'transparent', color: tab === 'gift-cards' ? 'var(--gold)' : 'var(--ink-dim)' }}>
-          <Gift className="h-3.5 w-3.5" /> Gift Cards
-        </button>
-        <button onClick={() => setTab('ya-cashback')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: tab === 'ya-cashback' ? 'var(--gold)' : 'transparent', color: tab === 'ya-cashback' ? '#fff' : 'var(--ink-dim)' }}>
-          <Star className="h-3.5 w-3.5" /> YA Cashback
-        </button>
+        {[
+          { key: 'credit-cards', label: 'Credit Cards', icon: CreditCard },
+          { key: 'gift-cards',   label: 'Gift Cards',   icon: Gift       },
+          { key: 'ya-cashback',  label: 'YA Cashback',  icon: Star       },
+        ].map(({ key, label, icon: Icon }) => (
+          <button key={key} onClick={() => setTab(key)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              ...(tab === key
+                ? { background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }
+                : { background: 'var(--parch-warm)', color: 'var(--ink-dim)', border: '1px solid var(--parch-line)' }) }}>
+            <Icon className="h-3.5 w-3.5" /> {label}
+          </button>
+        ))}
       </div>
 
       {tab === 'credit-cards' && <CreditCardsTab queryClient={queryClient} />}
