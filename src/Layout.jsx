@@ -8,7 +8,7 @@ import {
   LayoutDashboard, BarChart3, Package, CirclePlus,
   Inbox, ArrowLeftRight, Hash, Receipt, TrendingUp,
   Menu, X, LogOut, ChevronDown, Settings as SettingsIcon,
-  PanelLeftClose, PanelLeftOpen, Search,
+  PanelLeftClose, PanelLeftOpen, Search, FileText,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -34,6 +34,7 @@ const NAV_GROUPS = [
     label: 'Ledger',
     items: [
       { name: 'Transactions', page: 'Transactions',   icon: Hash },
+      { name: 'Invoices',     page: 'Invoices',       icon: FileText },
       { name: 'Expenses',     page: 'PaymentMethods', icon: Receipt },
     ],
   },
