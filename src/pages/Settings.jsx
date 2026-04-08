@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import ThemeToggle from '@/components/ThemeToggle';
 import { base44 } from '@/api/base44Client';
 import {
   User, Database, Target, Mail, Key, Bell, Palette, Shield,
@@ -469,6 +470,10 @@ function AppearanceTab() {
           <Toggle on={settings[t.key] !== false} onToggle={() => upd(t.key, !settings[t.key])} />
         </SectionRow>
       ))}
+
+      <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--parch-line)' }}>
+        <ThemeToggle />
+      </div>
 
       <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--parch-line)' }}>
         <SectionLabel>Profit Calculation Mode</SectionLabel>
