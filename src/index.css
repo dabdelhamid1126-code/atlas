@@ -5,247 +5,123 @@
 
 @layer base {
   :root {
-    /* ── PARCHMENT SURFACES ── */
-    --parch-bg:    #ede6d8;
-    --parch-card:  #f7f2e8;
-    --parch-warm:  #e0d9c8;
-    --parch-line:  #b8aa90;
-    --parch-deep:  #9c8e76;
-
-    /* ── INK TYPOGRAPHY ── */
-    --ink:         #0f0d09;
-    --ink-mid:     #2a2218;
-    --ink-faded:   #3d3020;
-    --ink-dim:     #5a4a34;
-    --ink-ghost:   #7a6650;
-
-    /* ── GOLD — map accent ── */
-    --gold:        #8a5e00;
-    --gold2:       #a87800;
-    --gold3:       #c9a84c;
-    --gold-bg:     #f0e0a8;
-    --gold-border: rgba(138,94,0,0.32);
-
-    /* ── TERRAIN GREEN — revenue/profit ── */
-    --terrain:     #163d12;
-    --terrain2:    #245c1e;
-    --terrain-bg:  #ceeacb;
-    --terrain-bdr: rgba(22,61,18,0.28);
-
-    /* ── OCEAN BLUE — spend/cost ── */
-    --ocean:       #083060;
-    --ocean2:      #0e4d96;
-    --ocean-bg:    #c8dff5;
-    --ocean-bdr:   rgba(8,48,96,0.28);
-
-    /* ── VIOLET — cashback/rewards ── */
-    --violet:      #2e1050;
-    --violet2:     #5a2e90;
-    --violet-bg:   #e0ceee;
-    --violet-bdr:  rgba(46,16,80,0.22);
-
-    /* ── CRIMSON — alerts/danger ── */
-    --crimson:     #580e0e;
-    --crimson2:    #8b1a1a;
-    --crimson-bg:  #f2c8c8;
-    --crimson-bdr: rgba(88,14,14,0.28);
-
-    /* ── ROSE — gift cards ── */
-    --rose:        #5e1020;
-    --rose2:       #8a1830;
-    --rose-bg:     #ecc8d0;
-    --rose-bdr:    rgba(94,16,32,0.22);
-
-    /* ── SHADCN TOKENS — synced to parchment ── */
-    --background:          38 25% 87%;      /* #ede6d8 parchment */
-    --foreground:          25 35% 5%;       /* #0f0d09 near-black ink */
-
-    --card:                38 40% 95%;      /* #f7f2e8 card parchment */
-    --card-foreground:     25 35% 5%;
-
-    --popover:             38 40% 95%;
-    --popover-foreground:  25 35% 5%;
-
-    --primary:             38 100% 27%;     /* #8a5e00 dark gold */
-    --primary-foreground:  38 100% 97%;
-
-    --secondary:           36 22% 85%;      /* #e0d9c8 warm fill */
-    --secondary-foreground: 25 30% 12%;
-
-    --muted:               36 22% 85%;
-    --muted-foreground:    28 22% 35%;      /* #5a4a34 readable dim */
-
-    --accent:              38 100% 27%;
-    --accent-foreground:   38 100% 97%;
-
-    --destructive:         4 72% 20%;       /* #580e0e deep crimson */
+    /* ── Shadcn tokens (mapped to parchment palette) ─────────────── */
+    --background:         38 35% 94%;
+    --foreground:         28 35% 12%;
+    --card:               38 30% 97%;
+    --card-foreground:    28 35% 12%;
+    --popover:            38 30% 97%;
+    --popover-foreground: 28 35% 12%;
+    --primary:            40 80% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary:          38 20% 90%;
+    --secondary-foreground: 28 25% 25%;
+    --muted:              38 15% 88%;
+    --muted-foreground:   30 12% 48%;
+    --accent:             40 80% 36%;
+    --accent-foreground:  0 0% 100%;
+    --destructive:        4 72% 42%;
     --destructive-foreground: 0 0% 98%;
+    --border:             38 22% 82%;
+    --input:              38 22% 82%;
+    --ring:               40 80% 36%;
+    --radius:             0.75rem;
 
-    --border:              36 22% 70%;      /* #b8aa90 visible border */
-    --input:               36 22% 85%;
-    --ring:                38 100% 27%;
+    /* ── Parchment surfaces ─────────────────────────────────────────── */
+    --parch-bg:   #f4edd8;   /* page background — aged parchment */
+    --parch-card: #faf6ec;   /* cards, modals, panels */
+    --parch-warm: #ede5cf;   /* inputs, inner wells */
+    --parch-deep: #e6dbbf;   /* deeper section fills */
+    --parch-line: rgba(160,120,40,0.22); /* borders */
 
-    --radius: 0.75rem;
+    /* ── Ink (text on light parchment) ──────────────────────────────── */
+    --ink:        #1c1410;   /* primary text */
+    --ink-dim:    #4a3c28;   /* secondary text */
+    --ink-faded:  #7a6a4e;   /* tertiary / placeholder */
+    --ink-ghost:  #a8957a;   /* very faded text */
+
+    /* ── Gold — UI accent ─────────────────────────────────────────────── */
+    --gold:        #b8860b;
+    --gold2:       #d4a017;
+    --gold-bg:     rgba(184,134,11,0.08);
+    --gold-border: rgba(184,134,11,0.22);
+
+    /* ── Terrain — Revenue (green) ───────────────────────────────────── */
+    --terrain:     #2d5a27;
+    --terrain2:    #4a8c42;
+    --terrain-bg:  rgba(45,90,39,0.08);
+    --terrain-bdr: rgba(45,90,39,0.22);
+
+    /* ── Ocean — Spend (blue) ────────────────────────────────────────── */
+    --ocean:       #1a5276;
+    --ocean2:      #2980b9;
+    --ocean-bg:    rgba(26,82,118,0.08);
+    --ocean-bdr:   rgba(26,82,118,0.22);
+
+    /* ── Violet — Cashback (purple) ──────────────────────────────────── */
+    --violet:      #5b2c6f;
+    --violet2:     #8e44ad;
+    --violet-bg:   rgba(91,44,111,0.08);
+    --violet-bdr:  rgba(91,44,111,0.20);
+
+    /* ── Crimson — Loss / Danger (red) ───────────────────────────────── */
+    --crimson:     #922b21;
+    --crimson2:    #c0392b;
+    --crimson-bg:  rgba(146,43,33,0.08);
+    --crimson-bdr: rgba(146,43,33,0.20);
+
+    /* ── Rose — Gift Cards (pink) ────────────────────────────────────── */
+    --rose:        #a83260;
+    --rose-bg:     rgba(168,50,96,0.08);
+    --rose-bdr:    rgba(168,50,96,0.20);
 
     /* ── SHADCN SIDEBAR TOKENS ── */
-    --sidebar-background:          24 22% 13%;   /* #2a2218 warm dark brown */
-    --sidebar-foreground:          38 40% 65%;   /* #c4a96a gold nav text */
-    --sidebar-primary:             43 82% 54%;   /* #c9a84c bright gold */
+    --sidebar-background:          24 22% 13%;
+    --sidebar-foreground:          38 40% 65%;
+    --sidebar-primary:             43 82% 54%;
     --sidebar-primary-foreground:  24 20% 5%;
-    --sidebar-accent:              24 18% 18%;   /* slightly lighter for hover */
-    --sidebar-accent-foreground:   38 60% 75%;   /* hover text */
-    --sidebar-border:              43 40% 28%;   /* visible gold border */
+    --sidebar-accent:              24 18% 18%;
+    --sidebar-accent-foreground:   38 60% 75%;
+    --sidebar-border:              43 40% 28%;
     --sidebar-ring:                43 82% 54%;
 
     /* ── CHART TOKENS ── */
-    --chart-1: 38 100% 27%;    /* gold */
-    --chart-2: 209 84% 30%;    /* ocean */
-    --chart-3: 274 52% 25%;    /* violet */
-    --chart-4: 118 43% 24%;    /* terrain */
-    --chart-5: 4 72% 20%;      /* crimson */
+    --chart-1: 38 100% 27%;
+    --chart-2: 209 84% 30%;
+    --chart-3: 274 52% 25%;
+    --chart-4: 118 43% 24%;
+    --chart-5: 4 72% 20%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
+  * { @apply border-border; }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     background-color: var(--parch-bg);
     color: var(--ink);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
-
-  /* ── Parchment scrollbar ── */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: var(--parch-warm); }
-  ::-webkit-scrollbar-thumb { background: var(--parch-deep); border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
-
-  /* ── Force all shadcn Card / Sheet / Dialog surfaces to parchment ── */
-  [class*="bg-card"],
-  [class*="bg-background"],
-  .bg-card,
-  .bg-background {
-    background-color: var(--parch-card) !important;
-    color: var(--ink) !important;
-  }
-
-  /* ── Override hardcoded dark page shells ── */
-  [style*="background: #080c12"],
-  [style*="background:#080c12"] {
-    background: var(--parch-bg) !important;
-  }
-  [style*="background: #111827"],
-  [style*="background:#111827"] {
-    background: var(--parch-card) !important;
-    border-color: var(--parch-line) !important;
-  }
-  [style*="background: #0d1117"],
-  [style*="background:#0d1117"] {
-    background: var(--parch-warm) !important;
-    color: var(--ink) !important;
-  }
-  [style*="background: #1a2234"],
-  [style*="background:#1a2234"],
-  [style*="background: #12100d"],
-  [style*="background:#12100d"] {
-    background: var(--parch-card) !important;
-    color: var(--ink) !important;
-  }
-
-  /* ── Tailwind slate/white overrides ── */
-  .bg-white       { background-color: var(--parch-card) !important; }
-  .bg-slate-50    { background-color: var(--parch-warm) !important; }
-  .bg-slate-100   { background-color: var(--parch-warm) !important; }
-  .bg-slate-800   { background-color: var(--ink-mid) !important; }
-  .bg-slate-900   { background-color: var(--ink) !important; }
-  .bg-gray-50     { background-color: var(--parch-warm) !important; }
-  .bg-gray-100    { background-color: var(--parch-warm) !important; }
-  .text-slate-900 { color: var(--ink) !important; }
-  .text-slate-800 { color: var(--ink-mid) !important; }
-  .text-slate-700 { color: var(--ink-faded) !important; }
-  .text-slate-600 { color: var(--ink-dim) !important; }
-  .text-slate-500 { color: var(--ink-ghost) !important; }
-  .text-gray-900  { color: var(--ink) !important; }
-  .text-gray-700  { color: var(--ink-faded) !important; }
-  .border-slate-200 { border-color: var(--parch-line) !important; }
-  .border-slate-100 { border-color: var(--parch-line) !important; }
-  .border-gray-200  { border-color: var(--parch-line) !important; }
-  .divide-y > *     { border-color: var(--parch-line) !important; }
-
-  /* ── Shadcn dialog/popover/sheet ── */
-  [data-radix-popper-content-wrapper] [class*="bg-"],
-  [role="dialog"] { background-color: var(--parch-card) !important; color: var(--ink) !important; }
-
-  /* ── rgba white text overrides (dark page text) ── */
-  [style*="color: rgba(255,255,255,0.95)"],
-  [style*="color: rgba(255,255,255,0.9)"],
-  [style*="color: rgba(255,255,255,0.88)"],
-  [style*="color: rgba(255,255,255,0.85)"],
-  [style*="color: rgba(255,255,255,0.8)"],
-  [style*="color: rgba(255,255,255,0.7)"],
-  [style*="color: rgba(255,255,255,0.6)"],
-  [style*="color: rgba(255,255,255,0.55)"],
-  [style*="color: rgba(255,255,255,0.5)"] {
-    color: var(--ink) !important;
-  }
-  [style*="color: rgba(255,255,255,0.4)"],
-  [style*="color: rgba(255,255,255,0.35)"],
-  [style*="color: rgba(255,255,255,0.3)"],
-  [style*="color: rgba(255,255,255,0.28)"],
-  [style*="color: rgba(255,255,255,0.25)"],
-  [style*="color: rgba(255,255,255,0.2)"] {
-    color: var(--ink-dim) !important;
-  }
-  [style*="color: #94a3b8"] { color: var(--ink-dim) !important; }
-  [style*="color: #64748b"] { color: var(--ink-ghost) !important; }
-  [style*="color: #cbd5e1"] { color: var(--ink-faded) !important; }
-  [style*="color: #e2e8f0"] { color: var(--ink-dim) !important; }
-
-  /* ── Tables ── */
-  table {
-    color: var(--ink);
-  }
-  th {
-    color: var(--ink-dim) !important;
-    background-color: var(--parch-warm) !important;
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  td {
-    color: var(--ink);
-    border-top: 1px solid var(--parch-line);
-  }
-  tr:hover td {
-    background-color: rgba(138,94,0,0.03);
-  }
-
-  /* ── Inputs ── */
-  input, select, textarea {
-    background-color: var(--parch-card) !important;
-    color: var(--ink) !important;
-    border-color: var(--parch-line) !important;
-  }
-  input::placeholder, textarea::placeholder {
-    color: var(--ink-ghost) !important;
-  }
-
-  /* ── Badges / Pills ── */
-  .badge {
-    font-size: 8.5px;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    border-radius: 999px;
-    padding: 3px 10px;
-  }
 }
+
+/* Smooth Animations */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+
+/* Parchment Scrollbar */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--parch-warm); }
+::-webkit-scrollbar-thumb { background: rgba(160,120,40,0.35); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(160,120,40,0.55); }
 
 @layer utilities {
   .font-display {
@@ -259,40 +135,16 @@
     background-clip: text;
   }
 
-  /* ── Section dividers ── */
-  .sec-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .sec-title {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold);
-    white-space: nowrap;
-  }
-  .sec-line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(138,94,0,0.35), rgba(138,94,0,0.1), transparent);
-  }
-
-  /* ── Card utility ── */
   .parch-card {
     background: var(--parch-card);
     border: 1px solid var(--parch-line);
     border-radius: 12px;
   }
 
-  /* ── KPI card top accent bars ── */
   .kpi-gold   { border-top: 3px solid var(--gold); }
   .kpi-ocean  { border-top: 3px solid var(--ocean2); }
   .kpi-green  { border-top: 3px solid var(--terrain2); }
   .kpi-violet { border-top: 3px solid var(--violet2); }
-  .kpi-rose   { border-top: 3px solid var(--rose2); }
+  .kpi-rose   { border-top: 3px solid var(--rose); }
   .kpi-red    { border-top: 3px solid var(--crimson2); }
 }
