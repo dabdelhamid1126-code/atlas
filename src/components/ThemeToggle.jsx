@@ -13,18 +13,6 @@ const THEMES = [
       dots: ['#b8860b','#2d5a27','#1a5276'],
     },
   },
-  {
-    id: 'midnight',
-    name: 'Midnight',
-    desc: 'Deep navy with cyan glows — dark & dramatic',
-    preview: {
-      bg: '#0a0e1a',
-      card: 'rgba(100,180,255,0.06)',
-      accent: '#06b6d4',
-      text: 'rgba(200,220,255,0.9)',
-      dots: ['#06b6d4','#34d399','#60a5fa'],
-    },
-  },
 ];
 
 export default function ThemeToggle() {
