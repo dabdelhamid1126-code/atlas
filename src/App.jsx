@@ -1,4 +1,7 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster"
+import SplashScreen from '@/components/SplashScreen';
+import { base44 } from '@/api/base44Client';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
@@ -103,6 +106,16 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  const [splashDone, setSplashDone] = React.useState(false);
+  const [userName, setUserName] = React.useState('');
+
+  React.useEffect(() => {
+    base44.auth.me().then(u => { if (u?.full_name) setUserName(u.full_name.split(' ')[0]); }).catch(() => {});
+  }, []);
+
+  if (!splashDone) {
+    return <SplashScreen onComplete={() => setSplashDone(true)} userName={userName} />;
+  }
 
   return (
     <AuthProvider>
