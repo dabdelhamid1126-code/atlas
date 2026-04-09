@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Download, Trash2, Tag, Globe, X, Zap, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -36,7 +36,10 @@ export default function Transactions() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: orders = [], isLoading } = useQuery({ queryKey: ['purchaseOrders'], queryFn: () => base44.entities.PurchaseOrder.list('-created_date') });
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
+  const { data: orders = [], isLoading } = useQuery({ queryKey: ['purchaseOrders', userEmail], queryFn: () => userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }, '-created_date') : [], enabled: userEmail !== null });
   const { data: products = [] }    = useQuery({ queryKey: ['products'],     queryFn: () => base44.entities.Product.list() });
   const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards'],  queryFn: () => base44.entities.CreditCard.list() });
   const { data: giftCards = [] }   = useQuery({ queryKey: ['giftCards'],    queryFn: () => base44.entities.GiftCard.list() });
