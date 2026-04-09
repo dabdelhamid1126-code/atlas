@@ -1,0 +1,47 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description"
+    },
+    "upc": {
+      "type": "string",
+      "description": "Universal Product Code (barcode)"
+    },
+    "image": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "phones",
+        "tablets",
+        "laptops",
+        "gaming",
+        "accessories",
+        "wearables",
+        "audio",
+        "other"
+      ],
+      "description": "Product category"
+    },
+    "hidden_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of user emails who have hidden this product",
+      "default": []
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

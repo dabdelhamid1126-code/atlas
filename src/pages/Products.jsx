@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Pencil, Trash2, Package, Upload, X, Loader, ChevronLeft, ChevronRight, Check } from 'lucide-react';
@@ -206,11 +206,27 @@ export default function Products() {
   const [importing, setImporting]         = useState(false);
   const [lookingUp, setLookingUp]         = useState(false);
 
-  const { data: products = [], isLoading } = useQuery({ queryKey: ['products'], queryFn: () => base44.entities.Product.list() });
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
+  const { data: allProducts = [], isLoading } = useQuery({ queryKey: ['products'], queryFn: () => base44.entities.Product.list() });
+
+  // Filter out products hidden by this user
+  const products = useMemo(() =>
+    userEmail ? allProducts.filter(p => !(p.hidden_by || []).includes(userEmail)) : allProducts,
+    [allProducts, userEmail]
+  );
 
   const createMutation = useMutation({ mutationFn: (data) => base44.entities.Product.create(data), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); toast.success('Product created'); closeDialog(); } });
   const updateMutation = useMutation({ mutationFn: ({ id, data }) => base44.entities.Product.update(id, data), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); toast.success('Product updated'); closeDialog(); } });
-  const deleteMutation = useMutation({ mutationFn: (id) => base44.entities.Product.delete(id), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); toast.success('Product deleted'); } });
+  // Soft-delete: add user email to hidden_by array
+  const deleteMutation = useMutation({
+    mutationFn: (product) => {
+      const hidden = [...new Set([...(product.hidden_by || []), userEmail])];
+      return base44.entities.Product.update(product.id, { hidden_by: hidden });
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); toast.success('Product removed from your view'); }
+  });
 
   const openDialog = (product = null) => {
     setEditingProduct(product);
@@ -219,7 +235,7 @@ export default function Products() {
   };
   const closeDialog = () => { setDialogOpen(false); setEditingProduct(null); };
   const handleSubmit = (e) => { e.preventDefault(); if (editingProduct) updateMutation.mutate({ id: editingProduct.id, data: { ...formData } }); else createMutation.mutate({ ...formData }); };
-  const handleDelete = (product) => { if (confirm(`Delete "${product.name}"?`)) deleteMutation.mutate(product.id); };
+  const handleDelete = (product) => { if (confirm(`Remove "${product.name}" from your catalog?`)) deleteMutation.mutate(product); };
 
   const lookupSingleUPC = async () => {
     if (!formData.upc) { toast.error('Enter a UPC first'); return; }
