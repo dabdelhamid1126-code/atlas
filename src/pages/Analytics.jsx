@@ -108,17 +108,23 @@ export default function Analytics() {
     base44.auth.me().then(u => { if (u?.profit_mode) setProfitMode(u.profit_mode); }).catch(() => {});
   }, []);
 
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
   const { data: orders = [], isLoading, refetch } = useQuery({
-    queryKey: ['analyticsOrders'],
-    queryFn: () => base44.entities.PurchaseOrder.list('-order_date'),
+    queryKey: ['analyticsOrders', userEmail],
+    queryFn: () => userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }, '-order_date') : [],
+    enabled: userEmail !== null,
   });
   const { data: rewards = [] } = useQuery({
-    queryKey: ['analyticsRewards'],
-    queryFn: () => base44.entities.Reward.list(),
+    queryKey: ['analyticsRewards', userEmail],
+    queryFn: () => userEmail ? base44.entities.Reward.filter({ created_by: userEmail }) : [],
+    enabled: userEmail !== null,
   });
   const { data: creditCards = [] } = useQuery({
-    queryKey: ['analyticsCreditCards'],
-    queryFn: () => base44.entities.CreditCard.list(),
+    queryKey: ['analyticsCreditCards', userEmail],
+    queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [],
+    enabled: userEmail !== null,
   });
 
   const filteredOrders = useMemo(() => orders.filter(o => {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Package, TrendingUp, ArrowUpRight, ChevronDown, ChevronRight, Boxes, DollarSign, ShoppingCart } from 'lucide-react';
@@ -214,10 +214,13 @@ export default function Inventory() {
   const [editingOrder, setEditingOrder]   = useState(null);
   const [formOpen, setFormOpen]           = useState(false);
 
-  const { data: orders = [], isLoading } = useQuery({ queryKey: ['purchaseOrders'], queryFn: () => base44.entities.PurchaseOrder.list('-created_date') });
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
+  const { data: orders = [], isLoading } = useQuery({ queryKey: ['purchaseOrders', userEmail], queryFn: () => userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }, '-created_date') : [], enabled: userEmail !== null });
   const { data: products    = [] } = useQuery({ queryKey: ['products'],    queryFn: () => base44.entities.Product.list() });
-  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards'], queryFn: () => base44.entities.CreditCard.list() });
-  const { data: giftCards   = [] } = useQuery({ queryKey: ['giftCards'],   queryFn: () => base44.entities.GiftCard.list() });
+  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards', userEmail], queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
+  const { data: giftCards   = [] } = useQuery({ queryKey: ['giftCards', userEmail],   queryFn: () => userEmail ? base44.entities.GiftCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
   const { data: sellers     = [] } = useQuery({ queryKey: ['sellers'],     queryFn: () => base44.entities.Seller.list() });
 
   const relevantOrders = useMemo(() =>

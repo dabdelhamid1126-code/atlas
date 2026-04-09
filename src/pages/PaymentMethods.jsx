@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -68,14 +68,19 @@ function CreditCardsTab({ queryClient }) {
   const [viewMode, setViewMode] = useState('grid');
   const [activeView, setActiveView] = useState('cards');
 
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
   const { data: cards = [], isLoading } = useQuery({
-    queryKey: ['creditCards'],
-    queryFn: () => base44.entities.CreditCard.list(),
+    queryKey: ['creditCards', userEmail],
+    queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [],
+    enabled: userEmail !== null,
   });
 
   const { data: orders = [] } = useQuery({
-    queryKey: ['purchaseOrders'],
-    queryFn: () => base44.entities.PurchaseOrder.list(),
+    queryKey: ['purchaseOrders', userEmail],
+    queryFn: () => userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }) : [],
+    enabled: userEmail !== null,
   });
 
   const createMutation = useMutation({
@@ -322,17 +327,23 @@ function GiftCardsTab({ queryClient }) {
   };
   const [formData, setFormData] = useState(emptyForm);
 
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
   const { data: cards = [], isLoading } = useQuery({
-    queryKey: ['giftCards'],
+    queryKey: ['giftCards', userEmail],
     queryFn: async () => {
-      const data = await base44.entities.GiftCard.list('-created_date');
+      if (!userEmail) return [];
+      const data = await base44.entities.GiftCard.filter({ created_by: userEmail }, '-created_date');
       return data.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
-    }
+    },
+    enabled: userEmail !== null,
   });
 
   const { data: creditCards = [] } = useQuery({
-    queryKey: ['creditCards'],
-    queryFn: () => base44.entities.CreditCard.list()
+    queryKey: ['creditCards', userEmail],
+    queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [],
+    enabled: userEmail !== null,
   });
 
   const createMutation = useMutation({

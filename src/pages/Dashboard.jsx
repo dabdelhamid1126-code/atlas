@@ -192,16 +192,20 @@ export default function Dashboard() {
 
   const loadData = async (silent = false) => {
     try {
+      const currentUser = await base44.auth.me().catch(() => null);
+      const userEmail = currentUser?.email;
+      if (!userEmail) return;
+      const byUser = { created_by: userEmail };
       const [orders, rewards, creditCards, inventoryItems, giftCards, invoices, damagedItems, shipmentsData, activityData] = await Promise.all([
-        base44.entities.PurchaseOrder.list(),
-        base44.entities.Reward.list(),
-        base44.entities.CreditCard.list(),
-        base44.entities.InventoryItem.list().catch(() => []),
-        base44.entities.GiftCard.list().catch(() => []),
-        base44.entities.Invoice.list().catch(() => []),
-        base44.entities.DamagedItem.list().catch(() => []),
-        base44.entities.Shipment.list().catch(() => []),
-        base44.entities.ActivityLog.list().catch(() => []),
+        base44.entities.PurchaseOrder.filter(byUser),
+        base44.entities.Reward.filter(byUser),
+        base44.entities.CreditCard.filter(byUser),
+        base44.entities.InventoryItem.filter(byUser).catch(() => []),
+        base44.entities.GiftCard.filter(byUser).catch(() => []),
+        base44.entities.Invoice.filter(byUser).catch(() => []),
+        base44.entities.DamagedItem.filter(byUser).catch(() => []),
+        base44.entities.Shipment.filter(byUser).catch(() => []),
+        base44.entities.ActivityLog.filter(byUser).catch(() => []),
       ]);
       setAllOrders(orders);
 

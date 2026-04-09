@@ -137,9 +137,12 @@ export default function NewOrders() {
   const fileInputRef = useRef(null);
   const set = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
 
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: () => base44.entities.Product.list() });
-  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards'], queryFn: () => base44.entities.CreditCard.list() });
-  const { data: giftCards = [] } = useQuery({ queryKey: ['giftCards'], queryFn: () => base44.entities.GiftCard.list() });
+  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards', userEmail], queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
+  const { data: giftCards = [] } = useQuery({ queryKey: ['giftCards', userEmail], queryFn: () => userEmail ? base44.entities.GiftCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
   const { data: sellers = [] } = useQuery({ queryKey: ['sellers'], queryFn: () => base44.entities.Seller.list() });
 
   useEffect(() => {
