@@ -14,37 +14,59 @@ import {
    THEME / TOKENS
 ───────────────────────────────────────────── */
 const CSS = `
+  :root {
     --font-serif: ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-sans:  ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
-    --gold:        #b8860b;
-    --gold2:       #d4a017;
-    --gold-bg:     rgba(184,134,11,0.08);
-    --gold-bdr:    rgba(184,134,11,0.22);
-    --crimson:     #922b21;
-    --crimson-bg:  rgba(146,43,33,0.08);
-    --crimson-bdr: rgba(146,43,33,0.2);
-    --ocean:       #1a5276;
-    --ocean-bg:    rgba(26,82,118,0.08);
-    --ocean-bdr:   rgba(26,82,118,0.2);
-    --terrain:     #2d5a27;
-    --terrain-bg:  rgba(45,90,39,0.08);
-    --terrain-bdr: rgba(45,90,39,0.2);
-    --violet:      #5b2c6f;
-    --violet-bg:   rgba(91,44,111,0.08);
-    --violet-bdr:  rgba(91,44,111,0.2);
-    --rose:        #943126;
-    --ink:         #1c1510;
-    --ink-dim:     #5a4a3a;
-    --ink-faded:   #7a6a5a;
-    --ink-ghost:   #a89880;
-    --parch:       #fdf8f0;
-    --parch-card:  #fffdf8;
-    --parch-warm:  #f8f3e8;
-    --parch-line:  rgba(184,134,11,0.14);
-    --shadow-sm:   0 1px 4px rgba(28,21,16,0.06);
-    --shadow-md:   0 4px 16px rgba(28,21,16,0.08);
-    --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
+
+    /* ── Neutral Elegance palette ── */
+    --ne-cream:    #FFDBBB;
+    --ne-greige:   #CCBEB1;
+    --ne-brown:    #997E67;
+    --ne-espresso: #664930;
+
+    --parch:       #FDF5EC;
+    --parch-card:  #FFF8F0;
+    --parch-warm:  #F5EDE0;
+    --parch-line:  rgba(153,126,103,0.18);
+
+    --ink:         #3D2B1A;
+    --ink-dim:     #664930;
+    --ink-faded:   #8a6d56;
+    --ink-ghost:   #b89e8a;
+
+    --gold:        #A0722A;
+    --gold2:       #C4922E;
+    --gold-bg:     rgba(160,114,42,0.08);
+    --gold-bdr:    rgba(160,114,42,0.22);
+
+    --terrain:     #4a7a35;
+    --terrain2:    #5a8c42;
+    --terrain-bg:  rgba(74,122,53,0.08);
+    --terrain-bdr: rgba(74,122,53,0.2);
+
+    --crimson:     #8b3a2a;
+    --crimson2:    #a34535;
+    --crimson-bg:  rgba(139,58,42,0.08);
+    --crimson-bdr: rgba(139,58,42,0.2);
+
+    --ocean:       #2a5c7a;
+    --ocean2:      #336e90;
+    --ocean-bg:    rgba(42,92,122,0.08);
+    --ocean-bdr:   rgba(42,92,122,0.2);
+
+    --violet:      #5a3a6e;
+    --violet2:     #6e4a85;
+    --violet-bg:   rgba(90,58,110,0.08);
+    --violet-bdr:  rgba(90,58,110,0.2);
+
+    --rose:        #8b3a2a;
+    --rose-bg:     rgba(139,58,42,0.08);
+    --rose-bdr:    rgba(139,58,42,0.2);
+
+    --shadow-sm:   0 1px 4px rgba(61,43,26,0.07);
+    --shadow-md:   0 4px 20px rgba(61,43,26,0.10);
+    --r-sm: 8px; --r-md: 12px; --r-lg: 12px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -80,15 +102,15 @@ const CSS = `
     cursor: pointer;
     border: none;
     background: transparent;
-    color: var(--ink-dim);
+    color: var(--ink-faded);
     transition: background 0.15s, color 0.15s;
     letter-spacing: 0.02em;
   }
   .tab-btn.active {
     background: var(--ink);
-    color: var(--gold2);
+    color: var(--ne-cream);
   }
-  .tab-btn:hover:not(.active) { background: rgba(28,21,16,0.05); }
+  .tab-btn:hover:not(.active) { background: rgba(61,43,26,0.06); }
 
   /* ── Card ── */
   .card {
@@ -119,6 +141,7 @@ const CSS = `
     position: relative;
     overflow: hidden;
     transition: box-shadow 0.2s;
+    box-shadow: var(--shadow-sm);
   }
   .kpi-card:hover { box-shadow: var(--shadow-md); }
   .kpi-label {
@@ -168,7 +191,7 @@ const CSS = `
   }
   .section-div-line {
     flex: 1; height: 1px;
-    background: linear-gradient(90deg, rgba(184,134,11,0.25), rgba(184,134,11,0.06), transparent);
+    background: linear-gradient(90deg, rgba(160,114,42,0.28), rgba(160,114,42,0.06), transparent);
   }
 
   /* ── Table ── */
@@ -190,7 +213,7 @@ const CSS = `
     color: var(--ink);
   }
   .dash-table tbody tr { transition: background 0.12s; }
-  .dash-table tbody tr:hover { background: rgba(184,134,11,0.025); }
+  .dash-table tbody tr:hover { background: rgba(160,114,42,0.03); }
 
   /* ── Status badge ── */
   .status-badge {
@@ -223,7 +246,7 @@ const CSS = `
   /* ── Refresh btn ── */
   .refresh-btn {
     padding: 7px 16px; border-radius: var(--r-sm);
-    background: var(--ink); color: var(--gold2);
+    background: var(--ink); color: var(--ne-cream);
     font-size: 11px; font-weight: 700; cursor: pointer; border: none;
     font-family: var(--font-serif); letter-spacing: 0.04em;
     transition: opacity 0.15s;
@@ -260,17 +283,17 @@ const CSS = `
 ───────────────────────────────────────────── */
 const TIME_FILTERS = ["Today", "7 Days", "30 Days", "YTD", "All Time"];
 const MODE_FILTERS = ["All", "Churning", "Resell"];
-const PIE_COLORS   = ["#b8860b","#8e44ad","#2980b9","#4a8c42","#c0392b","#d4a017"];
+const PIE_COLORS   = ["#A0722A","#8a6d56","#2a5c7a","#5a3a6e","#997E67","#C4922E"];
 
 const STATUS_CONFIG = {
-  pending:            { label:"Pending",   icon:Clock,        color:"#9c8f7e", bg:"rgba(156,143,126,0.10)", border:"rgba(156,143,126,0.25)" },
-  ordered:            { label:"Ordered",   icon:ShoppingBag,  color:"#1a5276", bg:"rgba(26,82,118,0.10)",   border:"rgba(26,82,118,0.22)"   },
-  shipped:            { label:"Shipped",   icon:Send,         color:"#5b2c6f", bg:"rgba(91,44,111,0.10)",   border:"rgba(91,44,111,0.20)"   },
-  received:           { label:"Received",  icon:Package,      color:"#1a5276", bg:"rgba(26,82,118,0.10)",   border:"rgba(26,82,118,0.22)"   },
-  partially_received: { label:"Partial",   icon:Package,      color:"#b8860b", bg:"rgba(184,134,11,0.10)",  border:"rgba(184,134,11,0.22)"  },
-  paid:               { label:"Paid",      icon:CheckCircle,  color:"#2d5a27", bg:"rgba(45,90,39,0.10)",    border:"rgba(45,90,39,0.20)"    },
-  completed:          { label:"Completed", icon:CheckCircle,  color:"#b8860b", bg:"rgba(184,134,11,0.10)",  border:"rgba(184,134,11,0.22)"  },
-  cancelled:          { label:"Cancelled", icon:X,            color:"#922b21", bg:"rgba(146,43,33,0.10)",   border:"rgba(146,43,33,0.20)"   },
+  pending:            { label:"Pending",   icon:Clock,        color:"#997E67", bg:"rgba(153,126,103,0.10)", border:"rgba(153,126,103,0.22)" },
+  ordered:            { label:"Ordered",   icon:ShoppingBag,  color:"#2a5c7a", bg:"rgba(42,92,122,0.10)",   border:"rgba(42,92,122,0.22)"   },
+  shipped:            { label:"Shipped",   icon:Send,         color:"#5a3a6e", bg:"rgba(90,58,110,0.10)",   border:"rgba(90,58,110,0.20)"   },
+  received:           { label:"Received",  icon:Package,      color:"#2a5c7a", bg:"rgba(42,92,122,0.10)",   border:"rgba(42,92,122,0.22)"   },
+  partially_received: { label:"Partial",   icon:Package,      color:"#A0722A", bg:"rgba(160,114,42,0.10)",  border:"rgba(160,114,42,0.22)"  },
+  paid:               { label:"Paid",      icon:CheckCircle,  color:"#4a7a35", bg:"rgba(74,122,53,0.10)",   border:"rgba(74,122,53,0.20)"   },
+  completed:          { label:"Completed", icon:CheckCircle,  color:"#A0722A", bg:"rgba(160,114,42,0.10)",  border:"rgba(160,114,42,0.22)"  },
+  cancelled:          { label:"Cancelled", icon:X,            color:"#8b3a2a", bg:"rgba(139,58,42,0.10)",   border:"rgba(139,58,42,0.20)"   },
 };
 
 const KPI_DEFS = [
@@ -504,7 +527,7 @@ export default function Dashboard() {
     <>
       <style>{CSS}</style>
 
-      <div style={{ maxWidth:1340, margin:"0 auto", padding:"16px 16px 40px" }}>
+      <div style={{ maxWidth:1340, margin:"0 auto", padding:"16px 16px 40px", background:"var(--parch)" }}>
 
         {/* ── Header ── */}
         <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:8 }}>
@@ -612,7 +635,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={190}>
               <AreaChart data={trendData} margin={{ top:4, right:4, left:0, bottom:0 }}>
                 <defs>
-                  {[["gRevenue","#b8860b"],["gProfit","#2d5a27"],["gSpent","#1a5276"],["gCash","#5b2c6f"]].map(([id,c]) => (
+                  {[["gRevenue","#A0722A"],["gProfit","#4a7a35"],["gSpent","#2a5c7a"],["gCash","#5a3a6e"]].map(([id,c]) => (
                     <linearGradient key={id} id={id} x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor={c} stopOpacity={0.18}/>
                       <stop offset="95%" stopColor={c} stopOpacity={0}/>
@@ -623,13 +646,13 @@ export default function Dashboard() {
                 <XAxis dataKey="month" tick={{ fontSize:10, fill:"var(--ink-ghost)", fontFamily:"var(--font-sans)" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize:10, fill:"var(--ink-ghost)", fontFamily:"var(--font-mono)" }} axisLine={false} tickLine={false} tickFormatter={v=>`$${v>=1000?(v/1000).toFixed(0)+"k":v}`} />
                 <Tooltip content={<ChartTooltip />} />
-                {[["revenue","#b8860b","gRevenue"],["profit","#2d5a27","gProfit"],["spent","#1a5276","gSpent"],["cashback","#5b2c6f","gCash"]].map(([key,c,g]) => (
+                {[["revenue","#A0722A","gRevenue"],["profit","#4a7a35","gProfit"],["spent","#2a5c7a","gSpent"],["cashback","#5a3a6e","gCash"]].map(([key,c,g]) => (
                   <Area key={key} type="monotone" dataKey={key} stroke={c} fill={`url(#${g})`} strokeWidth={2} name={key.charAt(0).toUpperCase()+key.slice(1)} dot={{ r:3, fill:c }} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
             <div style={{ display:"flex", flexWrap:"wrap", gap:10, marginTop:10 }}>
-              {[["#b8860b","Revenue"],["#2d5a27","Profit"],["#1a5276","Spent"],["#5b2c6f","Cashback"]].map(([c,l]) => (
+              {[["#A0722A","Revenue"],["#4a7a35","Profit"],["#2a5c7a","Spent"],["#5a3a6e","Cashback"]].map(([c,l]) => (
                 <div key={l} style={{ display:"flex", alignItems:"center", gap:5, fontSize:10, color:"var(--ink-faded)" }}>
                   <span style={{ width:8, height:8, borderRadius:"50%", background:c, display:"inline-block" }} />
                   {l}
