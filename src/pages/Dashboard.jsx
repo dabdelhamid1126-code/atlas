@@ -373,7 +373,7 @@ export default function Dashboard() {
             ].map(b => (
               <div key={b.label} style={{ borderRadius: 10, padding: 12, background: b.bg, border: `1px solid ${b.border}` }}>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: b.color, marginBottom: 4 }}>{b.label}</p>
-                <p style={{ fontSize: 18, fontWeight: 800, color: b.color }}>{b.prefix}{b.value}</p>
+                <p style={{ fontSize: 22, fontWeight: 600, color: b.color, lineHeight: 1, fontFamily: "'Cinzel', serif" }}>{b.prefix}{b.value}</p>
               </div>
             ))}
           </div>
