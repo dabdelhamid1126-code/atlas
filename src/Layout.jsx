@@ -289,7 +289,7 @@ export default function Layout({ children, currentPageName }) {
             radial-gradient(ellipse at 50% 10%, rgba(26,82,118,0.03) 0%, transparent 40%)
           `,
         }}>
-          <div className="p-5 lg:p-7">
+          <div className="p-5 lg:p-7" style={{ maxWidth: 1320, margin: '0 auto', width: '100%' }}>
             {children}
           </div>
         </div>
