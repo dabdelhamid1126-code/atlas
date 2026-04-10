@@ -219,7 +219,8 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
