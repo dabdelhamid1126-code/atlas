@@ -234,7 +234,7 @@ export default function Transactions() {
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', ...(mode === m.id ? activeTabStyle : inactiveTabStyle) }}>
             <m.Icon style={{ width: 14, height: 14 }} />
             {m.label}
-            <span style={{ fontSize: 10, opacity: 0.7 }}>({modeCounts[m.id]})</span>
+            <span style={{ fontSize: 10, opacity: 0.7, fontFamily: "'Cinzel', serif" }}>({modeCounts[m.id]})</span>
           </button>
         ))}
       </div>
