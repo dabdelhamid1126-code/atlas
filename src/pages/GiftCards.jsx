@@ -380,38 +380,29 @@ export default function GiftCards() {
 
   return (
     <div>
-      <PageHeader 
-        title="Gift Cards" 
-        description="Manage gift card inventory"
-        actions={
-          <div className="flex gap-2">
-            <Button onClick={() => setBulkDialogOpen(true)} variant="outline" className="border-2 border-black">
-              Bulk Add
-            </Button>
-            <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
-              <Plus className="h-4 w-4 mr-2" /> Add Card
-            </Button>
-          </div>
-        }
-      />
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Gift Cards</h1>
+        <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Manage gift card inventory</p>
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 24, justifyContent: 'flex-end' }}>
+        <Button onClick={() => setBulkDialogOpen(true)} variant="outline">Bulk Add</Button>
+        <Button onClick={() => openDialog()} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
+          <Plus className="h-4 w-4 mr-2" /> Add Card
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <p className="text-sm text-slate-500">Total Cards</p>
-          <p className="text-2xl font-semibold">{filteredCards.length}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <p className="text-sm text-slate-500">Available Cards</p>
-          <p className="text-2xl font-semibold">{filteredCards.filter(c => c.status === 'available').length}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <p className="text-sm text-slate-500">Available Value</p>
-          <p className="text-2xl font-semibold">${totalValue.toLocaleString()}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <p className="text-sm text-slate-500">Total Profit</p>
-          <p className="text-2xl font-semibold text-green-600">${totalProfit.toFixed(2)}</p>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 24 }}>
+        {[
+          { label: 'Total Cards',      value: filteredCards.length,                                                             color: 'var(--ink)'     },
+          { label: 'Available Cards',  value: filteredCards.filter(c => c.status === 'available').length,                        color: 'var(--terrain)' },
+          { label: 'Available Value',  value: `$${totalValue.toLocaleString()}`,                                                  color: 'var(--ocean)'   },
+          { label: 'Total Profit',     value: `$${totalProfit.toFixed(2)}`,                                                       color: 'var(--terrain)' },
+        ].map(s => (
+          <div key={s.label} style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 16 }}>
+            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>{s.label}</p>
+            <p style={{ fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 600, color: s.color }}>{s.value}</p>
+          </div>
+        ))}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -594,7 +585,7 @@ export default function GiftCards() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
+              <Button type="submit" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
                 {editingCard ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
@@ -672,7 +663,7 @@ export default function GiftCards() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleBulkAdd} className="bg-black hover:bg-gray-800 text-white">
+            <Button onClick={handleBulkAdd} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
               Add Cards
             </Button>
           </DialogFooter>
