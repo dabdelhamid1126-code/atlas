@@ -123,7 +123,7 @@ export default function Layout({ children, currentPageName }) {
                 background: 'linear-gradient(135deg, #c9a84c, #f5e09a, #c9a84c)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               }}>Atlas</p>
-              <p className="text-[8px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: '#8a7a5e' }}>Reselling, Quantified</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: '#8a7a5e' }}>Reselling, Quantified</p>
             </div>
             <button onClick={openCmd} title="Search (⌘K)" className="p-1.5 rounded-lg transition-colors" style={{ color: NAV_ITEM_COLOR }}>
               <Search className="w-[15px] h-[15px]" />
