@@ -154,7 +154,7 @@ function GoalsTab() {
                 {isCurrency && <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>}
                 <input type="number" min="0" placeholder={isCurrency ? '0.00' : '0'} value={goal.target}
                   onChange={e => update(idx, { target: e.target.value })}
-                  style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%', paddingLeft: isCurrency ? 26 : 12 }} />
+                  style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%', paddingLeft: isCurrency ? 26 : 12, fontFamily: "'Cinzel', serif" }} />
               </div>
               <Toggle on={goal.isActive} onToggle={() => update(idx, { isActive: !goal.isActive })} />
             </div>
@@ -298,7 +298,7 @@ function DataTab() {
         {importResult && (
           <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: importResult.success ? 'var(--terrain-bg)' : 'var(--crimson-bg)', border: `1px solid ${importResult.success ? 'var(--terrain-bdr)' : 'var(--crimson-bdr)'}`, fontSize: 12, color: importResult.success ? 'var(--terrain)' : 'var(--crimson)' }}>
             {importResult.success
-              ? <><p style={{ fontWeight: 700, margin: '0 0 4px' }}>Import complete</p>{Object.entries(importResult.summary || {}).map(([k, v]) => <p key={k} style={{ margin: 0 }}>{k}: {v} records</p>)}</>
+              ? <><p style={{ fontWeight: 700, margin: '0 0 4px' }}>Import complete</p>{Object.entries(importResult.summary || {}).map(([k, v]) => <p key={k} style={{ margin: 0 }}>{k}: <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 600 }}>{v}</span> records</p>)}</>
               : <p style={{ margin: 0 }}>{importResult.error || 'Import failed'}</p>}
           </div>
         )}
