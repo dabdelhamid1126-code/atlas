@@ -73,7 +73,7 @@ function KpiCard({ label, value, sub, accentColor, valueColor }) {
     }}>
       <p style={{
         fontFamily: "'Playfair Display', serif",
-        fontSize: 8, fontWeight: 700, letterSpacing: '0.14em',
+        fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
         textTransform: 'uppercase', marginBottom: 8,
         color: 'var(--ink-dim)',
       }}>{label}</p>
@@ -372,7 +372,7 @@ export default function Dashboard() {
               { label: 'Net Profit', value: abbrev(metrics.netProfit),   color: metrics.netProfit >= 0 ? 'var(--gold)' : 'var(--crimson)', bg: metrics.netProfit >= 0 ? 'var(--gold-bg)' : 'var(--crimson-bg)', border: metrics.netProfit >= 0 ? 'var(--gold-border)' : 'var(--crimson-bdr)', prefix: '' },
             ].map(b => (
               <div key={b.label} style={{ borderRadius: 10, padding: 12, background: b.bg, border: `1px solid ${b.border}` }}>
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: b.color, marginBottom: 4 }}>{b.label}</p>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: b.color, marginBottom: 4 }}>{b.label}</p>
                 <p style={{ fontSize: 18, fontWeight: 800, color: b.color }}>{b.prefix}{b.value}</p>
               </div>
             ))}
@@ -389,7 +389,7 @@ export default function Dashboard() {
       {/* ── Pipeline ── */}
       <SectionDivider title="Route Map" dotColor="var(--ocean2)" lineColor="rgba(26,82,118,0.25)" />
       <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', marginBottom: 20 }}>
-        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>Order Pipeline · {filteredOrders.length} Total</p>
+        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>Order Pipeline · {filteredOrders.length} Total</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: 6, position: 'relative' }}>
           <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(184,134,11,0.2) 10%, rgba(184,134,11,0.2) 90%, transparent)', pointerEvents: 'none' }} />
           {Object.keys(STATUS_CONFIG).map(status => (
@@ -403,7 +403,7 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 20 }}>
         <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Profit & Revenue — 6 Expeditions</p>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Profit & Revenue — 6 Expeditions</p>
             <span style={{ fontSize: 8, background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', padding: '2px 8px', borderRadius: 99, color: 'var(--gold)', fontWeight: 700 }}>Monthly</span>
           </div>
           {trendData.length === 0 ? (
@@ -440,7 +440,7 @@ export default function Dashboard() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', flex: 1 }}>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>By Status</p>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>By Status</p>
             {byStatusData.length === 0 ? <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>No data</p> : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <ResponsiveContainer width={72} height={72}>
@@ -465,7 +465,7 @@ export default function Dashboard() {
             )}
           </div>
           <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', flex: 1 }}>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>Top Cards</p>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 14 }}>Top Cards</p>
             {topCards.length === 0 ? <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>No data</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {topCards.map((card, i) => (
@@ -493,7 +493,7 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
         <div style={{ borderRadius: 14, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
           <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
               <Activity style={{ width: 12, height: 12, color: 'var(--gold)' }} /> Field Log
             </div>
             <span style={{ fontSize: 9, background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', color: 'var(--gold)', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>● Live</span>
@@ -507,7 +507,7 @@ export default function Dashboard() {
 
         <div style={{ borderRadius: 14, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
           <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
               <Truck style={{ width: 12, height: 12, color: 'var(--ocean)' }} /> Vessels In Transit
             </div>
             {alerts.inTransit > 0 && <span style={{ fontSize: 9, background: 'var(--ocean-bg)', border: '1px solid var(--ocean-bdr)', color: 'var(--ocean)', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>{alerts.inTransit} active</span>}
@@ -541,7 +541,7 @@ export default function Dashboard() {
       <SectionDivider title="Recent Expeditions" dotColor="var(--terrain2)" lineColor="rgba(45,90,39,0.25)" />
       <div style={{ borderRadius: 14, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
         <div style={{ padding: '13px 16px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>
             Recent Transactions
           </div>
           <button onClick={() => navigate('/Transactions')} style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.04em' }}>View all →</button>
@@ -554,7 +554,7 @@ export default function Dashboard() {
               <thead>
                 <tr style={{ background: 'var(--parch-warm)' }}>
                   {['', 'Product', 'Retailer', 'Cost', 'Cashback', 'Profit', 'Status', 'Date'].map((h, i) => (
-                    <th key={i} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', fontFamily: "'Playfair Display', serif", whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={i} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', fontFamily: "'Playfair Display', serif", whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
