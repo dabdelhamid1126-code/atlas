@@ -155,7 +155,7 @@ export default function Layout({ children, currentPageName }) {
         {NAV_GROUPS.map(group => (
           <div key={group.label} className="space-y-0.5">
             {!collapsed && (
-              <p className="px-2 pt-1 pb-1 font-display text-[8px] font-bold uppercase tracking-[0.18em]" style={{ color: NAV_LABEL_COLOR }}>
+              <p className="px-2 pt-1 pb-1 font-display text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: NAV_LABEL_COLOR }}>
                 {group.label}
               </p>
             )}
@@ -169,7 +169,7 @@ export default function Layout({ children, currentPageName }) {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 9,
                     padding: '7px 10px',
-                    borderRadius: 8, fontSize: 12, fontWeight: 500,
+                    borderRadius: 8, fontSize: 14, fontWeight: 500,
                     marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
                     justifyContent: collapsed ? 'center' : undefined,
                     borderLeft: isActive ? '2px solid #c9a84c' : '2px solid transparent',
@@ -210,10 +210,10 @@ export default function Layout({ children, currentPageName }) {
               {!collapsed && (
                 <>
                   <div className="flex-1 min-w-0 text-left">
-                    <p className="font-display text-[13px] font-bold leading-tight truncate" style={{ color: '#c9a84c' }}>
+                    <p className="font-display text-[14px] font-bold leading-tight truncate" style={{ color: '#c9a84c' }}>
                       {user.full_name || user.email?.split('@')[0] || 'User'}
                     </p>
-                    <p className="text-[9px] leading-tight" style={{ color: '#8a7a5e', letterSpacing: '0.04em' }}>● Charting</p>
+                    <p className="text-[11px] leading-tight" style={{ color: '#8a7a5e', letterSpacing: '0.04em' }}>● Charting</p>
                   </div>
                   <ChevronDown style={{ width: 13, height: 13, color: NAV_ITEM_COLOR, flexShrink: 0 }} />
                 </>
@@ -288,7 +288,7 @@ export default function Layout({ children, currentPageName }) {
             radial-gradient(ellipse at 85% 70%, rgba(45,90,39,0.03) 0%, transparent 40%),
             radial-gradient(ellipse at 50% 10%, rgba(26,82,118,0.03) 0%, transparent 40%)
           `,
-          fontSize: '15px',
+          fontSize: '16px',
         }}>
           <div className="p-5 lg:p-7" style={{ maxWidth: 1320, margin: '0 auto', width: '100%' }}>
             {children}
