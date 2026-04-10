@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
 import {
   DollarSign, TrendingUp, CreditCard, Percent, ShoppingBag, Send,
   Package, CheckCircle, X, ImageOff, AlertTriangle, Truck, Activity,
@@ -335,52 +337,18 @@ function cssVar(name) {
 }
 
 /* ─────────────────────────────────────────────
-   MOCK DATA  (replace with real base44 calls)
+   DATE HELPERS
 ───────────────────────────────────────────── */
-const MOCK_METRICS = {
-  totalCost:     42380, saleRevenue: 61200, cashback: 3840,
-  netProfit:     22660, avgRoi:      53.5,  yaCashback: 1200,
-  inStockUnits:  148,   giftCardValue: 560, points: 12400,
-};
-const MOCK_TREND = [
-  { month:"Nov", revenue:9200,  profit:3100, spent:7400, cashback:480 },
-  { month:"Dec", revenue:14800, profit:5200, spent:10600,cashback:720 },
-  { month:"Jan", revenue:8900,  profit:2800, spent:7200, cashback:310 },
-  { month:"Feb", revenue:11400, profit:4100, spent:8600, cashback:550 },
-  { month:"Mar", revenue:9700,  profit:3400, spent:7500, cashback:420 },
-  { month:"Apr", revenue:7200,  profit:4060, spent:8880, cashback:360 },
-];
-const MOCK_BY_STATUS = [
-  { name:"ordered",   value:14 },
-  { name:"shipped",   value:8  },
-  { name:"received",  value:21 },
-  { name:"completed", value:37 },
-  { name:"pending",   value:5  },
-];
-const MOCK_TOP_CARDS = [
-  { name:"Amex Gold",    spent:18400, orders:34 },
-  { name:"Chase Sapph.", spent:12100, orders:22 },
-  { name:"Citi Double",  spent:7200,  orders:15 },
-  { name:"Cap One VX",   spent:3100,  orders:8  },
-  { name:"Discover It",  spent:1580,  orders:4  },
-];
-const MOCK_COST_BREAKDOWN = [
-  { name:"Fees",     value:1840 },
-  { name:"Shipping", value:2310 },
-  { name:"Tax",      value:3120 },
-];
-const MOCK_TRANSACTIONS = [
-  { id:1, productName:"Sony WH-1000XM5 Headphones",    platform:"Amazon",   salePlatform:"eBay",    totalPrice:248, salePrice:310, cashbackAmount:12.4,  profit:74,   status:"completed", transactionDate:"2024-04-08", productImageUrl:null },
-  { id:2, productName:"Apple AirPods Pro 2nd Gen",     platform:"BestBuy",  salePlatform:"StockX",  totalPrice:189, salePrice:229, cashbackAmount:9.45,  profit:49,   status:"shipped",   transactionDate:"2024-04-07", productImageUrl:null },
-  { id:3, productName:"Dyson V15 Detect Vacuum",       platform:"Costco",   salePlatform:"—",       totalPrice:499, salePrice:null,cashbackAmount:24.95, profit:null, status:"received",  transactionDate:"2024-04-06", productImageUrl:null },
-  { id:4, productName:"Nintendo Switch OLED Bundle",   platform:"Target",   salePlatform:"Facebook",totalPrice:349, salePrice:410, cashbackAmount:17.45, profit:78,   status:"completed", transactionDate:"2024-04-05", productImageUrl:null },
-  { id:5, productName:"Instant Pot Duo 7-in-1",        platform:"Walmart",  salePlatform:"Mercari", totalPrice:79,  salePrice:95,  cashbackAmount:3.95,  profit:20,   status:"paid",      transactionDate:"2024-04-04", productImageUrl:null },
-  { id:6, productName:"LEGO Star Wars Millennium Fal.", platform:"Amazon",   salePlatform:"—",       totalPrice:699, salePrice:null,cashbackAmount:34.95, profit:null, status:"ordered",   transactionDate:"2024-04-03", productImageUrl:null },
-  { id:7, productName:"KitchenAid Stand Mixer 5Qt",    platform:"Williams", salePlatform:"eBay",    totalPrice:329, salePrice:389, cashbackAmount:16.45, profit:76,   status:"completed", transactionDate:"2024-04-02", productImageUrl:null },
-  { id:8, productName:"Canon EOS R50 Mirrorless Kit",  platform:"BestBuy",  salePlatform:"—",       totalPrice:879, salePrice:null,cashbackAmount:43.95, profit:null, status:"pending",   transactionDate:"2024-04-01", productImageUrl:null },
-];
-const MOCK_ALERTS = { overdueInvoices:2, damagedItems:1, inTransit:4 };
-const STATUS_COUNTS = { pending:5, ordered:14, shipped:8, received:21, partially_received:3, paid:6, completed:37, cancelled:2 };
+function getDateCutoff(timeFilter) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (timeFilter === "Today")   return today;
+  if (timeFilter === "7 Days")  return new Date(today - 7*864e5);
+  if (timeFilter === "30 Days") return new Date(today - 30*864e5);
+  if (timeFilter === "YTD")     return new Date(now.getFullYear(), 0, 1);
+  return new Date(0);
+}
+function parseD(str) { return str ? new Date(str) : null; }
 
 /* ─────────────────────────────────────────────
    SUB-COMPONENTS
@@ -493,18 +461,169 @@ export default function Dashboard() {
   const [modeFilter, setModeFilter] = useState("All");
   const [showBreakdown, setShowBreakdown] = useState(true);
   const [refreshing, setRefreshing]       = useState(false);
+  const [loading, setLoading]             = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [modalImg, setModalImg]           = useState(null);
+  const navigate = useNavigate();
 
-  const metrics      = MOCK_METRICS;
-  const trendData    = MOCK_TREND;
-  const byStatus     = MOCK_BY_STATUS;
-  const topCards     = MOCK_TOP_CARDS;
-  const costBreakdown= MOCK_COST_BREAKDOWN;
-  const transactions = MOCK_TRANSACTIONS;
-  const alerts       = MOCK_ALERTS;
-  const statusCounts = STATUS_COUNTS;
-  const totalOrders  = Object.values(statusCounts).reduce((a,b)=>a+b,0);
+  // Raw data
+  const [allOrders, setAllOrders]         = useState([]);
+  const [allRewards, setAllRewards]       = useState([]);
+  const [creditCards, setCreditCards]     = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [giftCards, setGiftCards]         = useState([]);
+  const [invoices, setInvoices]           = useState([]);
+  const [damagedItems, setDamagedItems]   = useState([]);
+  const [shipments, setShipments]         = useState([]);
+  const [userEmail, setUserEmail]         = useState(null);
+
+  const loadData = useCallback(async () => {
+    const u = await base44.auth.me().catch(() => null);
+    if (!u?.email) { setLoading(false); return; }
+    setUserEmail(u.email);
+    const byUser = { created_by: u.email };
+    const [orders, rewards, cards, inv, gc, invs, dmg, ships] = await Promise.all([
+      base44.entities.PurchaseOrder.filter(byUser),
+      base44.entities.Reward.filter(byUser),
+      base44.entities.CreditCard.filter(byUser),
+      base44.entities.InventoryItem.filter(byUser).catch(() => []),
+      base44.entities.GiftCard.filter(byUser).catch(() => []),
+      base44.entities.Invoice.filter(byUser).catch(() => []),
+      base44.entities.DamagedItem.filter(byUser).catch(() => []),
+      base44.entities.Shipment.filter(byUser).catch(() => []),
+    ]);
+    setAllOrders(orders);
+    setAllRewards(rewards);
+    setCreditCards(cards);
+    setInventoryItems(inv);
+    setGiftCards(gc);
+    setInvoices(invs);
+    setDamagedItems(dmg);
+    setShipments(ships);
+    setLoading(false);
+    setLastRefreshed(new Date());
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
+
+  // Filtered orders
+  const filteredOrders = useMemo(() => {
+    const cutoff = getDateCutoff(timeFilter);
+    return allOrders.filter(o => {
+      const d = parseD(o.order_date || o.created_date);
+      if (!d || d < cutoff) return false;
+      if (modeFilter === "Churning" && o.order_type !== "churning") return false;
+      if (modeFilter === "Resell"   && o.order_type !== "marketplace") return false;
+      return true;
+    });
+  }, [allOrders, timeFilter, modeFilter]);
+
+  const filteredRewards = useMemo(() => {
+    const cutoff = getDateCutoff(timeFilter);
+    return allRewards.filter(r => { const d = parseD(r.date_earned); return d && d >= cutoff; });
+  }, [allRewards, timeFilter]);
+
+  // Computed metrics
+  const metrics = useMemo(() => {
+    const totalCost    = filteredOrders.reduce((s,o) => s + parseFloat(o.total_cost || 0), 0);
+    const saleRevenue  = filteredOrders.reduce((s,o) => s + (o.sale_events||[]).reduce((ss,ev) => ss + (ev.items||[]).reduce((is,item) => is + (parseFloat(item.sale_price)||0)*(parseInt(item.qty||item.quantity)||1), 0), 0), 0);
+    const usdRewards   = filteredRewards.filter(r => r.currency === "USD");
+    const cashback     = usdRewards.reduce((s,r) => s + (r.amount||0), 0);
+    const yaCashback   = usdRewards.filter(r => r.notes?.match(/Young Adult|YACB|Prime Young Adult/i)).reduce((s,r) => s + (r.amount||0), 0);
+    const points       = filteredRewards.filter(r => r.currency === "points").reduce((s,r) => s + (r.amount||0), 0);
+    const netProfit    = saleRevenue - totalCost + cashback;
+    const avgRoi       = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
+    const inStockUnits = inventoryItems.filter(i => i.status === "in_stock" || i.status === "received").reduce((s,i) => s + (i.quantity||1), 0);
+    const giftCardValue= giftCards.filter(gc => gc.status === "available").reduce((s,gc) => s + parseFloat(gc.value||0), 0);
+    return { totalCost, saleRevenue, cashback, yaCashback, points, netProfit, avgRoi, inStockUnits, giftCardValue };
+  }, [filteredOrders, filteredRewards, inventoryItems, giftCards]);
+
+  // Trend data (6 months)
+  const trendData = useMemo(() => {
+    const result = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const mEnd   = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      const mOrders = allOrders.filter(o => { const dd = parseD(o.order_date); return dd && dd >= mStart && dd <= mEnd; });
+      const mRew    = allRewards.filter(r => { const dd = parseD(r.date_earned); return dd && dd >= mStart && dd <= mEnd; });
+      const spent    = mOrders.reduce((s,o) => s + parseFloat(o.total_cost||0), 0);
+      const revenue  = mOrders.reduce((s,o) => s + (o.sale_events||[]).reduce((ss,ev) => ss + (ev.items||[]).reduce((is,item) => is + (parseFloat(item.sale_price)||0)*(parseInt(item.qty||item.quantity)||1), 0), 0), 0);
+      const cashbackM= mRew.filter(r => r.currency==="USD").reduce((s,r) => s+(r.amount||0), 0);
+      result.push({ month: d.toLocaleDateString("en-US",{month:"short"}), spent, revenue, profit: revenue - spent, cashback: cashbackM });
+    }
+    return result;
+  }, [allOrders, allRewards]);
+
+  // Status counts
+  const statusCounts = useMemo(() => {
+    const counts = {};
+    filteredOrders.forEach(o => { const s = o.status?.toLowerCase(); if (s) counts[s] = (counts[s]||0) + 1; });
+    return counts;
+  }, [filteredOrders]);
+
+  const totalOrders = filteredOrders.length;
+
+  // By status for donut
+  const byStatus = useMemo(() => Object.entries(statusCounts).map(([name,value]) => ({name,value})), [statusCounts]);
+
+  // Top cards
+  const topCards = useMemo(() => {
+    const map = {};
+    filteredOrders.forEach(o => {
+      const key = o.credit_card_id || o.card_name || "Unknown";
+      if (!map[key]) { const c = creditCards.find(c => c.id === o.credit_card_id); map[key] = { name: c?.card_name || o.card_name || "Unknown", spent:0, orders:0 }; }
+      map[key].spent  += parseFloat(o.final_cost || o.total_cost || 0);
+      map[key].orders += 1;
+    });
+    return Object.values(map).sort((a,b) => b.spent - a.spent).slice(0,5);
+  }, [filteredOrders, creditCards]);
+
+  // Cost breakdown
+  const costBreakdown = useMemo(() => [
+    { name:"Tax",      value: filteredOrders.reduce((s,o) => s + parseFloat(o.tax||0), 0) },
+    { name:"Shipping", value: filteredOrders.reduce((s,o) => s + parseFloat(o.shipping_cost||0), 0) },
+    { name:"Fees",     value: filteredOrders.reduce((s,o) => s + parseFloat(o.fees||0), 0) },
+  ].filter(b => b.value > 0), [filteredOrders]);
+
+  // Recent transactions (last 10)
+  const transactions = useMemo(() => {
+    return [...filteredOrders]
+      .sort((a,b) => new Date(b.order_date||b.created_date) - new Date(a.order_date||a.created_date))
+      .slice(0, 10)
+      .map(o => {
+        const revenue = (o.sale_events||[]).reduce((s,ev) => s + (ev.items||[]).reduce((is,item) => is + (parseFloat(item.sale_price)||0)*(parseInt(item.qty||item.quantity)||1), 0), 0);
+        const profit  = o.sale_events?.length ? revenue - parseFloat(o.total_cost||o.final_cost||0) + parseFloat(o.cashback_amount||0) : null;
+        return {
+          id:              o.id,
+          productName:     o.product_name || o.items?.[0]?.product_name || "—",
+          platform:        o.retailer || "—",
+          salePlatform:    o.marketplace_platform || (o.sale_events?.[0]?.platform) || "—",
+          totalPrice:      parseFloat(o.final_cost || o.total_cost || 0),
+          salePrice:       revenue || null,
+          cashbackAmount:  parseFloat(o.cashback_amount || 0),
+          profit,
+          status:          o.status,
+          transactionDate: o.order_date || o.created_date,
+          productImageUrl: o.product_image_url || o.image_url || o.items?.[0]?.image_url || null,
+        };
+      });
+  }, [filteredOrders]);
+
+  // Alerts
+  const today = new Date().toISOString().slice(0,10);
+  const alerts = useMemo(() => ({
+    overdueInvoices: invoices.filter(inv => inv.status==="overdue" || (inv.status==="sent" && inv.due_date && inv.due_date < today)).length,
+    damagedItems:    damagedItems.filter(d => d.status==="reported" || d.status==="assessed").length,
+    inTransit:       shipments.filter(s => !s.delivered_date && s.status && !s.status.toLowerCase().includes("delivered")).length,
+  }), [invoices, damagedItems, shipments]);
 
   const activeAlerts = [
     alerts.overdueInvoices > 0 && { icon:FileWarning, color:"var(--crimson)", bg:"var(--crimson-bg)", border:"var(--crimson-bdr)", title:`${alerts.overdueInvoices} Overdue Invoice${alerts.overdueInvoices>1?"s":""}`, value:"Action required" },
@@ -512,16 +631,19 @@ export default function Dashboard() {
     alerts.inTransit > 0       && { icon:Truck,        color:"var(--ocean)",  bg:"var(--ocean-bg)",   border:"var(--ocean-bdr)",   title:`${alerts.inTransit} Shipment${alerts.inTransit>1?"s":""} In Transit`, value:"Packages on the way" },
   ].filter(Boolean);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); setLastRefreshed(new Date()); }, 900);
-  }, []);
-
   const timeSince = () => {
     const s = Math.floor((Date.now() - lastRefreshed)/1000);
     if (s < 60) return `${s}s ago`;
     return `${Math.floor(s/60)}m ago`;
   };
+
+  if (loading) {
+    return (
+      <div style={{ padding:40, textAlign:"center", color:"var(--ink-ghost)", fontFamily:"var(--font-sans)", fontSize:13 }}>
+        Loading dashboard...
+      </div>
+    );
+  }
 
   return (
     <>
@@ -734,7 +856,7 @@ export default function Dashboard() {
             <div style={{ fontFamily:"var(--font-serif)", fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-dim)" }}>
               Recent Transactions
             </div>
-            <button style={{ fontSize:10, color:"var(--gold)", fontWeight:700, background:"none", border:"none", cursor:"pointer", letterSpacing:"0.04em", fontFamily:"var(--font-sans)" }}>
+            <button onClick={() => navigate("/Transactions")} style={{ fontSize:10, color:"var(--gold)", fontWeight:700, background:"none", border:"none", cursor:"pointer", letterSpacing:"0.04em", fontFamily:"var(--font-sans)" }}>
               View all →
             </button>
           </div>
