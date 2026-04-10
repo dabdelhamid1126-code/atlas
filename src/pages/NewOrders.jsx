@@ -765,11 +765,11 @@ export default function NewOrders() {
                 <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: hasSales ? 'var(--terrain)' : 'var(--violet)', marginBottom: 8 }}>
                   {hasSales ? 'Estimated Profit' : 'Cashback Profit'}
                 </p>
-                <p style={{ fontSize: 36, fontWeight: 800, lineHeight: 1, color: profitColor }}>
+                <p style={{ fontSize: 36, fontWeight: 600, lineHeight: 1, color: profitColor, fontFamily: "'Cinzel', serif" }}>
                   {fmt$(netProfit)}
                 </p>
                 <p style={{ fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontWeight: 600, color: roiColor }}>{roi.toFixed(1)}% ROI</span>
+                  <span style={{ fontWeight: 600, color: roiColor, fontFamily: "'Cinzel', serif" }}>{roi.toFixed(1)}% ROI</span>
                   <span style={{ color: 'var(--parch-deep)' }}>·</span>
                   <span style={{ color: 'var(--ink-ghost)' }}>{validItemCount} item{validItemCount !== 1 ? 's' : ''}</span>
                 </p>
@@ -813,7 +813,7 @@ export default function NewOrders() {
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--parch-line)' }}>
                   <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 13 }}>{hasSales ? 'Net profit' : 'Cashback'}</span>
-                  <span style={{ fontWeight: 800, fontSize: 15, color: profitColor }}>{fmt$(netProfit)}</span>
+                  <span style={{ fontWeight: 600, fontSize: 15, color: profitColor, fontFamily: "'Cinzel', serif" }}>{fmt$(netProfit)}</span>
                 </div>
               </div>
             </div>
