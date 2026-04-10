@@ -514,10 +514,10 @@ export default function Rewards() {
 
   return (
     <div>
-      <PageHeader 
-        title="Rewards & Cashback" 
-        description="Track points, cashback, and loyalty rewards"
-      />
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Rewards & Cashback</h1>
+        <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Track points, cashback, and loyalty rewards</p>
+      </div>
 
       <Tabs defaultValue="rewards" className="space-y-6">
         <TabsList>
@@ -528,25 +528,19 @@ export default function Rewards() {
 
         <TabsContent value="rewards" className="space-y-6">
           <div className="flex justify-end">
-            <Button onClick={() => openDialog()} className="bg-black hover:bg-gray-800 text-white">
+            <Button onClick={() => openDialog()} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
               <Plus className="h-4 w-4 mr-2" /> Add Reward
             </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                <p className="text-sm text-green-700 font-medium">Cashback Earned</p>
-              </div>
-              <p className="text-2xl font-bold text-green-900">${totalEarned.toFixed(2)}</p>
+            <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--terrain)' }}>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 8 }}>Cashback Earned</p>
+              <p style={{ fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 600, color: 'var(--terrain)' }}>${totalEarned.toFixed(2)}</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="h-5 w-5 text-blue-600" />
-                <p className="text-sm text-blue-700 font-medium">Points Available</p>
-              </div>
-              <p className="text-2xl font-bold text-blue-900">{totalPoints.toLocaleString()}</p>
+            <div style={{ background: 'var(--violet-bg)', border: '1px solid var(--violet-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--violet)' }}>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--violet)', marginBottom: 8 }}>Points Available</p>
+              <p style={{ fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 600, color: 'var(--violet)' }}>{totalPoints.toLocaleString()}</p>
             </div>
           </div>
 
@@ -596,7 +590,7 @@ export default function Rewards() {
 
         <TabsContent value="cards" className="space-y-6">
           <div className="flex justify-end">
-            <Button onClick={() => openCardDialog()} className="bg-black hover:bg-gray-800 text-white">
+            <Button onClick={() => openCardDialog()} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
               <Plus className="h-4 w-4 mr-2" /> Add Credit Card
             </Button>
           </div>
@@ -615,19 +609,13 @@ export default function Rewards() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Package className="h-5 w-5 text-emerald-600" />
-                <p className="text-sm text-emerald-700 font-medium">Total Sales</p>
-              </div>
-              <p className="text-2xl font-bold text-emerald-900">${totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--terrain)' }}>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 8 }}>Total Sales</p>
+              <p style={{ fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 600, color: 'var(--terrain)' }}>${totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                <p className="text-sm text-green-700 font-medium">Completed Sales</p>
-              </div>
-              <p className="text-2xl font-bold text-green-900">${completedSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--terrain)' }}>
+              <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 8 }}>Completed Sales</p>
+              <p style={{ fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 600, color: 'var(--terrain)' }}>${completedSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
           </div>
 
@@ -728,9 +716,9 @@ export default function Rewards() {
               </div>
             )}
 
-            <div className="p-4 bg-slate-50 rounded-lg">
+            <div style={{ padding: 14, borderRadius: 10, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
               <p className="text-sm font-medium mb-2">Calculated Reward:</p>
-              <p className="text-2xl font-bold">
+              <p style={{ fontFamily: "'Cinzel',serif", fontSize: 22, fontWeight: 600, color: 'var(--ink)' }}>
                 {formData.currency === 'USD' 
                   ? `$${parseFloat(formData.amount || 0).toFixed(2)}` 
                   : `${formData.amount || 0} points`}
@@ -838,7 +826,7 @@ export default function Rewards() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
+              <Button type="submit" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
                 {editingReward ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
@@ -984,7 +972,7 @@ export default function Rewards() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCardDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-black hover:bg-gray-800 text-white">
+              <Button type="submit" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
                 {editingCard ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
