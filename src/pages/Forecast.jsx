@@ -15,7 +15,7 @@ function SectionCard({ icon: Icon, title, accentColor = 'var(--violet)', childre
     <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, overflow:'hidden', borderTop:`3px solid ${accentColor}` }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 18px', borderBottom:'1px solid var(--parch-line)', background:'var(--parch-warm)' }}>
         <Icon style={{ width:16, height:16, color:accentColor }} />
-        <h2 style={{ fontFamily:"'Playfair Display', serif", fontSize:13, fontWeight:700, color:'var(--ink)', margin:0 }}>{title}</h2>
+        <h2 style={{ fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize:13, fontWeight:700, color:'var(--ink)', margin:0 }}>{title}</h2>
       </div>
       <div style={{ padding:18 }}>{children}</div>
     </div>
@@ -66,12 +66,12 @@ function ProfitCalculator({ creditCards }) {
       </div>
       {totalCost > 0 && (
         <div style={{ borderRadius:12, border:`1px solid ${isPositive ? 'var(--terrain-bdr)' : 'var(--crimson-bdr)'}`, padding:14, background: isPositive ? 'var(--terrain-bg)' : 'var(--crimson-bg)' }}>
-          <p style={{ fontFamily:"'Playfair Display', serif", fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:8 }}>Calculation Results</p>
+          <p style={{ fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:8 }}>Calculation Results</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:10 }}>
             {[['Total Cost', fmt$(totalCost), 'var(--ink)'], ['Gross Profit', fmt$(grossProfit), grossProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)'], ['ROI', pct(roi), roi >= 0 ? 'var(--terrain)' : 'var(--crimson)']].map(([l,v,c]) => (
               <div key={l} style={{ background:'var(--parch-card)', borderRadius:10, padding:10, border:'1px solid var(--parch-line)', textAlign:'center' }}>
                 <p style={{ fontSize:9, color:'var(--ink-dim)', marginBottom:2 }}>{l}</p>
-                <p style={{ fontSize:14, fontWeight:600, color:c, fontFamily:"'Cinzel', serif" }}>{v}</p>
+                <p style={{ fontSize:14, fontWeight:600, color:c, fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{v}</p>
               </div>
             ))}
           </div>
@@ -86,7 +86,7 @@ function ProfitCalculator({ creditCards }) {
           )}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--parch-card)', borderRadius:10, padding:'10px 14px', border:'2px dashed var(--parch-line)' }}>
             <p style={{ fontSize:13, fontWeight:700, color:'var(--ink)' }}>Net Profit (after cashback)</p>
-            <p style={{ fontSize:22, fontWeight:600, color: isPositive ? 'var(--terrain)' : 'var(--crimson)', fontFamily:"'Cinzel', serif" }}>{isPositive ? '+' : ''}{fmt$(netProfit)}</p>
+            <p style={{ fontSize:22, fontWeight:600, color: isPositive ? 'var(--terrain)' : 'var(--crimson)', fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{isPositive ? '+' : ''}{fmt$(netProfit)}</p>
           </div>
         </div>
       )}
@@ -123,13 +123,13 @@ function MonthlyProjection({ orders, goals }) {
         {[['30-Day Orders', recentOrders.length, 'var(--ink)'], ['Avg ROI', pct(avgROI), avgROI >= 0 ? 'var(--terrain)' : 'var(--crimson)'], ['Days Left', daysLeft, 'var(--ink)']].map(([l,v,c]) => (
           <div key={l} style={{ background:'var(--parch-warm)', borderRadius:10, padding:10, border:'1px solid var(--parch-line)', textAlign:'center' }}>
             <p style={{ fontSize:9, color:'var(--ink-dim)', marginBottom:2 }}>{l}</p>
-            <p style={{ fontSize:18, fontWeight:600, color:c, fontFamily:"'Cinzel', serif" }}>{v}</p>
+            <p style={{ fontSize:18, fontWeight:600, color:c, fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{v}</p>
           </div>
         ))}
       </div>
       <div style={{ borderRadius:10, padding:'10px 14px', border:`1px solid ${projectedMonthlyProfit >= 0 ? 'var(--terrain-bdr)' : 'var(--gold-border)'}`, background: projectedMonthlyProfit >= 0 ? 'var(--terrain-bg)' : 'var(--gold-bg)', marginBottom:12 }}>
         <p style={{ fontSize:11, color:'var(--ink-dim)' }}>If you maintain this pace, you'll earn</p>
-        <p style={{ fontSize:26, fontWeight:600, color: projectedMonthlyProfit >= 0 ? 'var(--terrain)' : 'var(--gold)', marginTop:2, fontFamily:"'Cinzel', serif" }}>{fmt$(projectedMonthlyProfit)}</p>
+        <p style={{ fontSize:26, fontWeight:600, color: projectedMonthlyProfit >= 0 ? 'var(--terrain)' : 'var(--gold)', marginTop:2, fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{fmt$(projectedMonthlyProfit)}</p>
         <p style={{ fontSize:10, color:'var(--ink-dim)', marginTop:2 }}>this month in profit</p>
       </div>
       {goalTarget > 0 ? (
@@ -255,7 +255,7 @@ export default function Forecast() {
   return (
     <div style={{ paddingBottom:40 }}>
       <div style={{ marginBottom:22 }}>
-        <h1 style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:8 }}>
+        <h1 style={{ fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', display:'flex', alignItems:'center', gap:8 }}>
           <TrendingUp style={{ height:22, width:22, color:'var(--violet)' }} /> Forecast
         </h1>
         <p style={{ fontSize:12, color:'var(--ink-dim)', marginTop:4 }}>Calculate profitability, project earnings, and find your best cards</p>

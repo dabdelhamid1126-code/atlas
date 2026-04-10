@@ -98,7 +98,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
               padding: '18px 0',
               borderBottom: idx !== goalTypes.length - 1 ? '1px solid var(--parch-line)' : 'none',
             }}>
-              <div style={{ width: 96, fontSize: 13, fontWeight: 700, color: gc.color, fontFamily: "'Playfair Display', serif" }}>
+              <div style={{ width: 96, fontSize: 13, fontWeight: 700, color: gc.color, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
                 {label}
               </div>
 
@@ -184,7 +184,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <Target style={{ width: 22, height: 22, color: 'var(--gold)' }} />
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>
+          <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>
             Goal Tracking
           </h1>
         </div>
@@ -207,7 +207,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
                 padding: '20px 0',
                 borderBottom: idx !== goalTypes.length - 1 ? '1px solid var(--parch-line)' : 'none',
               }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: gc.color, marginBottom: 14, fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: gc.color, marginBottom: 14, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", letterSpacing: '0.04em' }}>
                   {label}
                 </div>
 

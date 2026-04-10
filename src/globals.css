@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cinzel:wght@400;600&display=swap');
+/* Google Fonts removed — using system font stack */:ital,wght@0,400;0,700;0,900;1,400&family=Cinzel:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -185,17 +185,14 @@ html, body {
 }
 
 body {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: var(--parch-bg);
   color: var(--ink);
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Force Playfair Display on EVERYTHING */
-*, *::before, *::after {
-  font-family: 'Playfair Display', Georgia, serif;
-}
+/* System font stack on everything */
 
 /* Midnight body glow */
 [data-theme="midnight"] body {
@@ -260,8 +257,8 @@ input:focus, textarea:focus, select:focus {
 }
 
 @layer utilities {
-  .font-display { font-family: 'Playfair Display', Georgia, serif; }
-  .font-cinzel  { font-family: 'Cinzel', serif; }
+  .font-display { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+  .font-cinzel  { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
   .gradient-gold {
     background: linear-gradient(135deg, #c9a84c, #f5e09a, #c9a84c);
     -webkit-background-clip: text;

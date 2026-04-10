@@ -381,7 +381,7 @@ export default function GiftCards() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Gift Cards</h1>
+        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Gift Cards</h1>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Manage gift card inventory</p>
       </div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 24, justifyContent: 'flex-end' }}>
@@ -399,8 +399,8 @@ export default function GiftCards() {
           { label: 'Total Profit',     value: `$${totalProfit.toFixed(2)}`,                                                       color: 'var(--terrain)' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 16 }}>
-            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>{s.label}</p>
-            <p style={{ fontFamily: "'Cinzel',serif", fontSize: 26, fontWeight: 600, color: s.color }}>{s.value}</p>
+            <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>{s.label}</p>
+            <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 26, fontWeight: 600, color: s.color }}>{s.value}</p>
           </div>
         ))}
       </div>

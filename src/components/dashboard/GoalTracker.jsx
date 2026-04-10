@@ -41,7 +41,7 @@ export default function GoalTracker({ metrics }) {
         return (
           <div key={`${goal.type}-${goal.timeframe}`}
             style={{ borderRadius: 12, padding: 14, background: 'var(--parch-card)', border: `1px solid var(--parch-line)`, borderTop: `3px solid ${config.border}` }}>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: config.color, marginBottom: 4 }}>
+            <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: config.color, marginBottom: 4 }}>
               {config.label}
             </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 2 }}>

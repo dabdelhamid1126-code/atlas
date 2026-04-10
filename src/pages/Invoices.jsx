@@ -529,7 +529,7 @@ export default function Invoices() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Invoices</h1>
+        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Invoices</h1>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Manage and track invoices</p>
       </div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 24, justifyContent: 'flex-end' }}>
@@ -549,8 +549,8 @@ export default function Invoices() {
           { label: 'Total Profit', value: `$${totalProfit.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: 'var(--terrain)', icon: DollarSign },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 18, borderTop: `3px solid ${s.color}` }}>
-            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: s.color, marginBottom: 8 }}>{s.label}</p>
-            <p style={{ fontFamily: "'Cinzel',serif", fontSize: 22, fontWeight: 600, color: s.color }}>{s.value}</p>
+            <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: s.color, marginBottom: 8 }}>{s.label}</p>
+            <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 22, fontWeight: 600, color: s.color }}>{s.value}</p>
           </div>
         ))}
       </div>
