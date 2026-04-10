@@ -71,7 +71,7 @@ function ProfitCalculator({ creditCards }) {
             {[['Total Cost', fmt$(totalCost), 'var(--ink)'], ['Gross Profit', fmt$(grossProfit), grossProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)'], ['ROI', pct(roi), roi >= 0 ? 'var(--terrain)' : 'var(--crimson)']].map(([l,v,c]) => (
               <div key={l} style={{ background:'var(--parch-card)', borderRadius:10, padding:10, border:'1px solid var(--parch-line)', textAlign:'center' }}>
                 <p style={{ fontSize:9, color:'var(--ink-dim)', marginBottom:2 }}>{l}</p>
-                <p style={{ fontSize:13, fontWeight:700, color:c }}>{v}</p>
+                <p style={{ fontSize:14, fontWeight:600, color:c, fontFamily:"'Cinzel', serif" }}>{v}</p>
               </div>
             ))}
           </div>
@@ -86,7 +86,7 @@ function ProfitCalculator({ creditCards }) {
           )}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--parch-card)', borderRadius:10, padding:'10px 14px', border:'2px dashed var(--parch-line)' }}>
             <p style={{ fontSize:13, fontWeight:700, color:'var(--ink)' }}>Net Profit (after cashback)</p>
-            <p style={{ fontSize:18, fontWeight:800, color: isPositive ? 'var(--terrain)' : 'var(--crimson)' }}>{isPositive ? '+' : ''}{fmt$(netProfit)}</p>
+            <p style={{ fontSize:22, fontWeight:600, color: isPositive ? 'var(--terrain)' : 'var(--crimson)', fontFamily:"'Cinzel', serif" }}>{isPositive ? '+' : ''}{fmt$(netProfit)}</p>
           </div>
         </div>
       )}
@@ -123,13 +123,13 @@ function MonthlyProjection({ orders, goals }) {
         {[['30-Day Orders', recentOrders.length, 'var(--ink)'], ['Avg ROI', pct(avgROI), avgROI >= 0 ? 'var(--terrain)' : 'var(--crimson)'], ['Days Left', daysLeft, 'var(--ink)']].map(([l,v,c]) => (
           <div key={l} style={{ background:'var(--parch-warm)', borderRadius:10, padding:10, border:'1px solid var(--parch-line)', textAlign:'center' }}>
             <p style={{ fontSize:9, color:'var(--ink-dim)', marginBottom:2 }}>{l}</p>
-            <p style={{ fontSize:16, fontWeight:700, color:c }}>{v}</p>
+            <p style={{ fontSize:18, fontWeight:600, color:c, fontFamily:"'Cinzel', serif" }}>{v}</p>
           </div>
         ))}
       </div>
       <div style={{ borderRadius:10, padding:'10px 14px', border:`1px solid ${projectedMonthlyProfit >= 0 ? 'var(--terrain-bdr)' : 'var(--gold-border)'}`, background: projectedMonthlyProfit >= 0 ? 'var(--terrain-bg)' : 'var(--gold-bg)', marginBottom:12 }}>
         <p style={{ fontSize:11, color:'var(--ink-dim)' }}>If you maintain this pace, you'll earn</p>
-        <p style={{ fontSize:22, fontWeight:800, color: projectedMonthlyProfit >= 0 ? 'var(--terrain)' : 'var(--gold)', marginTop:2 }}>{fmt$(projectedMonthlyProfit)}</p>
+        <p style={{ fontSize:26, fontWeight:600, color: projectedMonthlyProfit >= 0 ? 'var(--terrain)' : 'var(--gold)', marginTop:2, fontFamily:"'Cinzel', serif" }}>{fmt$(projectedMonthlyProfit)}</p>
         <p style={{ fontSize:10, color:'var(--ink-dim)', marginTop:2 }}>this month in profit</p>
       </div>
       {goalTarget > 0 ? (
