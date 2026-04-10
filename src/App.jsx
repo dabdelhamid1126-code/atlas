@@ -28,9 +28,10 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
+  const [splashDone, setSplashDone] = useState(false);
+  const userName = user?.full_name?.split(' ')[0] || '';
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -39,18 +40,15 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
+    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
+    if (authError.type === 'auth_required') { navigateToLogin(); return null; }
   }
 
-  // Render the main app
+  if (!splashDone) {
+    return <SplashScreen onComplete={() => setSplashDone(true)} userName={userName} />;
+  }
+
   return (
     <Routes>
       <Route path="/" element={
@@ -69,37 +67,12 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
-      <Route path="/Settings" element={
-        <LayoutWrapper currentPageName="Settings">
-          <Settings />
-        </LayoutWrapper>
-      } />
-      <Route path="/Goals" element={
-        <LayoutWrapper currentPageName="Goals">
-          <Goals />
-        </LayoutWrapper>
-      } />
-      <Route path="/Transactions" element={
-        <LayoutWrapper currentPageName="Transactions">
-          <Transactions />
-        </LayoutWrapper>
-      } />
-      <Route path="/NewOrders" element={
-        <LayoutWrapper currentPageName="NewOrders">
-          <NewOrders />
-        </LayoutWrapper>
-      } />
-      <Route path="/Forecast" element={
-        <LayoutWrapper currentPageName="Forecast">
-          <Forecast />
-        </LayoutWrapper>
-      } />
-      <Route path="/ImportOrders" element={
-        <LayoutWrapper currentPageName="ImportOrders">
-          <ImportOrders />
-        </LayoutWrapper>
-      } />
-
+      <Route path="/Settings" element={<LayoutWrapper currentPageName="Settings"><Settings /></LayoutWrapper>} />
+      <Route path="/Goals" element={<LayoutWrapper currentPageName="Goals"><Goals /></LayoutWrapper>} />
+      <Route path="/Transactions" element={<LayoutWrapper currentPageName="Transactions"><Transactions /></LayoutWrapper>} />
+      <Route path="/NewOrders" element={<LayoutWrapper currentPageName="NewOrders"><NewOrders /></LayoutWrapper>} />
+      <Route path="/Forecast" element={<LayoutWrapper currentPageName="Forecast"><Forecast /></LayoutWrapper>} />
+      <Route path="/ImportOrders" element={<LayoutWrapper currentPageName="ImportOrders"><ImportOrders /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -107,30 +80,19 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-  const [splashDone, setSplashDone] = useState(false);
-  const [userName, setUserName] = useState('');
-
-  useEffect(() => {
-    base44.auth.me().then(u => { if (u?.full_name) setUserName(u.full_name.split(' ')[0]); }).catch(() => {});
-  }, []);
-
-  if (!splashDone) {
-    return <SplashScreen onComplete={() => setSplashDone(true)} userName={userName} />;
-  }
-
   return (
     <ThemeProvider>
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
     </ThemeProvider>
-  )
+  );
 }
 
 export default App
