@@ -14,12 +14,9 @@ import {
    THEME / TOKENS
 ───────────────────────────────────────────── */
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
-
-  :root {
-    --font-serif: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
-    --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono:  'DM Mono', 'ui-monospace', 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    --font-serif: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-sans:  ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
     --gold:        #b8860b;
     --gold2:       #d4a017;
     --gold-bg:     rgba(184,134,11,0.08);
