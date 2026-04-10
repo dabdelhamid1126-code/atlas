@@ -143,6 +143,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
                     color: 'var(--ink)', outline: 'none',
                     paddingLeft: key !== 'transactions' ? 26 : 12,
                     paddingRight: 12,
+                    fontFamily: "'Cinzel', serif",
                   }}
                 />
               </div>
@@ -206,7 +207,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
                 padding: '20px 0',
                 borderBottom: idx !== goalTypes.length - 1 ? '1px solid var(--parch-line)' : 'none',
               }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: gc.color, marginBottom: 14, fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: gc.color, marginBottom: 14, fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' }}>
                   {label}
                 </div>
 
@@ -235,6 +236,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
                             flex: 1, height: 36, borderRadius: 8, fontSize: 13,
                             background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
                             color: 'var(--ink)', outline: 'none', padding: '0 12px',
+                            fontFamily: "'Cinzel', serif",
                           }}
                         />
                       </div>
