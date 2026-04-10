@@ -299,7 +299,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ paddingBottom: 40 }}>
+    <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 28px 40px 28px' }}>
 
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 14 }}>
