@@ -146,10 +146,10 @@ export default function ReceiveItems() {
 
   return (
     <div>
-      <PageHeader 
-        title="Receive Items" 
-        description="Mark purchased items as received and assign serial numbers"
-      />
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Receive Items</h1>
+        <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Mark purchased items as received and assign serial numbers</p>
+      </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,47 +158,39 @@ export default function ReceiveItems() {
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <PackageCheck className="h-12 w-12 mx-auto text-slate-300 mb-4" />
-            <p className="text-slate-500">No pending orders to receive</p>
-          </CardContent>
-        </Card>
+        <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 48, textAlign: 'center' }}>
+          <PackageCheck className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--ink-ghost)' }} />
+          <p style={{ color: 'var(--ink-dim)' }}>No pending orders to receive</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {orders.map(order => (
-            <Card key={order.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base font-mono">{order.order_number}</CardTitle>
-                    <p className="text-sm text-slate-500">{order.supplier}</p>
+            <div key={order.id} style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div>
+                  <p style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{order.order_number}</p>
+                  <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>{order.supplier}</p>
+                </div>
+                <StatusBadge status={order.status} />
+              </div>
+              <div className="space-y-2 mb-4">
+                {order.items?.slice(0, 3).map((item, idx) => (
+                  <div key={idx} className="flex justify-between text-sm">
+                    <span className="text-slate-600">{item.product_name}</span>
+                    <span className="font-medium">{item.quantity_received || 0}/{item.quantity_ordered}</span>
                   </div>
-                  <StatusBadge status={order.status} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 mb-4">
-                  {order.items?.slice(0, 3).map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-sm">
-                      <span className="text-slate-600">{item.product_name}</span>
-                      <span className="font-medium">
-                        {item.quantity_received || 0}/{item.quantity_ordered}
-                      </span>
-                    </div>
-                  ))}
-                  {(order.items?.length || 0) > 3 && (
-                    <p className="text-xs text-slate-400">+{order.items.length - 3} more items</p>
-                  )}
-                </div>
-                <Button 
-                  className="w-full bg-black hover:bg-gray-800 text-white"
-                  onClick={() => openReceiveDialog(order)}
-                >
-                  <PackageCheck className="h-4 w-4 mr-2" /> Receive Items
-                </Button>
-              </CardContent>
-            </Card>
+                ))}
+                {(order.items?.length || 0) > 3 && (
+                  <p className="text-xs text-slate-400">+{order.items.length - 3} more items</p>
+                )}
+              </div>
+              <Button
+                style={{ width: '100%', background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}
+                onClick={() => openReceiveDialog(order)}
+              >
+                <PackageCheck className="h-4 w-4 mr-2" /> Receive Items
+              </Button>
+            </div>
           ))}
         </div>
       )}
@@ -215,8 +207,8 @@ export default function ReceiveItems() {
                 <div key={idx} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="font-medium">{item.product_name}</p>
-                      <p className="text-sm text-slate-500">SKU: {item.sku}</p>
+                      <p style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 13 }}>{item.product_name}</p>
+                      <p style={{ fontSize: 11, color: 'var(--ink-dim)' }}>SKU: {item.sku}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-500">Remaining: {remaining}</p>
@@ -265,7 +257,7 @@ export default function ReceiveItems() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setReceiveDialogOpen(false)}>Cancel</Button>
-            <Button className="bg-black hover:bg-gray-800 text-white" onClick={handleReceive}>
+            <Button style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }} onClick={handleReceive}>
               <Check className="h-4 w-4 mr-2" /> Confirm Receipt
             </Button>
           </DialogFooter>
