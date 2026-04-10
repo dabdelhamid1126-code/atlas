@@ -111,7 +111,7 @@ const TABS = [
 // ── Style tokens ───────────────────────────────────────────────────────────
 const inp    = { background:'var(--parch-warm)', color:'var(--ink)', borderColor:'var(--parch-line)', borderRadius:8 };
 const inpRo  = { background:'var(--parch-card)', color:'var(--ink-ghost)', borderColor:'var(--parch-line)', borderRadius:8 };
-const LBL    = ({children}) => <label style={{ fontSize:10, fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-dim)', display:'block', marginBottom:4, fontFamily:"'Playfair Display', serif" }}>{children}</label>;
+const LBL    = ({children}) => <label style={{ fontSize:10, fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-dim)', display:'block', marginBottom:4, fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{children}</label>;
 
 const defaultSaleEvent = () => ({ id:crypto.randomUUID(), buyer:'', sale_date:'', payout_date:'', items:[] });
 const defaultItem = () => ({ product_id:'', product_name:'', upc:'', quantity_ordered:1, quantity_received:0, unit_cost:0, sale_price:0, product_image_url:'' });
@@ -263,7 +263,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
             <div style={{ display:'flex', alignItems:'center', gap:12, minWidth:0, flex:1 }}>
               <StoreLogo retailer={formData.retailer} size={32} />
               <div style={{ minWidth:0, flex:1 }}>
-                <h2 style={{ fontFamily:"'Playfair Display', serif", fontSize:18, fontWeight:800, color:'var(--ink)', margin:0, lineHeight:1.2 }}>{order?'Edit Order':'New Order'}</h2>
+                <h2 style={{ fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize:18, fontWeight:800, color:'var(--ink)', margin:0, lineHeight:1.2 }}>{order?'Edit Order':'New Order'}</h2>
                 {subtitle && <p style={{ fontSize:12, color:'var(--ink-dim)', marginTop:4 }}>{subtitle}</p>}
               </div>
             </div>

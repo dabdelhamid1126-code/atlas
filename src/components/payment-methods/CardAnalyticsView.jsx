@@ -79,7 +79,7 @@ export default function CardAnalyticsView({ cards=[], orders=[] }) {
   const th = {
     textAlign:'left', fontSize:8, fontWeight:700, letterSpacing:'0.14em',
     textTransform:'uppercase', color:'var(--ink-dim)', padding:'10px 16px',
-    fontFamily:"'Playfair Display', serif",
+    fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif",
   };
 
   return (
@@ -95,7 +95,7 @@ export default function CardAnalyticsView({ cards=[], orders=[] }) {
                 <div style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--parch-warm)', border:'1px solid var(--parch-line)', flexShrink:0 }}>
                   <Icon style={{ width:14, height:14, color:stat.color }} />
                 </div>
-                <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', fontFamily:"'Playfair Display', serif", margin:0 }}>{stat.label}</p>
+                <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif", margin:0 }}>{stat.label}</p>
               </div>
               <p style={{ fontSize:22, fontWeight:800, color:stat.color, margin:0 }}>{stat.value}</p>
             </div>
@@ -107,7 +107,7 @@ export default function CardAnalyticsView({ cards=[], orders=[] }) {
 
         {/* Bar Chart */}
         <div style={{ ...sectionCard, padding:20 }}>
-          <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:16, fontFamily:"'Playfair Display', serif" }}>Spend & Est. Cashback by Card</p>
+          <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:16, fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>Spend & Est. Cashback by Card</p>
           {barData.length===0
             ? <p style={{ fontSize:13, color:'var(--ink-ghost)', textAlign:'center', padding:'32px 0' }}>No spend data yet.</p>
             : (
@@ -127,7 +127,7 @@ export default function CardAnalyticsView({ cards=[], orders=[] }) {
 
         {/* Pie donut */}
         <div style={{ ...sectionCard, padding:20 }}>
-          <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:16, fontFamily:"'Playfair Display', serif" }}>Spend Distribution</p>
+          <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:16, fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>Spend Distribution</p>
           {spendPieData.length===0
             ? <p style={{ fontSize:13, color:'var(--ink-ghost)', textAlign:'center', padding:'32px 0' }}>No spend data yet.</p>
             : (
@@ -158,7 +158,7 @@ export default function CardAnalyticsView({ cards=[], orders=[] }) {
       {/* Performance table */}
       <div style={{ ...sectionCard, overflow:'hidden' }}>
         <div style={{ padding:'14px 20px', borderBottom:'1px solid var(--parch-line)', background:'var(--parch-warm)' }}>
-          <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:0, fontFamily:"'Playfair Display', serif" }}>Card Performance Table</p>
+          <p style={{ fontSize:8, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:0, fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" }}>Card Performance Table</p>
         </div>
         <div style={{ overflowX:'auto' }}>
           <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>

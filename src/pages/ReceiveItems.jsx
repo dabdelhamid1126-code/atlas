@@ -147,7 +147,7 @@ export default function ReceiveItems() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Receive Items</h1>
+        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Receive Items</h1>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Mark purchased items as received and assign serial numbers</p>
       </div>
 

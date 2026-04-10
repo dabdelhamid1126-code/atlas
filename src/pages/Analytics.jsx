@@ -35,7 +35,7 @@ const CARD_STYLE = { background: 'var(--parch-card)', border: '1px solid var(--p
 function KpiCard({ label, value, icon: Icon, color, subtext }) {
   return (
     <div style={{ ...CARD_STYLE, padding: 14, borderTop: `3px solid ${color}` }}>
-      <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color, marginBottom: 6 }}>{label}</p>
+      <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color, marginBottom: 6 }}>{label}</p>
       <p style={{ fontSize: 18, fontWeight: 800, color, lineHeight: 1 }}>{value}</p>
       {subtext && <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 4 }}>{subtext}</p>}
     </div>
@@ -46,7 +46,7 @@ function ChartCard({ title, subtitle, badge, children }) {
   return (
     <div style={{ ...CARD_STYLE, padding: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>{title}</p>
+        <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>{title}</p>
         {badge && <span style={{ fontSize: 9, background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', color: 'var(--gold)', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>{badge}</span>}
       </div>
       {subtitle && <p style={{ fontSize: 10, color: 'var(--ink-ghost)', marginBottom: 14 }}>{subtitle}</p>}
@@ -89,7 +89,7 @@ function SD({ title }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
       <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
-      <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--gold)' }}>{title}</span>
+      <span style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--gold)' }}>{title}</span>
       <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(184,134,11,0.25), transparent)' }} />
     </div>
   );
@@ -300,7 +300,7 @@ export default function Analytics() {
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
         <div>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Analytics & Insights</h1>
+          <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Analytics & Insights</h1>
           <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
             {mode === 'all' ? 'Combined overview' : mode === 'churning' ? 'Churning performance' : 'Marketplace performance'}
           </p>
@@ -315,7 +315,7 @@ export default function Analytics() {
             ))}
           </div>
           <button onClick={() => refetch()} disabled={isLoading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer', fontFamily: "'Playfair Display', serif" }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer', fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
             <RefreshCw style={{ width: 13, height: 13 }} className={isLoading ? 'animate-spin' : ''} /> Refresh
           </button>
         </div>
@@ -324,7 +324,7 @@ export default function Analytics() {
       {/* ── FILTER CARD ── */}
       <div style={{ ...CARD_STYLE, padding: '14px 18px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 20 }}>
         <div>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>Period</p>
+          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>Period</p>
           <div style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 8, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
             {['monthly', 'quarterly', 'yearly'].map(p => (
               <button key={p} onClick={() => setPeriod(p)}
@@ -335,7 +335,7 @@ export default function Analytics() {
           </div>
         </div>
         <div>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>Date Range</p>
+          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>Date Range</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={inp} />
             <span style={{ color: 'var(--ink-ghost)', fontSize: 12 }}>→</span>
@@ -356,7 +356,7 @@ export default function Analytics() {
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', background: 'transparent', borderBottom: showProfitDetails ? '1px solid var(--parch-line)' : 'none', cursor: 'pointer', border: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Info style={{ width: 14, height: 14, color: 'var(--gold)' }} />
-            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>Profit Breakdown</span>
+            <span style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>Profit Breakdown</span>
             <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 99, background: 'var(--gold-bg)', color: 'var(--gold)', border: '1px solid var(--gold-border)' }}>
               {profitMode === 'cashback_wallet' ? 'Cashback Wallet Mode' : 'Accounting Mode'}
             </span>
@@ -372,7 +372,7 @@ export default function Analytics() {
               { label: profitMode === 'cashback_wallet' ? 'Wallet Profit' : 'Net Profit', value: fmt$(kpis.profit), color: 'var(--gold)', bg: 'var(--gold-bg)', border: 'var(--gold-border)', prefix: '' },
             ].map(b => (
               <div key={b.label} style={{ borderRadius: 10, padding: 12, background: b.bg, border: `1px solid ${b.border}` }}>
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: b.color, marginBottom: 4 }}>{b.label}</p>
+                <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: b.color, marginBottom: 4 }}>{b.label}</p>
                 <p style={{ fontSize: 16, fontWeight: 800, color: b.color }}>{b.prefix}{b.value}</p>
               </div>
             ))}
@@ -400,7 +400,7 @@ export default function Analytics() {
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={periodData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "'Playfair Display',serif" }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }} tickLine={false} axisLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Line type="monotone" dataKey="revenue" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3, fill: '#60a5fa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Revenue" />
@@ -441,7 +441,7 @@ export default function Analytics() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "'Playfair Display',serif" }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }} tickLine={false} axisLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Area type="monotone" dataKey="cumProfit" stroke="#10b981" fill="url(#cumGrad)" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Cumulative Profit" />
@@ -454,7 +454,7 @@ export default function Analytics() {
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={periodData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "'Playfair Display',serif" }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--ink-ghost)', fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }} tickLine={false} axisLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: 'var(--ink-ghost)' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v => fmt$(v)} />
                   <Line type="monotone" dataKey="revenue" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3, fill: '#60a5fa', strokeWidth: 0 }} activeDot={{ r: 5 }} name="Revenue" />
@@ -522,7 +522,7 @@ export default function Analytics() {
             </ChartCard>
 
             <div style={{ ...CARD_STYLE, padding: 20 }}>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 16 }}>Store Summary</p>
+              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 16 }}>Store Summary</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 {[
                   { label: 'Total Store Sales', value: fmt$(kpis.revenue), color: 'var(--ocean)', bg: 'var(--ocean-bg)', border: 'var(--ocean-bdr)' },
@@ -594,7 +594,7 @@ export default function Analytics() {
 
           <div style={{ ...CARD_STYLE, overflow: 'hidden' }}>
             <div style={{ padding: '13px 20px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)' }}>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Payment Method Performance</p>
+              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Payment Method Performance</p>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
@@ -647,7 +647,7 @@ export default function Analytics() {
 
           <div style={{ ...CARD_STYLE, overflow: 'hidden' }}>
             <div style={{ padding: '13px 20px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Store Breakdown</p>
+              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Store Breakdown</p>
               <span style={{ fontSize: 10, background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)', padding: '2px 10px', borderRadius: 99, fontWeight: 700 }}>{storeData.length} Stores</span>
             </div>
             <div style={{ overflowX: 'auto' }}>
@@ -691,7 +691,7 @@ export default function Analytics() {
 
           <div style={{ ...CARD_STYLE, overflow: 'hidden' }}>
             <div style={{ padding: '13px 20px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Platform Breakdown</p>
+              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Platform Breakdown</p>
               <span style={{ fontSize: 10, background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)', padding: '2px 10px', borderRadius: 99, fontWeight: 700 }}>{platformData.length} Platforms</span>
             </div>
             <div style={{ overflowX: 'auto' }}>
@@ -724,7 +724,7 @@ export default function Analytics() {
 
           <div style={{ ...CARD_STYLE, overflow: 'hidden' }}>
             <div style={{ padding: '13px 20px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)' }}>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Period-by-Period Data</p>
+              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)' }}>Period-by-Period Data</p>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>

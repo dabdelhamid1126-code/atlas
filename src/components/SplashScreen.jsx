@@ -92,7 +92,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
       transition: phase === 'out' ? 'opacity 0.75s ease' : 'none',
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cinzel:wght@400;600&display=swap');
+        /* System font stack — no Google Fonts */
         @keyframes inkFloat {
           0%,100% { transform:translateY(0) translateX(0); }
           33%      { transform:translateY(-14px) translateX(5px); }
@@ -193,7 +193,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
         {/* Title */}
         <div style={{ ...fadeUp(titleVisible), marginBottom:10, textAlign:'center' }}>
           <h1 style={{
-            fontFamily:"'Cinzel','Playfair Display',Georgia,serif",
+            fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif",
             fontSize:46, fontWeight:600,
             letterSpacing:'0.22em',
             color:'#26190a',
@@ -207,7 +207,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:30, height:1, background:'rgba(184,134,11,0.38)' }}/>
             <p style={{
-              fontFamily:"'Playfair Display',Georgia,serif",
+              fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif",
               fontSize:10, fontWeight:400,
               letterSpacing:'0.3em', textTransform:'uppercase',
               color:'#7a6040', margin:0,
@@ -219,7 +219,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
         {/* Greeting */}
         <div style={{ ...fadeUp(greetVisible), marginBottom:38, textAlign:'center' }}>
           <p style={{
-            fontFamily:"'Playfair Display',Georgia,serif",
+            fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif",
             fontSize:14, fontStyle:'italic',
             color:'#7a6040', margin:0,
           }}>

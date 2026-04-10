@@ -121,7 +121,7 @@ function StatCard({ label, value, color = 'var(--ink)', icon: Icon }) {
     <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:12, padding:'10px 14px', borderTop:`3px solid ${color}` }}>
       <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:4 }}>
         {Icon && <Icon style={{ width:11, height:11, color:'var(--ink-dim)' }} />}
-        <span style={{ fontSize:9, color:'var(--ink-dim)', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:"'Playfair Display', serif", fontWeight:700 }}>{label}</span>
+        <span style={{ fontSize:9, color:'var(--ink-dim)', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif", fontWeight:700 }}>{label}</span>
       </div>
       <div style={{ fontSize:16, fontWeight:800, color }}>{value}</div>
     </div>
@@ -275,14 +275,14 @@ export default function Inventory() {
   const toggleGroup = (name) => setExpandedGroups(prev => ({ ...prev, [name]: !prev[name] }));
   const handleEdit  = (order) => { setEditingOrder(order); setFormOpen(true); };
 
-  const th = { color:'var(--ink-dim)', fontSize:9, textTransform:'uppercase', letterSpacing:'0.06em', padding:'8px 8px', textAlign:'left', borderBottom:'1px solid var(--parch-line)', fontWeight:700, whiteSpace:'nowrap', background:'var(--parch-warm)', fontFamily:"'Playfair Display', serif" };
+  const th = { color:'var(--ink-dim)', fontSize:9, textTransform:'uppercase', letterSpacing:'0.06em', padding:'8px 8px', textAlign:'left', borderBottom:'1px solid var(--parch-line)', fontWeight:700, whiteSpace:'nowrap', background:'var(--parch-warm)', fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif" };
 
   return (
     <div style={{ paddingBottom:24 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       <div style={{ marginBottom:18 }}>
-        <h1 style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:22, fontWeight:900, color:'var(--ink)', margin:0 }}>Inventory On Hand</h1>
+        <h1 style={{ fontFamily:"ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize:22, fontWeight:900, color:'var(--ink)', margin:0 }}>Inventory On Hand</h1>
         <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:3 }}>Grouped by product · derived from your purchase orders</p>
       </div>
 

@@ -10,7 +10,7 @@ import {
 // ─── shared style tokens ──────────────────────────────────────────────────────
 const card  = { background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 24, marginBottom: 20 };
 const inp   = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%' };
-const labelStyle = { fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-dim)', display: 'block', marginBottom: 4, fontFamily: "'Playfair Display', serif" };
+const labelStyle = { fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-dim)', display: 'block', marginBottom: 4, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" };
 
 function SectionRow({ icon: Icon, title, description, children, noBorder = false }) {
   return (
@@ -38,7 +38,7 @@ function Toggle({ on, onToggle }) {
 
 function SectionLabel({ children }) {
   return (
-    <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 12, marginTop: 8 }}>
+    <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 12, marginTop: 8 }}>
       {children}
     </p>
   );
@@ -48,13 +48,13 @@ function SectionLabel({ children }) {
 function ProfileTab({ user }) {
   return (
     <div style={card}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Profile</h2>
+      <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Profile</h2>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
         <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#8b6914,#b8860b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: 'white', flexShrink: 0 }}>
           {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
         </div>
         <div>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{user?.full_name || 'User'}</p>
+          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{user?.full_name || 'User'}</p>
           <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 2 }}>Connected via Base44</p>
         </div>
       </div>
@@ -80,7 +80,7 @@ function DataSetupTab() {
   ];
   return (
     <div style={card}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Data Setup</h2>
+      <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Data Setup</h2>
       <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginBottom: 16 }}>Quick links to setup pages.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {pages.map(p => (
@@ -129,7 +129,7 @@ function GoalsTab() {
     <div style={card}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <Target style={{ width: 16, height: 16, color: 'var(--terrain)' }} />
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Goal Tracking</h2>
+        <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Goal Tracking</h2>
       </div>
       <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginBottom: 20 }}>Set targets. Active goals appear on your Dashboard.</p>
 
@@ -140,7 +140,7 @@ function GoalsTab() {
           return (
             <div key={goal.metric} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: idx < goals.length - 1 ? '1px solid var(--parch-line)' : 'none' }}>
               <div style={{ width: 100, flexShrink: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: meta.color, fontFamily: "'Playfair Display', serif" }}>{meta.label}</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: meta.color, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{meta.label}</p>
               </div>
               <div style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 8, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
                 {['WEEKLY', 'MONTHLY'].map(p => (
@@ -154,7 +154,7 @@ function GoalsTab() {
                 {isCurrency && <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>}
                 <input type="number" min="0" placeholder={isCurrency ? '0.00' : '0'} value={goal.target}
                   onChange={e => update(idx, { target: e.target.value })}
-                  style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%', paddingLeft: isCurrency ? 26 : 12, fontFamily: "'Cinzel', serif" }} />
+                  style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%', paddingLeft: isCurrency ? 26 : 12 }} />
               </div>
               <Toggle on={goal.isActive} onToggle={() => update(idx, { isActive: !goal.isActive })} />
             </div>
@@ -247,7 +247,7 @@ function DataTab() {
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Download style={{ width: 16, height: 16, color: 'var(--terrain)' }} />
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Export Data</h2>
+          <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Export Data</h2>
         </div>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginBottom: 16 }}>Select which data to include in your export file.</p>
 
@@ -287,7 +287,7 @@ function DataTab() {
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Upload style={{ width: 16, height: 16, color: 'var(--ocean)' }} />
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Import Data</h2>
+          <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Import Data</h2>
         </div>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginBottom: 16 }}>Import a previously exported JSON file.</p>
         <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleImport} style={{ display: 'none' }} />
@@ -298,7 +298,7 @@ function DataTab() {
         {importResult && (
           <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: importResult.success ? 'var(--terrain-bg)' : 'var(--crimson-bg)', border: `1px solid ${importResult.success ? 'var(--terrain-bdr)' : 'var(--crimson-bdr)'}`, fontSize: 12, color: importResult.success ? 'var(--terrain)' : 'var(--crimson)' }}>
             {importResult.success
-              ? <><p style={{ fontWeight: 700, margin: '0 0 4px' }}>Import complete</p>{Object.entries(importResult.summary || {}).map(([k, v]) => <p key={k} style={{ margin: 0 }}>{k}: <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 600 }}>{v}</span> records</p>)}</>
+              ? <><p style={{ fontWeight: 700, margin: '0 0 4px' }}>Import complete</p>{Object.entries(importResult.summary || {}).map(([k, v]) => <p key={k} style={{ margin: 0 }}>{k}: <span style={{ fontWeight: 600 }}>{v}</span> records</p>)}</>
               : <p style={{ margin: 0 }}>{importResult.error || 'Import failed'}</p>}
           </div>
         )}
@@ -308,7 +308,7 @@ function DataTab() {
       <div style={{ ...card, border: '1px solid var(--crimson-bdr)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Trash2 style={{ width: 16, height: 16, color: 'var(--crimson)' }} />
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Danger Zone</h2>
+          <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Danger Zone</h2>
         </div>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginBottom: 16 }}>Permanently delete all your data. This cannot be undone.</p>
 
@@ -391,7 +391,7 @@ function ApiKeysTab() {
     <div style={card}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
         <Key style={{ width: 16, height: 16, color: 'var(--violet)' }} />
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>API Keys</h2>
+        <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>API Keys</h2>
       </div>
 
       <div style={{ padding: 16, borderRadius: 10, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
@@ -432,7 +432,7 @@ function ApiKeysTab() {
 function SecurityTab({ user }) {
   return (
     <div style={card}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 16 }}>Security</h2>
+      <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 16 }}>Security</h2>
       <SectionRow title="Authentication" description="Signed in via Base44">
         <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }}>Active</span>
       </SectionRow>
@@ -461,7 +461,7 @@ function AppearanceTab() {
 
   return (
     <div style={card}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Appearance</h2>
+      <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>Appearance</h2>
 
       <SectionLabel>Dashboard & Analytics</SectionLabel>
       {dashToggles.map((t, i) => (
@@ -517,7 +517,7 @@ export default function Settings() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>Settings</h1>
+        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>Settings</h1>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Manage your account preferences</p>
       </div>
 

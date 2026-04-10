@@ -22,7 +22,7 @@ const guessCategory = (name) => {
 const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', padding: '8px 12px', fontSize: 13, outline: 'none', width: '100%' };
 
 const LBL = ({ children }) => (
-  <label style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-dim)', display: 'block', marginBottom: 4, fontFamily: "'Playfair Display', serif" }}>
+  <label style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-dim)', display: 'block', marginBottom: 4, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
     {children}
   </label>
 );
@@ -97,7 +97,7 @@ function UPCPickerModal({ upc, results, onSelect, onManual, onClose }) {
       <div style={{ position: 'relative', width: '100%', maxWidth: 520, background: 'var(--parch-card)', borderRadius: 16, border: '1px solid var(--parch-line)', boxShadow: '0 24px 60px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--parch-line)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', background: 'var(--parch-warm)' }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', fontFamily: "'Playfair Display', serif" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
               {results.length > 1 ? 'Multiple results found' : 'Result found'}
             </div>
             <div style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>
@@ -326,7 +326,7 @@ export default function Products() {
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>Products</h1>
+          <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>Products</h1>
           <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 4 }}>Master product catalog · {products.length} total</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -391,7 +391,7 @@ export default function Products() {
           <div onClick={closeDialog} style={{ position: 'absolute', inset: 0, background: 'rgba(26,22,18,0.5)' }} />
           <div style={{ position: 'relative', width: '100%', maxWidth: 440, background: 'var(--parch-card)', borderRadius: 16, border: '1px solid var(--parch-line)', boxShadow: '0 24px 60px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
             <div style={{ padding: '18px 24px 14px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--ink)' }}>{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
+              <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--ink)' }}>{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
               <button onClick={closeDialog} style={{ background: 'none', border: 'none', color: 'var(--ink-dim)', cursor: 'pointer', padding: 4 }}><X style={{ width: 16, height: 16 }} /></button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -425,7 +425,7 @@ export default function Products() {
               </div>
               <div style={{ padding: '14px 24px', borderTop: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                 <button type="button" onClick={closeDialog} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', fontFamily: "'Playfair Display', serif" }}>
+                <button type="submit" style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
                   {editingProduct ? 'Update' : 'Create'}
                 </button>
               </div>
@@ -441,7 +441,7 @@ export default function Products() {
           <div style={{ position: 'relative', width: '100%', maxWidth: 780, maxHeight: '88vh', background: 'var(--parch-card)', borderRadius: 16, border: '1px solid var(--parch-line)', boxShadow: '0 24px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '18px 24px 14px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
               <div>
-                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--ink)' }}>Import UPCs</h2>
+                <h2 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--ink)' }}>Import UPCs</h2>
                 <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 2 }}>Best Buy preferred · category auto-detected · duplicates skipped</p>
               </div>
               <button onClick={() => { setImportOpen(false); setImportRows([]); setUpcInput(''); }} style={{ background: 'none', border: 'none', color: 'var(--ink-dim)', cursor: 'pointer', padding: 4 }}><X style={{ width: 16, height: 16 }} /></button>
@@ -516,8 +516,8 @@ export default function Products() {
               <div style={{ fontSize: 11, color: 'var(--ink-dim)' }}>{importRows.length > 0 && !lookingUp && `${selCount} product${selCount !== 1 ? 's' : ''} selected`}</div>
               <div style={{ display: 'flex', gap: 10 }}>
                 {importRows.length > 0 && !lookingUp && <button onClick={() => { setImportRows([]); setUpcInput(''); }} style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-faded)', cursor: 'pointer' }}>← Back</button>}
-                {importRows.length === 0 && <button onClick={handleBulkLookup} disabled={!upcInput.trim() || lookingUp} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: upcInput.trim() ? 'var(--ink)' : 'var(--parch-warm)', border: upcInput.trim() ? 'none' : '1px solid var(--parch-line)', color: upcInput.trim() ? 'var(--gold)' : 'var(--ink-ghost)', cursor: upcInput.trim() ? 'pointer' : 'not-allowed', fontFamily: upcInput.trim() ? "'Playfair Display', serif" : undefined }}>Look up UPCs →</button>}
-                {importRows.length > 0 && !lookingUp && selCount > 0 && <button onClick={handleBulkImport} disabled={importing} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', opacity: importing ? 0.7 : 1, fontFamily: "'Playfair Display', serif" }}>{importing ? 'Importing...' : `Import ${selCount} product${selCount !== 1 ? 's' : ''}`}</button>}
+                {importRows.length === 0 && <button onClick={handleBulkLookup} disabled={!upcInput.trim() || lookingUp} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: upcInput.trim() ? 'var(--ink)' : 'var(--parch-warm)', border: upcInput.trim() ? 'none' : '1px solid var(--parch-line)', color: upcInput.trim() ? 'var(--gold)' : 'var(--ink-ghost)', cursor: upcInput.trim() ? 'pointer' : 'not-allowed' }}>Look up UPCs →</button>}
+                {importRows.length > 0 && !lookingUp && selCount > 0 && <button onClick={handleBulkImport} disabled={importing} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', opacity: importing ? 0.7 : 1 }}>{importing ? 'Importing...' : `Import ${selCount} product${selCount !== 1 ? 's' : ''}`}</button>}
               </div>
             </div>
           </div>

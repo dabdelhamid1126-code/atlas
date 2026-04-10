@@ -29,7 +29,7 @@ export default function PaymentMethods() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Payment Methods</h1>
+        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Payment Methods</h1>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Manage cards, cashback rates, and per-store rate overrides</p>
       </div>
 
@@ -141,17 +141,17 @@ function CreditCardsTab({ queryClient }) {
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--ocean)' }}>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ocean)', marginBottom: 4 }}>Active Cards</p>
+          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ocean)', marginBottom: 4 }}>Active Cards</p>
           <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--ocean)' }}>{activeCards.length}</p>
           <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{cards.length} total</p>
         </div>
         <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--gold)' }}>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 4 }}>Spent This Month</p>
+          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 4 }}>Spent This Month</p>
           <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--gold)' }}>${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
           <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{monthOrders.length} orders</p>
         </div>
         <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--terrain)' }}>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 4 }}>Avg Cashback</p>
+          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 4 }}>Avg Cashback</p>
           <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--terrain)' }}>{avgCashback.toFixed(1)}%</p>
           <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>across active cards</p>
         </div>
