@@ -528,69 +528,31 @@ export default function Invoices() {
 
   return (
     <div>
-      <PageHeader 
-        title="Invoices" 
-        description="Manage and track invoices"
-        actions={
-          <div className="flex gap-3">
-            <Button onClick={() => setImportOpen(true)} variant="outline" className="border-indigo-200 text-indigo-600 hover:bg-indigo-50">
-              <Upload className="h-4 w-4 mr-2" /> Import
-            </Button>
-            <Button onClick={() => openDialog()} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg">
-              <Plus className="h-4 w-4 mr-2" /> New Invoice
-            </Button>
-          </div>
-        }
-      />
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Invoices</h1>
+        <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Manage and track invoices</p>
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 24, justifyContent: 'flex-end' }}>
+        <Button onClick={() => setImportOpen(true)} variant="outline">
+          <Upload className="h-4 w-4 mr-2" /> Import
+        </Button>
+        <Button onClick={() => openDialog()} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
+          <Plus className="h-4 w-4 mr-2" /> New Invoice
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="card-modern p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 gradient-primary rounded-xl flex items-center justify-center">
-              <FileText className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-600">Total Invoices</p>
-              <p className="text-2xl font-bold">{invoices.length}</p>
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 24 }}>
+        {[
+          { label: 'Total Invoices', value: invoices.length, color: 'var(--ocean)', icon: FileText },
+          { label: 'Paid', value: `$${paidInvoices.reduce((s,i) => s+(i.total||0),0).toLocaleString()}`, color: 'var(--terrain)', icon: Check },
+          { label: 'Unpaid', value: `$${unpaidInvoices.reduce((s,i) => s+(i.total||0),0).toLocaleString()}`, color: 'var(--gold)', icon: DollarSign },
+          { label: 'Total Profit', value: `$${totalProfit.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`, color: 'var(--terrain)', icon: DollarSign },
+        ].map(s => (
+          <div key={s.label} style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 18, borderTop: `3px solid ${s.color}` }}>
+            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: s.color, marginBottom: 8 }}>{s.label}</p>
+            <p style={{ fontFamily: "'Cinzel',serif", fontSize: 22, fontWeight: 600, color: s.color }}>{s.value}</p>
           </div>
-        </div>
-
-        <div className="card-modern p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 gradient-success rounded-xl flex items-center justify-center">
-              <Check className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-600">Paid</p>
-              <p className="text-2xl font-bold text-emerald-600">${paidInvoices.reduce((s, i) => s + (i.total || 0), 0).toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card-modern p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 gradient-warning rounded-xl flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-600">Unpaid</p>
-              <p className="text-2xl font-bold text-amber-600">${unpaidInvoices.reduce((s, i) => s + (i.total || 0), 0).toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card-modern p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-600">Total Profit</p>
-              <p className="text-2xl font-bold text-emerald-600">${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       <Tabs defaultValue="unpaid" className="w-full">
@@ -609,7 +571,7 @@ export default function Invoices() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="font-mono text-lg font-bold text-slate-900">#{inv.invoice_number}</span>
+                    <span className="font-mono text-lg font-bold" style={{ color: 'var(--ink)' }}>#{inv.invoice_number}</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       inv.status === 'sent' ? 'bg-blue-100 text-blue-700' :
                       inv.status === 'overdue' ? 'bg-red-100 text-red-700' :
@@ -618,19 +580,19 @@ export default function Invoices() {
                       {inv.status.toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-slate-600 font-medium">{inv.buyer}</p>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="font-medium" style={{ color: 'var(--ink-dim)' }}>{inv.buyer}</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--ink-faded)' }}>
                     Due: {inv.due_date ? format(new Date(inv.due_date), 'MMM dd, yyyy') : 'No due date'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right mr-4">
-                    <p className="text-2xl font-bold text-slate-900">${(inv.total || 0).toFixed(2)}</p>
+                    <p className="text-2xl font-bold" style={{ color: 'var(--ink)' }}>${(inv.total || 0).toFixed(2)}</p>
                   </div>
                   <Button onClick={() => setViewInvoice(inv)} variant="outline" size="icon" title="View Invoice">
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button onClick={() => togglePaidStatus(inv)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <Button onClick={() => togglePaidStatus(inv)} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
                     <Check className="h-4 w-4 mr-2" /> Mark Paid
                   </Button>
                   <Button onClick={() => downloadPDF(inv)} variant="outline" size="icon">
@@ -660,13 +622,13 @@ export default function Invoices() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="font-mono text-lg font-bold text-slate-900">#{inv.invoice_number}</span>
+                    <span className="font-mono text-lg font-bold" style={{ color: 'var(--ink)' }}>#{inv.invoice_number}</span>
                     <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                       PAID
                     </span>
                   </div>
-                  <p className="text-slate-600 font-medium">{inv.buyer}</p>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="font-medium" style={{ color: 'var(--ink-dim)' }}>{inv.buyer}</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--ink-faded)' }}>
                     Paid on: {inv.invoice_date ? format(new Date(inv.invoice_date), 'MMM dd, yyyy') : '-'}
                   </p>
                 </div>
@@ -676,7 +638,7 @@ export default function Invoices() {
                     {(() => {
                       const { profit, profitMargin } = calculateInvoiceProfit(inv);
                       return (
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm" style={{ color: 'var(--ink-dim)' }}>
                           Profit: <span className={profit >= 0 ? 'text-emerald-600 font-semibold' : 'text-red-600 font-semibold'}>
                             ${profit.toFixed(2)}
                           </span> ({profitMargin.toFixed(1)}%)
@@ -923,7 +885,7 @@ export default function Invoices() {
               </div>
               <div className="flex justify-between font-bold text-xl pt-3 border-t-2 border-slate-300">
                 <span>Total</span>
-                <span className="text-indigo-600">${calculateTotals().total.toFixed(2)}</span>
+                <span style={{ color: 'var(--terrain)' }}>${calculateTotals().total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -939,7 +901,7 @@ export default function Invoices() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
+              <Button type="submit" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
                 {editingInvoice ? 'Update Invoice' : 'Create Invoice'}
               </Button>
             </DialogFooter>
@@ -1003,8 +965,8 @@ export default function Invoices() {
             <div className="space-y-6 p-6 bg-white">
               <div className="flex justify-between items-start pb-6 border-b">
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900 mb-2">INVOICE</h1>
-                  <p className="text-slate-600">#{viewInvoice.invoice_number}</p>
+                  <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--ink)' }}>INVOICE</h1>
+                  <p style={{ color: 'var(--ink-dim)' }}>#{viewInvoice.invoice_number}</p>
                 </div>
                 <div className={`px-4 py-2 rounded-lg font-semibold ${
                   viewInvoice.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
@@ -1018,8 +980,8 @@ export default function Invoices() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm font-semibold text-slate-500 mb-2">BILL TO:</p>
-                  <p className="font-semibold text-slate-900">{viewInvoice.buyer}</p>
+                  <p className="text-sm font-semibold mb-2" style={{ color: 'var(--ink-faded)' }}>BILL TO:</p>
+                  <p className="font-semibold" style={{ color: 'var(--ink)' }}>{viewInvoice.buyer}</p>
                   {viewInvoice.buyer_email && <p className="text-slate-600">{viewInvoice.buyer_email}</p>}
                   {viewInvoice.buyer_address && <p className="text-slate-600">{viewInvoice.buyer_address}</p>}
                 </div>
