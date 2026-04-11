@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Calculator, TrendingUp, CreditCard, BarChart2,
   Store, ChevronUp, ChevronDown, Target, RefreshCw,
-  ArrowRight, Zap,
+  ArrowRight, Zap, Search, X, Package, Barcode,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -99,17 +99,240 @@ function StatBox({ label, value, color = 'var(--ink)', bg = 'var(--parch-warm)',
 }
 
 /* ─────────────────────────────────────────────
+   PRODUCT SEARCH — name (your inventory) or UPC
+───────────────────────────────────────────── */
+function ProductSearch({ userEmail, onSelect }) {
+  const [query,       setQuery]       = useState('');
+  const [results,     setResults]     = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
+  const [showDropdown,setShowDropdown]= useState(false);
+  const inputRef = useCallback(node => { if (node) node.focus(); }, []);
+
+  // Detect if query looks like a UPC (all digits, 8–14 chars)
+  const isUpc = /^\d{8,14}$/.test(query.trim());
+
+  const search = useCallback(async () => {
+    const q = query.trim();
+    if (!q || q.length < 2) { setResults([]); return; }
+    setLoading(true);
+    setError('');
+
+    try {
+      if (isUpc) {
+        // ── UPC lookup via UPCitemdb free tier ──
+        const res  = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${q}`);
+        const data = await res.json();
+        if (data.items?.length) {
+          setResults(data.items.map(item => ({
+            source:      'upc',
+            id:          item.upc,
+            name:        item.title,
+            brand:       item.brand,
+            description: item.description,
+            image:       item.images?.[0] || null,
+            cost:        item.lowest_recorded_price || '',
+            upc:         item.upc,
+          })));
+        } else {
+          setError('No product found for that UPC.');
+          setResults([]);
+        }
+      } else {
+        // ── Name search — your Products then Inventory ──
+        const [products, inventory] = await Promise.all([
+          base44.entities.Product
+            .filter({ created_by: userEmail })
+            .catch(() => []),
+          base44.entities.InventoryItem
+            .filter({ created_by: userEmail })
+            .catch(() => []),
+        ]);
+
+        const ql = q.toLowerCase();
+        const matched = [
+          ...products.map(p => ({
+            source: 'product',
+            id:     p.id,
+            name:   p.name || p.product_name || '—',
+            brand:  p.brand || '',
+            sku:    p.sku || p.upc || '',
+            image:  p.image_url || null,
+            cost:   p.cost || p.unit_cost || p.purchase_price || '',
+          })),
+          ...inventory.map(i => ({
+            source: 'inventory',
+            id:     i.id,
+            name:   i.product_name || i.name || '—',
+            brand:  '',
+            sku:    i.sku || i.upc || '',
+            image:  i.image_url || null,
+            cost:   i.unit_cost || i.cost || i.purchase_price || '',
+          })),
+        ].filter(r =>
+          r.name.toLowerCase().includes(ql) ||
+          r.sku?.toLowerCase().includes(ql) ||
+          r.brand?.toLowerCase().includes(ql)
+        ).slice(0, 8);
+
+        setResults(matched);
+        if (!matched.length) setError('No matching products in your inventory.');
+      }
+    } catch (e) {
+      setError('Search failed. Check your connection.');
+      setResults([]);
+    } finally {
+      setLoading(false);
+      setShowDropdown(true);
+    }
+  }, [query, isUpc, userEmail]);
+
+  // Search on Enter or when UPC reaches full length
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') search();
+    if (e.key === 'Escape') { setShowDropdown(false); setQuery(''); }
+  };
+  useEffect(() => {
+    if (isUpc && query.trim().length >= 12) search();
+  }, [query]);
+
+  const handleSelect = (result) => {
+    onSelect(result);
+    setQuery(result.name);
+    setShowDropdown(false);
+    setResults([]);
+  };
+
+  const clear = () => { setQuery(''); setResults([]); setError(''); setShowDropdown(false); };
+
+  const sourceLabel = { product: 'Product', inventory: 'Inventory', upc: 'UPC Lookup' };
+  const sourceBg    = { product: 'var(--terrain-bg)', inventory: 'var(--ocean-bg)', upc: 'var(--violet-bg)' };
+  const sourceColor = { product: 'var(--terrain)',    inventory: 'var(--ocean)',     upc: 'var(--violet)'    };
+
+  return (
+    <div style={{ marginBottom: 16, position: 'relative' }}>
+      <Label>Search Product (name or UPC)</Label>
+      <div style={{ position: 'relative', display: 'flex', gap: 6 }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', pointerEvents: 'none' }} />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => { setQuery(e.target.value); setShowDropdown(false); setError(''); }}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a product name or scan/paste a UPC..."
+            style={{ ...INP, paddingLeft: 32, paddingRight: query ? 32 : 11, fontFamily: 'var(--font-sans)' }}
+          />
+          {query && (
+            <button onClick={clear} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', padding: 2 }}>
+              <X size={13} />
+            </button>
+          )}
+        </div>
+        <button
+          onClick={search}
+          disabled={loading || !query.trim()}
+          style={{
+            padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: 'var(--ink)', color: 'var(--ne-cream)',
+            fontFamily: 'var(--font-serif)', fontSize: 11, fontWeight: 700,
+            letterSpacing: '0.06em', opacity: loading || !query.trim() ? 0.5 : 1,
+            display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
+          }}
+        >
+          {loading
+            ? <RefreshCw size={12} className="spin" />
+            : isUpc ? <Barcode size={13} /> : <Search size={13} />
+          }
+          {loading ? 'Searching...' : isUpc ? 'Lookup UPC' : 'Search'}
+        </button>
+      </div>
+
+      {/* Hint */}
+      <p style={{ fontSize: 10, color: 'var(--ink-ghost)', marginTop: 4 }}>
+        {isUpc
+          ? '📦 UPC detected — will look up via barcode database'
+          : 'Press Enter to search your Products & Inventory · Enter a UPC (8–14 digits) for barcode lookup'}
+      </p>
+
+      {/* Dropdown results */}
+      {showDropdown && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+          background: 'var(--parch-card)', border: '1px solid var(--parch-line)',
+          borderRadius: 10, boxShadow: 'var(--shadow-md)', marginTop: 4,
+          overflow: 'hidden', maxHeight: 320, overflowY: 'auto',
+        }}>
+          {error && !results.length && (
+            <div style={{ padding: '12px 14px', fontSize: 12, color: 'var(--ink-faded)', textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+          {results.map((r, i) => (
+            <button
+              key={`${r.source}-${r.id}`}
+              onClick={() => handleSelect(r)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
+                background: 'transparent', borderBottom: i < results.length - 1 ? '1px solid var(--parch-line)' : 'none',
+                transition: 'background 0.12s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--parch-warm)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              {/* Image or icon */}
+              <div style={{ width: 36, height: 36, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {r.image
+                  ? <img src={r.image} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <Package size={16} color="var(--ink-ghost)" />
+                }
+              </div>
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</p>
+                <p style={{ fontSize: 10, color: 'var(--ink-faded)' }}>
+                  {r.brand && `${r.brand} · `}{r.sku || r.upc || ''}
+                </p>
+              </div>
+              {/* Cost badge */}
+              {r.cost && (
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ocean)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
+                  {fmt$(parseFloat(r.cost))}
+                </span>
+              )}
+              {/* Source tag */}
+              <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: sourceBg[r.source], color: sourceColor[r.source], letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>
+                {sourceLabel[r.source]}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    1. PROFIT CALCULATOR (enhanced)
 ───────────────────────────────────────────── */
-function ProfitCalculator({ creditCards }) {
-  const [mode,          setMode]          = useState('forward'); // 'forward' | 'breakeven'
-  const [unitCost,      setUnitCost]      = useState('');
-  const [qty,           setQty]           = useState('1');
-  const [salePrice,     setSalePrice]     = useState('');
-  const [platformFee,   setPlatformFee]   = useState('');   // % marketplace takes
-  const [shippingCost,  setShippingCost]  = useState('');   // $ per order
-  const [selectedCardId,setSelectedCardId]= useState('');
-  const [targetProfit,  setTargetProfit]  = useState('');   // break-even mode
+function ProfitCalculator({ creditCards, userEmail }) {
+  const [mode,           setMode]           = useState('forward');
+  const [selectedProduct,setSelectedProduct] = useState(null);
+  const [unitCost,       setUnitCost]        = useState('');
+  const [qty,            setQty]             = useState('1');
+  const [salePrice,      setSalePrice]       = useState('');
+  const [platformFee,    setPlatformFee]     = useState('');
+  const [shippingCost,   setShippingCost]    = useState('');
+  const [selectedCardId, setSelectedCardId]  = useState('');
+  const [targetProfit,   setTargetProfit]    = useState('');
+
+  // When a product is selected from search, auto-fill cost and name
+  const handleProductSelect = useCallback((result) => {
+    setSelectedProduct(result);
+    if (result.cost) setUnitCost(String(parseFloat(result.cost)));
+  }, []);
 
   const q             = parseInt(qty) || 1;
   const cost          = (parseFloat(unitCost) || 0) * q;
@@ -144,6 +367,35 @@ function ProfitCalculator({ creditCards }) {
 
   return (
     <SectionCard icon={Calculator} title="Profit Calculator" accentColor="var(--violet)">
+
+      {/* Product search */}
+      <ProductSearch userEmail={userEmail} onSelect={handleProductSelect} />
+
+      {/* Selected product pill */}
+      {selectedProduct && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+          borderRadius: 8, background: 'var(--violet-bg)', border: '1px solid var(--violet-bdr)',
+          marginBottom: 14,
+        }}>
+          {selectedProduct.image
+            ? <img src={selectedProduct.image} alt={selectedProduct.name} style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+            : <Package size={16} color="var(--violet)" style={{ flexShrink: 0 }} />
+          }
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--violet)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedProduct.name}</p>
+            <p style={{ fontSize: 10, color: 'var(--ink-faded)' }}>
+              {selectedProduct.brand && `${selectedProduct.brand} · `}
+              {selectedProduct.source === 'upc' ? `UPC: ${selectedProduct.upc}` : selectedProduct.sku || 'From inventory'}
+              {selectedProduct.cost ? ` · Cost: ${fmt$(parseFloat(selectedProduct.cost))}` : ' · No cost on file — enter manually'}
+            </p>
+          </div>
+          <button onClick={() => setSelectedProduct(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', padding: 2 }}>
+            <X size={13} />
+          </button>
+        </div>
+      )}
+
       {/* Mode toggle */}
       <div className="tab-bar" style={{ marginBottom: 14, width: 'fit-content' }}>
         {[['forward', 'Forward Calc'], ['breakeven', 'Break-Even']].map(([id, label]) => (
@@ -723,7 +975,7 @@ export default function Forecast() {
       {/* Row 1 — Calculator + Projection */}
       <SectionDivider title="Planning Tools" />
       <div className="grid-2col" style={{ marginBottom: 16 }}>
-        <ProfitCalculator creditCards={creditCards} />
+        <ProfitCalculator creditCards={creditCards} userEmail={userEmail} />
         <MonthlyProjection orders={orders} rewards={rewards} goals={goals} />
       </div>
 
