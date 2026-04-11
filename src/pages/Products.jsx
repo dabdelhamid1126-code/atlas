@@ -70,23 +70,23 @@ function findDuplicate(formData, products, editingId) {
 /* ------------------------------------------------------------------ */
 /*  STYLES                                                              */
 /* ------------------------------------------------------------------ */
-const inp = { background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:8, color:'var(--ink)', padding:'8px 12px', fontSize:13, outline:'none', width:'100%' };
+const inp = { background:'#f0e8d8', border:'1px solid #e4d8c8', borderRadius:8, color:'#1e1a14', padding:'8px 12px', fontSize:13, outline:'none', width:'100%' };
 
 const CAT_COLORS = {
-  phones:      { bg:'var(--ocean-bg)',   color:'var(--ocean)',   border:'var(--ocean-bdr)'   },
-  tablets:     { bg:'var(--terrain-bg)', color:'var(--terrain)', border:'var(--terrain-bdr)' },
-  laptops:     { bg:'var(--violet-bg)',  color:'var(--violet)',  border:'var(--violet-bdr)'  },
-  gaming:      { bg:'var(--crimson-bg)', color:'var(--crimson)', border:'var(--crimson-bdr)' },
-  accessories: { bg:'var(--gold-bg)',    color:'var(--gold)',    border:'var(--gold-border)' },
-  wearables:   { bg:'var(--ocean-bg)',   color:'var(--ocean2)',  border:'var(--ocean-bdr)'   },
-  audio:       { bg:'var(--violet-bg)',  color:'var(--violet)',  border:'var(--violet-bdr)'  },
-  other:       { bg:'var(--parch-warm)', color:'var(--ink-dim)', border:'var(--parch-line)'  },
+  phones:      { bg:'#dceef8', color:'#2a5c7a', border:'#90c0e0' },
+  tablets:     { bg:'#e8f4e0', color:'#4a7a35', border:'#a8d490' },
+  laptops:     { bg:'#ede0f8', color:'#5a3a6e', border:'#c0a0e0' },
+  gaming:      { bg:'#fae8e4', color:'#8b3a2a', border:'#e0a898' },
+  accessories: { bg:'#fdf3dc', color:'#a07828', border:'#e8c878' },
+  wearables:   { bg:'#dceef8', color:'#1a4060', border:'#90c0e0' },
+  audio:       { bg:'#ede0f8', color:'#5a3a6e', border:'#c0a0e0' },
+  other:       { bg:'#f0e8d8', color:'#8a7a60', border:'#e4d8c8' },
 };
 
 const SOURCE_STYLES = {
-  'UPCitemdb': { bg:'var(--ocean-bg)',   color:'var(--ocean)',   border:'var(--ocean-bdr)'   },
-  'Best Buy':  { bg:'var(--gold-bg)',    color:'var(--gold2)',   border:'var(--gold-border)' },
-  'Google':    { bg:'var(--terrain-bg)', color:'var(--terrain)', border:'var(--terrain-bdr)' },
+  'UPCitemdb': { bg:'#dceef8', color:'#2a5c7a', border:'#90c0e0' },
+  'Best Buy':  { bg:'#fdf3dc', color:'#a07828', border:'#e8c878' },
+  'Google':    { bg:'#e8f4e0', color:'#4a7a35', border:'#a8d490' },
 };
 
 /* ------------------------------------------------------------------ */
