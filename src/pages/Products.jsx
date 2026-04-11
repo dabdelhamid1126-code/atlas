@@ -73,20 +73,20 @@ function findDuplicate(formData, products, editingId) {
 const inp = { background:'#f0e8d8', border:'1px solid #e4d8c8', borderRadius:8, color:'#1e1a14', padding:'8px 12px', fontSize:13, outline:'none', width:'100%' };
 
 const CAT_COLORS = {
-  phones:      { bg:'#dceef8', color:'#2a5c7a', border:'#90c0e0' },
-  tablets:     { bg:'#e8f4e0', color:'#4a7a35', border:'#a8d490' },
-  laptops:     { bg:'#ede0f8', color:'#5a3a6e', border:'#c0a0e0' },
-  gaming:      { bg:'#fae8e4', color:'#8b3a2a', border:'#e0a898' },
-  accessories: { bg:'#fdf3dc', color:'#a07828', border:'#e8c878' },
-  wearables:   { bg:'#dceef8', color:'#1a4060', border:'#90c0e0' },
-  audio:       { bg:'#ede0f8', color:'#5a3a6e', border:'#c0a0e0' },
-  other:       { bg:'#f0e8d8', color:'#8a7a60', border:'#e4d8c8' },
+  phones:      { bg:'rgba(42,92,122,0.12)',  color:'#2a5c7a', border:'rgba(42,92,122,0.35)'  },
+  tablets:     { bg:'rgba(74,122,53,0.12)',  color:'#4a7a35', border:'rgba(74,122,53,0.35)'  },
+  laptops:     { bg:'rgba(90,58,110,0.12)',  color:'#5a3a6e', border:'rgba(90,58,110,0.35)'  },
+  gaming:      { bg:'rgba(139,58,42,0.12)',  color:'#8b3a2a', border:'rgba(139,58,42,0.35)'  },
+  accessories: { bg:'rgba(160,114,42,0.12)', color:'#A0722A', border:'rgba(160,114,42,0.35)' },
+  wearables:   { bg:'rgba(26,64,96,0.12)',   color:'#1a4060', border:'rgba(26,64,96,0.35)'   },
+  audio:       { bg:'rgba(90,58,110,0.12)',  color:'#5a3a6e', border:'rgba(90,58,110,0.35)'  },
+  other:       { bg:'rgba(138,122,96,0.12)', color:'#8a7a60', border:'rgba(138,122,96,0.35)' },
 };
 
 const SOURCE_STYLES = {
-  'UPCitemdb': { bg:'#dceef8', color:'#2a5c7a', border:'#90c0e0' },
-  'Best Buy':  { bg:'#fdf3dc', color:'#a07828', border:'#e8c878' },
-  'Google':    { bg:'#e8f4e0', color:'#4a7a35', border:'#a8d490' },
+  'UPCitemdb': { bg:'rgba(42,92,122,0.12)',  color:'#2a5c7a', border:'rgba(42,92,122,0.35)'  },
+  'Best Buy':  { bg:'rgba(160,114,42,0.12)', color:'#A0722A', border:'rgba(160,114,42,0.35)' },
+  'Google':    { bg:'rgba(74,122,53,0.12)',  color:'#4a7a35', border:'rgba(74,122,53,0.35)'  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -103,7 +103,7 @@ function LBL({ children }) {
 function CategoryBadge({ category }) {
   const s = CAT_COLORS[category] || CAT_COLORS.other;
   return (
-    <span style={{ display:'inline-flex', alignItems:'center', padding:'2px 7px', borderRadius:99, fontSize:9, fontWeight:700, letterSpacing:'0.05em', textTransform:'uppercase', background:s.bg, color:s.color, border:`1px solid ${s.border}` }}>
+    <span style={{ display:'inline-flex', alignItems:'center', padding:'3px 9px', borderRadius:99, fontSize:9, fontWeight:800, letterSpacing:'0.07em', textTransform:'uppercase', background:s.bg, color:s.color, border:`1px solid ${s.border}` }}>
       {category || 'other'}
     </span>
   );
@@ -112,7 +112,7 @@ function CategoryBadge({ category }) {
 function SourceBadge({ source }) {
   const s = SOURCE_STYLES[source] || SOURCE_STYLES['Google'];
   return (
-    <span style={{ display:'inline-flex', alignItems:'center', padding:'2px 7px', borderRadius:99, fontSize:9, fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase', background:s.bg, color:s.color, border:`1px solid ${s.border}`, whiteSpace:'nowrap', flexShrink:0 }}>
+    <span style={{ display:'inline-flex', alignItems:'center', padding:'3px 9px', borderRadius:99, fontSize:9, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase', background:s.bg, color:s.color, border:`1px solid ${s.border}`, whiteSpace:'nowrap', flexShrink:0 }}>
       {source}
     </span>
   );
@@ -322,7 +322,7 @@ export default function Products() {
   };
   const closeDialog = () => { setDialogOpen(false); setEditingProduct(null); setDupWarning(null); };
 
-  /* Check for duplicate whenever name or UPC changes — only against visible products */
+  /* Check for duplicate whenever name or UPC changes -- only against visible products */
   const handleFormChange = useCallback((field, value) => {
     const updated = { ...formData, [field]:value };
     setFormData(updated);
