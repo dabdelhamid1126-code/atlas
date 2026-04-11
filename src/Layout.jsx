@@ -30,7 +30,7 @@ const NAV_GROUPS = [
     label: 'Manage',
     items: [
       { name: 'Inventory',   page: 'Inventory',    icon: Boxes      },
-      { name: '+ New Order', page: 'NewOrders',    icon: PlusCircle, accent: true },
+      { name: 'New Order',   page: 'NewOrders',    icon: PlusCircle, accent: true },
       { name: 'Products',    page: 'Products',     icon: Package    },
       { name: 'Import',      page: 'ImportOrders', icon: Download   },
     ],
