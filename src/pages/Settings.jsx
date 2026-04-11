@@ -470,24 +470,6 @@ function AppearanceTab() {
         </SectionRow>
       ))}
 
-      <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--parch-line)' }}>
-        <SectionLabel>Profit Calculation Mode</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {[
-            { key: 'accounting',      label: 'Accounting',      desc: 'Profit = Revenue − Cost + Cashback', color: 'var(--terrain)', bg: 'var(--terrain-bg)', border: 'var(--terrain-bdr)' },
-            { key: 'cashback_wallet', label: 'Cashback Wallet', desc: 'Profit = Accounting − YA Used',      color: 'var(--ocean)',   bg: 'var(--ocean-bg)',   border: 'var(--ocean-bdr)'   },
-          ].map(opt => {
-            const isActive = (settings.profitCalculationMode || 'accounting') === opt.key;
-            return (
-              <button key={opt.key} onClick={() => upd('profitCalculationMode', opt.key)}
-                style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${isActive ? opt.border : 'var(--parch-line)'}`, textAlign: 'left', cursor: 'pointer', background: isActive ? opt.bg : 'var(--parch-warm)' }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: isActive ? opt.color : 'var(--ink-faded)', margin: '0 0 4px' }}>{opt.label}</p>
-                <p style={{ fontSize: 11, color: 'var(--ink-dim)', margin: 0 }}>{opt.desc}</p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }

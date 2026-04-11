@@ -372,15 +372,11 @@ export default function Analytics() {
   const [fromDate,      setFromDate]      = useState(() => format(subMonths(new Date(),12),'yyyy-MM-dd'));
   const [toDate,        setToDate]        = useState(() => format(new Date(),'yyyy-MM-dd'));
   const [activeTab,     setActiveTab]     = useState('overview');
-  const [profitMode,    setProfitMode]    = useState('accounting');
   const [showBreakdown, setShowBreakdown] = useState(true);
   const [userEmail,     setUserEmail]     = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
-      setUserEmail(u?.email||null);
-      if (u?.profit_mode) setProfitMode(u.profit_mode);
-    }).catch(()=>{});
+    base44.auth.me().then(u => { setUserEmail(u?.email||null); }).catch(()=>{});
   }, []);
 
   const { data:orders=[], isLoading, refetch } = useQuery({
@@ -418,13 +414,12 @@ export default function Analytics() {
     const revenue = filteredOrders.reduce((s,o) => s+calcRevenue(o), 0);
     const cost    = filteredOrders.reduce((s,o) => s+parseFloat(o.final_cost||o.total_cost||0), 0);
     const { cardCashback, yaCashback, totalUSD, points } = splitCashback(filteredRewards);
-    const accountingProfit = revenue - cost + totalUSD;
-    const profit = profitMode==='cashback_wallet' ? accountingProfit - yaCashback : accountingProfit;
+    const profit = revenue - cost + totalUSD;
     const roi    = cost>0 ? (profit/cost)*100 : 0;
     const storeMap = {};
     filteredOrders.forEach(o => { if(o.retailer) storeMap[o.retailer]=(storeMap[o.retailer]||0)+parseFloat(o.total_cost||0); });
     const topStore = Object.entries(storeMap).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
-    return { revenue, cost, profit, roi, cardCashback, yaCashback, totalUSD, points, accountingProfit, topStore };
+    return { revenue, cost, profit, roi, cardCashback, yaCashback, totalUSD, points, topStore };
   }, [filteredOrders, filteredRewards, profitMode]);
 
   /* ── Period trend ── */
@@ -534,7 +529,7 @@ export default function Analytics() {
   const KPI_CARDS = [
     { label:'Sale Revenue',   value:fmt$(kpis.revenue),      sub:`${filteredOrders.filter(o=>calcRevenue(o)>0).length} sold`,   icon:TrendingUp, accentColor:V.terrain2, bgColor:V.terrBg, bdrColor:V.terrBdr },
     { label:'Total Cost',     value:fmt$(kpis.cost),         sub:`${filteredOrders.length} orders`,                             icon:CreditCard, accentColor:V.ocean2,   bgColor:V.oceanBg,bdrColor:V.oceanBdr },
-    { label:profitMode==='cashback_wallet'?'Wallet Profit':'Net Profit',
+    { label:'Net Profit',
                               value:fmt$(kpis.profit),       sub:fmtPct(kpis.roi)+' ROI',                                       icon:DollarSign, accentColor:kpis.profit>=0?V.gold:V.crimson2,   bgColor:kpis.profit>=0?V.goldBg:V.crimBg,  bdrColor:kpis.profit>=0?V.goldBdr:V.crimBdr },
     { label:'ROI',            value:fmtPct(kpis.roi),        sub:'return on investment',                                        icon:Percent,    accentColor:kpis.roi>=0?V.ocean2:V.crimson2,     bgColor:V.oceanBg, bdrColor:V.oceanBdr },
     { label:'Card Cashback',  value:fmt$(kpis.cardCashback), sub:'credit card rewards',                                         icon:CreditCard, accentColor:V.violet2,  bgColor:V.violBg, bdrColor:V.violBdr },
@@ -608,9 +603,6 @@ export default function Analytics() {
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
             <Info size={13} color={V.gold}/>
             <span style={{ fontFamily:'var(--font-serif)', fontSize:11, fontWeight:700, color:'var(--ink)' }}>Profit Breakdown</span>
-            <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:V.goldBg, color:V.gold, border:`1px solid ${V.goldBdr}` }}>
-              {profitMode==='cashback_wallet'?'Cashback Wallet Mode':'Accounting Mode'}
-            </span>
           </div>
           {showBreakdown?<ChevronUp size={13} color='var(--ink-dim)'/>:<ChevronDown size={13} color='var(--ink-dim)'/>}
         </button>
@@ -621,7 +613,7 @@ export default function Analytics() {
               { label:'Card Spend', value:fmt$(kpis.cost),          prefix:'−', color:V.crimson2, bg:V.crimBg, bdr:V.crimBdr },
               { label:'Card CB',    value:fmt$(kpis.cardCashback),  prefix:'+', color:V.violet2,  bg:V.violBg, bdr:V.violBdr },
               { label:'YA CB',      value:fmt$(kpis.yaCashback),    prefix:'+', color:V.gold,     bg:V.goldBg, bdr:V.goldBdr },
-              { label:profitMode==='cashback_wallet'?'Wallet Profit':'Net Profit',
+              { label:'Net Profit',
                                     value:fmt$(kpis.profit),        prefix:'',  color:kpis.profit>=0?V.gold:V.crimson2, bg:kpis.profit>=0?V.goldBg:V.crimBg, bdr:kpis.profit>=0?V.goldBdr:V.crimBdr },
             ].map(b=>(
               <div key={b.label} style={{ borderRadius:10, padding:'10px 12px', background:b.bg, border:`1px solid ${b.bdr}` }}>

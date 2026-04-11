@@ -707,7 +707,6 @@ export default function Dashboard() {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <Info size={13} color="var(--gold)" />
               <span style={{ fontFamily:"var(--font-serif)", fontSize:11, fontWeight:700, color:"var(--ink)" }}>Profit Breakdown</span>
-              <span style={{ fontSize:9, fontWeight:700, padding:"2px 9px", borderRadius:99, background:"var(--gold-bg)", color:"var(--gold)", border:"1px solid var(--gold-bdr)" }}>Accounting Mode</span>
             </div>
             {showBreakdown ? <ChevronUp size={13} color="var(--ink-dim)" /> : <ChevronDown size={13} color="var(--ink-dim)" />}
           </button>
