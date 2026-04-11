@@ -14,13 +14,71 @@ import {
 } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
-   CSS VARIABLE TOKENS — exact names from globals.css
+   INJECTED CSS — same block as Dashboard.jsx
+   so both pages use identical tokens
+───────────────────────────────────────────── */
+const CSS = `
+  :root {
+    --font-serif: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-sans:  ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
+
+    --ne-cream:    #FFDBBB;
+    --ne-greige:   #CCBEB1;
+    --ne-brown:    #997E67;
+    --ne-espresso: #664930;
+
+    --parch:       #FDF5EC;
+    --parch-card:  #FFF8F0;
+    --parch-warm:  #F5EDE0;
+    --parch-line:  rgba(153,126,103,0.18);
+
+    --ink:         #3D2B1A;
+    --ink-dim:     #664930;
+    --ink-faded:   #8a6d56;
+    --ink-ghost:   #b89e8a;
+
+    --gold:        #A0722A;
+    --gold2:       #C4922E;
+    --gold-bg:     rgba(160,114,42,0.08);
+    --gold-bdr:    rgba(160,114,42,0.22);
+
+    --terrain:     #4a7a35;
+    --terrain2:    #5a8c42;
+    --terrain-bg:  rgba(74,122,53,0.08);
+    --terrain-bdr: rgba(74,122,53,0.2);
+
+    --crimson:     #8b3a2a;
+    --crimson2:    #a34535;
+    --crimson-bg:  rgba(139,58,42,0.08);
+    --crimson-bdr: rgba(139,58,42,0.2);
+
+    --ocean:       #2a5c7a;
+    --ocean2:      #336e90;
+    --ocean-bg:    rgba(42,92,122,0.08);
+    --ocean-bdr:   rgba(42,92,122,0.2);
+
+    --violet:      #5a3a6e;
+    --violet2:     #6e4a85;
+    --violet-bg:   rgba(90,58,110,0.08);
+    --violet-bdr:  rgba(90,58,110,0.2);
+
+    --rose:        #8b3a2a;
+    --rose-bg:     rgba(139,58,42,0.08);
+    --rose-bdr:    rgba(139,58,42,0.2);
+
+    --shadow-sm:   0 1px 4px rgba(61,43,26,0.07);
+    --shadow-md:   0 4px 20px rgba(61,43,26,0.10);
+  }
+`;
+
+/* ─────────────────────────────────────────────
+   CSS VARIABLE TOKENS — match Dashboard exactly
 ───────────────────────────────────────────── */
 const V = {
-  bg:        'var(--parch-bg)',
+  bg:        'var(--parch)',
   card:      'var(--parch-card)',
   warm:      'var(--parch-warm)',
-  deep:      'var(--parch-deep)',
   border:    'var(--parch-line)',
 
   ink:       'var(--ink)',
@@ -31,7 +89,7 @@ const V = {
   gold:      'var(--gold)',
   gold2:     'var(--gold2)',
   goldBg:    'var(--gold-bg)',
-  goldBdr:   'var(--gold-border)',
+  goldBdr:   'var(--gold-bdr)',
 
   terrain:   'var(--terrain)',
   terrain2:  'var(--terrain2)',
@@ -56,26 +114,20 @@ const V = {
   rose:      'var(--rose)',
   roseBg:    'var(--rose-bg)',
   roseBdr:   'var(--rose-bdr)',
-
-  // chart colors from globals.css
-  chartRevenue:  'var(--chart-revenue)',
-  chartProfit:   'var(--chart-profit)',
-  chartSpend:    'var(--chart-spend)',
-  chartCashback: 'var(--chart-cashback)',
-  chartGrid:     'var(--chart-grid)',
 };
 
-// chart hex values (recharts can't use CSS vars)
+// Hex values for recharts (can't use CSS vars inside SVG)
+// Match dashboard chart colors exactly
 const CH = {
-  revenue:  '#2d5a27',
-  profit:   '#b8860b',
-  spend:    '#1a5276',
-  cashback: '#5b2c6f',
-  violet:   '#8e44ad',
-  ocean:    '#2980b9',
-  crimson:  '#c0392b',
-  rose:     '#a83260',
-  amber:    '#d4a017',
+  revenue:  '#A0722A',  // --gold
+  profit:   '#4a7a35',  // --terrain
+  spend:    '#2a5c7a',  // --ocean
+  cashback: '#5a3a6e',  // --violet
+  violet:   '#6e4a85',  // --violet2
+  ocean:    '#336e90',  // --ocean2
+  crimson:  '#8b3a2a',  // --crimson
+  rose:     '#8b3a2a',  // --rose
+  amber:    '#C4922E',  // --gold2
 };
 
 const PIE_COLORS = [CH.profit, CH.violet, CH.ocean, CH.revenue, CH.crimson, CH.rose, '#7a5a3a', '#3a6a5a'];
@@ -91,7 +143,7 @@ const TOOLTIP_STYLE = {
   borderRadius: 10,
   border:       `1px solid var(--parch-line)`,
   fontSize:     11,
-  background:   'var(--parch-card)',
+  background: 'var(--parch-card)',
   color:        'var(--ink)',
   boxShadow:    '0 4px 16px rgba(28,20,10,0.10)',
 };
@@ -155,7 +207,7 @@ function SectionDivider({ title, color=V.gold }) {
     <div style={{ display:'flex', alignItems:'center', gap:10, margin:'18px 0 12px' }}>
       <div style={{ width:5, height:5, borderRadius:'50%', background:color, flexShrink:0 }} />
       <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color, whiteSpace:'nowrap' }}>{title}</span>
-      <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${color === V.gold ? 'var(--gold-border)' : color},transparent)`, opacity:0.4 }} />
+      <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${color === V.gold ? 'var(--gold-bdr)' : color},transparent)`, opacity:0.4 }} />
     </div>
   );
 }
@@ -510,7 +562,9 @@ export default function Analytics() {
   const tdMono = (color, extra={}) => ({ padding:'9px 13px', color, fontWeight:600, ...extra });
 
   return (
-    <div style={{ paddingBottom:40 }}>
+    <>
+      <style>{CSS}</style>
+      <div style={{ paddingBottom:40 }}>
 
       {/* ── HEADER ── */}
       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:16 }}>
@@ -609,7 +663,7 @@ export default function Analytics() {
                           </linearGradient>
                         ))}
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)"/>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)"/>
                       <XAxis dataKey="label" tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false}/>
                       <YAxis tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v>=1000?(v/1000).toFixed(0)+'k':v}`}/>
                       <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v=>fmt$(v)}/>
@@ -639,7 +693,7 @@ export default function Analytics() {
                           <stop offset="95%" stopColor={CH.cashback} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)"/>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)"/>
                       <XAxis dataKey="label" tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false}/>
                       <YAxis tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v>=1000?(v/1000).toFixed(0)+'k':v}`}/>
                       <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v=>fmt$(v)}/>
@@ -655,7 +709,7 @@ export default function Analytics() {
               {periodData.length===0 ? <EmptyState/> : (
                 <ResponsiveContainer width="100%" height={190}>
                   <BarChart data={periodData} margin={{top:4,right:4,left:0,bottom:0}}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)"/>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)"/>
                     <XAxis dataKey="label" tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false}/>
                     <YAxis tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v>=1000?(v/1000).toFixed(0)+'k':v}`}/>
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v=>fmt$(v)}/>
@@ -679,7 +733,7 @@ export default function Analytics() {
                 <>
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={storeData.slice(0,8).map(s=>({name:s.store,revenue:s.revenue,profit:s.profit}))} layout="vertical" margin={{left:0}}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" horizontal={false}/>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)" horizontal={false}/>
                       <XAxis type="number" tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v>=1000?(v/1000).toFixed(0)+'k':v}`}/>
                       <YAxis type="category" dataKey="name" tick={{fontSize:9,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} width={72}/>
                       <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v=>fmt$(v)}/>
@@ -701,7 +755,7 @@ export default function Analytics() {
               {storeData.length===0 ? <EmptyState/> : (
                 <ResponsiveContainer width="100%" height={190}>
                   <BarChart data={storeData.slice(0,8)} margin={{top:4,right:4,left:0,bottom:0}}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)"/>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)"/>
                     <XAxis dataKey="store" tick={{fontSize:9,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false}/>
                     <YAxis tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} tickFormatter={v=>`${v.toFixed(0)}%`}/>
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v=>`${Number(v).toFixed(2)}%`}/>
@@ -756,7 +810,7 @@ export default function Analytics() {
                 <>
                   <ResponsiveContainer width="100%" height={190}>
                     <BarChart data={paymentData.slice(0,8)} margin={{top:4,right:4,left:0,bottom:0}}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)"/>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)"/>
                       <XAxis dataKey="name" tick={{fontSize:9,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false}/>
                       <YAxis tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} tickFormatter={v=>`$${v>=1000?(v/1000).toFixed(0)+'k':v}`}/>
                       <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v=>fmt$(v)}/>
@@ -781,7 +835,7 @@ export default function Analytics() {
               <>
                 <ResponsiveContainer width="100%" height={190}>
                   <BarChart data={paymentData} margin={{top:4,right:4,left:0,bottom:0}}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)"/>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,185,168,0.4)"/>
                     <XAxis dataKey="name" tick={{fontSize:9,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false}/>
                     <YAxis tick={{fontSize:10,fill:'var(--ink-ghost)'}} axisLine={false} tickLine={false} tickFormatter={v=>`${v.toFixed(1)}%`}/>
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={v=>`${Number(v).toFixed(2)}%`}/>
@@ -903,5 +957,6 @@ export default function Analytics() {
         </div>
       )}
     </div>
+    </>
   );
 }
