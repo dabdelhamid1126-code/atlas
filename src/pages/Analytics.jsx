@@ -596,34 +596,6 @@ export default function Analytics() {
         {KPI_CARDS.map(k => <KpiCard key={k.label} {...k}/>)}
       </div>
 
-      {/* ── PROFIT BREAKDOWN ── */}
-      <div className='card' style={{ overflow:'hidden', marginBottom:14 }}>
-        <button onClick={()=>setShowBreakdown(p=>!p)}
-          style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:V.warm, borderBottom:showBreakdown?`1px solid ${V.border}`:'none', cursor:'pointer', border:'none' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-            <Info size={13} color={V.gold}/>
-            <span style={{ fontFamily:'var(--font-serif)', fontSize:11, fontWeight:700, color:'var(--ink)' }}>Profit Breakdown</span>
-          </div>
-          {showBreakdown?<ChevronUp size={13} color='var(--ink-dim)'/>:<ChevronDown size={13} color='var(--ink-dim)'/>}
-        </button>
-        {showBreakdown && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:8, padding:'10px 14px' }}>
-            {[
-              { label:'Revenue',    value:fmt$(kpis.revenue),       prefix:'',  color:V.terrain,  bg:V.terrBg, bdr:V.terrBdr },
-              { label:'Card Spend', value:fmt$(kpis.cost),          prefix:'−', color:V.crimson2, bg:V.crimBg, bdr:V.crimBdr },
-              { label:'Card CB',    value:fmt$(kpis.cardCashback),  prefix:'+', color:V.violet2,  bg:V.violBg, bdr:V.violBdr },
-              { label:'YA CB',      value:fmt$(kpis.yaCashback),    prefix:'+', color:V.gold,     bg:V.goldBg, bdr:V.goldBdr },
-              { label:'Net Profit',
-                                    value:fmt$(kpis.profit),        prefix:'',  color:kpis.profit>=0?V.gold:V.crimson2, bg:kpis.profit>=0?V.goldBg:V.crimBg, bdr:kpis.profit>=0?V.goldBdr:V.crimBdr },
-            ].map(b=>(
-              <div key={b.label} style={{ borderRadius:10, padding:'10px 12px', background:b.bg, border:`1px solid ${b.bdr}` }}>
-                <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:b.color, marginBottom:4 }}>{b.label}</p>
-                <p style={{ fontFamily:'var(--font-mono)', fontSize:20, fontWeight:600, color:b.color, lineHeight:1 }}>{b.prefix}{b.value}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* ── TAB BAR ── */}
       <div style={{ marginBottom:14 }}>
