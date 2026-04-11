@@ -123,6 +123,9 @@ function ProductSearch({ userEmail, onSelect }) {
         // ── UPC lookup via UPCitemdb free tier ──
         const res  = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${q}`);
         const data = await res.json();
+        // Proxy image through weserv.nl to bypass CORS on UPCitemdb images
+        const proxyImg = (url) => url ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=200&h=200&fit=contain&bg=white` : null;
+
         if (data.items?.length) {
           setResults(data.items.map(item => ({
             source:      'upc',
@@ -130,8 +133,8 @@ function ProductSearch({ userEmail, onSelect }) {
             name:        item.title,
             brand:       item.brand,
             description: item.description,
-            image:       item.images?.[0] || null,
-            cost:        item.lowest_recorded_price || '',
+            image:       proxyImg(item.images?.[0] || item.images_url?.[0] || null),
+            cost:        item.lowest_recorded_price || item.offers?.[0]?.price || '',
             upc:         item.upc,
           })));
         } else {
@@ -140,6 +143,16 @@ function ProductSearch({ userEmail, onSelect }) {
         }
       } else {
         // ── Name search — your Products then Inventory ──
+        // Helper — try every possible image field name
+        const getImg = (obj) => {
+          const raw = obj.image_url || obj.imageUrl || obj.image ||
+            obj.photo_url || obj.photoUrl || obj.photo ||
+            obj.thumbnail || obj.thumbnail_url ||
+            obj.product_image || obj.product_image_url ||
+            obj.img || obj.img_url || null;
+          return raw ? `https://images.weserv.nl/?url=${encodeURIComponent(raw)}&w=200&h=200&fit=contain&bg=white` : null;
+        };
+
         const [products, inventory] = await Promise.all([
           base44.entities.Product
             .filter({ created_by: userEmail })
@@ -154,20 +167,20 @@ function ProductSearch({ userEmail, onSelect }) {
           ...products.map(p => ({
             source: 'product',
             id:     p.id,
-            name:   p.name || p.product_name || '—',
-            brand:  p.brand || '',
-            sku:    p.sku || p.upc || '',
-            image:  p.image_url || null,
-            cost:   p.cost || p.unit_cost || p.purchase_price || '',
+            name:   p.name || p.product_name || p.title || '—',
+            brand:  p.brand || p.manufacturer || '',
+            sku:    p.sku || p.upc || p.barcode || p.asin || '',
+            image:  getImg(p),
+            cost:   p.cost || p.unit_cost || p.purchase_price || p.price || '',
           })),
           ...inventory.map(i => ({
             source: 'inventory',
             id:     i.id,
-            name:   i.product_name || i.name || '—',
-            brand:  '',
-            sku:    i.sku || i.upc || '',
-            image:  i.image_url || null,
-            cost:   i.unit_cost || i.cost || i.purchase_price || '',
+            name:   i.product_name || i.name || i.title || '—',
+            brand:  i.brand || i.manufacturer || '',
+            sku:    i.sku || i.upc || i.barcode || i.asin || '',
+            image:  getImg(i),
+            cost:   i.unit_cost || i.cost || i.purchase_price || i.price || '',
           })),
         ].filter(r =>
           r.name.toLowerCase().includes(ql) ||
@@ -283,10 +296,10 @@ function ProductSearch({ userEmail, onSelect }) {
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               {/* Image or icon */}
-              <div style={{ width: 36, height: 36, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {r.image
-                  ? <img src={r.image} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <Package size={16} color="var(--ink-ghost)" />
+                  ? <img src={r.image} alt={r.name} referrerPolicy="no-referrer" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.target.style.display='none'; }} />
+                  : <Package size={18} color="var(--ink-ghost)" />
                 }
               </div>
               {/* Info */}
@@ -371,27 +384,76 @@ function ProfitCalculator({ creditCards, userEmail }) {
       {/* Product search */}
       <ProductSearch userEmail={userEmail} onSelect={handleProductSelect} />
 
-      {/* Selected product pill */}
+      {/* Selected product card */}
       {selectedProduct && (
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
-          borderRadius: 8, background: 'var(--violet-bg)', border: '1px solid var(--violet-bdr)',
-          marginBottom: 14,
+          display: 'flex', gap: 14, padding: 12,
+          borderRadius: 12, background: 'var(--parch-card)',
+          border: '1px solid var(--violet-bdr)',
+          marginBottom: 14, position: 'relative',
         }}>
-          {selectedProduct.image
-            ? <img src={selectedProduct.image} alt={selectedProduct.name} style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
-            : <Package size={16} color="var(--violet)" style={{ flexShrink: 0 }} />
-          }
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--violet)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedProduct.name}</p>
-            <p style={{ fontSize: 10, color: 'var(--ink-faded)' }}>
-              {selectedProduct.brand && `${selectedProduct.brand} · `}
-              {selectedProduct.source === 'upc' ? `UPC: ${selectedProduct.upc}` : selectedProduct.sku || 'From inventory'}
-              {selectedProduct.cost ? ` · Cost: ${fmt$(parseFloat(selectedProduct.cost))}` : ' · No cost on file — enter manually'}
-            </p>
+          {/* Image */}
+          <div style={{
+            width: 90, height: 90, flexShrink: 0, borderRadius: 10,
+            overflow: 'hidden', background: 'var(--parch-warm)',
+            border: '1px solid var(--parch-line)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {selectedProduct.image ? (
+              <img
+                src={selectedProduct.image}
+                alt={selectedProduct.name}
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+              />
+            ) : null}
+            <div style={{ display: selectedProduct.image ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+              <Package size={28} color="var(--ink-ghost)" />
+            </div>
           </div>
-          <button onClick={() => setSelectedProduct(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', padding: 2 }}>
-            <X size={13} />
+
+          {/* Info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.3, marginBottom: 4 }}>
+              {selectedProduct.name}
+            </p>
+            {selectedProduct.brand && (
+              <p style={{ fontSize: 11, color: 'var(--ink-faded)', marginBottom: 3 }}>{selectedProduct.brand}</p>
+            )}
+            <p style={{ fontSize: 10, color: 'var(--ink-ghost)', marginBottom: 8 }}>
+              {selectedProduct.source === 'upc'
+                ? `UPC: ${selectedProduct.upc}`
+                : selectedProduct.sku
+                  ? `SKU: ${selectedProduct.sku}`
+                  : selectedProduct.source === 'inventory' ? 'From Inventory' : 'From Products'
+              }
+            </p>
+            {/* Cost badge */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99,
+                background: 'var(--violet-bg)', color: 'var(--violet)',
+                border: '1px solid var(--violet-bdr)', letterSpacing: '0.08em', textTransform: 'uppercase',
+              }}>
+                {selectedProduct.source === 'upc' ? 'UPC Lookup' : selectedProduct.source === 'inventory' ? 'Inventory' : 'Product'}
+              </span>
+              {selectedProduct.cost
+                ? <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ocean)', fontFamily: 'var(--font-mono)' }}>
+                    Cost: {fmt$(parseFloat(selectedProduct.cost))}
+                  </span>
+                : <span style={{ fontSize: 11, color: 'var(--ink-ghost)' }}>No cost on file — enter manually below</span>
+              }
+            </div>
+          </div>
+
+          {/* Clear */}
+          <button
+            onClick={() => setSelectedProduct(null)}
+            style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', padding: 2 }}
+          >
+            <X size={14} />
           </button>
         </div>
       )}
