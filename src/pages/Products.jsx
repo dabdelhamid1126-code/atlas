@@ -322,17 +322,17 @@ export default function Products() {
   };
   const closeDialog = () => { setDialogOpen(false); setEditingProduct(null); setDupWarning(null); };
 
-  /* Check for duplicate whenever name or UPC changes */
+  /* Check for duplicate whenever name or UPC changes — only against visible products */
   const handleFormChange = useCallback((field, value) => {
     const updated = { ...formData, [field]:value };
     setFormData(updated);
-    const dup = findDuplicate(updated, allProducts, editingProduct?.id);
+    const dup = findDuplicate(updated, products, editingProduct?.id);
     setDupWarning(dup);
-  }, [formData, allProducts, editingProduct]);
+  }, [formData, products, editingProduct]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const dup = findDuplicate(formData, allProducts, editingProduct?.id);
+    const dup = findDuplicate(formData, products, editingProduct?.id);
     if (dup) { setDupWarning(dup); return; }
     if (editingProduct) updateMutation.mutate({ id:editingProduct.id, data:{ ...formData } });
     else createMutation.mutate({ ...formData });
@@ -358,7 +358,7 @@ export default function Products() {
     const autoCategory = guessCategory(result.title);
     setFormData(prev => ({ ...prev, name:result.title, image:result.image||prev.image, category:prev.category||autoCategory }));
     setPickerResults(null);
-    setDupWarning(findDuplicate({ ...formData, name:result.title }, allProducts, editingProduct?.id));
+    setDupWarning(findDuplicate({ ...formData, name:result.title }, products, editingProduct?.id));
   };
 
   /*    BULK IMPORT    */
