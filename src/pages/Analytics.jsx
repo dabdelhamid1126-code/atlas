@@ -202,43 +202,39 @@ function calcRevenue(order) {
 /* ─────────────────────────────────────────────
    SHARED COMPONENTS
 ───────────────────────────────────────────── */
-function SectionDivider({ title, color=V.gold }) {
+function SectionDivider({ title, dotColor="var(--gold)", lineColor="rgba(160,114,42,0.25)" }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:10, margin:'18px 0 12px' }}>
-      <div style={{ width:5, height:5, borderRadius:'50%', background:color, flexShrink:0 }} />
-      <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color, whiteSpace:'nowrap' }}>{title}</span>
-      <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${color === V.gold ? 'var(--gold-bdr)' : color},transparent)`, opacity:0.4 }} />
+    <div className="section-div">
+      <div className="section-div-dot" style={{ background:dotColor }} />
+      <span className="section-div-label" style={{ color:dotColor }}>{title}</span>
+      <div className="section-div-line" style={{ background:`linear-gradient(90deg,${lineColor},rgba(160,114,42,0.06),transparent)` }} />
     </div>
   );
 }
 
 function KpiCard({ label, value, sub, icon:Icon, accentColor, bgColor, bdrColor }) {
   return (
-    <div style={{ ...CARD_STYLE, padding:14, borderTop:`3px solid ${accentColor}` }}>
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
-        <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:V.inkFaded, marginBottom:6 }}>{label}</p>
-          <p style={{ fontSize:18, fontWeight:800, color:accentColor, lineHeight:1, letterSpacing:'-0.3px' }}>{value}</p>
-          {sub && <p style={{ fontSize:10, color:V.inkGhost, marginTop:5 }}>{sub}</p>}
+    <div className="kpi-card fade-up" style={{ borderTopColor:accentColor }}>
+      <div className="kpi-label">{label}</div>
+      <div className="kpi-value" style={{ color:accentColor }}>{value}</div>
+      {sub && <div className="kpi-sub">{sub}</div>}
+      {Icon && (
+        <div className="kpi-icon" style={{ background:bgColor, borderColor:bdrColor }}>
+          <Icon size={13} color={accentColor} />
         </div>
-        {Icon && (
-          <div style={{ width:30, height:30, borderRadius:8, background:bgColor, border:`1px solid ${bdrColor}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginLeft:8 }}>
-            <Icon size={13} color={accentColor} />
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
 function ChartCard({ title, badge, subtitle, children }) {
   return (
-    <div style={{ ...CARD_STYLE, padding:'14px 16px' }}>
+    <div className="card" style={{ padding:'12px 14px' }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
-        <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:V.inkFaded }}>{title}</p>
-        {badge && <span style={{ fontSize:9, background:V.goldBg, border:`1px solid ${V.goldBdr}`, color:V.gold, padding:'2px 8px', borderRadius:99, fontWeight:700 }}>{badge}</span>}
+        <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)' }}>{title}</p>
+        {badge && <span style={{ fontSize:8, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', color:'var(--gold)', padding:'2px 8px', borderRadius:99, fontWeight:700 }}>{badge}</span>}
       </div>
-      {subtitle && <p style={{ fontSize:10, color:V.inkGhost, marginBottom:12 }}>{subtitle}</p>}
+      {subtitle && <p style={{ fontSize:10, color:'var(--ink-ghost)', marginBottom:12 }}>{subtitle}</p>}
       {!subtitle && <div style={{ height:8 }} />}
       {children}
     </div>
@@ -251,7 +247,7 @@ function ChartLegend({ items }) {
       {items.map(item => (
         <div key={item.label} style={{ display:'flex', alignItems:'center', gap:5 }}>
           <div style={{ width:18, height:3, borderRadius:99, background:item.color }} />
-          <span style={{ fontSize:10, fontWeight:500, color:V.inkFaded }}>{item.label}</span>
+          <span style={{ fontSize:10, fontWeight:600, color:'var(--ink-faded)' }}>{item.label}</span>
         </div>
       ))}
     </div>
@@ -275,9 +271,9 @@ function DonutChart({ data, colors, fmtFn }) {
           <div key={d.name} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
             <div style={{ display:'flex', alignItems:'center', gap:5, minWidth:0 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background:colors[i%colors.length], flexShrink:0 }} />
-              <span style={{ fontSize:10, color:V.inkFaded, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{d.name}</span>
+              <span style={{ fontSize:10, color:'var(--ink-faded)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{d.name}</span>
             </div>
-            <span style={{ fontSize:10, fontWeight:600, color:V.ink, flexShrink:0 }}>{fmtFn?fmtFn(d.value):d.value}</span>
+            <span style={{ fontSize:10, fontWeight:600, color:'var(--ink)', flexShrink:0 }}>{fmtFn?fmtFn(d.value):d.value}</span>
           </div>
         ))}
       </div>
@@ -291,8 +287,8 @@ function EmptyState({ label='No data yet' }) {
       <div style={{ width:36, height:36, borderRadius:10, background:V.goldBg, border:`1px solid ${V.goldBdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
         <BarChart2 size={16} color={V.gold} />
       </div>
-      <p style={{ fontSize:12, color:V.inkGhost }}>{label}</p>
-      <p style={{ fontSize:10, color:V.inkGhost, opacity:0.7 }}>Add transactions to unlock insights</p>
+      <p style={{ fontSize:12, color:'var(--ink-ghost)' }}>{label}</p>
+      <p style={{ fontSize:10, color:'var(--ink-ghost)', opacity:0.7 }}>Add transactions to unlock insights</p>
     </div>
   );
 }
@@ -305,7 +301,7 @@ function PillGroup({ options, active, onChange }) {
         return (
           <button key={o.id} onClick={()=>onChange(o.id)}
             style={{ padding:'5px 12px', borderRadius:6, fontSize:11, fontWeight:600, cursor:'pointer', border:'none',
-              background:on?V.ink:'transparent', color:on?V.gold2:V.inkFaded, transition:'background 0.15s,color 0.15s' }}>
+              background:on?'var(--ink)':'transparent', color:on?'var(--ne-cream)':'var(--ink-faded)', transition:'background 0.15s,color 0.15s' }}>
             {o.label}
           </button>
         );
@@ -322,7 +318,7 @@ function TabBar({ tabs, active, onChange }) {
         return (
           <button key={t.id} onClick={()=>onChange(t.id)}
             style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 13px', borderRadius:8, fontSize:11, fontWeight:600, cursor:'pointer', border:'none',
-              background:on?V.ink:'transparent', color:on?V.gold2:V.inkFaded, transition:'background 0.15s,color 0.15s' }}>
+              background:on?'var(--ink)':'transparent', color:on?'var(--ne-cream)':'var(--ink-faded)', transition:'background 0.15s,color 0.15s' }}>
             {Icon && <Icon size={13}/>} {t.label}
           </button>
         );
@@ -333,9 +329,9 @@ function TabBar({ tabs, active, onChange }) {
 
 function TableWrap({ title, badge, badgeColor, badgeBg, badgeBdr, children }) {
   return (
-    <div style={{ ...CARD_STYLE, overflow:'hidden' }}>
-      <div style={{ padding:'10px 14px', borderBottom:`1px solid ${V.border}`, background:V.warm, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:V.inkFaded }}>{title}</p>
+    <div className="card" style={{ overflow:'hidden' }}>
+      <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--parch-line)', background:'var(--parch-warm)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)' }}>{title}</p>
         {badge && <span style={{ fontSize:10, background:badgeBg, color:badgeColor, border:`1px solid ${badgeBdr}`, padding:'2px 10px', borderRadius:99, fontWeight:700 }}>{badge}</span>}
       </div>
       <div style={{ overflowX:'auto' }}>{children}</div>
@@ -344,11 +340,7 @@ function TableWrap({ title, badge, badgeColor, badgeBg, badgeBdr, children }) {
 }
 
 function Th({ children }) {
-  return (
-    <th style={{ padding:'9px 13px', textAlign:'left', fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:V.inkFaded, whiteSpace:'nowrap', background:V.warm }}>
-      {children}
-    </th>
-  );
+  return <th>{children}</th>;
 }
 
 function TotalsRow({ children }) {
@@ -559,7 +551,7 @@ export default function Analytics() {
     </div>
   );
 
-  const tdMono = (color, extra={}) => ({ padding:'9px 13px', color, fontWeight:600, ...extra });
+  const tdMono = (color, extra={}) => ({ padding:'10px 14px', color, fontWeight:600, fontFamily:'var(--font-mono)', fontSize:12, ...extra });
 
   return (
     <>
@@ -569,32 +561,32 @@ export default function Analytics() {
       {/* ── HEADER ── */}
       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:16 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:900, color:V.ink, letterSpacing:'-0.3px', lineHeight:1.1, margin:0 }}>Analytics & Insights</h1>
-          <p style={{ fontSize:11, color:V.inkFaded, marginTop:4 }}>
+          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', lineHeight:1.1 }}>Analytics & Insights</h1>
+          <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:4 }}>
             {mode==='all'?'Combined overview':mode==='churning'?'Churning performance':'Marketplace performance'}
           </p>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
           <PillGroup options={MODE_OPTIONS} active={mode} onChange={setMode} />
           <button onClick={handleExport}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:600, background:V.card, border:`1px solid ${V.border}`, color:V.inkFaded, cursor:'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:600, background:'var(--parch-card)', border:'1px solid var(--parch-line)', color:'var(--ink-faded)', cursor:'pointer' }}>
             <Download size={13}/> Export CSV
           </button>
           <button onClick={()=>refetch()} disabled={isLoading}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:700, background:V.ink, border:'none', color:V.gold2, cursor:'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:700, background:'var(--ink)', border:'none', color:'var(--ne-cream)', cursor:'pointer' }}>
             <RefreshCw size={13} className={isLoading?'animate-spin':''}/> Refresh
           </button>
         </div>
       </div>
 
       {/* ── FILTERS ── */}
-      <div style={{ ...CARD_STYLE, padding:'12px 16px', display:'flex', flexWrap:'wrap', alignItems:'flex-end', gap:16, marginBottom:14 }}>
+      <div className='card' style={{ padding:'12px 16px', display:'flex', flexWrap:'wrap', alignItems:'flex-end', gap:16, marginBottom:14 }}>
         <div>
-          <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:V.inkFaded, marginBottom:7 }}>Period</p>
+          <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:8 }}>Period</p>
           <PillGroup options={PERIOD_OPTIONS} active={period} onChange={setPeriod} />
         </div>
         <div>
-          <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:V.inkFaded, marginBottom:7 }}>Date Range</p>
+          <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:8 }}>Date Range</p>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={INP_STYLE}/>
             <span style={{ color:V.inkGhost, fontSize:12 }}>→</span>
@@ -610,17 +602,17 @@ export default function Analytics() {
       </div>
 
       {/* ── PROFIT BREAKDOWN ── */}
-      <div style={{ ...CARD_STYLE, overflow:'hidden', marginBottom:14 }}>
+      <div className='card' style={{ overflow:'hidden', marginBottom:14 }}>
         <button onClick={()=>setShowBreakdown(p=>!p)}
           style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:V.warm, borderBottom:showBreakdown?`1px solid ${V.border}`:'none', cursor:'pointer', border:'none' }}>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
             <Info size={13} color={V.gold}/>
-            <span style={{ fontSize:11, fontWeight:700, color:V.ink }}>Profit Breakdown</span>
+            <span style={{ fontFamily:'var(--font-serif)', fontSize:11, fontWeight:700, color:'var(--ink)' }}>Profit Breakdown</span>
             <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:V.goldBg, color:V.gold, border:`1px solid ${V.goldBdr}` }}>
               {profitMode==='cashback_wallet'?'Cashback Wallet Mode':'Accounting Mode'}
             </span>
           </div>
-          {showBreakdown?<ChevronUp size={13} color={V.inkFaded}/>:<ChevronDown size={13} color={V.inkFaded}/>}
+          {showBreakdown?<ChevronUp size={13} color='var(--ink-dim)'/>:<ChevronDown size={13} color='var(--ink-dim)'/>}
         </button>
         {showBreakdown && (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:8, padding:'10px 14px' }}>
@@ -633,8 +625,8 @@ export default function Analytics() {
                                     value:fmt$(kpis.profit),        prefix:'',  color:kpis.profit>=0?V.gold:V.crimson2, bg:kpis.profit>=0?V.goldBg:V.crimBg, bdr:kpis.profit>=0?V.goldBdr:V.crimBdr },
             ].map(b=>(
               <div key={b.label} style={{ borderRadius:10, padding:'10px 12px', background:b.bg, border:`1px solid ${b.bdr}` }}>
-                <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:b.color, marginBottom:4 }}>{b.label}</p>
-                <p style={{ fontSize:16, fontWeight:800, color:b.color, lineHeight:1 }}>{b.prefix}{b.value}</p>
+                <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:b.color, marginBottom:4 }}>{b.label}</p>
+                <p style={{ fontFamily:'var(--font-mono)', fontSize:20, fontWeight:600, color:b.color, lineHeight:1 }}>{b.prefix}{b.value}</p>
               </div>
             ))}
           </div>
@@ -768,7 +760,7 @@ export default function Analytics() {
             </ChartCard>
 
             <div style={{ ...CARD_STYLE, padding:'14px 16px' }}>
-              <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:V.inkFaded, marginBottom:14 }}>Store Summary</p>
+              <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:14 }}>Store Summary</p>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 {[
                   { label:'Total Revenue', value:fmt$(storeData.reduce((s,x)=>s+x.revenue,0)), color:V.terrain2, bg:V.terrBg, bdr:V.terrBdr },
@@ -799,7 +791,7 @@ export default function Analytics() {
               <div key={c.label} style={{ ...CARD_STYLE, padding:14, borderTop:`3px solid ${c.color}` }}>
                 <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:c.color, marginBottom:6 }}>{c.label}</p>
                 <p style={{ fontSize:22, fontWeight:800, color:c.color, lineHeight:1 }}>{c.value}</p>
-                <p style={{ fontSize:10, color:V.inkGhost, marginTop:5 }}>{c.sub}</p>
+                <p style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:5 }}>{c.sub}</p>
               </div>
             ))}
           </div>
@@ -851,15 +843,15 @@ export default function Analytics() {
           </ChartCard>
 
           <TableWrap title="Payment Method Performance" badge={`${paymentData.length} cards`} badgeColor={V.violet2} badgeBg={V.violBg} badgeBdr={V.violBdr}>
-            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+            <table className='dash-table'>
               <thead><tr>{['Card','Txns','Spent','Cashback','Stated %','Effective %','Variance'].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
               <tbody>
                 {paymentData.map(p=>(
                   <tr key={p.id} style={{borderTop:`1px solid var(--parch-line)`}}
                     onMouseEnter={e=>e.currentTarget.style.background='var(--gold-bg)'}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                    <td style={{padding:'9px 13px',fontWeight:700,color:V.ink}}>{p.name}</td>
-                    <td style={{padding:'9px 13px',color:V.inkFaded}}>{p.txns}</td>
+                    <td style={{padding:'9px 13px',fontWeight:700,color:'var(--ink)'}}>{p.name}</td>
+                    <td style={{padding:'9px 13px',color:'var(--ink-faded)'}}>{p.txns}</td>
                     <td style={tdMono(V.ocean2)}>{fmt$(p.spent)}</td>
                     <td style={tdMono(V.violet2)}>{fmt$(p.cashback)}</td>
                     <td style={{padding:'9px 13px',color:V.inkFaded}}>{fmtPct(p.statedRate)}</td>
@@ -871,11 +863,11 @@ export default function Analytics() {
               <tfoot>
                 <TotalsRow>
                   <td style={{padding:'9px 13px',fontWeight:800,color:V.ink}}>TOTAL</td>
-                  <td style={{padding:'9px 13px',fontWeight:800,color:V.inkDim}}>{paymentData.reduce((s,p)=>s+p.txns,0)}</td>
+                  <td style={{padding:'9px 13px',fontWeight:800,color:'var(--ink-dim)'}}>{paymentData.reduce((s,p)=>s+p.txns,0)}</td>
                   <td style={tdMono(V.ocean2,{fontWeight:800})}>{fmt$(paymentData.reduce((s,p)=>s+p.spent,0))}</td>
                   <td style={tdMono(V.violet2,{fontWeight:800})}>{fmt$(paymentData.reduce((s,p)=>s+p.cashback,0))}</td>
                   <td colSpan={3} style={{padding:'9px 13px',color:V.inkGhost,fontSize:10}}>
-                    Best card: <span style={{color:V.gold,fontWeight:700}}>{[...paymentData].sort((a,b)=>b.effectiveRate-a.effectiveRate)[0]?.name||'—'}</span>
+                    Best card: <span style={{color:'var(--gold)',fontWeight:700}}>{[...paymentData].sort((a,b)=>b.effectiveRate-a.effectiveRate)[0]?.name||'—'}</span>
                   </td>
                 </TotalsRow>
               </tfoot>
@@ -889,20 +881,20 @@ export default function Analytics() {
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
 
           <TableWrap title="Store Breakdown" badge={`${storeData.length} stores`} badgeColor={V.terrain2} badgeBg={V.terrBg} badgeBdr={V.terrBdr}>
-            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+            <table className='dash-table'>
               <thead><tr>{['Store','Cost','Revenue','Profit','Cashback','ROI','Txns'].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
               <tbody>
                 {storeData.map(s=>(
                   <tr key={s.store} style={{borderTop:`1px solid var(--parch-line)`}}
                     onMouseEnter={e=>e.currentTarget.style.background='var(--gold-bg)'}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                    <td style={{padding:'9px 13px',fontWeight:700,color:V.ink}}>{s.store}</td>
+                    <td style={{padding:'9px 13px',fontWeight:700,color:'var(--ink)'}}>{s.store}</td>
                     <td style={tdMono(V.ocean2)}>{fmt$(s.cost)}</td>
                     <td style={tdMono(V.terrain2)}>{fmt$(s.revenue)}</td>
                     <td style={tdMono(s.profit>=0?V.terrain2:V.crimson2)}>{fmt$(s.profit)}</td>
                     <td style={tdMono(V.violet2)}>{fmt$(s.cashback)}</td>
                     <td style={tdMono(s.roi>=0?V.terrain2:V.crimson2)}>{fmtPct(s.roi)}</td>
-                    <td style={{padding:'9px 13px',color:V.inkFaded}}>{s.txns}</td>
+                    <td style={{padding:'9px 13px',color:'var(--ink-faded)'}}>{s.txns}</td>
                   </tr>
                 ))}
               </tbody>
@@ -914,14 +906,14 @@ export default function Analytics() {
                   <td style={tdMono(storeData.reduce((s,x)=>s+x.profit,0)>=0?V.terrain2:V.crimson2,{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.profit,0))}</td>
                   <td style={tdMono(V.violet2,{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.cashback,0))}</td>
                   <td style={tdMono(kpis.roi>=0?V.terrain2:V.crimson2,{fontWeight:800})}>{fmtPct(kpis.roi)}</td>
-                  <td style={{padding:'9px 13px',fontWeight:800,color:V.inkDim}}>{storeData.reduce((s,x)=>s+x.txns,0)}</td>
+                  <td style={{padding:'9px 13px',fontWeight:800,color:'var(--ink-dim)'}}>{storeData.reduce((s,x)=>s+x.txns,0)}</td>
                 </TotalsRow>
               </tfoot>
             </table>
           </TableWrap>
 
           <TableWrap title="Period-by-Period Data">
-            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+            <table className='dash-table'>
               <thead><tr>{['Period','Cost','Revenue','Cashback','Net Profit','Margin'].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
               <tbody>
                 {periodData.map(p=>(
