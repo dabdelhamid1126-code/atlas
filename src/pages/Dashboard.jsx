@@ -475,12 +475,10 @@ export default function Dashboard() {
   const [invoices, setInvoices]           = useState([]);
   const [damagedItems, setDamagedItems]   = useState([]);
   const [shipments, setShipments]         = useState([]);
-  const [userEmail, setUserEmail]         = useState(null);
 
   const loadData = useCallback(async () => {
     const u = await base44.auth.me().catch(() => null);
     if (!u?.email) { setLoading(false); return; }
-    setUserEmail(u.email);
     const byUser = { created_by: u.email };
     const [orders, rewards, cards, inv, gc, invs, dmg, ships] = await Promise.all([
       base44.entities.PurchaseOrder.filter(byUser),
