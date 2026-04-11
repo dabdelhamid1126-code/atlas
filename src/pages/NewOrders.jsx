@@ -13,11 +13,11 @@ import {
   Minus, Check, ChevronRight,
 } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
-import GiftCardPicker from '@/components/shared/GiftCardPicker';
+import { ChevronDown as ChevronDownIcon } from 'lucide-react';
 
-/* ─────────────────────────────────────────────
-   CONSTANTS
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  CONSTANTS                                                           */
+/* ------------------------------------------------------------------ */
 const RETAILERS = ['Amazon','Best Buy','Walmart','Target','Costco',"Sam's Club",'eBay','Woot','Apple','Staples','Other'];
 const QUICK_RETAILERS = ['Best Buy','Amazon','Walmart',"Sam's Club",'Costco','Target'];
 const CHURNING_STATUSES  = [{ value:'pending',label:'Pending' },{ value:'ordered',label:'Ordered' },{ value:'shipped',label:'Shipped' },{ value:'received',label:'Received' }];
@@ -26,9 +26,9 @@ const MARKETPLACE_STATUSES = [{ value:'pending',label:'Pending' },{ value:'order
 const fmt$ = (v) => new Intl.NumberFormat('en-US',{ style:'currency', currency:'USD', maximumFractionDigits:2 }).format(parseFloat(v)||0);
 const pct  = (v) => `${Number(v||0).toFixed(1)}%`;
 
-/* ─────────────────────────────────────────────
-   DOMAIN HELPERS
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  DOMAIN HELPERS                                                      */
+/* ------------------------------------------------------------------ */
 const getStoreDomain = (n) => {
   const s = String(n||'').toLowerCase().replace(/[\s\-_.']/g,'').replace(/[^a-z0-9]/g,'');
   if (s.includes('bestbuy'))  return 'bestbuy.com';
@@ -63,14 +63,14 @@ const BRANDFETCH = '1idzVIG0BYPKsFIDJDI';
 const brandfetch = (domain) => domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH}` : null;
 const proxyImg   = (url)    => url    ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=120&h=120&fit=contain&bg=white` : null;
 
-/* ─────────────────────────────────────────────
-   SHARED STYLES
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  SHARED STYLES                                                       */
+/* ------------------------------------------------------------------ */
 const INP = { background:'var(--parch-warm)', color:'var(--ink)', borderColor:'var(--parch-line)' };
 
-/* ─────────────────────────────────────────────
-   MICRO COMPONENTS
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  MICRO COMPONENTS                                                    */
+/* ------------------------------------------------------------------ */
 function LBL({ children }) {
   return (
     <label style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-faded)', display:'block', marginBottom:4 }}>
@@ -125,9 +125,9 @@ function ImagePreviewModal({ src, alt, onClose }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   DEFAULT FACTORIES
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  DEFAULT FACTORIES                                                   */
+/* ------------------------------------------------------------------ */
 const defaultItem       = () => ({ id:crypto.randomUUID(), product_id:'', product_name:'', upc:'', quantity_ordered:1, unit_cost:'', product_image_url:'' });
 const defaultSaleEvent  = () => ({ id:crypto.randomUUID(), buyer:'', sale_date:'', payout_date:'', items:[] });
 const defaultForm       = () => ({
@@ -141,9 +141,9 @@ const defaultForm       = () => ({
   items:[defaultItem()], sale_events:[],
 });
 
-/* ─────────────────────────────────────────────
-   PROFIT BAR
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  PROFIT BAR (inline at bottom, always visible)                      */
+/* ------------------------------------------------------------------ */
 function ProfitBar({ netProfit, totalCost, finalCost, totalCB, cardCB, yaCB, totalSalePrice, validItemCount, hasSales, isSplit }) {
   const isPos = netProfit >= 0;
   const roi   = totalCost > 0 ? (netProfit/totalCost)*100 : 0;
@@ -155,13 +155,15 @@ function ProfitBar({ netProfit, totalCost, finalCost, totalCB, cardCB, yaCB, tot
       </p>
       <p style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:700, color:profColor, lineHeight:1 }}>{fmt$(netProfit)}</p>
       <p style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:2 }}>
-        {pct(roi)} ROI · {validItemCount} item{validItemCount!==1?'s':''}
+        {pct(roi)} ROI &middot; {validItemCount} item{validItemCount!==1?'s':''}
       </p>
+      {/* breakdown rows */}
       <div style={{ marginTop:8, paddingTop:8, borderTop:'1px solid var(--parch-line)', display:'flex', flexDirection:'column', gap:4 }}>
         <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
           <span style={{ color:'var(--ink-dim)' }}>Total cost</span>
           <span style={{ fontFamily:'var(--font-mono)', fontWeight:700, color:'var(--gold)' }}>{fmt$(finalCost)}</span>
         </div>
+        {/* cashback breakdown */}
         {cardCB > 0 && (
           <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
             <span style={{ color:'var(--ink-dim)' }}>Card cashback</span>
@@ -189,25 +191,27 @@ function ProfitBar({ netProfit, totalCost, finalCost, totalCB, cardCB, yaCB, tot
   );
 }
 
-/* ─────────────────────────────────────────────
-   UPC LOOKUP BAR
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  UPC LOOKUP BAR                                                      */
+/* ------------------------------------------------------------------ */
 function UPCLookupBar({ products, onApply }) {
-  const [upc,     setUpc]     = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result,  setResult]  = useState(null);
-  const [error,   setError]   = useState('');
+  const [upc,        setUpc]        = useState('');
+  const [loading,    setLoading]    = useState(false);
+  const [result,     setResult]     = useState(null);
+  const [error,      setError]      = useState('');
 
   const lookup = useCallback(async () => {
     const q = upc.trim().replace(/\D/g,'');
     if (!q || q.length < 6) { toast.error('Enter a valid UPC'); return; }
     setLoading(true); setResult(null); setError('');
     try {
+      // Check internal catalog first
       const inCatalog = products.find(p => p.upc === q || p.upc === upc.trim());
       if (inCatalog) {
         setResult({ title:inCatalog.name, image:proxyImg(inCatalog.image), price:'', upc:q, source:'catalog', product_id:inCatalog.id });
         setLoading(false); return;
       }
+      // Fall back to UPCitemdb
       const res  = await base44.functions.invoke('lookupUPCProxy', { upc: q });
       const data = res.data;
       const item = data.items?.[0];
@@ -221,7 +225,7 @@ function UPCLookupBar({ products, onApply }) {
         product_id: null,
       });
     } catch {
-      setError('Lookup failed - enter manually.');
+      setError('Lookup failed -- enter manually.');
     } finally {
       setLoading(false);
     }
@@ -233,6 +237,7 @@ function UPCLookupBar({ products, onApply }) {
     <div style={{ marginBottom:12 }}>
       <LBL>UPC Scan / Lookup</LBL>
       <div style={{ display:'flex', gap:7, alignItems:'center', marginBottom:result?8:0 }}>
+        {/* barcode icon button */}
         <button type="button" onClick={lookup} title="Lookup UPC"
           style={{ width:38, height:38, borderRadius:9, background:'var(--ink)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
           {loading
@@ -253,8 +258,10 @@ function UPCLookupBar({ products, onApply }) {
         </button>
       </div>
 
+      {/* error */}
       {error && <p style={{ fontSize:11, color:'var(--crimson)', marginTop:4 }}>{error}</p>}
 
+      {/* result card */}
       {result && (
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', borderRadius:10 }}>
           <div style={{ width:46, height:46, borderRadius:9, background:'var(--parch-card)', border:'1px solid var(--parch-line)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -284,94 +291,335 @@ function UPCLookupBar({ products, onApply }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   GIFT CARD SECTION
-───────────────────────────────────────────── */
-function GiftCardSection({ giftCards, selectedIds, onChange, retailer }) {
-  const applied = giftCards.filter(gc => selectedIds.includes(gc.id));
-  const totalApplied = applied.reduce((s,gc)=>s+(gc.value||0),0);
+/* ------------------------------------------------------------------ */
+/*  SMART GIFT CARD SELECTOR                                            */
+/*  - Vendor-matched filtering (only shows cards for selected retailer) */
+/*  - Collapsed dropdown -- single row trigger                          */
+/*  - Multi-select with checkboxes                                     */
+/*  - Search bar inside picker                                         */
+/*  - Hides fully used (zero balance) cards                            */
+/*  - Partial balance: only uses what's needed, preserves remainder    */
+/* ------------------------------------------------------------------ */
+function GiftCardSection({ giftCards, selectedIds, onChange, retailer, orderTotal }) {
+  const [open,   setOpen]   = useState(false);
+  const [search, setSearch] = useState('');
+
+  /* Normalise retailer name for matching */
+  const normRetailer = (s) =>
+    String(s || '').toLowerCase().replace(/[\s\-_.']/g, '').replace(/[^a-z0-9]/g, '');
+
+  /* Match gift card to retailer */
+  const gcMatchesRetailer = useCallback((gc, ret) => {
+    if (!ret) return true;
+    const r  = normRetailer(ret);
+    const cn = normRetailer(gc.card_name || gc.name || gc.retailer || '');
+    const gr = normRetailer(gc.retailer || '');
+    if (r.includes('bestbuy'))  return cn.includes('bestbuy')  || gr.includes('bestbuy');
+    if (r.includes('amazon'))   return cn.includes('amazon')   || gr.includes('amazon');
+    if (r.includes('walmart'))  return cn.includes('walmart')  || gr.includes('walmart');
+    if (r.includes('target'))   return cn.includes('target')   || gr.includes('target');
+    if (r.includes('costco'))   return cn.includes('costco')   || gr.includes('costco');
+    if (r.includes('samsclub')||r.includes('sams')) return cn.includes('sams') || gr.includes('sams');
+    if (r.includes('staples'))  return cn.includes('staples')  || gr.includes('staples');
+    if (r.includes('apple'))    return cn.includes('apple')    || gr.includes('apple');
+    /* For unrecognised retailers show all */
+    return true;
+  }, []);
+
+  /* Available cards: non-zero balance only, vendor-matched */
+  const availableCards = useMemo(() =>
+    giftCards.filter(gc =>
+      gc.status !== 'used' &&
+      (gc.value || 0) > 0 &&
+      gcMatchesRetailer(gc, retailer)
+    ),
+    [giftCards, retailer, gcMatchesRetailer]
+  );
+
+  /* Cards filtered by search */
+  const filteredCards = useMemo(() => {
+    if (!search.trim()) return availableCards;
+    const q = search.toLowerCase();
+    return availableCards.filter(gc =>
+      (gc.card_name || gc.name || '').toLowerCase().includes(q) ||
+      String(gc.value || '').includes(q) ||
+      (gc.id || '').toLowerCase().includes(q)
+    );
+  }, [availableCards, search]);
+
+  /* Selected cards (from availableCards only) */
+  const selectedCards  = availableCards.filter(gc => selectedIds.includes(gc.id));
+  const totalSelected  = selectedCards.reduce((s, gc) => s + (gc.value || 0), 0);
+  const totalAvailable = availableCards.reduce((s, gc) => s + (gc.value || 0), 0);
+
+  /* How much of a card is actually used on this order */
+  const getAmountUsed = useCallback((gc) => {
+    if (!orderTotal || orderTotal <= 0) return gc.value || 0;
+    /* Work out how much of the order is covered by cards before this one */
+    const idx = selectedCards.findIndex(c => c.id === gc.id);
+    if (idx < 0) return 0;
+    const coveredBefore = selectedCards
+      .slice(0, idx)
+      .reduce((s, c) => s + (c.value || 0), 0);
+    const remaining = Math.max(0, orderTotal - coveredBefore);
+    return Math.min(gc.value || 0, remaining);
+  }, [selectedCards, orderTotal]);
+
+  const toggleCard = (id) => {
+    if (selectedIds.includes(id)) onChange(selectedIds.filter(x => x !== id));
+    else onChange([...selectedIds, id]);
+  };
+
+  const gcDisplayName = (gc) =>
+    gc.card_name || gc.name || 'Gift Card';
+
+  const gcShortId = (gc) =>
+    gc.id ? gc.id.slice(-4).toUpperCase() : '????';
 
   return (
     <div>
-      <SectionHeader color="var(--gold)" title="Gift Cards"
-        right={totalApplied>0&&<span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, color:'var(--gold2)' }}>-{fmt$(totalApplied)} applied</span>}
+      <SectionHeader
+        color="var(--gold)"
+        title="Gift Cards"
+        right={
+          selectedCards.length > 0
+            ? <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, color:'var(--terrain)' }}>
+                -{fmt$(totalSelected)} applied
+              </span>
+            : availableCards.length > 0
+              ? <span style={{ fontFamily:'var(--font-mono)', fontSize:10, color:'var(--ink-ghost)' }}>
+                  {availableCards.length} available
+                </span>
+              : null
+        }
       />
 
-      {applied.map(gc => {
-        const used = gc.value || 0;
-        const original = gc.original_value || gc.value || 0;
-        const remaining = Math.max(0, original - used);
-        const usedPct = original > 0 ? (used/original)*100 : 100;
-        return (
-          <div key={gc.id} style={{ background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', borderRadius:10, padding:'10px 12px', marginBottom:8 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:8 }}>
-              <div style={{ width:30, height:30, borderRadius:8, background:'var(--parch-card)', border:'1px solid var(--gold-bdr)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>
-                &#127873;
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ fontSize:12, fontWeight:700, color:'var(--gold2)' }}>{gc.card_name || gc.name || 'Gift Card'}</p>
-                <p style={{ fontSize:9, color:'var(--ink-ghost)', marginTop:1 }}>Applied to this order</p>
-              </div>
-              <button type="button"
-                onClick={()=>onChange(selectedIds.filter(id=>id!==gc.id))}
-                style={{ fontSize:9, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontFamily:'var(--font-serif)', fontWeight:700 }}>
-                Remove
-              </button>
+      {availableCards.length === 0 ? (
+        <p style={{ fontSize:11, color:'var(--ink-ghost)', textAlign:'center', padding:'8px 0' }}>
+          {retailer
+            ? `No ${retailer} gift cards with available balance`
+            : 'No gift cards with available balance'}
+        </p>
+      ) : (
+        <>
+          {/*    COLLAPSED TRIGGER    */}
+          <div
+            onClick={() => setOpen(o => !o)}
+            style={{
+              display:'flex', alignItems:'center', gap:10,
+              padding:'10px 13px', borderRadius:10, cursor:'pointer',
+              background: selectedCards.length > 0 ? 'var(--gold-bg)' : 'var(--parch-warm)',
+              border:'1px solid ' + (selectedCards.length > 0 ? 'var(--gold-bdr)' : 'var(--parch-line)'),
+              transition:'all 0.15s', userSelect:'none',
+              marginBottom: open ? 6 : 0,
+            }}
+          >
+            {/* Icon */}
+            <div style={{ width:32, height:32, borderRadius:8, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>
+              &#127873;
             </div>
-            <div style={{ background:'var(--parch-warm)', borderRadius:8, padding:'8px 10px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:0, marginBottom:6 }}>
-              {[
-                { lbl:'Original', val:fmt$(original), color:'var(--ink-dim)' },
-                { lbl:'Used Here', val:fmt$(used),     color:'var(--gold2)'   },
-                { lbl:'Remaining', val:fmt$(remaining), color:'var(--terrain)' },
-              ].map(({ lbl, val, color },i) => (
-                <div key={lbl} style={{ textAlign:'center', borderLeft:i>0?'1px solid var(--parch-line)':undefined }}>
-                  <p style={{ fontFamily:'var(--font-serif)', fontSize:7, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-ghost)', marginBottom:3 }}>{lbl}</p>
-                  <p style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color }}>{val}</p>
+            {/* Info */}
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontSize:12, fontWeight:700, color: selectedCards.length > 0 ? 'var(--gold2)' : 'var(--ink)' }}>
+                {retailer ? `${retailer} Gift Cards` : 'Gift Cards'}
+              </p>
+              <p style={{ fontSize:9, color:'var(--ink-ghost)', marginTop:1, fontFamily:'var(--font-mono)' }}>
+                {selectedCards.length > 0
+                  ? `${selectedCards.length} selected  ${fmt$(totalSelected)} applied`
+                  : `${availableCards.length} cards  ${fmt$(totalAvailable)} available`}
+              </p>
+            </div>
+            {/* Badge */}
+            {selectedCards.length > 0 && (
+              <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--terrain-bg)', color:'var(--terrain)', border:'1px solid var(--terrain-bdr)', fontFamily:'var(--font-mono)', flexShrink:0 }}>
+                {selectedCards.length} selected
+              </span>
+            )}
+            {selectedCards.length === 0 && (
+              <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--gold-bg)', color:'var(--gold2)', border:'1px solid var(--gold-bdr)', fontFamily:'var(--font-mono)', flexShrink:0 }}>
+                {availableCards.length} cards
+              </span>
+            )}
+            {/* Chevron */}
+            <ChevronDownIcon style={{ width:15, height:15, color:'var(--ink-ghost)', flexShrink:0, transform: open ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}/>
+          </div>
+
+          {/*    DROPDOWN    */}
+          {open && (
+            <div style={{ background:'var(--parch-card)', border:'1px solid var(--gold-bdr)', borderRadius:12, overflow:'hidden', marginBottom:8 }}>
+
+              {/* Header with search */}
+              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', background:'var(--gold-bg)', borderBottom:'1px solid var(--gold-bdr)' }}>
+                <span style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--gold2)', whiteSpace:'nowrap' }}>
+                  Select Cards
+                </span>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search by name or amount..."
+                  onClick={e => e.stopPropagation()}
+                  style={{ flex:1, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:7, padding:'5px 9px', fontSize:11, color:'var(--ink)', outline:'none', fontFamily:'var(--font-sans)' }}
+                />
+                {selectedCards.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); onChange([]); }}
+                    style={{ fontSize:9, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', whiteSpace:'nowrap', fontFamily:'var(--font-serif)', fontWeight:700 }}>
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              {/* Card list */}
+              <div style={{ maxHeight:240, overflowY:'auto' }}>
+                {filteredCards.length === 0 ? (
+                  <p style={{ fontSize:11, color:'var(--ink-ghost)', textAlign:'center', padding:'16px 0' }}>No cards match your search</p>
+                ) : filteredCards.map((gc, idx) => {
+                  const isSelected = selectedIds.includes(gc.id);
+                  const amtUsed    = isSelected ? getAmountUsed(gc) : null;
+                  const remaining  = isSelected ? Math.max(0, (gc.value || 0) - (amtUsed || 0)) : null;
+                  return (
+                    <div
+                      key={gc.id}
+                      onClick={e => { e.stopPropagation(); toggleCard(gc.id); }}
+                      style={{
+                        display:'flex', alignItems:'center', gap:9,
+                        padding:'9px 12px',
+                        borderBottom: idx < filteredCards.length - 1 ? '1px solid var(--parch-line)' : 'none',
+                        cursor:'pointer', transition:'background 0.12s',
+                        background: isSelected ? 'var(--terrain-bg)' : 'transparent',
+                      }}
+                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--parch-warm)'; }}
+                      onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      {/* Checkbox */}
+                      <div style={{
+                        width:20, height:20, borderRadius:6, flexShrink:0,
+                        border:'1.5px solid ' + (isSelected ? 'var(--terrain)' : 'var(--parch-line)'),
+                        background: isSelected ? 'var(--terrain)' : 'var(--parch-warm)',
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        transition:'all 0.12s',
+                      }}>
+                        {isSelected && <Check style={{ width:11, height:11, color:'#fff' }}/>}
+                      </div>
+                      {/* Icon */}
+                      <div style={{ width:28, height:28, borderRadius:7, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>
+                        &#127873;
+                      </div>
+                      {/* Info */}
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ fontSize:11, fontWeight:600, color: isSelected ? 'var(--terrain)' : 'var(--ink)' }}>
+                          {gcDisplayName(gc)} #{gcShortId(gc)}
+                        </p>
+                        <p style={{ fontSize:9, color:'var(--ink-ghost)', marginTop:1, fontFamily:'var(--font-mono)' }}>
+                          {isSelected && amtUsed !== null && amtUsed < (gc.value || 0)
+                            ? `Using ${fmt$(amtUsed)} of ${fmt$(gc.value)}  ${fmt$(remaining)} stays on card`
+                            : 'Full balance available'}
+                        </p>
+                      </div>
+                      {/* Value */}
+                      <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color: isSelected ? 'var(--terrain)' : 'var(--gold2)', flexShrink:0 }}>
+                        {fmt$(gc.value || 0)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 12px', background:'var(--parch-warm)', borderTop:'1px solid var(--gold-bdr)' }}>
+                <div>
+                  <p style={{ fontSize:10, fontWeight:700, color:'var(--terrain)', fontFamily:'var(--font-mono)' }}>
+                    {selectedCards.length} selected  {fmt$(totalSelected)} applied
+                  </p>
+                  <p style={{ fontSize:9, color:'var(--ink-ghost)', marginTop:1 }}>Tap a card to toggle</p>
                 </div>
-              ))}
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); setOpen(false); }}
+                  style={{ padding:'6px 16px', borderRadius:8, background:'var(--ink)', color:'var(--gold)', fontSize:11, fontWeight:700, border:'none', cursor:'pointer', fontFamily:'var(--font-serif)' }}>
+                  Done
+                </button>
+              </div>
             </div>
-            <div style={{ height:4, borderRadius:99, background:'var(--parch-warm)', overflow:'hidden' }}>
-              <div style={{ height:'100%', width:`${usedPct}%`, background:'var(--gold)', borderRadius:99 }}/>
-            </div>
-            <div style={{ display:'flex', justifyContent:'space-between', marginTop:3 }}>
-              <span style={{ fontSize:8, color:'var(--gold2)', fontFamily:'var(--font-mono)' }}>{usedPct.toFixed(0)}% used</span>
-              <span style={{ fontSize:8, color:'var(--terrain)', fontFamily:'var(--font-mono)' }}>{fmt$(remaining)} left</span>
-            </div>
-          </div>
-        );
-      })}
+          )}
 
-      {giftCards.filter(gc=>!selectedIds.includes(gc.id)&&gc.status==='available').map(gc => (
-        <div key={gc.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:9, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', marginBottom:6 }}>
-          <div style={{ width:28, height:28, borderRadius:7, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>&#127873;</div>
-          <div style={{ flex:1, minWidth:0 }}>
-            <p style={{ fontSize:11, fontWeight:600, color:'var(--ink-dim)' }}>{gc.card_name||gc.name||'Gift Card'}</p>
-            <p style={{ fontSize:9, color:'var(--ink-ghost)' }}>{fmt$(gc.value||0)} available</p>
-          </div>
-          <button type="button"
-            onClick={()=>onChange([...selectedIds,gc.id])}
-            style={{ fontSize:9, fontWeight:700, padding:'3px 8px', borderRadius:99, background:'var(--gold-bg)', color:'var(--gold2)', border:'1px solid var(--gold-bdr)', cursor:'pointer', fontFamily:'var(--font-serif)' }}>
-            Apply
-          </button>
-        </div>
-      ))}
+          {/*    APPLIED CHIPS (when collapsed)    */}
+          {!open && selectedCards.length > 0 && (
+            <div style={{ marginTop:8 }}>
+              {/* Chips row */}
+              <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:10 }}>
+                {selectedCards.map(gc => {
+                  const amtUsed   = getAmountUsed(gc);
+                  const remaining = Math.max(0, (gc.value || 0) - amtUsed);
+                  return (
+                    <div key={gc.id} style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 8px', borderRadius:99, background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', fontSize:10, fontWeight:700, color:'var(--terrain)', fontFamily:'var(--font-mono)' }}>
+                      #{gcShortId(gc)}  {fmt$(amtUsed)}
+                      {remaining > 0 && (
+                        <span style={{ fontSize:8, color:'var(--ink-ghost)', fontWeight:400 }}>({fmt$(remaining)} stays)</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => toggleCard(gc.id)}
+                        style={{ color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', padding:'0 0 0 2px', fontSize:12, lineHeight:1 }}>
+                        x
+                      </button>
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:99, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', fontSize:10, color:'var(--ocean)', fontWeight:700, cursor:'pointer', fontFamily:'var(--font-serif)' }}>
+                  + Add more
+                </button>
+              </div>
 
-      {giftCards.filter(gc=>gc.status==='available').length===0&&selectedIds.length===0&&(
-        <p style={{ fontSize:11, color:'var(--ink-ghost)', textAlign:'center', padding:'8px 0' }}>No gift cards available</p>
+              {/* Balance summary strip */}
+              <div style={{ background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', borderRadius:10, padding:'10px 12px' }}>
+                <p style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--gold2)', marginBottom:8 }}>
+                  Applied Cards Summary
+                </p>
+                <div style={{ background:'var(--parch-warm)', borderRadius:8, padding:'8px 10px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', marginBottom:6 }}>
+                  {[
+                    { lbl:'Cards',     val:String(selectedCards.length),                     color:'var(--ink-dim)'  },
+                    { lbl:'Applied',   val:fmt$(selectedCards.reduce((s,gc)=>s+getAmountUsed(gc),0)), color:'var(--gold2)'    },
+                    { lbl:'Remaining', val:fmt$(selectedCards.reduce((s,gc)=>s+Math.max(0,(gc.value||0)-getAmountUsed(gc)),0)), color:'var(--terrain)' },
+                  ].map(({ lbl, val, color }, i) => (
+                    <div key={lbl} style={{ textAlign:'center', borderLeft: i > 0 ? '1px solid var(--parch-line)' : undefined }}>
+                      <p style={{ fontFamily:'var(--font-serif)', fontSize:7, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-ghost)', marginBottom:3 }}>{lbl}</p>
+                      <p style={{ fontFamily:'var(--font-mono)', fontSize:12, fontWeight:700, color }}>{val}</p>
+                    </div>
+                  ))}
+                </div>
+                {/* Progress bar */}
+                <div style={{ height:4, borderRadius:99, background:'var(--parch-warm)', overflow:'hidden' }}>
+                  <div style={{ height:'100%', borderRadius:99, background:'var(--gold)', width: totalAvailable > 0 ? `${Math.min(100,(totalSelected/totalAvailable)*100)}%` : '0%' }}/>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', marginTop:3 }}>
+                  <span style={{ fontSize:8, color:'var(--gold2)', fontFamily:'var(--font-mono)' }}>{selectedCards.length}/{availableCards.length} cards used</span>
+                  <span style={{ fontSize:8, color:'var(--terrain)', fontFamily:'var(--font-mono)' }}>{fmt$(totalAvailable - totalSelected)} still available</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   CASHBACK BREAKDOWN
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  CASHBACK BREAKDOWN                                                  */
+/* ------------------------------------------------------------------ */
 function CashbackBreakdown({ cardCB, yaCB, totalCB, selectedCard, isAmazon, yacbEnabled, cashbackBase }) {
   if (totalCB <= 0) return null;
   return (
     <div style={{ background:'var(--violet-bg)', border:'1px solid var(--violet-bdr)', borderRadius:10, padding:'10px 12px', marginBottom:10 }}>
       <p style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--violet)', marginBottom:8 }}>Cashback Sources</p>
 
+      {/* Card line */}
       {cardCB > 0 && (
         <div style={{ display:'flex', alignItems:'center', gap:9, paddingBottom:6, borderBottom: yaCB>0 ? '1px solid rgba(90,58,110,0.15)' : 'none', marginBottom: yaCB>0 ? 6 : 0 }}>
           <div style={{ width:26, height:26, borderRadius:7, background:'var(--parch-card)', border:'1px solid var(--parch-line)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -385,6 +633,7 @@ function CashbackBreakdown({ cardCB, yaCB, totalCB, selectedCard, isAmazon, yacb
         </div>
       )}
 
+      {/* Amazon YA line */}
       {yaCB > 0 && isAmazon && yacbEnabled && (
         <div style={{ display:'flex', alignItems:'center', gap:9 }}>
           <div style={{ width:26, height:26, borderRadius:7, background:'var(--parch-card)', border:'1px solid var(--parch-line)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -398,6 +647,7 @@ function CashbackBreakdown({ cardCB, yaCB, totalCB, selectedCard, isAmazon, yacb
         </div>
       )}
 
+      {/* Total */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:8, marginTop:6, borderTop:'1px solid var(--violet-bdr)' }}>
         <span style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, color:'var(--violet)' }}>Total Cashback</span>
         <span style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:'var(--violet)' }}>+{fmt$(totalCB)}</span>
@@ -406,9 +656,9 @@ function CashbackBreakdown({ cardCB, yaCB, totalCB, selectedCard, isAmazon, yacb
   );
 }
 
-/* ─────────────────────────────────────────────
-   MAIN COMPONENT
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  MAIN COMPONENT                                                      */
+/* ------------------------------------------------------------------ */
 export default function NewOrders() {
   const queryClient = useQueryClient();
   const [form,       setForm]       = useState(defaultForm());
@@ -421,17 +671,18 @@ export default function NewOrders() {
   const [userEmail, setUserEmail] = useState(null);
   useEffect(()=>{ base44.auth.me().then(u=>setUserEmail(u?.email)).catch(()=>{}); },[]);
 
-  const { data:products    =[] } = useQuery({ queryKey:['products'],             queryFn:()=>base44.entities.Product.list() });
-  const { data:creditCards =[] } = useQuery({ queryKey:['creditCards',userEmail], queryFn:()=>userEmail?base44.entities.CreditCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
-  const { data:giftCards   =[] } = useQuery({ queryKey:['giftCards',userEmail],   queryFn:()=>userEmail?base44.entities.GiftCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
-  const { data:sellers     =[] } = useQuery({ queryKey:['sellers'],               queryFn:()=>base44.entities.Seller.list() });
+  const { data:products    =[] } = useQuery({ queryKey:['products'],                   queryFn:()=>base44.entities.Product.list() });
+  const { data:creditCards =[] } = useQuery({ queryKey:['creditCards',userEmail],       queryFn:()=>userEmail?base44.entities.CreditCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
+  const { data:giftCards   =[] } = useQuery({ queryKey:['giftCards',userEmail],         queryFn:()=>userEmail?base44.entities.GiftCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
+  const { data:sellers     =[] } = useQuery({ queryKey:['sellers'],                     queryFn:()=>base44.entities.Seller.list() });
 
+  // Reset form when order type changes but keep vendor + card
   useEffect(()=>{
     setForm(prev=>({ ...defaultForm(), order_type:prev.order_type, retailer:prev.retailer, credit_card_id:prev.credit_card_id }));
     setReceipts([]);
   },[form.order_type]);
 
-  /* ITEM HELPERS */
+  /*    ITEM HELPERS    */
   const updateItem    = (id,f,v) => setForm(prev=>({ ...prev, items:prev.items.map(it=>it.id!==id?it:{ ...it,[f]:v }) }));
   const addItem       = ()       => setForm(prev=>({ ...prev, items:[...prev.items, defaultItem()] }));
   const removeItem    = (id)     => setForm(prev=>({ ...prev, items:prev.items.length>1?prev.items.filter(it=>it.id!==id):prev.items }));
@@ -442,6 +693,7 @@ export default function NewOrders() {
     return { ...prev, items };
   });
 
+  // Apply UPC result to a new item
   const applyUPC = useCallback((result) => {
     const newItem = {
       ...defaultItem(),
@@ -455,20 +707,20 @@ export default function NewOrders() {
     toast.success('Product added from UPC');
   }, []);
 
-  /* TRACKING */
+  /*    TRACKING    */
   const updateTracking = (idx,val) => setForm(prev=>{ const t=[...prev.tracking_numbers]; t[idx]=val; return { ...prev, tracking_numbers:t }; });
   const addTracking    = ()         => setForm(prev=>({ ...prev, tracking_numbers:[...prev.tracking_numbers,''] }));
   const removeTracking = (idx)      => setForm(prev=>({ ...prev, tracking_numbers:prev.tracking_numbers.length>1?prev.tracking_numbers.filter((_,i)=>i!==idx):[''] }));
 
-  /* SALE EVENTS */
+  /*    SALE EVENTS    */
   const addSaleEvent = () => {
     const ev=defaultSaleEvent();
     ev.items=form.items.filter(it=>it.product_name?.trim()).map(it=>({ product_name:it.product_name, quantity:1, sale_price:0 }));
     setForm(prev=>({ ...prev, sale_events:[...prev.sale_events, ev] }));
   };
-  const removeSaleEvent     = (id)          => setForm(prev=>({ ...prev, sale_events:prev.sale_events.filter(e=>e.id!==id) }));
-  const updateSaleEvent     = (id,f,v)      => setForm(prev=>({ ...prev, sale_events:prev.sale_events.map(e=>e.id!==id?e:{ ...e,[f]:v }) }));
-  const updateSaleEventItem = (eid,idx,f,v) => setForm(prev=>({
+  const removeSaleEvent      = (id)            => setForm(prev=>({ ...prev, sale_events:prev.sale_events.filter(e=>e.id!==id) }));
+  const updateSaleEvent      = (id,f,v)        => setForm(prev=>({ ...prev, sale_events:prev.sale_events.map(e=>e.id!==id?e:{ ...e,[f]:v }) }));
+  const updateSaleEventItem  = (eid,idx,f,v)   => setForm(prev=>({
     ...prev,
     sale_events:prev.sale_events.map(e=>{
       if(e.id!==eid) return e;
@@ -476,7 +728,7 @@ export default function NewOrders() {
     })
   }));
 
-  /* CALCULATIONS */
+  /*    CALCULATIONS    */
   const isSplit         = form.payment_splits?.length > 1;
   const primaryCardId   = isSplit ? (form.payment_splits[0]?.card_id||'') : form.credit_card_id;
   const selectedCard    = creditCards.find(c=>c.id===primaryCardId);
@@ -501,18 +753,18 @@ export default function NewOrders() {
   const validItemCount  = form.items.filter(it=>it.product_name?.trim()&&parseFloat(it.unit_cost)>0).length;
   const hasSales        = totalSalePrice > 0;
 
-  /* SALE ITEM PROFIT */
+  /*    SALE ITEM PROFIT    */
   const getSaleItemProfit = (saleItem, orderItems) => {
     const matched = orderItems.find(oi=>oi.product_name?.toLowerCase()===saleItem.product_name?.toLowerCase());
     if (!matched) return null;
-    const cost    = (parseFloat(matched.unit_cost)||0)*(parseInt(saleItem.quantity)||1);
-    const revenue = (parseFloat(saleItem.sale_price)||0)*(parseInt(saleItem.quantity)||1);
-    const profit  = revenue - cost;
-    const roi     = cost > 0 ? (profit/cost)*100 : 0;
+    const cost      = (parseFloat(matched.unit_cost)||0)*(parseInt(saleItem.quantity)||1);
+    const revenue   = (parseFloat(saleItem.sale_price)||0)*(parseInt(saleItem.quantity)||1);
+    const profit    = revenue - cost;
+    const roi       = cost > 0 ? (profit/cost)*100 : 0;
     return { profit, roi, cost };
   };
 
-  /* SUBMIT */
+  /*    SUBMIT    */
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const order = await base44.entities.PurchaseOrder.create(data);
@@ -593,11 +845,13 @@ export default function NewOrders() {
     { id:'sales',   label:'Sales',   icon:DollarSign    },
   ];
 
+  /*    RENDER    */
   return (
     <div style={{ maxWidth:720, margin:'0 auto', paddingBottom:40 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       {previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={()=>setPreviewImg(null)}/>}
 
+      {/* Header */}
       <div style={{ marginBottom:20 }}>
         <h1 style={{ fontFamily:'var(--font-sans)', fontSize:22, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px' }}>Add Order</h1>
         <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:3 }}>Record a new purchase</p>
@@ -627,7 +881,7 @@ export default function NewOrders() {
           </div>
         </div>
 
-        {/* Mode toggle + tabs */}
+        {/* Mode toggle */}
         <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:14, marginBottom:14 }}>
           <div style={{ display:'flex', gap:4, padding:4, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', width:'fit-content', marginBottom:14 }}>
             {[{ v:'churning',label:'Churning',icon:Tag,color:'var(--gold)',bg:'var(--gold-bg)',bdr:'var(--gold-bdr)' },
@@ -640,6 +894,7 @@ export default function NewOrders() {
             ))}
           </div>
 
+          {/* Tab bar */}
           <div style={{ display:'flex', gap:0, borderBottom:'1px solid var(--parch-line)' }}>
             {TABS.map(tab=>{
               const TabIcon=tab.icon;
@@ -657,7 +912,7 @@ export default function NewOrders() {
           </div>
         </div>
 
-        {/* DETAILS TAB */}
+        {/*    DETAILS TAB    */}
         {activeTab==='details' && (
           <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
             <SectionHeader color="var(--gold)" title="Vendor & Order"/>
@@ -771,13 +1026,14 @@ export default function NewOrders() {
           </div>
         )}
 
-        {/* ITEMS TAB */}
+        {/*    ITEMS TAB    */}
         {activeTab==='items' && (
           <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
             <SectionHeader color="var(--ocean)" title="Order Items"
               right={<span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--ocean)', background:'var(--ocean-bg)', padding:'2px 7px', borderRadius:99, border:'1px solid var(--ocean-bdr)' }}>{form.items.length} item{form.items.length!==1?'s':''}</span>}
             />
 
+            {/* UPC LOOKUP BAR */}
             <UPCLookupBar products={products} onApply={applyUPC}/>
 
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
@@ -849,10 +1105,11 @@ export default function NewOrders() {
           </div>
         )}
 
-        {/* PAYMENT TAB */}
+        {/*    PAYMENT TAB    */}
         {activeTab==='payment' && (
           <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
 
+            {/* Costs */}
             <SectionHeader color="var(--gold)" title="Costs"/>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(80px,1fr))', gap:10, marginBottom:12 }}>
               {[['Tax','tax'],['Shipping','shipping_cost'],['Fees','fees']].map(([lbl,field])=>(
@@ -866,6 +1123,7 @@ export default function NewOrders() {
               ))}
             </div>
 
+            {/* Cost summary */}
             <div style={{ background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:9, padding:'9px 12px', marginBottom:16 }}>
               {[['Items subtotal', fmt$(itemsSubtotal), 'var(--ink)'],
                 (tax+shipping+fees)>0&&['Tax + ship + fees', '+'+fmt$(tax+shipping+fees), 'var(--ink-faded)'],
@@ -882,6 +1140,7 @@ export default function NewOrders() {
               </div>
             </div>
 
+            {/* Credit card */}
             <SectionHeader color="var(--ocean)" title="Credit Card"/>
             {!isSplit ? (
               <Select value={form.credit_card_id||''} onValueChange={v=>set('credit_card_id',v)}>
@@ -941,10 +1200,11 @@ export default function NewOrders() {
               {isSplit&&<button type="button" onClick={()=>set('payment_splits',[])} style={{ fontSize:12, color:'var(--ink-dim)', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>Single card</button>}
             </div>
 
+            {/* Cashback toggles */}
             <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginBottom:14 }}>
               {[
-                { field:'include_tax_in_cashback',      label:'Tax in cashback'      },
-                { field:'include_shipping_in_cashback',  label:'Shipping in cashback' },
+                { field:'include_tax_in_cashback',     label:'Tax in cashback'      },
+                { field:'include_shipping_in_cashback', label:'Shipping in cashback' },
               ].map(({ field, label })=>(
                 <label key={field} style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'var(--ink-faded)', cursor:'pointer' }}>
                   <input type="checkbox" checked={form[field]} onChange={e=>set(field,e.target.checked)}/>
@@ -960,22 +1220,25 @@ export default function NewOrders() {
               )}
             </div>
 
+            {/* CASHBACK BREAKDOWN */}
             <CashbackBreakdown
               cardCB={cardCB} yaCB={yaCB} totalCB={totalCB}
               selectedCard={selectedCard} isAmazon={isAmazon}
               yacbEnabled={form.amazon_yacb} cashbackBase={cashbackBase}
             />
 
+            {/* GIFT CARDS WITH BALANCE */}
             <GiftCardSection
               giftCards={giftCards}
               selectedIds={form.gift_card_ids}
               onChange={ids=>set('gift_card_ids',ids)}
               retailer={form.retailer}
+              orderTotal={totalCost}
             />
           </div>
         )}
 
-        {/* SALES TAB */}
+        {/*    SALES TAB    */}
         {activeTab==='sales' && (
           <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
             <SectionHeader color="var(--terrain)" title="Sale Events"
@@ -1033,6 +1296,7 @@ export default function NewOrders() {
                         const isProfit = pp ? pp.profit >= 0 : null;
                         return (
                           <div key={itIdx} style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:9, padding:'9px 10px' }}>
+                            {/* Input row */}
                             <div style={{ display:'grid', gridTemplateColumns:'4fr 1.5fr 2.5fr 20px', gap:6, alignItems:'center', marginBottom: pp ? 7 : 0 }}>
                               <Input className="h-7 text-xs" style={INP} value={it.product_name||''} placeholder="Product" onChange={e=>updateSaleEventItem(ev.id,itIdx,'product_name',e.target.value)}/>
                               <Input className="h-7 text-xs text-center" style={INP} type="number" min="1" value={it.quantity??1} placeholder="1" onChange={e=>updateSaleEventItem(ev.id,itIdx,'quantity',parseInt(e.target.value)||1)}/>
@@ -1043,6 +1307,7 @@ export default function NewOrders() {
                               <button type="button" onClick={()=>updateSaleEvent(ev.id,'items',ev.items.filter((_,i)=>i!==itIdx))} style={{ color:'var(--ink-ghost)', background:'none', border:'none', cursor:'pointer', padding:2 }}><X style={{ width:12, height:12 }}/></button>
                             </div>
 
+                            {/* PROFIT PER ITEM */}
                             {pp !== null && it.sale_price > 0 && (
                               <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:7, borderTop:'1px solid var(--parch-line)', flexWrap:'wrap' }}>
                                 <div style={{ display:'flex', alignItems:'center', gap:4 }}>
@@ -1081,7 +1346,7 @@ export default function NewOrders() {
           </div>
         )}
 
-        {/* PROFIT BAR */}
+        {/*    PROFIT BAR (always visible)    */}
         <ProfitBar
           netProfit={netProfit} totalCost={totalCost} finalCost={finalCost}
           totalCB={totalCB} cardCB={cardCB} yaCB={yaCB}
@@ -1089,6 +1354,7 @@ export default function NewOrders() {
           hasSales={hasSales} isSplit={isSplit}
         />
 
+        {/*    ROI + CASHBACK + ITEMS mini stats    */}
         {(totalCost > 0 || totalCB > 0) && (
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12 }}>
             {[
@@ -1104,7 +1370,7 @@ export default function NewOrders() {
           </div>
         )}
 
-        {/* SUBMIT */}
+        {/*    SUBMIT    */}
         <button type="submit" disabled={createMutation.isPending}
           style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'13px 0', borderRadius:12, color:'var(--gold)', fontSize:13, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase', border:'none', cursor:'pointer', background:'var(--ink)', opacity:createMutation.isPending?0.6:1, transition:'opacity 0.15s', fontFamily:'var(--font-serif)', marginBottom:8 }}>
           {createMutation.isPending
