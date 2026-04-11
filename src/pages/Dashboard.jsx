@@ -402,7 +402,7 @@ export default function Dashboard() {
     <div style={{ maxWidth:1340, margin:"0 auto", padding:"16px 16px 40px", background:"var(--parch)" }}>
 
       {/* ── Header ── */}
-      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:8 }}>
+      <div className="dash-header">
         <div>
           <h1 style={{ fontFamily:"var(--font-serif)", fontSize:24, fontWeight:900, color:"var(--ink)", letterSpacing:"-0.3px", lineHeight:1.1 }}>
             {greeting()}, Explorer
@@ -414,7 +414,7 @@ export default function Dashboard() {
             Updated {timeSince()}
           </p>
         </div>
-        <div style={{ display:"flex", gap:6, alignItems:"center", flexWrap:"wrap" }}>
+        <div className="dash-filter-row">
           <div className="tab-bar">
             {MODE_FILTERS.map(m => (
               <button key={m} className={`tab-btn${modeFilter===m?" active":""}`} onClick={() => setModeFilter(m)}>{m}</button>
@@ -433,17 +433,17 @@ export default function Dashboard() {
 
       {/* ── Alerts ── */}
       {activeAlerts.length > 0 && (
-        <div style={{ display:"grid", gridTemplateColumns:`repeat(${activeAlerts.length},1fr)`, gap:6, marginBottom:12 }}>
+        <div className="grid-alerts" style={{ '--alert-count': activeAlerts.length, marginBottom:12 }}>
           {activeAlerts.map((a,i) => <AlertBanner key={i} {...a} />)}
         </div>
       )}
 
       {/* ── KPIs ── */}
       <SectionDivider title="Performance" />
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:8 }}>
+      <div className="grid-kpi" style={{ marginBottom:8 }}>
         {KPI_DEFS.slice(0,4).map(def => <KpiCard key={def.key} def={def} metrics={metrics} />)}
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:16 }}>
+      <div className="grid-kpi" style={{ marginBottom:16 }}>
         {KPI_DEFS.slice(4).map(def => <KpiCard key={def.key} def={def} metrics={metrics} />)}
       </div>
 
@@ -453,7 +453,7 @@ export default function Dashboard() {
         <p style={{ fontFamily:"var(--font-serif)", fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-dim)", marginBottom:10 }}>
           Order Pipeline · {filteredOrders.length} Total
         </p>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:5, position:"relative" }}>
+        <div className="grid-pipeline" style={{ position:"relative" }}>
           <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"linear-gradient(90deg,transparent,rgba(160,114,42,0.2) 10%,rgba(160,114,42,0.2) 90%,transparent)", pointerEvents:"none" }} />
           {Object.keys(STATUS_CONFIG).map(s => <PipelineCard key={s} status={s} count={statusCounts[s]||0} />)}
         </div>
@@ -461,7 +461,7 @@ export default function Dashboard() {
 
       {/* ── Charts ── */}
       <SectionDivider title="Cartographic Trends" />
-      <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:8, marginBottom:16 }}>
+      <div className="grid-charts" style={{ marginBottom:16 }}>
 
         {/* Area chart — 6-month trend */}
         <div className="card" style={{ padding:"12px 14px" }}>
@@ -501,7 +501,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right column */}
-        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        <div className="grid-charts-right">
 
           {/* By Status donut */}
           <div className="card" style={{ padding:"12px 14px", flex:1 }}>
