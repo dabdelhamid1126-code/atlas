@@ -597,6 +597,107 @@ select:focus {
   border-style: solid;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE GRID UTILITIES
+   Used by Dashboard and Analytics — avoids inline gridTemplateColumns.
+   Breakpoints: sm=480px  md=768px  lg=1024px
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* KPI grid: 2 col → 2 col → 4 col */
+.grid-kpi {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 1024px) {
+  .grid-kpi { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Charts: 1 col → 2-col (2fr 1fr) */
+.grid-charts {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .grid-charts { grid-template-columns: 2fr 1fr; }
+}
+
+/* Order pipeline: 4 col → 8 col */
+.grid-pipeline {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (min-width: 768px) {
+  .grid-pipeline { grid-template-columns: repeat(8, 1fr); }
+}
+
+/* 2-column grid: 1 col → 2 col */
+.grid-2col {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .grid-2col { grid-template-columns: 1fr 1fr; }
+}
+
+/* 3-column grid: 1 col → 3 col */
+.grid-3col {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .grid-3col { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* 5-column breakdown: 2 col → 5 col */
+.grid-5col {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 768px) {
+  .grid-5col { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* Alert banners: stack → row */
+.grid-alerts {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .grid-alerts { grid-template-columns: repeat(var(--alert-count, 1), 1fr); }
+}
+
+/* Analytics chart-right column: stacks on mobile, side-by-side on desktop */
+.grid-charts-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Dashboard header: stack on mobile, row on desktop */
+.dash-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Filter row in header: wrap on mobile */
+.dash-filter-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 /* ── Tailwind base ───────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;
