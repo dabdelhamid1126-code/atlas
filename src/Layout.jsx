@@ -219,7 +219,7 @@ export default function Layout({ children, currentPageName }) {
                    accent     gold with background pill to make "New Order" pop
                    normal     standard item color
                 */
-                const itemColor  = active ? ACTV_CLR : isAccent ? ACCENT_CLR : ITEM_CLR;
+                const itemColor  = active ? ACTV_CLR : ITEM_CLR;
                 const itemBg     = active
                   ? 'linear-gradient(90deg,rgba(201,168,76,0.18),transparent)'
                   : 'transparent';
@@ -236,7 +236,7 @@ export default function Layout({ children, currentPageName }) {
                       display: 'flex', alignItems: 'center', gap: 9,
                       padding: '7px 10px', borderRadius: 8,
                       fontSize: 13.5,
-                      fontWeight: active ? 600 : isAccent ? 600 : 500,
+                      fontWeight: active ? 600 : 500,
                       marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
                       justifyContent: collapsed ? 'center' : undefined,
                       borderLeft: itemBorder,
@@ -257,17 +257,9 @@ export default function Layout({ children, currentPageName }) {
                       }
                     }}
                   >
-                    <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: active ? 1 : isAccent ? 0.9 : ICON_OPC }} />
+                    <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: active ? 1 : ICON_OPC }} />
                     {!collapsed && (
                       <span className="truncate flex-1">{item.name}</span>
-                    )}
-                    {/* Small dot indicator for accent items when not active */}
-                    {!collapsed && isAccent && (
-                      <span style={{
-                        width: 5, height: 5, borderRadius: '50%',
-                        background: ACCENT_CLR, flexShrink: 0,
-                        opacity: 0.7,
-                      }} />
                     )}
                   </Link>
                 );
