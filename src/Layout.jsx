@@ -222,14 +222,10 @@ export default function Layout({ children, currentPageName }) {
                 const itemColor  = active ? ACTV_CLR : isAccent ? ACCENT_CLR : ITEM_CLR;
                 const itemBg     = active
                   ? 'linear-gradient(90deg,rgba(201,168,76,0.18),transparent)'
-                  : isAccent
-                    ? ACCENT_BG
-                    : 'transparent';
+                  : 'transparent';
                 const itemBorder = active
                   ? '2px solid #c9a84c'
-                  : isAccent
-                    ? `2px solid ${ACCENT_BORDER}`
-                    : '2px solid transparent';
+                  : '2px solid transparent';
 
                 return (
                   <Link
@@ -251,15 +247,13 @@ export default function Layout({ children, currentPageName }) {
                     onMouseEnter={e => {
                       if (!active) {
                         e.currentTarget.style.color = isAccent ? ACCENT_HOVER : HOVER_CLR;
-                        e.currentTarget.style.background = isAccent
-                          ? 'rgba(201,168,76,0.18)'
-                          : 'rgba(201,168,76,0.07)';
+                        e.currentTarget.style.background = 'rgba(201,168,76,0.07)';
                       }
                     }}
                     onMouseLeave={e => {
                       if (!active) {
                         e.currentTarget.style.color = itemColor;
-                        e.currentTarget.style.background = itemBg;
+                        e.currentTarget.style.background = 'transparent';
                       }
                     }}
                   >
