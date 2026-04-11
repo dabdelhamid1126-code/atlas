@@ -435,7 +435,7 @@ export default function Analytics() {
   ];
 
   if (isLoading) return (
-    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, paddingBottom:40 }}>
+    <div className="grid-kpi" style={{ paddingBottom:40 }}>
       {[...Array(8)].map((_,i)=>(
         <div key={i} style={{ height:76, borderRadius:12, background:'var(--parch-warm)', border:'1px solid var(--parch-line)' }} />
       ))}
@@ -486,10 +486,10 @@ export default function Analytics() {
 
       {/* ── KPI GRID ── */}
       <SectionDivider title="Survey Markers" />
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:8 }}>
+      <div className="grid-kpi" style={{ marginBottom:8 }}>
         {KPI_CARDS.slice(0,4).map(k => <KpiCard key={k.label} {...k}/>)}
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:16 }}>
+      <div className="grid-kpi" style={{ marginBottom:16 }}>
         {KPI_CARDS.slice(4).map(k => <KpiCard key={k.label} {...k}/>)}
       </div>
 
@@ -501,7 +501,7 @@ export default function Analytics() {
       {/* ════════ OVERVIEW ════════ */}
       {activeTab==='overview' && (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:12 }}>
+          <div className="grid-charts">
             <ChartCard title="Revenue & Profit Trend" badge={PERIOD_OPTIONS.find(p=>p.id===period)?.label}>
               {periodData.length===0 ? <EmptyState/> : (
                 <>
@@ -533,8 +533,7 @@ export default function Analytics() {
             </ChartCard>
           </div>
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            <ChartCard title="Cumulative Profit">
+          <div className="grid-2col">
               {cumulativeData.length===0 ? <EmptyState/> : (
                 <>
                   <ResponsiveContainer width="100%" height={190}>
@@ -579,7 +578,7 @@ export default function Analytics() {
       {/* ════════ BREAKDOWNS ════════ */}
       {activeTab==='breakdowns' && (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          <div className="grid-2col">
             <ChartCard title="Store Performance" badge={`${storeData.length} Stores`}>
               {storeData.length===0 ? <EmptyState/> : (
                 <>
@@ -602,7 +601,7 @@ export default function Analytics() {
             </ChartCard>
           </div>
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          <div className="grid-2col">
             <ChartCard title="Store ROI Comparison">
               {storeData.length===0 ? <EmptyState/> : (
                 <ResponsiveContainer width="100%" height={190}>
@@ -621,7 +620,7 @@ export default function Analytics() {
 
             <div style={{ ...CARD_STYLE, padding:'14px 16px' }}>
               <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:14 }}>Store Summary</p>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div className="grid-2col" style={{ gap:10 }}>
                 {[
                   { label:'Total Revenue', value:fmt$(storeData.reduce((s,x)=>s+x.revenue,0)), color:'var(--terrain2)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)' },
                   { label:'Total Profit',  value:fmt$(storeData.reduce((s,x)=>s+x.profit,0)),  color:'var(--gold)',     bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'   },
@@ -642,7 +641,7 @@ export default function Analytics() {
       {/* ════════ PAYMENTS ════════ */}
       {activeTab==='payments' && (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+          <div className="grid-3col">
             {[
               { label:'Card Cashback', value:fmt$(kpis.cardCashback), sub:'From credit cards',   color:'var(--violet2)', bg:'var(--violet-bg)',  bdr:'var(--violet-bdr)'  },
               { label:'YA Cashback',   value:fmt$(kpis.yaCashback),   sub:'Young Adult rewards', color:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'    },
@@ -656,7 +655,7 @@ export default function Analytics() {
             ))}
           </div>
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          <div className="grid-2col">
             <ChartCard title="Spend by Payment Method">
               {paymentData.length===0 ? <EmptyState/> : (
                 <>
