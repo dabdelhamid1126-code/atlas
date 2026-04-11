@@ -1,839 +1,1164 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from ‘react’;
+import { base44 } from ‘@/api/base44Client’;
+import { useQuery, useMutation, useQueryClient } from ‘@tanstack/react-query’;
+import { toast } from ‘sonner’;
+import { format } from ‘date-fns’;
+import { Label } from ‘@/components/ui/label’;
+import { Input } from ‘@/components/ui/input’;
+import { Textarea } from ‘@/components/ui/textarea’;
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ‘@/components/ui/select’;
 import {
-  Tag, Globe, Package, CreditCard, DollarSign, Plus, Trash2,
-  Copy, Sparkles, Info, Minus, Paperclip, X, FileText, TrendingUp, ImageOff,
-  ClipboardList, Download,
-} from 'lucide-react';
-import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
-import GiftCardPicker from '@/components/shared/GiftCardPicker';
-import SplitPaymentInput from '@/components/payment-methods/SplitPaymentInput';
+Tag, Globe, Package, CreditCard, DollarSign, Plus, Trash2,
+Copy, X, ImageOff, ClipboardList, Barcode, RefreshCw,
+Minus, Check, ChevronRight,
+} from ‘lucide-react’;
+import ProductAutocomplete from ‘@/components/purchase-orders/ProductAutocomplete’;
+import GiftCardPicker from ‘@/components/shared/GiftCardPicker’;
 
-const RETAILERS = ['Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco', "Sam's Club", 'eBay', 'Woot', 'Apple', 'Other'];
-const CHURNING_STATUSES  = [{ value: 'pending', label: 'Pending' }, { value: 'ordered', label: 'Ordered' }, { value: 'shipped', label: 'Shipped' }, { value: 'received', label: 'Received' }];
-const MARKETPLACE_STATUSES = [{ value: 'pending', label: 'Pending' }, { value: 'ordered', label: 'Listed' }, { value: 'shipped', label: 'Sold' }, { value: 'received', label: 'Completed' }];
-const fmt$ = (v) => `$${(parseFloat(v) || 0).toFixed(2)}`;
+/* —————————————————————— */
+/*  CONSTANTS                                                           */
+/* —————————————————————— */
+const RETAILERS = [‘Amazon’,‘Best Buy’,‘Walmart’,‘Target’,‘Costco’,“Sam’s Club”,‘eBay’,‘Woot’,‘Apple’,‘Staples’,‘Other’];
+const QUICK_RETAILERS = [‘Best Buy’,‘Amazon’,‘Walmart’,“Sam’s Club”,‘Costco’,‘Target’];
+const CHURNING_STATUSES  = [{ value:‘pending’,label:‘Pending’ },{ value:‘ordered’,label:‘Ordered’ },{ value:‘shipped’,label:‘Shipped’ },{ value:‘received’,label:‘Received’ }];
+const MARKETPLACE_STATUSES = [{ value:‘pending’,label:‘Pending’ },{ value:‘ordered’,label:‘Listed’ },{ value:‘shipped’,label:‘Sold’ },{ value:‘received’,label:‘Completed’ }];
 
-const inp = { background: 'var(--parch-warm)', color: 'var(--ink)', borderColor: 'var(--parch-line)' };
-const inpReadonly = { background: 'var(--parch-card)', color: 'var(--ink-ghost)', borderColor: 'var(--parch-line)' };
+const fmt$ = (v) => new Intl.NumberFormat(‘en-US’,{ style:‘currency’, currency:‘USD’, maximumFractionDigits:2 }).format(parseFloat(v)||0);
+const pct  = (v) => `${Number(v||0).toFixed(1)}%`;
 
-// Logo domain mappers
-const getStoreDomain = (vendorName) => {
-  const n = String(vendorName || '').toLowerCase().replace(/[\s\-\_\.\']/g, '').replace(/[^a-z0-9]/g, '');
-  if (n.includes('bestbuy')) return 'bestbuy.com';
-  if (n.includes('amazon')) return 'amazon.com';
-  if (n.includes('walmart')) return 'walmart.com';
-  if (n.includes('apple')) return 'apple.com';
-  if (n.includes('target')) return 'target.com';
-  if (n.includes('costco')) return 'costco.com';
-  if (n.includes('samsclub') || n.includes('sams')) return 'samsclub.com';
-  if (n.includes('ebay')) return 'ebay.com';
-  if (n.includes('woot')) return 'woot.com';
-  return null;
+/* —————————————————————— */
+/*  DOMAIN HELPERS                                                      */
+/* —————————————————————— */
+const getStoreDomain = (n) => {
+const s = String(n||’’).toLowerCase().replace(/[\s-_.’]/g,’’).replace(/[^a-z0-9]/g,’’);
+if (s.includes(‘bestbuy’))  return ‘bestbuy.com’;
+if (s.includes(‘amazon’))   return ‘amazon.com’;
+if (s.includes(‘walmart’))  return ‘walmart.com’;
+if (s.includes(‘apple’))    return ‘apple.com’;
+if (s.includes(‘target’))   return ‘target.com’;
+if (s.includes(‘costco’))   return ‘costco.com’;
+if (s.includes(‘samsclub’)||s.includes(‘sams’)) return ‘samsclub.com’;
+if (s.includes(‘staples’))  return ‘staples.com’;
+if (s.includes(‘ebay’))     return ‘ebay.com’;
+if (s.includes(‘woot’))     return ‘woot.com’;
+return null;
 };
-
-const getCardDomain = (cardName) => {
-  const n = String(cardName || '').toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
-  if (n.includes('chase')) return 'chase.com';
-  if (n.includes('amex') || n.includes('american')) return 'americanexpress.com';
-  if (n.includes('citi')) return 'citi.com';
-  if (n.includes('capital')) return 'capitalone.com';
-  if (n.includes('discover')) return 'discover.com';
-  if (n.includes('bofa') || n.includes('bankofamerica')) return 'bankofamerica.com';
-  if (n.includes('usbank')) return 'usbank.com';
-  if (n.includes('wells')) return 'wellsfargo.com';
-  if (n.includes('amazon')) return 'amazon.com';
-  if (n.includes('apple')) return 'apple.com';
-  if (n.includes('costco')) return 'costco.com';
-  if (n.includes('target')) return 'target.com';
-  return null;
+const getCardDomain = (n) => {
+const s = String(n||’’).toLowerCase().replace(/\s+/g,’’).replace(/[^a-z0-9]/g,’’);
+if (s.includes(‘chase’))   return ‘chase.com’;
+if (s.includes(‘amex’)||s.includes(‘american’)) return ‘americanexpress.com’;
+if (s.includes(‘citi’))    return ‘citi.com’;
+if (s.includes(‘capital’)) return ‘capitalone.com’;
+if (s.includes(‘discover’))return ‘discover.com’;
+if (s.includes(‘bofa’)||s.includes(‘bankofamerica’)) return ‘bankofamerica.com’;
+if (s.includes(‘usbank’))  return ‘usbank.com’;
+if (s.includes(‘wells’))   return ‘wellsfargo.com’;
+if (s.includes(‘amazon’))  return ‘amazon.com’;
+if (s.includes(‘apple’))   return ‘apple.com’;
+if (s.includes(‘costco’))  return ‘costco.com’;
+if (s.includes(‘target’))  return ‘target.com’;
+return null;
 };
+const BRANDFETCH = ‘1idzVIG0BYPKsFIDJDI’;
+const brandfetch = (domain) => domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH}` : null;
+const proxyImg   = (url)    => url    ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=120&h=120&fit=contain&bg=white` : null;
 
-const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
+/* —————————————————————— */
+/*  SHARED STYLES                                                       */
+/* —————————————————————— */
+const INP = { background:‘var(–parch-warm)’, color:‘var(–ink)’, borderColor:‘var(–parch-line)’ };
 
-function BrandLogo({ domain, size = 18, fallbackInitials = 'X' }) {
-  const [err, setErr] = React.useState(false);
-  const logoUrl = domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_CLIENT_ID}` : null;
-  if (!logoUrl || err) {
-    return (
-      <div style={{ width: size, height: size, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #10b981, #06b6d4)', color: 'white', fontWeight: 700, fontSize: size * 0.35, flexShrink: 0 }}>
-        {fallbackInitials.charAt(0).toUpperCase()}
-      </div>
-    );
-  }
-  return (
-    <img src={logoUrl} alt="logo" onError={() => setErr(true)}
-      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid var(--parch-line)', display: 'block' }} />
-  );
+/* —————————————————————— */
+/*  MICRO COMPONENTS                                                    */
+/* —————————————————————— */
+function LBL({ children }) {
+return (
+<label style={{ fontFamily:‘var(–font-serif)’, fontSize:9, fontWeight:700, letterSpacing:‘0.08em’, textTransform:‘uppercase’, color:‘var(–ink-faded)’, display:‘block’, marginBottom:4 }}>
+{children}
+</label>
+);
+}
+
+function SectionHeader({ color = ‘var(–gold)’, title, right }) {
+return (
+<div style={{ display:‘flex’, alignItems:‘center’, gap:6, marginBottom:11, paddingBottom:8, borderBottom:‘1px solid var(–parch-line)’ }}>
+<div style={{ width:6, height:6, borderRadius:‘50%’, background:color, flexShrink:0 }} />
+<span style={{ fontFamily:‘var(–font-serif)’, fontSize:9, fontWeight:700, letterSpacing:‘0.12em’, textTransform:‘uppercase’, color:‘var(–ink-faded)’ }}>{title}</span>
+{right && <div style={{ marginLeft:‘auto’ }}>{right}</div>}
+</div>
+);
+}
+
+function BrandLogo({ domain, size=18, fallback=’?’ }) {
+const [err, setErr] = useState(false);
+const url = domain ? brandfetch(domain) : null;
+if (!url||err) return (
+<div style={{ width:size, height:size, borderRadius:‘50%’, background:‘linear-gradient(135deg,var(–ocean-bg),var(–ocean-bdr))’, display:‘flex’, alignItems:‘center’, justifyContent:‘center’, fontWeight:700, fontSize:size*0.4, color:‘var(–ocean)’, flexShrink:0 }}>
+{String(fallback).charAt(0).toUpperCase()}
+</div>
+);
+return <img src={url} alt=”” onError={()=>setErr(true)} style={{ width:size, height:size, borderRadius:‘50%’, objectFit:‘cover’, flexShrink:0, border:‘1px solid var(–parch-line)’, display:‘block’ }} />;
 }
 
 function ItemThumb({ src, name, onClick }) {
-  const [err, setErr] = React.useState(false);
-  React.useEffect(() => setErr(false), [src]);
-  if (!src || err) {
-    return (
-      <div onClick={onClick} style={{ width: 40, height: 40, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', color: 'var(--terrain)', fontSize: 13, fontWeight: 700 }}>
-        {name?.charAt(0)?.toUpperCase() || <ImageOff style={{ width: 14, height: 14 }} />}
-      </div>
-    );
-  }
-  return (
-    <img src={src} alt={name} onClick={onClick} onError={() => setErr(true)}
-      style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0, cursor: 'pointer', border: '1px solid var(--parch-line)' }} />
-  );
+const [err, setErr] = useState(false);
+useEffect(()=>setErr(false),[src]);
+if (!src||err) return (
+<div onClick={onClick} style={{ width:40, height:40, borderRadius:8, flexShrink:0, display:‘flex’, alignItems:‘center’, justifyContent:‘center’, cursor:‘pointer’, background:‘var(–terrain-bg)’, border:‘1px solid var(–terrain-bdr)’, color:‘var(–terrain)’, fontSize:13, fontWeight:700 }}>
+{name?.charAt(0)?.toUpperCase()||<ImageOff style={{ width:14, height:14 }}/>}
+</div>
+);
+return <img src={src} alt={name} onClick={onClick} onError={()=>setErr(true)} style={{ width:40, height:40, borderRadius:8, objectFit:‘cover’, flexShrink:0, cursor:‘pointer’, border:‘1px solid var(–parch-line)’ }}/>;
 }
 
 function ImagePreviewModal({ src, alt, onClose }) {
-  if (!src) return null;
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
-      <div style={{ position: 'relative', maxWidth: 384, width: '100%', margin: '0 16px' }} onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} style={{ position: 'absolute', top: -12, right: -12, zIndex: 10, width: 32, height: 32, borderRadius: '50%', background: 'var(--parch-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--parch-line)', cursor: 'pointer' }}>
-          <X style={{ width: 14, height: 14, color: 'var(--ink-dim)' }} />
-        </button>
-        <img src={src} alt={alt} style={{ width: '100%', borderRadius: 16, maxHeight: '80vh', objectFit: 'contain' }} />
-      </div>
-    </div>
-  );
+if (!src) return null;
+return (
+<div onClick={onClose} style={{ position:‘fixed’, inset:0, zIndex:50, display:‘flex’, alignItems:‘center’, justifyContent:‘center’, background:‘rgba(0,0,0,0.7)’ }}>
+<div onClick={e=>e.stopPropagation()} style={{ position:‘relative’, maxWidth:384, width:‘100%’, margin:‘0 16px’ }}>
+<button onClick={onClose} style={{ position:‘absolute’, top:-12, right:-12, zIndex:10, width:32, height:32, borderRadius:‘50%’, background:‘var(–parch-card)’, display:‘flex’, alignItems:‘center’, justifyContent:‘center’, border:‘1px solid var(–parch-line)’, cursor:‘pointer’ }}>
+<X style={{ width:14, height:14, color:‘var(–ink-dim)’ }}/>
+</button>
+<img src={src} alt={alt} style={{ width:‘100%’, borderRadius:16, maxHeight:‘80vh’, objectFit:‘contain’ }}/>
+</div>
+</div>
+);
 }
 
-const defaultItem = () => ({ id: crypto.randomUUID(), product_id: '', product_name: '', upc: '', quantity_ordered: 1, unit_cost: '', product_image_url: '' });
-
-const defaultSaleEvent = () => ({
-  id: crypto.randomUUID(), buyer: '', sale_date: '', payout_date: '', items: [],
+/* —————————————————————— */
+/*  DEFAULT FACTORIES                                                   */
+/* —————————————————————— */
+const defaultItem       = () => ({ id:crypto.randomUUID(), product_id:’’, product_name:’’, upc:’’, quantity_ordered:1, unit_cost:’’, product_image_url:’’ });
+const defaultSaleEvent  = () => ({ id:crypto.randomUUID(), buyer:’’, sale_date:’’, payout_date:’’, items:[] });
+const defaultForm       = () => ({
+order_type:‘churning’, retailer:’’, marketplace_platform:’’, account:’’,
+order_number:’’, tracking_numbers:[’’], status:‘pending’,
+product_category:’’, order_date:format(new Date(),‘yyyy-MM-dd’),
+tax:’’, shipping_cost:’’, fees:’’, credit_card_id:’’, payment_splits:[],
+gift_card_ids:[], include_tax_in_cashback:true, include_shipping_in_cashback:true,
+amazon_yacb:false, cashback_rate_override:’’, notes:’’,
+fulfillment_type:‘ship_to_me’, dropship_to:’’, pickup_location:’’,
+items:[defaultItem()], sale_events:[],
 });
 
-const defaultForm = () => ({
-  order_type: 'churning', retailer: '', marketplace_platform: '', account: '',
-  order_number: '', tracking_numbers: [''], status: 'pending',
-  product_category: '', order_date: format(new Date(), 'yyyy-MM-dd'),
-  tax: '', shipping_cost: '', fees: '', credit_card_id: '', payment_splits: [],
-  gift_card_ids: [], include_tax_in_cashback: true, include_shipping_in_cashback: true,
-  amazon_yacb: false, cashback_rate_override: '', notes: '',
-  fulfillment_type: 'ship_to_me', dropship_to: '', pickup_location: '',
-  items: [defaultItem()],
-  sale_events: [],
-});
-
-const LBL = ({ children }) => (
-  <label style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-dim)', display: 'block', marginBottom: 4 }}>
-    {children}
-  </label>
+/* —————————————————————— */
+/*  PROFIT BAR (inline at bottom, always visible)                      */
+/* —————————————————————— */
+function ProfitBar({ netProfit, totalCost, finalCost, totalCB, cardCB, yaCB, totalSalePrice, validItemCount, hasSales, isSplit }) {
+const isPos = netProfit >= 0;
+const roi   = totalCost > 0 ? (netProfit/totalCost)*100 : 0;
+const profColor = hasSales ? (isPos?‘var(–terrain)’:‘var(–crimson)’) : ‘var(–violet)’;
+return (
+<div style={{ background:‘var(–parch-card)’, border:‘1px solid var(–parch-line)’, borderRadius:12, padding:‘12px 14px’, marginBottom:10, borderTop:‘3px solid ‘+profColor }}>
+<p style={{ fontFamily:‘var(–font-serif)’, fontSize:8, fontWeight:700, letterSpacing:‘0.1em’, textTransform:‘uppercase’, color:‘var(–ink-faded)’, marginBottom:4 }}>
+{hasSales?‘Estimated Profit’:‘Cashback Profit’}
+</p>
+<p style={{ fontFamily:‘var(–font-mono)’, fontSize:22, fontWeight:700, color:profColor, lineHeight:1 }}>{fmt$(netProfit)}</p>
+<p style={{ fontSize:10, color:‘var(–ink-ghost)’, marginTop:2 }}>
+{pct(roi)} ROI · {validItemCount} item{validItemCount!==1?‘s’:’’}
+</p>
+{/* breakdown rows */}
+<div style={{ marginTop:8, paddingTop:8, borderTop:‘1px solid var(–parch-line)’, display:‘flex’, flexDirection:‘column’, gap:4 }}>
+<div style={{ display:‘flex’, justifyContent:‘space-between’, fontSize:11 }}>
+<span style={{ color:‘var(–ink-dim)’ }}>Total cost</span>
+<span style={{ fontFamily:‘var(–font-mono)’, fontWeight:700, color:‘var(–gold)’ }}>{fmt$(finalCost)}</span>
+</div>
+{/* cashback breakdown */}
+{cardCB > 0 && (
+<div style={{ display:‘flex’, justifyContent:‘space-between’, fontSize:11 }}>
+<span style={{ color:‘var(–ink-dim)’ }}>Card cashback</span>
+<span style={{ fontFamily:‘var(–font-mono)’, fontWeight:700, color:‘var(–violet)’ }}>+{fmt$(cardCB)}</span>
+</div>
+)}
+{yaCB > 0 && (
+<div style={{ display:‘flex’, justifyContent:‘space-between’, fontSize:11 }}>
+<span style={{ color:‘var(–ink-dim)’ }}>Amazon YA 5%</span>
+<span style={{ fontFamily:‘var(–font-mono)’, fontWeight:700, color:‘var(–violet)’ }}>+{fmt$(yaCB)}</span>
+</div>
+)}
+{totalSalePrice > 0 && (
+<div style={{ display:‘flex’, justifyContent:‘space-between’, fontSize:11 }}>
+<span style={{ color:‘var(–ink-dim)’ }}>Sale total</span>
+<span style={{ fontFamily:‘var(–font-mono)’, fontWeight:700, color:‘var(–ink)’ }}>{fmt$(totalSalePrice)}</span>
+</div>
+)}
+<div style={{ display:‘flex’, justifyContent:‘space-between’, paddingTop:5, borderTop:‘1px solid var(–parch-line)’ }}>
+<span style={{ fontWeight:700, color:‘var(–ink)’, fontSize:12 }}>{hasSales?‘Net profit’:‘Cashback’}</span>
+<span style={{ fontFamily:‘var(–font-mono)’, fontWeight:700, fontSize:14, color:profColor }}>{isPos&&hasSales?’+’:’’}{fmt$(netProfit)}</span>
+</div>
+</div>
+</div>
 );
+}
 
+/* —————————————————————— */
+/*  UPC LOOKUP BAR                                                      */
+/* —————————————————————— */
+function UPCLookupBar({ products, onApply }) {
+const [upc,        setUpc]        = useState(’’);
+const [loading,    setLoading]    = useState(false);
+const [result,     setResult]     = useState(null);
+const [error,      setError]      = useState(’’);
+
+const lookup = useCallback(async () => {
+const q = upc.trim().replace(/\D/g,’’);
+if (!q || q.length < 6) { toast.error(‘Enter a valid UPC’); return; }
+setLoading(true); setResult(null); setError(’’);
+try {
+// Check internal catalog first
+const inCatalog = products.find(p => p.upc === q || p.upc === upc.trim());
+if (inCatalog) {
+setResult({ title:inCatalog.name, image:proxyImg(inCatalog.image), price:’’, upc:q, source:‘catalog’, product_id:inCatalog.id });
+setLoading(false); return;
+}
+// Fall back to UPCitemdb
+const res  = await base44.functions.invoke(‘lookupUPCProxy’, { upc: q });
+const data = res.data;
+const item = data.items?.[0];
+if (!item) { setError(‘No product found for that UPC.’); setLoading(false); return; }
+setResult({
+title:   item.title,
+image:   proxyImg(item.images?.[0] || item.images_url?.[0] || null),
+price:   item.lowest_recorded_price || item.offers?.[0]?.price || ‘’,
+upc:     q,
+source:  ‘upcitemdb’,
+product_id: null,
+});
+} catch {
+setError(‘Lookup failed – enter manually.’);
+} finally {
+setLoading(false);
+}
+}, [upc, products]);
+
+const handleKey = (e) => { if (e.key===‘Enter’) lookup(); };
+
+return (
+<div style={{ marginBottom:12 }}>
+<LBL>UPC Scan / Lookup</LBL>
+<div style={{ display:‘flex’, gap:7, alignItems:‘center’, marginBottom:result?8:0 }}>
+{/* barcode icon button */}
+<button type=“button” onClick={lookup} title=“Lookup UPC”
+style={{ width:38, height:38, borderRadius:9, background:‘var(–ink)’, border:‘none’, display:‘flex’, alignItems:‘center’, justifyContent:‘center’, cursor:‘pointer’, flexShrink:0 }}>
+{loading
+? <RefreshCw style={{ width:15, height:15, color:‘var(–gold)’, animation:‘spin 0.8s linear infinite’ }}/>
+: <Barcode style={{ width:16, height:16, color:‘var(–gold)’ }}/>}
+</button>
+<input
+type=“text”
+value={upc}
+onChange={e=>{ setUpc(e.target.value); setResult(null); setError(’’); }}
+onKeyDown={handleKey}
+placeholder=“Paste or type UPC…”
+style={{ flex:1, background:‘var(–parch-warm)’, border:‘1px solid var(–parch-line)’, borderRadius:8, padding:‘8px 10px’, fontSize:12, color:‘var(–ink)’, outline:‘none’, fontFamily:‘var(–font-mono)’ }}
+/>
+<button type=“button” onClick={lookup} disabled={loading||!upc.trim()}
+style={{ padding:‘8px 12px’, borderRadius:8, background:‘var(–ocean-bg)’, color:‘var(–ocean2)’, border:‘1px solid var(–ocean-bdr)’, fontSize:11, fontWeight:700, cursor:‘pointer’, whiteSpace:‘nowrap’, fontFamily:‘var(–font-serif)’, opacity:loading||!upc.trim()?0.5:1 }}>
+{loading?’…’:‘Lookup’}
+</button>
+</div>
+
+```
+  {/* error */}
+  {error && <p style={{ fontSize:11, color:'var(--crimson)', marginTop:4 }}>{error}</p>}
+
+  {/* result card */}
+  {result && (
+    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', borderRadius:10 }}>
+      <div style={{ width:46, height:46, borderRadius:9, background:'var(--parch-card)', border:'1px solid var(--parch-line)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        {result.image
+          ? <img src={result.image} alt={result.title} style={{ width:'100%', height:'100%', objectFit:'contain', padding:3 }}/>
+          : <Package style={{ width:18, height:18, color:'var(--ink-ghost)' }}/>}
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <p style={{ fontSize:12, fontWeight:700, color:'var(--ink)', lineHeight:1.3 }}>{result.title}</p>
+        <p style={{ fontSize:9, color:'var(--ink-ghost)', marginTop:2, fontFamily:'var(--font-mono)' }}>
+          UPC: {result.upc} &middot; {result.source==='catalog'?'from your catalog':'via UPCitemdb'}
+        </p>
+        {result.price && (
+          <p style={{ fontSize:11, fontWeight:700, color:'var(--gold)', fontFamily:'var(--font-mono)', marginTop:2 }}>
+            {fmt$(result.price)} <span style={{ fontSize:9, color:'var(--ink-ghost)', fontFamily:'var(--font-sans)', fontWeight:400 }}>last price</span>
+          </p>
+        )}
+      </div>
+      <button type="button"
+        onClick={()=>{ onApply(result); setResult(null); setUpc(''); }}
+        style={{ padding:'6px 12px', borderRadius:7, background:'var(--terrain)', color:'#fff', border:'none', fontSize:10, fontWeight:700, cursor:'pointer', fontFamily:'var(--font-serif)', flexShrink:0 }}>
+        <Check style={{ width:11, height:11, display:'inline', marginRight:3 }}/>Use
+      </button>
+    </div>
+  )}
+</div>
+```
+
+);
+}
+
+/* —————————————————————— */
+/*  GIFT CARD SECTION WITH BALANCE DISPLAY                             */
+/* —————————————————————— */
+function GiftCardSection({ giftCards, selectedIds, onChange, retailer }) {
+const applied = giftCards.filter(gc => selectedIds.includes(gc.id));
+const totalApplied = applied.reduce((s,gc)=>s+(gc.value||0),0);
+
+return (
+<div>
+<SectionHeader color="var(--gold)" title="Gift Cards"
+right={totalApplied>0&&<span style={{ fontFamily:‘var(–font-mono)’, fontSize:10, fontWeight:700, color:‘var(–gold2)’ }}>-{fmt$(totalApplied)} applied</span>}
+/>
+
+```
+  {/* Applied cards with balance strip */}
+  {applied.map(gc => {
+    const used = gc.value || 0;
+    const original = gc.original_value || gc.value || 0;
+    const remaining = Math.max(0, original - used);
+    const usedPct = original > 0 ? (used/original)*100 : 100;
+    return (
+      <div key={gc.id} style={{ background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', borderRadius:10, padding:'10px 12px', marginBottom:8 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:8 }}>
+          <div style={{ width:30, height:30, borderRadius:8, background:'var(--parch-card)', border:'1px solid var(--gold-bdr)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>
+            &#127873;
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ fontSize:12, fontWeight:700, color:'var(--gold2)' }}>{gc.card_name || gc.name || 'Gift Card'}</p>
+            <p style={{ fontSize:9, color:'var(--ink-ghost)', marginTop:1 }}>Applied to this order</p>
+          </div>
+          <button type="button"
+            onClick={()=>onChange(selectedIds.filter(id=>id!==gc.id))}
+            style={{ fontSize:9, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontFamily:'var(--font-serif)', fontWeight:700 }}>
+            Remove
+          </button>
+        </div>
+        {/* Balance bar */}
+        <div style={{ background:'var(--parch-warm)', borderRadius:8, padding:'8px 10px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:0, marginBottom:6 }}>
+          {[
+            { lbl:'Original', val:fmt$(original), color:'var(--ink-dim)' },
+            { lbl:'Used Here', val:fmt$(used),     color:'var(--gold2)'   },
+            { lbl:'Remaining', val:fmt$(remaining), color:'var(--terrain)' },
+          ].map(({ lbl, val, color },i) => (
+            <div key={lbl} style={{ textAlign:'center', borderLeft:i>0?'1px solid var(--parch-line)':undefined }}>
+              <p style={{ fontFamily:'var(--font-serif)', fontSize:7, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-ghost)', marginBottom:3 }}>{lbl}</p>
+              <p style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color }}>{val}</p>
+            </div>
+          ))}
+        </div>
+        {/* Progress bar */}
+        <div style={{ height:4, borderRadius:99, background:'var(--parch-warm)', overflow:'hidden' }}>
+          <div style={{ height:'100%', width:`${usedPct}%`, background:'var(--gold)', borderRadius:99 }}/>
+        </div>
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop:3 }}>
+          <span style={{ fontSize:8, color:'var(--gold2)', fontFamily:'var(--font-mono)' }}>{usedPct.toFixed(0)}% used</span>
+          <span style={{ fontSize:8, color:'var(--terrain)', fontFamily:'var(--font-mono)' }}>{fmt$(remaining)} left</span>
+        </div>
+      </div>
+    );
+  })}
+
+  {/* Available cards */}
+  {giftCards.filter(gc=>!selectedIds.includes(gc.id)&&gc.status==='available').map(gc => (
+    <div key={gc.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:9, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', marginBottom:6 }}>
+      <div style={{ width:28, height:28, borderRadius:7, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>&#127873;</div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <p style={{ fontSize:11, fontWeight:600, color:'var(--ink-dim)' }}>{gc.card_name||gc.name||'Gift Card'}</p>
+        <p style={{ fontSize:9, color:'var(--ink-ghost)' }}>{fmt$(gc.value||0)} available</p>
+      </div>
+      <button type="button"
+        onClick={()=>onChange([...selectedIds,gc.id])}
+        style={{ fontSize:9, fontWeight:700, padding:'3px 8px', borderRadius:99, background:'var(--gold-bg)', color:'var(--gold2)', border:'1px solid var(--gold-bdr)', cursor:'pointer', fontFamily:'var(--font-serif)' }}>
+        Apply
+      </button>
+    </div>
+  ))}
+
+  {giftCards.filter(gc=>gc.status==='available').length===0&&selectedIds.length===0&&(
+    <p style={{ fontSize:11, color:'var(--ink-ghost)', textAlign:'center', padding:'8px 0' }}>No gift cards available</p>
+  )}
+</div>
+```
+
+);
+}
+
+/* —————————————————————— */
+/*  CASHBACK BREAKDOWN                                                  */
+/* —————————————————————— */
+function CashbackBreakdown({ cardCB, yaCB, totalCB, selectedCard, isAmazon, yacbEnabled, cashbackBase }) {
+if (totalCB <= 0) return null;
+return (
+<div style={{ background:‘var(–violet-bg)’, border:‘1px solid var(–violet-bdr)’, borderRadius:10, padding:‘10px 12px’, marginBottom:10 }}>
+<p style={{ fontFamily:‘var(–font-serif)’, fontSize:8, fontWeight:700, letterSpacing:‘0.1em’, textTransform:‘uppercase’, color:‘var(–violet)’, marginBottom:8 }}>Cashback Sources</p>
+
+```
+  {/* Card line */}
+  {cardCB > 0 && (
+    <div style={{ display:'flex', alignItems:'center', gap:9, paddingBottom:6, borderBottom: yaCB>0 ? '1px solid rgba(90,58,110,0.15)' : 'none', marginBottom: yaCB>0 ? 6 : 0 }}>
+      <div style={{ width:26, height:26, borderRadius:7, background:'var(--parch-card)', border:'1px solid var(--parch-line)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={22} fallback={selectedCard?.card_name||'C'}/>
+      </div>
+      <div style={{ flex:1 }}>
+        <p style={{ fontSize:11, fontWeight:600, color:'var(--violet)' }}>{selectedCard?.card_name||'Credit Card'}</p>
+        <p style={{ fontSize:9, color:'var(--ink-ghost)' }}>{selectedCard?.cashback_rate||0}% on {fmt$(cashbackBase)}</p>
+      </div>
+      <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color:'var(--violet)' }}>+{fmt$(cardCB)}</span>
+    </div>
+  )}
+
+  {/* Amazon YA line */}
+  {yaCB > 0 && isAmazon && yacbEnabled && (
+    <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+      <div style={{ width:26, height:26, borderRadius:7, background:'var(--parch-card)', border:'1px solid var(--parch-line)', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        <BrandLogo domain="amazon.com" size={22} fallback="A"/>
+      </div>
+      <div style={{ flex:1 }}>
+        <p style={{ fontSize:11, fontWeight:600, color:'var(--violet)' }}>Amazon Prime Young Adult</p>
+        <p style={{ fontSize:9, color:'var(--ink-ghost)' }}>5% extra &middot; capped at $100</p>
+      </div>
+      <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color:'var(--violet)' }}>+{fmt$(yaCB)}</span>
+    </div>
+  )}
+
+  {/* Total */}
+  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:8, marginTop:6, borderTop:'1px solid var(--violet-bdr)' }}>
+    <span style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, color:'var(--violet)' }}>Total Cashback</span>
+    <span style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:'var(--violet)' }}>+{fmt$(totalCB)}</span>
+  </div>
+</div>
+```
+
+);
+}
+
+/* —————————————————————— */
+/*  MAIN COMPONENT                                                      */
+/* —————————————————————— */
 export default function NewOrders() {
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState(defaultForm());
-  const [receipts, setReceipts] = useState([]);
-  const [previewImg, setPreviewImg] = useState(null);
-  const [activeTab, setActiveTab] = useState('details');
-  const fileInputRef = useRef(null);
-  const set = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
+const queryClient = useQueryClient();
+const [form,       setForm]       = useState(defaultForm());
+const [receipts,   setReceipts]   = useState([]);
+const [previewImg, setPreviewImg] = useState(null);
+const [activeTab,  setActiveTab]  = useState(‘details’);
 
-  const [userEmail, setUserEmail] = useState(null);
-  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+const set = (field, val) => setForm(prev=>({ …prev, [field]:val }));
 
-  const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: () => base44.entities.Product.list() });
-  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards', userEmail], queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
-  const { data: giftCards = [] } = useQuery({ queryKey: ['giftCards', userEmail], queryFn: () => userEmail ? base44.entities.GiftCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
-  const { data: sellers = [] } = useQuery({ queryKey: ['sellers'], queryFn: () => base44.entities.Seller.list() });
+const [userEmail, setUserEmail] = useState(null);
+useEffect(()=>{ base44.auth.me().then(u=>setUserEmail(u?.email)).catch(()=>{}); },[]);
 
-  useEffect(() => {
-    setForm(prev => ({ ...defaultForm(), order_type: prev.order_type, retailer: prev.retailer, credit_card_id: prev.credit_card_id }));
-    setReceipts([]);
-  }, [form.order_type]);
+const { data:products    =[] } = useQuery({ queryKey:[‘products’],                   queryFn:()=>base44.entities.Product.list() });
+const { data:creditCards =[] } = useQuery({ queryKey:[‘creditCards’,userEmail],       queryFn:()=>userEmail?base44.entities.CreditCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
+const { data:giftCards   =[] } = useQuery({ queryKey:[‘giftCards’,userEmail],         queryFn:()=>userEmail?base44.entities.GiftCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
+const { data:sellers     =[] } = useQuery({ queryKey:[‘sellers’],                     queryFn:()=>base44.entities.Seller.list() });
 
-  const updateItem = (id, f, v) => setForm(prev => ({ ...prev, items: prev.items.map(it => it.id !== id ? it : { ...it, [f]: v }) }));
-  const addItem = () => setForm(prev => ({ ...prev, items: [...prev.items, defaultItem()] }));
-  const removeItem = (id) => setForm(prev => ({ ...prev, items: prev.items.length > 1 ? prev.items.filter(it => it.id !== id) : prev.items }));
-  const duplicateItem = (id) => setForm(prev => {
-    const idx = prev.items.findIndex(it => it.id === id);
-    const copy = { ...prev.items[idx], id: crypto.randomUUID() };
-    const items = [...prev.items]; items.splice(idx + 1, 0, copy);
-    return { ...prev, items };
-  });
+// Reset form when order type changes but keep vendor + card
+useEffect(()=>{
+setForm(prev=>({ …defaultForm(), order_type:prev.order_type, retailer:prev.retailer, credit_card_id:prev.credit_card_id }));
+setReceipts([]);
+},[form.order_type]);
 
-  const updateTracking = (idx, val) => setForm(prev => { const t = [...prev.tracking_numbers]; t[idx] = val; return { ...prev, tracking_numbers: t }; });
-  const addTracking = () => setForm(prev => ({ ...prev, tracking_numbers: [...prev.tracking_numbers, ''] }));
-  const removeTracking = (idx) => setForm(prev => ({ ...prev, tracking_numbers: prev.tracking_numbers.length > 1 ? prev.tracking_numbers.filter((_, i) => i !== idx) : [''] }));
+/*    ITEM HELPERS    */
+const updateItem    = (id,f,v) => setForm(prev=>({ …prev, items:prev.items.map(it=>it.id!==id?it:{ …it,[f]:v }) }));
+const addItem       = ()       => setForm(prev=>({ …prev, items:[…prev.items, defaultItem()] }));
+const removeItem    = (id)     => setForm(prev=>({ …prev, items:prev.items.length>1?prev.items.filter(it=>it.id!==id):prev.items }));
+const duplicateItem = (id)     => setForm(prev=>{
+const idx=prev.items.findIndex(it=>it.id===id);
+const copy={ …prev.items[idx], id:crypto.randomUUID() };
+const items=[…prev.items]; items.splice(idx+1,0,copy);
+return { …prev, items };
+});
 
-  const addSaleEvent = () => {
-    const ev = defaultSaleEvent();
-    ev.items = form.items.filter(it => it.product_name?.trim()).map(it => ({ product_name: it.product_name, quantity: 1, sale_price: 0 }));
-    setForm(prev => ({ ...prev, sale_events: [...prev.sale_events, ev] }));
-  };
-  const removeSaleEvent = (id) => setForm(prev => ({ ...prev, sale_events: prev.sale_events.filter(e => e.id !== id) }));
-  const updateSaleEvent = (id, field, value) => setForm(prev => ({ ...prev, sale_events: prev.sale_events.map(e => e.id !== id ? e : { ...e, [field]: value }) }));
-  const updateSaleEventItem = (eventId, itemIdx, field, value) => setForm(prev => ({
-    ...prev,
-    sale_events: prev.sale_events.map(e => {
-      if (e.id !== eventId) return e;
-      return { ...e, items: e.items.map((it, i) => i === itemIdx ? { ...it, [field]: value } : it) };
-    })
-  }));
+// Apply UPC result to a new item
+const applyUPC = useCallback((result) => {
+const newItem = {
+…defaultItem(),
+product_id:        result.product_id || ‘’,
+product_name:      result.title || ‘’,
+upc:               result.upc   || ‘’,
+product_image_url: result.image || ‘’,
+unit_cost:         result.price ? String(parseFloat(result.price)) : ‘’,
+};
+setForm(prev=>({ …prev, items:[…prev.items.filter(it=>it.product_name.trim()||parseFloat(it.unit_cost)>0), newItem] }));
+toast.success(‘Product added from UPC’);
+}, []);
 
-  const addReceipts = (files) => setReceipts(prev => [...prev, ...Array.from(files)]);
-  const removeReceipt = (idx) => setReceipts(prev => prev.filter((_, i) => i !== idx));
+/*    TRACKING    */
+const updateTracking = (idx,val) => setForm(prev=>{ const t=[…prev.tracking_numbers]; t[idx]=val; return { …prev, tracking_numbers:t }; });
+const addTracking    = ()         => setForm(prev=>({ …prev, tracking_numbers:[…prev.tracking_numbers,’’] }));
+const removeTracking = (idx)      => setForm(prev=>({ …prev, tracking_numbers:prev.tracking_numbers.length>1?prev.tracking_numbers.filter((_,i)=>i!==idx):[’’] }));
 
-  const isSplit = form.payment_splits?.length > 1;
-  const primaryCardId = isSplit ? (form.payment_splits[0]?.card_id || '') : form.credit_card_id;
-  const selectedCard = creditCards.find(c => c.id === primaryCardId);
-  const isAmazon = form.retailer === 'Amazon';
-  const statuses = form.order_type === 'churning' ? CHURNING_STATUSES : MARKETPLACE_STATUSES;
+/*    SALE EVENTS    */
+const addSaleEvent = () => {
+const ev=defaultSaleEvent();
+ev.items=form.items.filter(it=>it.product_name?.trim()).map(it=>({ product_name:it.product_name, quantity:1, sale_price:0 }));
+setForm(prev=>({ …prev, sale_events:[…prev.sale_events, ev] }));
+};
+const removeSaleEvent      = (id)            => setForm(prev=>({ …prev, sale_events:prev.sale_events.filter(e=>e.id!==id) }));
+const updateSaleEvent      = (id,f,v)        => setForm(prev=>({ …prev, sale_events:prev.sale_events.map(e=>e.id!==id?e:{ …e,[f]:v }) }));
+const updateSaleEventItem  = (eid,idx,f,v)   => setForm(prev=>({
+…prev,
+sale_events:prev.sale_events.map(e=>{
+if(e.id!==eid) return e;
+return { …e, items:e.items.map((it,i)=>i!==idx?it:{ …it,[f]:v }) };
+})
+}));
 
-  const itemsSubtotal = useMemo(() => form.items.reduce((s, it) => s + (parseFloat(it.unit_cost) || 0) * (parseInt(it.quantity_ordered) || 1), 0), [form.items]);
-  const tax = parseFloat(form.tax) || 0;
-  const shipping = parseFloat(form.shipping_cost) || 0;
-  const fees = parseFloat(form.fees) || 0;
-  const totalCost = itemsSubtotal + tax + shipping + fees;
-  const giftCardTotal = useMemo(() => form.gift_card_ids.reduce((s, id) => { const gc = giftCards.find(g => g.id === id); return s + (gc?.value || 0); }, 0), [form.gift_card_ids, giftCards]);
-  const finalCost = totalCost - giftCardTotal;
-  const cardRate = parseFloat(form.cashback_rate_override) || selectedCard?.cashback_rate || 0;
-  const cashbackBase = (totalCost - giftCardTotal) - (!form.include_tax_in_cashback ? tax : 0) - (!form.include_shipping_in_cashback ? shipping : 0);
-  const splitCashbackTotal = isSplit ? form.payment_splits.reduce((sum, sp) => { const card = creditCards.find(c => c.id === sp.card_id); return sum + ((parseFloat(sp.amount) || 0) * (card?.cashback_rate || 0) / 100); }, 0) : 0;
-  const cardCB = isSplit ? splitCashbackTotal : Math.max(0, cashbackBase) * cardRate / 100;
-  const yaCB = form.amazon_yacb && isAmazon ? Math.min(cashbackBase * 0.05, 100) : 0;
-  const totalCB = cardCB + yaCB;
-  const totalSalePrice = form.sale_events?.reduce((sum, ev) => sum + (ev.items?.reduce((s, it) => s + (parseFloat(it.sale_price) || 0) * (parseInt(it.quantity) || 1), 0) || 0), 0) || 0;
-  const netProfit = totalSalePrice > 0 ? totalSalePrice - totalCost + totalCB : totalCB;
-  const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
-  const validItemCount = form.items.filter(it => it.product_name?.trim() && parseFloat(it.unit_cost) > 0).length;
-  const hasSales = totalSalePrice > 0;
+/*    CALCULATIONS    */
+const isSplit         = form.payment_splits?.length > 1;
+const primaryCardId   = isSplit ? (form.payment_splits[0]?.card_id||’’) : form.credit_card_id;
+const selectedCard    = creditCards.find(c=>c.id===primaryCardId);
+const isAmazon        = form.retailer === ‘Amazon’;
+const statuses        = form.order_type===‘churning’ ? CHURNING_STATUSES : MARKETPLACE_STATUSES;
 
-  const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const order = await base44.entities.PurchaseOrder.create(data);
-      if (data.gift_card_ids?.length > 0) {
-        for (const cardId of data.gift_card_ids) await base44.entities.GiftCard.update(cardId, { status: 'used', used_order_number: data.order_number });
-        queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      }
-      if (data.payment_splits?.length > 1) {
-        for (const sp of data.payment_splits) {
-          const card = creditCards.find(c => c.id === sp.card_id); if (!card) continue;
-          const cb = parseFloat((sp.amount * (card.cashback_rate || 0) / 100).toFixed(2));
-          if (cb > 0) await base44.entities.Reward.create({ credit_card_id: sp.card_id, card_name: card.card_name, source: card.card_name, type: 'cashback', currency: 'USD', purchase_amount: sp.amount, amount: cb, purchase_order_id: order.id, order_number: order.order_number, date_earned: order.order_date, status: 'pending', notes: `Auto from order ${order.order_number} (split: $${sp.amount})` });
-        }
-        queryClient.invalidateQueries({ queryKey: ['rewards'] });
-      } else if (order.credit_card_id && totalCB > 0) {
-        const card = creditCards.find(c => c.id === order.credit_card_id);
-        if (card) { await base44.entities.Reward.create({ credit_card_id: order.credit_card_id, card_name: card.card_name, source: card.card_name, type: 'cashback', currency: 'USD', purchase_amount: cashbackBase, amount: parseFloat(totalCB.toFixed(2)), purchase_order_id: order.id, order_number: order.order_number, date_earned: order.order_date, status: 'pending', notes: `Auto from order ${order.order_number}` }); queryClient.invalidateQueries({ queryKey: ['rewards'] }); }
-      }
-      return order;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      toast.success('Order created!');
-      setReceipts([]);
-      setForm(prev => ({ ...defaultForm(), order_type: prev.order_type, retailer: prev.retailer, credit_card_id: prev.credit_card_id }));
-    },
-    onError: () => toast.error('Failed to create order'),
-  });
+const itemsSubtotal   = useMemo(()=>form.items.reduce((s,it)=>s+(parseFloat(it.unit_cost)||0)*(parseInt(it.quantity_ordered)||1),0),[form.items]);
+const tax             = parseFloat(form.tax)||0;
+const shipping        = parseFloat(form.shipping_cost)||0;
+const fees            = parseFloat(form.fees)||0;
+const totalCost       = itemsSubtotal+tax+shipping+fees;
+const giftCardTotal   = useMemo(()=>form.gift_card_ids.reduce((s,id)=>{ const gc=giftCards.find(g=>g.id===id); return s+(gc?.value||0); },0),[form.gift_card_ids,giftCards]);
+const finalCost       = totalCost - giftCardTotal;
+const cardRate        = parseFloat(form.cashback_rate_override)||selectedCard?.cashback_rate||0;
+const cashbackBase    = (totalCost-giftCardTotal) - (!form.include_tax_in_cashback?tax:0) - (!form.include_shipping_in_cashback?shipping:0);
+const splitCBTotal    = isSplit ? form.payment_splits.reduce((sum,sp)=>{ const c=creditCards.find(x=>x.id===sp.card_id); return sum+((parseFloat(sp.amount)||0)*(c?.cashback_rate||0)/100); },0) : 0;
+const cardCB          = isSplit ? splitCBTotal : Math.max(0,cashbackBase)*cardRate/100;
+const yaCB            = form.amazon_yacb&&isAmazon ? Math.min(cashbackBase*0.05,100) : 0;
+const totalCB         = cardCB+yaCB;
+const totalSalePrice  = form.sale_events?.reduce((sum,ev)=>sum+(ev.items?.reduce((s,it)=>s+(parseFloat(it.sale_price)||0)*(parseInt(it.quantity)||1),0)||0),0)||0;
+const netProfit       = totalSalePrice>0 ? totalSalePrice-totalCost+totalCB : totalCB;
+const validItemCount  = form.items.filter(it=>it.product_name?.trim()&&parseFloat(it.unit_cost)>0).length;
+const hasSales        = totalSalePrice > 0;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.retailer) { toast.error('Vendor is required'); return; }
-    const validItems = form.items.filter(it => it.product_name?.trim() && parseFloat(it.unit_cost) > 0);
-    if (validItems.length === 0) { toast.error('At least one item with name and price is required'); return; }
-    if (isSplit) {
-      const splitsTotal = form.payment_splits.reduce((s, sp) => s + (parseFloat(sp.amount) || 0), 0);
-      if (Math.abs(splitsTotal - finalCost) > 0.01) { toast.error(`Split amounts must equal final cost`); return; }
-      if (form.payment_splits.some(sp => !sp.card_id)) { toast.error('Please select a card for each split payment'); return; }
-    }
-    const pcId = isSplit ? (form.payment_splits[0]?.card_id || null) : (form.credit_card_id || null);
-    const pc = creditCards.find(c => c.id === pcId);
+/*    SALE ITEM PROFIT    */
+const getSaleItemProfit = (saleItem, orderItems) => {
+const matched = orderItems.find(oi=>oi.product_name?.toLowerCase()===saleItem.product_name?.toLowerCase());
+if (!matched) return null;
+const cost      = (parseFloat(matched.unit_cost)||0)*(parseInt(saleItem.quantity)||1);
+const revenue   = (parseFloat(saleItem.sale_price)||0)*(parseInt(saleItem.quantity)||1);
+const profit    = revenue - cost;
+const roi       = cost > 0 ? (profit/cost)*100 : 0;
+return { profit, roi, cost };
+};
 
-    const normalizedSaleEvents = form.sale_events.map(ev => ({
-      ...ev,
-      items: ev.items.map(it => ({
-        product_name: it.product_name || '',
-        quantity: parseInt(it.quantity ?? 1) || 1,
-        sale_price: parseFloat(it.sale_price) || 0,
-      }))
-    }));
+/*    SUBMIT    */
+const createMutation = useMutation({
+mutationFn: async (data) => {
+const order = await base44.entities.PurchaseOrder.create(data);
+if (data.gift_card_ids?.length>0) {
+for (const cardId of data.gift_card_ids)
+await base44.entities.GiftCard.update(cardId,{ status:‘used’, used_order_number:data.order_number });
+queryClient.invalidateQueries({ queryKey:[‘giftCards’] });
+}
+if (isSplit) {
+for (const sp of data.payment_splits) {
+const c=creditCards.find(x=>x.id===sp.card_id); if(!c) continue;
+const cb=parseFloat((sp.amount*(c.cashback_rate||0)/100).toFixed(2));
+if(cb>0) await base44.entities.Reward.create({ credit_card_id:sp.card_id, card_name:c.card_name, source:c.card_name, type:‘cashback’, currency:‘USD’, purchase_amount:sp.amount, amount:cb, purchase_order_id:order.id, order_number:order.order_number, date_earned:order.order_date, status:‘pending’, notes:`Auto from ${order.order_number} (split)` });
+}
+queryClient.invalidateQueries({ queryKey:[‘rewards’] });
+} else if (order.credit_card_id&&totalCB>0) {
+const c=creditCards.find(x=>x.id===order.credit_card_id);
+if(c) { await base44.entities.Reward.create({ credit_card_id:order.credit_card_id, card_name:c.card_name, source:c.card_name, type:‘cashback’, currency:‘USD’, purchase_amount:cashbackBase, amount:parseFloat(totalCB.toFixed(2)), purchase_order_id:order.id, order_number:order.order_number, date_earned:order.order_date, status:‘pending’, notes:`Auto from ${order.order_number}` }); queryClient.invalidateQueries({ queryKey:[‘rewards’] }); }
+}
+return order;
+},
+onSuccess:()=>{
+queryClient.invalidateQueries({ queryKey:[‘purchaseOrders’] });
+toast.success(‘Order created!’);
+setReceipts([]);
+setForm(prev=>({ …defaultForm(), order_type:prev.order_type, retailer:prev.retailer, credit_card_id:prev.credit_card_id }));
+},
+onError:()=>toast.error(‘Failed to create order’),
+});
 
-    createMutation.mutate({
-      order_type: form.order_type,
-      order_number: form.order_number?.trim() || `ORD-${Date.now()}`,
-      tracking_numbers: form.tracking_numbers.map(t => t.trim()).filter(Boolean),
-      retailer: form.retailer,
-      marketplace_platform: form.marketplace_platform || null,
-      account: form.account || null,
-      status: form.status,
-      product_category: form.product_category || null,
-      order_date: form.order_date,
-      tax, shipping_cost: shipping, fees,
-      total_cost: totalCost,
-      gift_card_value: giftCardTotal,
-      final_cost: finalCost,
-      credit_card_id: pcId,
-      card_name: pc?.card_name || null,
-      payment_splits: isSplit ? form.payment_splits.map(sp => ({ card_id: sp.card_id, card_name: sp.card_name, amount: parseFloat(sp.amount) || 0 })) : [],
-      gift_card_ids: form.gift_card_ids,
-      include_tax_in_cashback: form.include_tax_in_cashback,
-      include_shipping_in_cashback: form.include_shipping_in_cashback,
-      extra_cashback_percent: form.amazon_yacb && isAmazon ? 5 : 0,
-      bonus_notes: form.amazon_yacb && isAmazon ? 'Prime Young Adult' : null,
-      notes: form.notes || null,
-      fulfillment_type: form.fulfillment_type || 'ship_to_me',
-      dropship_to: form.fulfillment_type === 'direct_dropship' ? form.dropship_to : null,
-      has_receipts: receipts.length > 0,
-      items: validItems.map(it => ({ product_id: it.product_id || null, product_name: it.product_name.trim(), upc: it.upc || null, quantity_ordered: parseInt(it.quantity_ordered) || 1, quantity_received: 0, unit_cost: parseFloat(it.unit_cost) || 0, product_image_url: it.product_image_url || null })),
-      sale_events: normalizedSaleEvents,
-    });
-  };
+const handleSubmit = (e) => {
+e.preventDefault();
+if (!form.retailer) { toast.error(‘Vendor is required’); return; }
+const validItems=form.items.filter(it=>it.product_name?.trim()&&parseFloat(it.unit_cost)>0);
+if (validItems.length===0) { toast.error(‘At least one item with name and price is required’); return; }
+if (isSplit) {
+const t=form.payment_splits.reduce((s,sp)=>s+(parseFloat(sp.amount)||0),0);
+if (Math.abs(t-finalCost)>0.01) { toast.error(‘Split amounts must equal final cost’); return; }
+if (form.payment_splits.some(sp=>!sp.card_id)) { toast.error(‘Select a card for each split’); return; }
+}
+const pcId=isSplit?(form.payment_splits[0]?.card_id||null):(form.credit_card_id||null);
+const pc=creditCards.find(c=>c.id===pcId);
+createMutation.mutate({
+order_type:form.order_type,
+order_number:form.order_number?.trim()||`ORD-${Date.now()}`,
+tracking_numbers:form.tracking_numbers.map(t=>t.trim()).filter(Boolean),
+retailer:form.retailer,
+marketplace_platform:form.marketplace_platform||null,
+account:form.account||null,
+status:form.status,
+product_category:form.product_category||null,
+order_date:form.order_date,
+tax, shipping_cost:shipping, fees,
+total_cost:totalCost,
+gift_card_value:giftCardTotal,
+final_cost:finalCost,
+credit_card_id:pcId,
+card_name:pc?.card_name||null,
+payment_splits:isSplit?form.payment_splits.map(sp=>({ card_id:sp.card_id, card_name:sp.card_name, amount:parseFloat(sp.amount)||0 })):[],
+gift_card_ids:form.gift_card_ids,
+include_tax_in_cashback:form.include_tax_in_cashback,
+include_shipping_in_cashback:form.include_shipping_in_cashback,
+extra_cashback_percent:form.amazon_yacb&&isAmazon?5:0,
+bonus_notes:form.amazon_yacb&&isAmazon?‘Prime Young Adult’:null,
+notes:form.notes||null,
+fulfillment_type:form.fulfillment_type||‘ship_to_me’,
+dropship_to:form.fulfillment_type===‘direct_dropship’?form.dropship_to:null,
+has_receipts:receipts.length>0,
+items:validItems.map(it=>({ product_id:it.product_id||null, product_name:it.product_name.trim(), upc:it.upc||null, quantity_ordered:parseInt(it.quantity_ordered)||1, quantity_received:0, unit_cost:parseFloat(it.unit_cost)||0, product_image_url:it.product_image_url||null })),
+sale_events:form.sale_events.map(ev=>({ …ev, items:ev.items.map(it=>({ product_name:it.product_name||’’, quantity:parseInt(it.quantity??1)||1, sale_price:parseFloat(it.sale_price)||0 })) })),
+});
+};
 
-  // Profit color using CSS vars
-  const profitColor = hasSales ? (netProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)') : 'var(--violet)';
-  const roiColor = roi !== 0 ? (roi >= 0 ? 'var(--terrain)' : 'var(--crimson)') : 'var(--ink-ghost)';
+const TABS = [
+{ id:‘details’, label:‘Details’, icon:ClipboardList },
+{ id:‘items’,   label:‘Items’,   icon:Package       },
+{ id:‘payment’, label:‘Payment’, icon:CreditCard    },
+{ id:‘sales’,   label:‘Sales’,   icon:DollarSign    },
+];
 
-  const TABS = [
-    { id: 'details', label: 'Details', icon: ClipboardList },
-    { id: 'items', label: 'Items', icon: Package },
-    { id: 'payment', label: 'Payment', icon: CreditCard },
-    { id: 'sales', label: 'Sales', icon: DollarSign },
-  ];
+/*    RENDER    */
+return (
+<div style={{ maxWidth:720, margin:‘0 auto’, paddingBottom:40 }}>
+<style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+{previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={()=>setPreviewImg(null)}/>}
 
-  return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
-      {previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={() => setPreviewImg(null)} />}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Add Order</h1>
-        <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Record a new purchase</p>
+```
+  {/* Header */}
+  <div style={{ marginBottom:20 }}>
+    <h1 style={{ fontFamily:'var(--font-sans)', fontSize:22, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px' }}>Add Order</h1>
+    <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:3 }}>Record a new purchase</p>
+  </div>
+
+  <form onSubmit={handleSubmit}>
+
+    {/* Quick vendor chips */}
+    <div style={{ marginBottom:12 }}>
+      <p style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-ghost)', marginBottom:6 }}>Quick Select</p>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+        {QUICK_RETAILERS.map(r=>(
+          <button key={r} type="button"
+            onClick={()=>set('retailer',r)}
+            style={{
+              display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:99,
+              fontSize:11, fontWeight:600, cursor:'pointer',
+              border:'1px solid '+(form.retailer===r?'var(--gold-bdr)':'var(--parch-line)'),
+              background:form.retailer===r?'var(--gold-bg)':'var(--parch-card)',
+              color:form.retailer===r?'var(--gold2)':'var(--ink-faded)',
+              transition:'all 0.12s',
+            }}>
+            <BrandLogo domain={getStoreDomain(r)} size={14} fallback={r}/>
+            {r}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Mode toggle */}
+    <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:14, marginBottom:14 }}>
+      <div style={{ display:'flex', gap:4, padding:4, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', width:'fit-content', marginBottom:14 }}>
+        {[{ v:'churning',label:'Churning',icon:Tag,color:'var(--gold)',bg:'var(--gold-bg)',bdr:'var(--gold-bdr)' },
+          { v:'marketplace',label:'Marketplace',icon:Globe,color:'var(--ocean)',bg:'var(--ocean-bg)',bdr:'var(--ocean-bdr)' }].map(({ v,label,icon:Icon,color,bg,bdr })=>(
+          <button key={v} type="button" onClick={()=>set('order_type',v)}
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', border:'1px solid', fontFamily:'var(--font-serif)',
+              ...(form.order_type===v?{ background:bg, color, borderColor:bdr }:{ background:'transparent', color:'var(--ink-dim)', borderColor:'transparent' }) }}>
+            <Icon style={{ width:13, height:13 }}/> {label}
+          </button>
+        ))}
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20, alignItems: 'start' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* ── MODE TOGGLE + TAB BAR ── */}
-            <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 16, padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
-                  <button type="button" onClick={() => set('order_type', 'churning')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
-                      ...(form.order_type === 'churning'
-                        ? { background: 'var(--gold-bg)', color: 'var(--gold)', borderColor: 'var(--gold-border)' }
-                        : { background: 'transparent', color: 'var(--ink-dim)', borderColor: 'transparent' }) }}>
-                    <Tag style={{ width: 13, height: 13 }} /> Churning
-                  </button>
-                  <button type="button" onClick={() => set('order_type', 'marketplace')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
-                      ...(form.order_type === 'marketplace'
-                        ? { background: 'var(--ocean-bg)', color: 'var(--ocean)', borderColor: 'var(--ocean-bdr)' }
-                        : { background: 'transparent', color: 'var(--ink-dim)', borderColor: 'transparent' }) }}>
-                    <Globe style={{ width: 13, height: 13 }} /> Marketplace
-                  </button>
-                </div>
-              </div>
-
-              {/* Tab bar */}
-              <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--parch-line)' }}>
-                {TABS.map(tab => {
-                  const TabIcon = tab.icon;
-                  return (
-                    <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
-                      style={{ padding: '10px 16px', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', outline: 'none',
-                        borderBottom: activeTab === tab.id ? '2px solid var(--terrain)' : '2px solid transparent',
-                        color: activeTab === tab.id ? 'var(--terrain)' : 'var(--ink-dim)',
-                        transition: 'all 0.15s', marginBottom: -1 }}>
-                      <TabIcon style={{ width: 14, height: 14 }} />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ── TAB: DETAILS ── */}
-            {activeTab === 'details' && (
-              <div style={{ background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', borderRadius: 16, padding: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
-                  🏪 Vendor & Order
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
-                  <div><LBL>Vendor *</LBL>
-                    <Select value={form.retailer} onValueChange={(v) => set('retailer', v)}>
-                      <SelectTrigger className="h-9" style={inp}><SelectValue placeholder="Select..." /></SelectTrigger>
-                      <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                        {RETAILERS.map(r => (
-                          <SelectItem key={r} value={r} style={{ color: 'var(--ink)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <BrandLogo domain={getStoreDomain(r)} size={16} fallbackInitials={r} />
-                              {r}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div><LBL>Status</LBL>
-                    <Select value={form.status} onValueChange={(v) => set('status', v)}>
-                      <SelectTrigger className="h-9" style={inp}><SelectValue /></SelectTrigger>
-                      <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                        {statuses.map(s => <SelectItem key={s.value} value={s.value} style={{ color: 'var(--ink)' }}>{s.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div><LBL>Order Number</LBL>
-                    <Input style={inp} className="h-9" value={form.order_number} onChange={e => set('order_number', e.target.value)} placeholder="112-3456789" />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                  <div><LBL>Order Date</LBL>
-                    <Input type="date" style={inp} className="h-9" value={form.order_date} onChange={e => set('order_date', e.target.value)} />
-                  </div>
-                  <div><LBL>Account</LBL>
-                    <Input style={inp} className="h-9" value={form.account} onChange={e => set('account', e.target.value)} placeholder="Account used" />
-                  </div>
-                </div>
-
-                <div><LBL>Tracking Number(s)</LBL>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {form.tracking_numbers.map((tn, idx) => (
-                      <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <Input style={{ ...inp, flex: 1 }} className="h-8" value={tn} onChange={e => updateTracking(idx, e.target.value)} placeholder="1Z999AA1..." />
-                        {form.tracking_numbers.length > 1 && (
-                          <button type="button" onClick={() => removeTracking(idx)} style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                            <Minus style={{ width: 14, height: 14 }} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button type="button" onClick={addTracking} style={{ fontSize: 12, color: 'var(--terrain)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Plus style={{ width: 12, height: 12 }} /> Add tracking number
-                    </button>
-                  </div>
-                </div>
-
-                {/* Fulfillment Type */}
-                <div style={{ display: 'flex', gap: 6, marginTop: 12, padding: 4, borderRadius: 12, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', width: 'fit-content' }}>
-                  {[
-                    { v: 'ship_to_me', label: '📦 Ship to Me', color: 'var(--ocean)', bg: 'var(--ocean-bg)', border: 'var(--ocean-bdr)' },
-                    { v: 'store_pickup', label: '📍 Store Pickup', color: 'var(--violet)', bg: 'var(--violet-bg)', border: 'var(--violet-bdr)' },
-                    { v: 'direct_dropship', label: '🚛 Dropship', color: 'var(--gold)', bg: 'var(--gold-bg)', border: 'var(--gold-border)' },
-                  ].map(({ v, label, color, bg, border }) => (
-                    <button key={v} type="button" onClick={() => set('fulfillment_type', v)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
-                        ...(form.fulfillment_type === v ? { background: bg, borderColor: border, color } : { background: 'transparent', borderColor: 'transparent', color: 'var(--ink-dim)' }) }}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                {form.fulfillment_type === 'direct_dropship' && (
-                  <div style={{ marginTop: 10 }}>
-                    <LBL>Ship To (Buyer)</LBL>
-                    <Select value={form.dropship_to} onValueChange={(v) => set('dropship_to', v)}>
-                      <SelectTrigger className="h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
-                      <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                        {sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: 'var(--ink)' }}>{s.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {form.fulfillment_type === 'store_pickup' && (
-                  <div style={{ marginTop: 10 }}>
-                    <LBL>Pickup Location</LBL>
-                    <Input style={inp} className="h-8" value={form.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="e.g. Downtown Store" />
-                  </div>
-                )}
-
-                <div style={{ marginTop: 12 }}><LBL>Notes</LBL>
-                  <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Any notes..." rows={2}
-                    style={{ ...inp, width: '100%', padding: '8px 12px', resize: 'vertical', fontSize: 13 }} />
-                </div>
-              </div>
-            )}
-
-            {/* ── TAB: ITEMS ── */}
-            {activeTab === 'items' && (
-              <div style={{ background: 'var(--ocean-bg)', border: '1px solid var(--ocean-bdr)', borderRadius: 16, padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Package style={{ width: 14, height: 14, color: 'var(--ocean)' }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ocean)' }}>Order Items</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--parch-card)', color: 'var(--ocean)', border: '1px solid var(--ocean-bdr)' }}>
-                      {form.items.length}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {form.items.map((item, idx) => (
-                    <div key={item.id} style={{ borderRadius: 10, padding: 12, background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ocean)', background: 'var(--ocean-bg)', padding: '2px 8px', borderRadius: 20, border: '1px solid var(--ocean-bdr)' }}>
-                          Item {idx + 1}
-                        </span>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button type="button" onClick={() => duplicateItem(item.id)} style={{ padding: 4, borderRadius: 6, color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                            <Copy style={{ width: 13, height: 13 }} />
-                          </button>
-                          {form.items.length > 1 && (
-                            <button type="button" onClick={() => removeItem(item.id)} style={{ padding: 4, borderRadius: 6, color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                              <Trash2 style={{ width: 13, height: 13 }} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div style={{ marginBottom: 8 }}><LBL>Product</LBL>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          <ItemThumb src={item.product_image_url} name={item.product_name} onClick={() => item.product_image_url && setPreviewImg({ src: item.product_image_url, alt: item.product_name })} />
-                          <div style={{ flex: 1 }}>
-                            <ProductAutocomplete products={products} nameValue={item.product_name || ''} upcValue={item.upc || ''} searchField="name"
-                              onSelect={(p) => { updateItem(item.id, 'product_id', p.id); updateItem(item.id, 'product_name', p.name); updateItem(item.id, 'upc', p.upc || ''); updateItem(item.id, 'product_image_url', p.image || ''); }}
-                              onChangeName={(val) => updateItem(item.id, 'product_name', val)} placeholder="e.g. iPad Air" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                        <div><LBL>Unit Price</LBL>
-                          <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
-                            <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 22 }} type="number" step="0.01" min="0" value={item.unit_cost || ''} onChange={(e) => updateItem(item.id, 'unit_cost', e.target.value)} placeholder="0.00" />
-                          </div>
-                        </div>
-                        <div><LBL>Qty</LBL>
-                          <Input className="h-8 text-sm text-center" style={inp} type="number" min="1" value={item.quantity_ordered || 1} onChange={(e) => updateItem(item.id, 'quantity_ordered', e.target.value)} />
-                        </div>
-                        <div><LBL>Total</LBL>
-                          <div style={{ height: 32, display: 'flex', alignItems: 'center', paddingLeft: 9, fontSize: 13, color: 'var(--ocean)', fontWeight: 600 }}>
-                            {fmt$((parseFloat(item.unit_cost) || 0) * (parseInt(item.quantity_ordered) || 1))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button type="button" onClick={addItem}
-                  style={{ marginTop: 12, width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, color: 'var(--terrain)', background: 'none', border: '1px dashed var(--terrain-bdr)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Plus style={{ width: 14, height: 14 }} /> Add Item
-                </button>
-              </div>
-            )}
-
-            {/* ── TAB: PAYMENT ── */}
-            {activeTab === 'payment' && (
-              <div style={{ background: 'var(--ocean-bg)', border: '1px solid var(--ocean-bdr)', borderRadius: 16, padding: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ocean)', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
-                  💳 Costs & Payment
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 10, marginBottom: 14 }}>
-                  <div><LBL>Tax</LBL>
-                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
-                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.tax} onChange={e => set('tax', e.target.value)} placeholder="0.00" /></div>
-                  </div>
-                  <div><LBL>Shipping</LBL>
-                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
-                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.shipping_cost} onChange={e => set('shipping_cost', e.target.value)} placeholder="0.00" /></div>
-                  </div>
-                  <div><LBL>Fees</LBL>
-                    <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
-                      <Input className="h-8 text-sm" style={{ ...inp, paddingLeft: 20, minWidth: 80 }} type="number" step="0.01" min="0" value={form.fees} onChange={e => set('fees', e.target.value)} placeholder="0.00" /></div>
-                  </div>
-                  <div><LBL>Card</LBL>
-                    {!isSplit ? (
-                      <Select value={form.credit_card_id || ''} onValueChange={(v) => set('credit_card_id', v)}>
-                        <SelectTrigger className="h-8 text-xs" style={inp}>
-                          {form.credit_card_id ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
-                              <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} fallbackInitials={selectedCard?.card_name || 'X'} />
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                                {selectedCard?.card_name}
-                              </span>
-                              {selectedCard?.last_4_digits && (
-                                <span style={{ flexShrink: 0, color: 'var(--ink-ghost)', fontSize: 11, fontFamily: 'monospace', marginLeft: 4 }}>
-                                  ••••{selectedCard.last_4_digits}
-                                </span>
-                              )}
-                            </div>
-                          ) : <SelectValue placeholder="Select..." />}
-                        </SelectTrigger>
-                        <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                          {creditCards.filter(c => c.active !== false).map(c => (
-                            <SelectItem key={c.id} value={c.id} style={{ color: 'var(--ink)' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <BrandLogo domain={getCardDomain(c.card_name)} size={18} fallbackInitials={c.card_name} />
-                                <span>{c.card_name}{c.last_4_digits ? ` •${c.last_4_digits}` : ''}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : <span style={{ fontSize: 11, color: 'var(--ink-dim)' }}>Split</span>}
-                  </div>
-                </div>
-
-                {!isSplit && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500, minHeight: 32,
-                      ...(cardRate > 0 ? { background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', color: 'var(--terrain)' } : { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-dim)' }) }}>
-                      {cardRate > 0 ? <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} /> : <CreditCard style={{ width: 13, height: 13 }} />}
-                      {cardRate > 0 ? `${cardRate}% → ${fmt$(totalCB)} est.` : 'Select a card'}
-                    </div>
-                  </div>
-                )}
-
-                {isSplit && (
-                  <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {form.payment_splits.map((sp, idx) => {
-                      const spCard = creditCards.find(c => c.id === sp.card_id);
-                      return (
-                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '5fr 3fr 2fr 32px', gap: 8, alignItems: 'end', padding: '10px 12px', borderRadius: 10, background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                          <div><LBL>Card</LBL>
-                            <Select value={sp.card_id || ''} onValueChange={(v) => { const card = creditCards.find(c => c.id === v); setForm(prev => ({ ...prev, payment_splits: prev.payment_splits.map((s, i) => i === idx ? { ...s, card_id: v, card_name: card?.card_name || '' } : s) })); }}>
-                              <SelectTrigger className="h-8 text-xs" style={inp}>
-                                {sp.card_id ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <BrandLogo domain={getCardDomain(spCard?.card_name)} size={14} />
-                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{spCard?.card_name}</span>
-                                  </div>
-                                ) : <SelectValue placeholder="Card..." />}
-                              </SelectTrigger>
-                              <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                                {creditCards.filter(c => c.active !== false).map(c => (
-                                  <SelectItem key={c.id} value={c.id} style={{ color: 'var(--ink)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                      <BrandLogo domain={getCardDomain(c.card_name)} size={18} />
-                                      <span>{c.card_name}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div><LBL>Amount</LBL>
-                            <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 11 }}>$</span>
-                              <Input className="h-8 text-xs" style={{ ...inp, paddingLeft: 20 }} type="number" step="0.01" min="0" value={sp.amount} onChange={(e) => setForm(prev => ({ ...prev, payment_splits: prev.payment_splits.map((s, i) => i === idx ? { ...s, amount: e.target.value } : s) }))} placeholder="0.00" /></div>
-                          </div>
-                          <div><LBL>CB</LBL>
-                            <div style={{ height: 32, display: 'flex', alignItems: 'center', paddingLeft: 8, color: 'var(--terrain)', fontWeight: 600, fontSize: 12 }}>
-                              {fmt$((parseFloat(sp.amount) || 0) * (creditCards.find(c => c.id === sp.card_id)?.cashback_rate || 0) / 100)}
-                            </div>
-                          </div>
-                          <button type="button" onClick={() => setForm(prev => ({ ...prev, payment_splits: prev.payment_splits.filter((_, i) => i !== idx) }))} style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, marginTop: 16 }}>
-                            <Trash2 style={{ width: 13, height: 13 }} />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-                  <button type="button" onClick={() => setForm(prev => ({ ...prev, payment_splits: [...(prev.payment_splits || []), { card_id: '', card_name: '', amount: '' }] }))}
-                    style={{ fontSize: 12, fontWeight: 600, color: 'var(--violet)', padding: '6px 12px', borderRadius: 8, background: 'var(--violet-bg)', border: '1px solid var(--violet-bdr)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Plus style={{ width: 12, height: 12 }} /> Split payment
-                  </button>
-                  {isSplit && (
-                    <button type="button" onClick={() => set('payment_splits', [])} style={{ fontSize: 12, color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Single card</button>
-                  )}
-                </div>
-
-                <GiftCardPicker giftCards={giftCards} selectedIds={form.gift_card_ids} onChange={(ids) => set('gift_card_ids', ids)} retailer={form.retailer} />
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 12 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-faded)', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={form.include_tax_in_cashback} onChange={e => set('include_tax_in_cashback', e.target.checked)} />
-                    Tax in cashback
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-faded)', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={form.include_shipping_in_cashback} onChange={e => set('include_shipping_in_cashback', e.target.checked)} />
-                    Shipping in cashback
-                  </label>
-                  {isAmazon && (
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', padding: '4px 10px', borderRadius: 8, border: '1px solid',
-                      ...(form.amazon_yacb ? { background: 'var(--gold-bg)', borderColor: 'var(--gold-border)', color: 'var(--gold)' } : { background: 'var(--parch-warm)', borderColor: 'var(--parch-line)', color: 'var(--ink-dim)' }) }}>
-                      <input type="checkbox" checked={form.amazon_yacb} onChange={e => set('amazon_yacb', e.target.checked)} />
-                      ✨ Amazon YA 5%
-                    </label>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ── TAB: SALES ── */}
-            {activeTab === 'sales' && (
-              <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 16, padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--parch-line)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <DollarSign style={{ width: 14, height: 14, color: 'var(--terrain)' }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--terrain)' }}>Sale Events</span>
-                  </div>
-                  <button type="button" onClick={addSaleEvent}
-                    style={{ fontSize: 12, fontWeight: 600, color: 'var(--terrain)', padding: '6px 12px', borderRadius: 8, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Plus style={{ width: 12, height: 12 }} /> Record Sale
-                  </button>
-                </div>
-
-                {form.sale_events.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                    <DollarSign style={{ width: 32, height: 32, color: 'var(--terrain-bdr)', margin: '0 auto 8px' }} />
-                    <p style={{ color: 'var(--ink-dim)', fontSize: 13, marginBottom: 12 }}>No sale events yet</p>
-                    <button type="button" onClick={addSaleEvent}
-                      style={{ fontSize: 13, fontWeight: 600, color: 'var(--terrain)', padding: '8px 20px', borderRadius: 10, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)', cursor: 'pointer' }}>
-                      + Record First Sale
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {form.sale_events.map((ev, evIdx) => (
-                      <div key={ev.id} style={{ borderRadius: 10, padding: 12, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--terrain)' }}>Sale {evIdx + 1}</span>
-                          <button type="button" onClick={() => removeSaleEvent(ev.id)} style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                            <Trash2 style={{ width: 13, height: 13 }} />
-                          </button>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
-                          <div><LBL>Buyer / Platform</LBL>
-                            <Select value={ev.buyer || ''} onValueChange={(v) => updateSaleEvent(ev.id, 'buyer', v)}>
-                              <SelectTrigger className="h-8 text-xs" style={inp}><SelectValue placeholder="Select buyer..." /></SelectTrigger>
-                              <SelectContent style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-                                {sellers.map(s => <SelectItem key={s.id} value={s.name} style={{ color: 'var(--ink)' }}>{s.name}</SelectItem>)}
-                                {['eBay', 'Amazon', 'Facebook Marketplace', 'Mercari', 'OfferUp'].map(p => <SelectItem key={p} value={p} style={{ color: 'var(--ink)' }}>{p}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div><LBL>Sale Date</LBL>
-                            <Input type="date" className="h-8 text-xs" style={inp} value={ev.sale_date || ''} onChange={(e) => updateSaleEvent(ev.id, 'sale_date', e.target.value)} />
-                          </div>
-                          <div><LBL>Payout Date</LBL>
-                            <Input type="date" className="h-8 text-xs" style={inp} value={ev.payout_date || ''} onChange={(e) => updateSaleEvent(ev.id, 'payout_date', e.target.value)} />
-                          </div>
-                        </div>
-
-                        <div><LBL>Items Sold</LBL>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-                            {ev.items.map((it, itIdx) => (
-                              <div key={itIdx} style={{ display: 'grid', gridTemplateColumns: '5fr 2fr 3fr 28px', gap: 6, alignItems: 'center' }}>
-                                <Input className="h-7 text-xs" style={inp} value={it.product_name || ''} placeholder="Product" onChange={(e) => updateSaleEventItem(ev.id, itIdx, 'product_name', e.target.value)} />
-                                <Input className="h-7 text-xs text-center" style={inp} type="number" min="1" value={it.quantity ?? 1} placeholder="1" onChange={(e) => updateSaleEventItem(ev.id, itIdx, 'quantity', parseInt(e.target.value) || 1)} />
-                                <div style={{ position: 'relative' }}><span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 11 }}>$</span>
-                                  <Input className="h-7 text-xs" style={{ ...inp, paddingLeft: 18 }} type="number" step="0.01" min="0" value={it.sale_price || ''} placeholder="Price" onChange={(e) => updateSaleEventItem(ev.id, itIdx, 'sale_price', e.target.value)} />
-                                </div>
-                                <button type="button" onClick={() => updateSaleEvent(ev.id, 'items', ev.items.filter((_, i) => i !== itIdx))} style={{ color: 'var(--ink-dim)', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
-                                  <X style={{ width: 12, height: 12 }} />
-                                </button>
-                              </div>
-                            ))}
-                            <button type="button" onClick={() => { updateSaleEvent(ev.id, 'items', [...ev.items, { product_name: '', quantity: 1, sale_price: 0 }]); }}
-                              style={{ fontSize: 11, color: 'var(--terrain)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <Plus style={{ width: 11, height: 11 }} /> Add item
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {totalSalePrice > 0 && (
-                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--parch-card)', border: '1px solid var(--terrain-bdr)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, color: 'var(--terrain)', fontWeight: 500 }}>
-                          {form.sale_events.reduce((s, ev) => s + (ev.items?.reduce((ss, it) => ss + (parseInt(it.quantity ?? 1) || 1), 0) || 0), 0)} items sold
-                        </span>
-                        <span style={{ fontSize: 13, color: 'var(--terrain)', fontWeight: 700 }}>
-                          {fmt$(totalSalePrice)} revenue
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* ── RIGHT COLUMN ── */}
-          <div style={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {/* Profit summary card */}
-            <div style={{ borderRadius: 16, overflow: 'hidden', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
-              <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--parch-line)' }}>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: hasSales ? 'var(--terrain)' : 'var(--violet)', marginBottom: 8 }}>
-                  {hasSales ? 'Estimated Profit' : 'Cashback Profit'}
-                </p>
-                <p style={{ fontSize: 36, fontWeight: 600, lineHeight: 1, color: profitColor, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
-                  {fmt$(netProfit)}
-                </p>
-                <p style={{ fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontWeight: 600, color: roiColor, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{roi.toFixed(1)}% ROI</span>
-                  <span style={{ color: 'var(--parch-deep)' }}>·</span>
-                  <span style={{ color: 'var(--ink-ghost)' }}>{validItemCount} item{validItemCount !== 1 ? 's' : ''}</span>
-                </p>
-                {!hasSales && (
-                  <p style={{ fontSize: 11, color: 'var(--ink-ghost)', marginTop: 8 }}>Record sales in Sales tab or after saving</p>
-                )}
-              </div>
-
-              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                  <span style={{ color: 'var(--ink-dim)' }}>Items subtotal</span>
-                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{fmt$(itemsSubtotal)}</span>
-                </div>
-                {(tax + shipping + fees) > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--ink-dim)' }}>Tax + ship + fees</span>
-                    <span style={{ color: 'var(--ink-faded)' }}>+{fmt$(tax + shipping + fees)}</span>
-                  </div>
-                )}
-                {giftCardTotal > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--ink-dim)' }}>Gift cards</span>
-                    <span style={{ color: 'var(--rose)', fontWeight: 600 }}>−{fmt$(giftCardTotal)}</span>
-                  </div>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingTop: 8, borderTop: '1px solid var(--parch-line)' }}>
-                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>Total cost</span>
-                  <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{fmt$(finalCost)}</span>
-                </div>
-                {totalCB > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--ink-dim)' }}>Cashback</span>
-                    <span style={{ color: 'var(--violet)', fontWeight: 600 }}>+{fmt$(totalCB)}</span>
-                  </div>
-                )}
-                {totalSalePrice > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--ink-dim)' }}>Sale total</span>
-                    <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{fmt$(totalSalePrice)}</span>
-                  </div>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--parch-line)' }}>
-                  <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 13 }}>{hasSales ? 'Net profit' : 'Cashback'}</span>
-                  <span style={{ fontWeight: 600, fontSize: 15, color: profitColor, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>{fmt$(netProfit)}</span>
-                </div>
-              </div>
-            </div>
-
-            <button type="submit" disabled={createMutation.isPending}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 0', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', opacity: createMutation.isPending ? 0.6 : 1, transition: 'opacity 0.15s' }}>
-              {createMutation.isPending ? (
-                <><div style={{ width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Creating...</>
-              ) : (
-                <><Plus style={{ width: 16, height: 16 }} /> Add Order{validItemCount > 1 ? ` (${validItemCount} items)` : ''}</>
-              )}
+      {/* Tab bar */}
+      <div style={{ display:'flex', gap:0, borderBottom:'1px solid var(--parch-line)' }}>
+        {TABS.map(tab=>{
+          const TabIcon=tab.icon;
+          return (
+            <button key={tab.id} type="button" onClick={()=>setActiveTab(tab.id)}
+              style={{ padding:'9px 14px', fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', outline:'none', fontFamily:'var(--font-serif)',
+                borderBottom:activeTab===tab.id?'2px solid var(--gold)':'2px solid transparent',
+                color:activeTab===tab.id?'var(--gold)':'var(--ink-ghost)',
+                transition:'all 0.15s', marginBottom:-1 }}>
+              <TabIcon style={{ width:13, height:13 }}/>
+              {tab.label}
             </button>
+          );
+        })}
+      </div>
+    </div>
 
-            <button type="button" onClick={() => window.history.back()}
-              style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, color: 'var(--ink-ghost)', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', cursor: 'pointer' }}>
-              Cancel
+    {/*    DETAILS TAB    */}
+    {activeTab==='details' && (
+      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
+        <SectionHeader color="var(--gold)" title="Vendor & Order"/>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:10 }}>
+          <div>
+            <LBL>Vendor *</LBL>
+            <Select value={form.retailer} onValueChange={v=>set('retailer',v)}>
+              <SelectTrigger className="h-9" style={INP}>
+                {form.retailer ? (
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <BrandLogo domain={getStoreDomain(form.retailer)} size={14} fallback={form.retailer}/>
+                    <span style={{ fontSize:12 }}>{form.retailer}</span>
+                  </div>
+                ) : <SelectValue placeholder="Select..."/>}
+              </SelectTrigger>
+              <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
+                {RETAILERS.map(r=>(
+                  <SelectItem key={r} value={r} style={{ color:'var(--ink)' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <BrandLogo domain={getStoreDomain(r)} size={16} fallback={r}/>
+                      {r}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <LBL>Status</LBL>
+            <Select value={form.status} onValueChange={v=>set('status',v)}>
+              <SelectTrigger className="h-9" style={INP}><SelectValue/></SelectTrigger>
+              <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
+                {statuses.map(s=><SelectItem key={s.value} value={s.value} style={{ color:'var(--ink)' }}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <LBL>Order Number</LBL>
+            <Input style={INP} className="h-9" value={form.order_number} onChange={e=>set('order_number',e.target.value)} placeholder="112-345..."/>
+          </div>
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+          <div>
+            <LBL>Order Date</LBL>
+            <Input type="date" style={INP} className="h-9" value={form.order_date} onChange={e=>set('order_date',e.target.value)}/>
+          </div>
+          <div>
+            <LBL>Account</LBL>
+            <Input style={INP} className="h-9" value={form.account} onChange={e=>set('account',e.target.value)} placeholder="Account used"/>
+          </div>
+        </div>
+
+        <div style={{ marginBottom:10 }}>
+          <LBL>Tracking Number(s)</LBL>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {form.tracking_numbers.map((tn,idx)=>(
+              <div key={idx} style={{ display:'flex', gap:6, alignItems:'center' }}>
+                <Input style={{ ...INP, flex:1 }} className="h-8" value={tn} onChange={e=>updateTracking(idx,e.target.value)} placeholder="1Z999AA1..."/>
+                {form.tracking_numbers.length>1&&(
+                  <button type="button" onClick={()=>removeTracking(idx)} style={{ color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', padding:4 }}>
+                    <Minus style={{ width:14, height:14 }}/>
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={addTracking} style={{ fontSize:12, color:'var(--terrain)', background:'none', border:'none', cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:4 }}>
+              <Plus style={{ width:12, height:12 }}/> Add tracking number
             </button>
           </div>
         </div>
-      </form>
-    </div>
-  );
+
+        {/* Fulfillment */}
+        <div style={{ display:'flex', gap:4, padding:3, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', width:'fit-content', marginBottom:12 }}>
+          {[{ v:'ship_to_me',label:'Ship to Me',color:'var(--ocean)',bg:'var(--ocean-bg)',bdr:'var(--ocean-bdr)' },
+            { v:'store_pickup',label:'Store Pickup',color:'var(--violet)',bg:'var(--violet-bg)',bdr:'var(--violet-bdr)' },
+            { v:'direct_dropship',label:'Dropship',color:'var(--gold)',bg:'var(--gold-bg)',bdr:'var(--gold-bdr)' }].map(({ v,label,color,bg,bdr })=>(
+            <button key={v} type="button" onClick={()=>set('fulfillment_type',v)}
+              style={{ padding:'6px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', border:'1px solid', fontFamily:'var(--font-serif)',
+                ...(form.fulfillment_type===v?{ background:bg, borderColor:bdr, color }:{ background:'transparent', borderColor:'transparent', color:'var(--ink-ghost)' }) }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {form.fulfillment_type==='direct_dropship' && (
+          <div style={{ marginBottom:10 }}>
+            <LBL>Ship To (Buyer)</LBL>
+            <Select value={form.dropship_to} onValueChange={v=>set('dropship_to',v)}>
+              <SelectTrigger className="h-8 text-xs" style={INP}><SelectValue placeholder="Select buyer..."/></SelectTrigger>
+              <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
+                {sellers.map(s=><SelectItem key={s.id} value={s.name} style={{ color:'var(--ink)' }}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {form.fulfillment_type==='store_pickup' && (
+          <div style={{ marginBottom:10 }}>
+            <LBL>Pickup Location</LBL>
+            <Input style={INP} className="h-8" value={form.pickup_location} onChange={e=>set('pickup_location',e.target.value)} placeholder="e.g. Downtown Store"/>
+          </div>
+        )}
+
+        <div>
+          <LBL>Notes</LBL>
+          <Textarea value={form.notes} onChange={e=>set('notes',e.target.value)} placeholder="Any notes..." rows={2}
+            style={{ ...INP, width:'100%', padding:'8px 12px', resize:'vertical', fontSize:13 }}/>
+        </div>
+      </div>
+    )}
+
+    {/*    ITEMS TAB    */}
+    {activeTab==='items' && (
+      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
+        <SectionHeader color="var(--ocean)" title="Order Items"
+          right={<span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--ocean)', background:'var(--ocean-bg)', padding:'2px 7px', borderRadius:99, border:'1px solid var(--ocean-bdr)' }}>{form.items.length} item{form.items.length!==1?'s':''}</span>}
+        />
+
+        {/* UPC LOOKUP BAR */}
+        <UPCLookupBar products={products} onApply={applyUPC}/>
+
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {form.items.map((item,idx)=>(
+            <div key={item.id} style={{ borderRadius:10, padding:12, background:'var(--parch-warm)', border:'1px solid var(--parch-line)' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                <span style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ocean)', background:'var(--ocean-bg)', padding:'2px 8px', borderRadius:20, border:'1px solid var(--ocean-bdr)' }}>
+                  Item {idx+1}
+                </span>
+                <div style={{ display:'flex', gap:4 }}>
+                  <button type="button" onClick={()=>duplicateItem(item.id)} style={{ padding:4, borderRadius:6, color:'var(--ink-dim)', background:'var(--parch-card)', border:'1px solid var(--parch-line)', cursor:'pointer' }}><Copy style={{ width:13, height:13 }}/></button>
+                  {form.items.length>1&&<button type="button" onClick={()=>removeItem(item.id)} style={{ padding:4, borderRadius:6, color:'var(--crimson)', background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', cursor:'pointer' }}><Trash2 style={{ width:13, height:13 }}/></button>}
+                </div>
+              </div>
+
+              <div style={{ marginBottom:8 }}>
+                <LBL>Product {item.product_name&&item.upc&&<span style={{ color:'var(--terrain)', textTransform:'none', letterSpacing:0, fontSize:8 }}>&bull; from UPC scan</span>}</LBL>
+                <div style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                  <ItemThumb src={item.product_image_url} name={item.product_name} onClick={()=>item.product_image_url&&setPreviewImg({ src:item.product_image_url, alt:item.product_name })}/>
+                  <div style={{ flex:1 }}>
+                    <ProductAutocomplete
+                      products={products}
+                      nameValue={item.product_name||''}
+                      upcValue={item.upc||''}
+                      searchField="name"
+                      onSelect={p=>{ updateItem(item.id,'product_id',p.id); updateItem(item.id,'product_name',p.name); updateItem(item.id,'upc',p.upc||''); updateItem(item.id,'product_image_url',p.image||''); }}
+                      onChangeName={val=>updateItem(item.id,'product_name',val)}
+                      placeholder="e.g. iPad Air"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+                <div>
+                  <LBL>Unit Price</LBL>
+                  <div style={{ position:'relative' }}>
+                    <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:'var(--ink-ghost)', fontSize:12 }}>$</span>
+                    <Input className="h-8 text-sm" style={{ ...INP, paddingLeft:22 }} type="number" step="0.01" min="0" value={item.unit_cost||''} onChange={e=>updateItem(item.id,'unit_cost',e.target.value)} placeholder="0.00"/>
+                  </div>
+                </div>
+                <div>
+                  <LBL>Qty</LBL>
+                  <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                    <Input className="h-8 text-sm text-center" style={{ ...INP, width:44, flexShrink:0 }} type="number" min="1" value={item.quantity_ordered||1} onChange={e=>updateItem(item.id,'quantity_ordered',e.target.value)}/>
+                    {[2,5,10].map(n=>(
+                      <button key={n} type="button" onClick={()=>updateItem(item.id,'quantity_ordered',n)}
+                        style={{ padding:'3px 6px', borderRadius:6, fontSize:10, fontWeight:700, background:parseInt(item.quantity_ordered)===n?'var(--ocean-bg)':'var(--parch-card)', color:parseInt(item.quantity_ordered)===n?'var(--ocean2)':'var(--ink-ghost)', border:'1px solid '+(parseInt(item.quantity_ordered)===n?'var(--ocean-bdr)':'var(--parch-line)'), cursor:'pointer', fontFamily:'var(--font-mono)' }}>
+                        x{n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <LBL>Total</LBL>
+                  <div style={{ height:32, display:'flex', alignItems:'center', paddingLeft:9, fontFamily:'var(--font-mono)', fontSize:13, color:'var(--ocean)', fontWeight:600 }}>
+                    {fmt$((parseFloat(item.unit_cost)||0)*(parseInt(item.quantity_ordered)||1))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button type="button" onClick={addItem}
+          style={{ marginTop:10, width:'100%', padding:'8px 0', borderRadius:8, fontSize:12, color:'var(--terrain)', background:'none', border:'1px dashed var(--terrain-bdr)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+          <Plus style={{ width:14, height:14 }}/> Add Item
+        </button>
+      </div>
+    )}
+
+    {/*    PAYMENT TAB    */}
+    {activeTab==='payment' && (
+      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
+
+        {/* Costs */}
+        <SectionHeader color="var(--gold)" title="Costs"/>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(80px,1fr))', gap:10, marginBottom:12 }}>
+          {[['Tax','tax'],['Shipping','shipping_cost'],['Fees','fees']].map(([lbl,field])=>(
+            <div key={field}>
+              <LBL>{lbl}</LBL>
+              <div style={{ position:'relative' }}>
+                <span style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', color:'var(--ink-ghost)', fontSize:12 }}>$</span>
+                <Input className="h-8 text-sm" style={{ ...INP, paddingLeft:20 }} type="number" step="0.01" min="0" value={form[field]} onChange={e=>set(field,e.target.value)} placeholder="0.00"/>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Cost summary */}
+        <div style={{ background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:9, padding:'9px 12px', marginBottom:16 }}>
+          {[['Items subtotal', fmt$(itemsSubtotal), 'var(--ink)'],
+            (tax+shipping+fees)>0&&['Tax + ship + fees', '+'+fmt$(tax+shipping+fees), 'var(--ink-faded)'],
+            giftCardTotal>0&&['Gift cards', '-'+fmt$(giftCardTotal), 'var(--gold2)'],
+          ].filter(Boolean).map(([l,v,c])=>(
+            <div key={l} style={{ display:'flex', justifyContent:'space-between', fontSize:12, padding:'3px 0' }}>
+              <span style={{ color:'var(--ink-dim)' }}>{l}</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontWeight:600, color:c }}>{v}</span>
+            </div>
+          ))}
+          <div style={{ display:'flex', justifyContent:'space-between', paddingTop:6, marginTop:4, borderTop:'1px solid var(--parch-line)' }}>
+            <span style={{ fontWeight:700, color:'var(--ink)', fontSize:13 }}>Total cost</span>
+            <span style={{ fontFamily:'var(--font-mono)', fontWeight:700, color:'var(--gold)', fontSize:14 }}>{fmt$(finalCost)}</span>
+          </div>
+        </div>
+
+        {/* Credit card */}
+        <SectionHeader color="var(--ocean)" title="Credit Card"/>
+        {!isSplit ? (
+          <Select value={form.credit_card_id||''} onValueChange={v=>set('credit_card_id',v)}>
+            <SelectTrigger className="h-9" style={INP}>
+              {form.credit_card_id ? (
+                <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
+                  <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} fallback={selectedCard?.card_name||'C'}/>
+                  <span style={{ fontSize:12, flex:1 }}>{selectedCard?.card_name}</span>
+                  {selectedCard?.cashback_rate>0&&<span style={{ fontFamily:'var(--font-mono)', fontSize:11, color:'var(--violet)', fontWeight:700 }}>{selectedCard.cashback_rate}% CB</span>}
+                </div>
+              ) : <SelectValue placeholder="Select card..."/>}
+            </SelectTrigger>
+            <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
+              {creditCards.filter(c=>c.active!==false).map(c=>(
+                <SelectItem key={c.id} value={c.id} style={{ color:'var(--ink)' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <BrandLogo domain={getCardDomain(c.card_name)} size={18} fallback={c.card_name}/>
+                    <span>{c.card_name}{c.last_4_digits?` ...${c.last_4_digits}`:''}</span>
+                    {c.cashback_rate>0&&<span style={{ color:'var(--violet)', fontFamily:'var(--font-mono)', fontSize:11 }}>{c.cashback_rate}%</span>}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <div style={{ marginBottom:8 }}>
+            {form.payment_splits.map((sp,idx)=>{
+              const spCard=creditCards.find(c=>c.id===sp.card_id);
+              return (
+                <div key={idx} style={{ display:'grid', gridTemplateColumns:'5fr 3fr 28px', gap:8, alignItems:'end', padding:'10px 12px', borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', marginBottom:6 }}>
+                  <div>
+                    <LBL>Card</LBL>
+                    <Select value={sp.card_id||''} onValueChange={v=>{ const c=creditCards.find(x=>x.id===v); setForm(prev=>({ ...prev, payment_splits:prev.payment_splits.map((s,i)=>i===idx?{ ...s, card_id:v, card_name:c?.card_name||'' }:s) })); }}>
+                      <SelectTrigger className="h-8 text-xs" style={INP}>{sp.card_id?<div style={{ display:'flex', alignItems:'center', gap:6 }}><BrandLogo domain={getCardDomain(spCard?.card_name)} size={14}/><span>{spCard?.card_name}</span></div>:<SelectValue placeholder="Card..."/>}</SelectTrigger>
+                      <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
+                        {creditCards.filter(c=>c.active!==false).map(c=><SelectItem key={c.id} value={c.id} style={{ color:'var(--ink)' }}><div style={{ display:'flex', alignItems:'center', gap:8 }}><BrandLogo domain={getCardDomain(c.card_name)} size={16}/>{c.card_name}</div></SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <LBL>Amount <span style={{ fontFamily:'var(--font-mono)', color:'var(--violet)' }}>{fmt$((parseFloat(sp.amount)||0)*(creditCards.find(c=>c.id===sp.card_id)?.cashback_rate||0)/100)} CB</span></LBL>
+                    <div style={{ position:'relative' }}><span style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', color:'var(--ink-ghost)', fontSize:11 }}>$</span>
+                      <Input className="h-8 text-xs" style={{ ...INP, paddingLeft:20 }} type="number" step="0.01" min="0" value={sp.amount} onChange={e=>setForm(prev=>({ ...prev, payment_splits:prev.payment_splits.map((s,i)=>i===idx?{ ...s, amount:e.target.value }:s) }))} placeholder="0.00"/></div>
+                  </div>
+                  <button type="button" onClick={()=>setForm(prev=>({ ...prev, payment_splits:prev.payment_splits.filter((_,i)=>i!==idx) }))} style={{ color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', padding:4, marginTop:18 }}><Trash2 style={{ width:13, height:13 }}/></button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div style={{ display:'flex', gap:8, margin:'10px 0 14px', flexWrap:'wrap' }}>
+          <button type="button" onClick={()=>setForm(prev=>({ ...prev, payment_splits:[...(prev.payment_splits||[]), { card_id:'', card_name:'', amount:'' }] }))}
+            style={{ fontSize:11, fontWeight:700, color:'var(--violet)', padding:'6px 12px', borderRadius:8, background:'var(--violet-bg)', border:'1px solid var(--violet-bdr)', cursor:'pointer', display:'flex', alignItems:'center', gap:4, fontFamily:'var(--font-serif)' }}>
+            <Plus style={{ width:12, height:12 }}/> Split payment
+          </button>
+          {isSplit&&<button type="button" onClick={()=>set('payment_splits',[])} style={{ fontSize:12, color:'var(--ink-dim)', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>Single card</button>}
+        </div>
+
+        {/* Cashback toggles */}
+        <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginBottom:14 }}>
+          {[
+            { field:'include_tax_in_cashback',     label:'Tax in cashback'      },
+            { field:'include_shipping_in_cashback', label:'Shipping in cashback' },
+          ].map(({ field, label })=>(
+            <label key={field} style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'var(--ink-faded)', cursor:'pointer' }}>
+              <input type="checkbox" checked={form[field]} onChange={e=>set(field,e.target.checked)}/>
+              {label}
+            </label>
+          ))}
+          {isAmazon && (
+            <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, cursor:'pointer', padding:'4px 10px', borderRadius:8, border:'1px solid',
+              ...(form.amazon_yacb?{ background:'var(--gold-bg)', borderColor:'var(--gold-bdr)', color:'var(--gold2)' }:{ background:'var(--parch-warm)', borderColor:'var(--parch-line)', color:'var(--ink-dim)' }) }}>
+              <input type="checkbox" checked={form.amazon_yacb} onChange={e=>set('amazon_yacb',e.target.checked)}/>
+              Amazon YA 5%
+            </label>
+          )}
+        </div>
+
+        {/* CASHBACK BREAKDOWN */}
+        <CashbackBreakdown
+          cardCB={cardCB} yaCB={yaCB} totalCB={totalCB}
+          selectedCard={selectedCard} isAmazon={isAmazon}
+          yacbEnabled={form.amazon_yacb} cashbackBase={cashbackBase}
+        />
+
+        {/* GIFT CARDS WITH BALANCE */}
+        <GiftCardSection
+          giftCards={giftCards}
+          selectedIds={form.gift_card_ids}
+          onChange={ids=>set('gift_card_ids',ids)}
+          retailer={form.retailer}
+        />
+      </div>
+    )}
+
+    {/*    SALES TAB    */}
+    {activeTab==='sales' && (
+      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
+        <SectionHeader color="var(--terrain)" title="Sale Events"
+          right={
+            <button type="button" onClick={addSaleEvent}
+              style={{ fontSize:10, fontWeight:700, color:'var(--terrain)', padding:'4px 10px', borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--terrain-bdr)', cursor:'pointer', fontFamily:'var(--font-serif)', display:'flex', alignItems:'center', gap:4 }}>
+              <Plus style={{ width:11, height:11 }}/> Record Sale
+            </button>
+          }
+        />
+
+        {form.sale_events.length===0 ? (
+          <div style={{ textAlign:'center', padding:'32px 0' }}>
+            <DollarSign style={{ width:32, height:32, color:'var(--terrain-bdr)', margin:'0 auto 8px' }}/>
+            <p style={{ color:'var(--ink-dim)', fontSize:13, marginBottom:12 }}>No sale events yet</p>
+            <button type="button" onClick={addSaleEvent}
+              style={{ fontSize:12, fontWeight:600, color:'var(--terrain)', padding:'8px 20px', borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--terrain-bdr)', cursor:'pointer' }}>
+              + Record First Sale
+            </button>
+          </div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {form.sale_events.map((ev,evIdx)=>(
+              <div key={ev.id} style={{ borderRadius:10, padding:12, background:'var(--parch-warm)', border:'1px solid var(--terrain-bdr)' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                  <span style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--terrain)', background:'var(--terrain-bg)', padding:'2px 8px', borderRadius:99, border:'1px solid var(--terrain-bdr)' }}>Sale {evIdx+1}</span>
+                  <button type="button" onClick={()=>removeSaleEvent(ev.id)} style={{ color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', padding:4 }}><Trash2 style={{ width:13, height:13 }}/></button>
+                </div>
+
+                <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:8, marginBottom:10 }}>
+                  <div>
+                    <LBL>Buyer / Platform</LBL>
+                    <Select value={ev.buyer||''} onValueChange={v=>updateSaleEvent(ev.id,'buyer',v)}>
+                      <SelectTrigger className="h-8 text-xs" style={INP}><SelectValue placeholder="Select buyer..."/></SelectTrigger>
+                      <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
+                        {sellers.map(s=><SelectItem key={s.id} value={s.name} style={{ color:'var(--ink)' }}>{s.name}</SelectItem>)}
+                        {['eBay','Amazon','Facebook Marketplace','Mercari','OfferUp'].map(p=><SelectItem key={p} value={p} style={{ color:'var(--ink)' }}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <LBL>Sale Date</LBL>
+                    <Input type="date" className="h-8 text-xs" style={INP} value={ev.sale_date||''} onChange={e=>updateSaleEvent(ev.id,'sale_date',e.target.value)}/>
+                  </div>
+                  <div>
+                    <LBL>Payout Date</LBL>
+                    <Input type="date" className="h-8 text-xs" style={INP} value={ev.payout_date||''} onChange={e=>updateSaleEvent(ev.id,'payout_date',e.target.value)}/>
+                  </div>
+                </div>
+
+                <LBL>Items Sold</LBL>
+                <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:4 }}>
+                  {ev.items.map((it,itIdx)=>{
+                    const pp = getSaleItemProfit(it, form.items);
+                    const isProfit = pp ? pp.profit >= 0 : null;
+                    return (
+                      <div key={itIdx} style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:9, padding:'9px 10px' }}>
+                        {/* Input row */}
+                        <div style={{ display:'grid', gridTemplateColumns:'4fr 1.5fr 2.5fr 20px', gap:6, alignItems:'center', marginBottom: pp ? 7 : 0 }}>
+                          <Input className="h-7 text-xs" style={INP} value={it.product_name||''} placeholder="Product" onChange={e=>updateSaleEventItem(ev.id,itIdx,'product_name',e.target.value)}/>
+                          <Input className="h-7 text-xs text-center" style={INP} type="number" min="1" value={it.quantity??1} placeholder="1" onChange={e=>updateSaleEventItem(ev.id,itIdx,'quantity',parseInt(e.target.value)||1)}/>
+                          <div style={{ position:'relative' }}>
+                            <span style={{ position:'absolute', left:7, top:'50%', transform:'translateY(-50%)', color:'var(--ink-ghost)', fontSize:11 }}>$</span>
+                            <Input className="h-7 text-xs" style={{ ...INP, paddingLeft:18 }} type="number" step="0.01" min="0" value={it.sale_price||''} placeholder="Price" onChange={e=>updateSaleEventItem(ev.id,itIdx,'sale_price',e.target.value)}/>
+                          </div>
+                          <button type="button" onClick={()=>updateSaleEvent(ev.id,'items',ev.items.filter((_,i)=>i!==itIdx))} style={{ color:'var(--ink-ghost)', background:'none', border:'none', cursor:'pointer', padding:2 }}><X style={{ width:12, height:12 }}/></button>
+                        </div>
+
+                        {/* PROFIT PER ITEM */}
+                        {pp !== null && it.sale_price > 0 && (
+                          <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:7, borderTop:'1px solid var(--parch-line)', flexWrap:'wrap' }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                              <span style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-ghost)' }}>Profit</span>
+                              <span style={{ fontFamily:'var(--font-mono)', fontSize:12, fontWeight:700, color:isProfit?'var(--terrain)':'var(--crimson)' }}>
+                                {isProfit?'+':''}{fmt$(pp.profit)}
+                              </span>
+                            </div>
+                            <span style={{ fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:99, fontFamily:'var(--font-mono)', background:isProfit?'var(--terrain-bg)':'var(--crimson-bg)', color:isProfit?'var(--terrain)':'var(--crimson)', border:'1px solid '+(isProfit?'var(--terrain-bdr)':'var(--crimson-bdr)') }}>
+                              ROI {pct(pp.roi)}
+                            </span>
+                            <span style={{ fontSize:9, color:'var(--ink-ghost)' }}>cost {fmt$(pp.cost)}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button type="button" onClick={()=>updateSaleEvent(ev.id,'items',[...ev.items,{ product_name:'', quantity:1, sale_price:0 }])}
+                    style={{ fontSize:11, color:'var(--terrain)', background:'none', border:'none', cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:4 }}>
+                    <Plus style={{ width:11, height:11 }}/> Add item
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {totalSalePrice>0&&(
+              <div style={{ padding:'10px 14px', borderRadius:10, background:'var(--parch-card)', border:'1px solid var(--terrain-bdr)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:12, color:'var(--terrain)' }}>
+                  {form.sale_events.reduce((s,ev)=>s+(ev.items?.reduce((ss,it)=>ss+(parseInt(it.quantity??1)||1),0)||0),0)} items sold
+                </span>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:13, color:'var(--terrain)', fontWeight:700 }}>{fmt$(totalSalePrice)} revenue</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )}
+
+    {/*    PROFIT BAR (always visible)    */}
+    <ProfitBar
+      netProfit={netProfit} totalCost={totalCost} finalCost={finalCost}
+      totalCB={totalCB} cardCB={cardCB} yaCB={yaCB}
+      totalSalePrice={totalSalePrice} validItemCount={validItemCount}
+      hasSales={hasSales} isSplit={isSplit}
+    />
+
+    {/*    ROI + CASHBACK + ITEMS mini stats    */}
+    {(totalCost > 0 || totalCB > 0) && (
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12 }}>
+        {[
+          { lbl:'ROI', val:pct(totalCost>0?(netProfit/totalCost)*100:0), color:netProfit>=0?'var(--terrain)':'var(--crimson)' },
+          { lbl:'Cashback', val:fmt$(totalCB), color:'var(--violet)' },
+          { lbl:'Items', val:validItemCount, color:'var(--ink)' },
+        ].map(({ lbl, val, color })=>(
+          <div key={lbl} style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:10, padding:'9px 10px', textAlign:'center' }}>
+            <p style={{ fontFamily:'var(--font-serif)', fontSize:8, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-ghost)', marginBottom:3 }}>{lbl}</p>
+            <p style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color }}>{val}</p>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/*    SUBMIT    */}
+    <button type="submit" disabled={createMutation.isPending}
+      style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'13px 0', borderRadius:12, color:'var(--gold)', fontSize:13, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase', border:'none', cursor:'pointer', background:'var(--ink)', opacity:createMutation.isPending?0.6:1, transition:'opacity 0.15s', fontFamily:'var(--font-serif)', marginBottom:8 }}>
+      {createMutation.isPending
+        ? <><div style={{ width:16, height:16, border:'2px solid var(--gold)', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.6s linear infinite' }}/> Creating...</>
+        : <><Plus style={{ width:16, height:16 }}/> Add Order{validItemCount>1?` (${validItemCount} items)`:''}</>}
+    </button>
+
+    <button type="button" onClick={()=>window.history.back()}
+      style={{ width:'100%', padding:'10px 0', borderRadius:12, fontSize:12, color:'var(--ink-ghost)', background:'var(--parch-warm)', border:'1px solid var(--parch-line)', cursor:'pointer' }}>
+      Cancel
+    </button>
+
+  </form>
+</div>
+```
+
+);
 }
