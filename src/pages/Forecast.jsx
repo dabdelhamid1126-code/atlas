@@ -589,15 +589,19 @@ function GoalCalculator({ creditCards }) {
         Enter your monthly profit goal and average deal metrics — we'll tell you exactly how many orders you need per day.
       </p>
 
-      <div className="grid-kpi" style={{ marginBottom: 10 }}>
-        <div>
-          <Label>Monthly Profit Goal ($)</Label>
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12 }}>$</span>
-            <input type="number" min="0" step="10" value={monthlyTarget} onChange={e => setMonthlyTarget(e.target.value)}
-              placeholder="1000.00" style={{ ...INP, paddingLeft: 22 }} />
-          </div>
+      {/* Row 1 — Monthly goal spans full width for emphasis */}
+      <div style={{ marginBottom: 10 }}>
+        <Label>Monthly Profit Goal ($)</Label>
+        <div style={{ position: 'relative' }}>
+          <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 14 }}>$</span>
+          <input type="number" min="0" step="10" value={monthlyTarget} onChange={e => setMonthlyTarget(e.target.value)}
+            placeholder="1,000.00"
+            style={{ ...INP, paddingLeft: 26, fontSize: 16, fontWeight: 700, height: 44, color: 'var(--gold)', background: 'var(--gold-bg)', border: '1px solid var(--gold-bdr)' }} />
         </div>
+      </div>
+
+      {/* Row 2 — Deal details: cost | sale price | platform fee */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 10, marginBottom: 10 }}>
         <div>
           <Label>Avg Order Cost ($)</Label>
           <div style={{ position: 'relative' }}>
@@ -615,7 +619,7 @@ function GoalCalculator({ creditCards }) {
           </div>
         </div>
         <div>
-          <Label>Platform Fee (%)</Label>
+          <Label>Platform Fee</Label>
           <div style={{ position: 'relative' }}>
             <input type="number" min="0" max="100" step="0.1" value={platformFee} onChange={e => setPlatformFee(e.target.value)}
               placeholder="0.0" style={{ ...INP, paddingRight: 22 }} />
@@ -624,12 +628,13 @@ function GoalCalculator({ creditCards }) {
         </div>
       </div>
 
+      {/* Row 3 — Credit card full width */}
       <div style={{ marginBottom: 14 }}>
         <Label>Credit Card (for cashback)</Label>
         <select value={selectedCardId} onChange={e => setSelectedCardId(e.target.value)} style={{ ...INP, cursor: 'pointer' }}>
-          <option value="">No card</option>
+          <option value="">No card selected</option>
           {creditCards.filter(c => c.active !== false).map(c => (
-            <option key={c.id} value={c.id}>{c.card_name} — {c.cashback_rate || 0}% CB</option>
+            <option key={c.id} value={c.id}>{c.card_name} — {c.cashback_rate || 0}% cashback</option>
           ))}
         </select>
       </div>
