@@ -96,21 +96,27 @@ export default function SplashScreen({ onComplete, userName = '' }) {
 
   useEffect(() => {
     const t = [
-      setTimeout(() => setLogoVisible(true),    250),
-      setTimeout(() => setTitleVisible(true),   700),
-      setTimeout(() => setSubtitleVisible(true),1050),
-      setTimeout(() => setGreetVisible(true),   1350),
-      setTimeout(() => setBarVisible(true),     1650),
+      setTimeout(() => setLogoVisible(true),     300),
+      setTimeout(() => setTitleVisible(true),    900),
+      setTimeout(() => setSubtitleVisible(true), 1400),
+      setTimeout(() => setGreetVisible(true),    1800),
+      setTimeout(() => setBarVisible(true),      2200),
     ];
     let p = 0;
     const tick = setInterval(() => {
-      p += Math.random() * 3.5 + 1.2;
+      // Slow start, steady middle, slight pause near end
+      const step = p < 30  ? Math.random() * 1.2 + 0.4   // slow start
+                 : p < 75  ? Math.random() * 1.8 + 0.8   // steady
+                 : p < 95  ? Math.random() * 0.8 + 0.3   // slow near end
+                 :            Math.random() * 0.4 + 0.1;  // creep to 100
+      p += step;
       if (p >= 100) {
         p = 100; clearInterval(tick);
-        setTimeout(() => { setPhase('out'); setTimeout(() => onComplete?.(), 800); }, 350);
+        // Pause at 100% for 900ms so user sees "Ready", then fade out
+        setTimeout(() => { setPhase('out'); setTimeout(() => onComplete?.(), 900); }, 900);
       }
       setProgress(Math.min(p, 100));
-    }, 45);
+    }, 55);
     return () => { t.forEach(clearTimeout); clearInterval(tick); };
   }, []);
 
