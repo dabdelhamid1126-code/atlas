@@ -420,7 +420,7 @@ export default function Analytics() {
     filteredOrders.forEach(o => { if(o.retailer) storeMap[o.retailer]=(storeMap[o.retailer]||0)+parseFloat(o.total_cost||0); });
     const topStore = Object.entries(storeMap).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
     return { revenue, cost, profit, roi, cardCashback, yaCashback, totalUSD, points, topStore };
-  }, [filteredOrders, filteredRewards, profitMode]);
+  }, [filteredOrders, filteredRewards]);
 
   /* ── Period trend ── */
   const periodData = useMemo(() => {
