@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+/* ─────────────────────────────────────────────
+   NAV STRUCTURE
+───────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
     label: 'Home',
@@ -51,30 +54,61 @@ const NAV_GROUPS = [
   },
 ];
 
-function AtlasLogo({ size = 36 }) {
-  const s = size, cx = s/2, cy = s/2, r = s*0.38;
-  const arrowN = s*0.09, arrowE = s*0.1;
-  const hex = Array.from({ length: 6 }, (_, i) => {
-    const a = (Math.PI/180)*(60*i-30);
-    return [cx+r*Math.cos(a), cy+r*Math.sin(a)];
-  }).map(p=>p.join(',')).join(' ');
+/* ─────────────────────────────────────────────
+   ATLAS LOGO SVG
+───────────────────────────────────────────── */
+function AtlasLogo({ size = 82 }) {
+  const s = size;
+  const scale = s / 512;
+  // Scale a 512-viewBox point to current size
+  const p = (x, y) => `${x * scale},${y * scale}`;
+  const cx = s / 2, cy = s / 2;
   return (
-    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} style={{ flexShrink:0 }}>
-      <rect width={s} height={s} rx={s*0.25} fill="#1e1a14"/>
-      <rect width={s} height={s} rx={s*0.25} fill="none" stroke="#c9a84c" strokeWidth="0.8" opacity="0.5"/>
-      <polygon points={hex} fill="none" stroke="#c9a84c" strokeWidth={s*0.048}/>
-      <line x1={cx} y1={cy-r+2} x2={cx} y2={cy+r-2} stroke="#c9a84c" strokeWidth={s*0.028} strokeDasharray={`${s*0.1} ${s*0.1}`} opacity="0.4"/>
-      <line x1={cx-r+2} y1={cy} x2={cx+r-2} y2={cy} stroke="#c9a84c" strokeWidth={s*0.028} strokeDasharray={`${s*0.1} ${s*0.1}`} opacity="0.4"/>
-      <polygon points={`${cx},${cy-r+s*0.04} ${cx-arrowN},${cy-r*0.42} ${cx+arrowN},${cy-r*0.42}`} fill="#c9a84c"/>
-      <polygon points={`${cx},${cy+r-s*0.04} ${cx-arrowN},${cy+r*0.42} ${cx+arrowN},${cy+r*0.42}`} fill="#c9a84c" opacity="0.2"/>
-      <polygon points={`${cx+r-s*0.04},${cy} ${cx+r*0.42},${cy-arrowE} ${cx+r*0.42},${cy+arrowE}`} fill="#f5e09a"/>
-      <polygon points={`${cx-r+s*0.04},${cy} ${cx-r*0.42},${cy-arrowE} ${cx-r*0.42},${cy+arrowE}`} fill="#c9a84c" opacity="0.2"/>
-      <circle cx={cx} cy={cy} r={s*0.14} fill="#1e1a14" stroke="#c9a84c" strokeWidth={s*0.038}/>
-      <circle cx={cx} cy={cy} r={s*0.06} fill="#c9a84c"/>
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Dark background */}
+      <rect width={s} height={s} rx={s * 0.195} fill="#1e1a14"/>
+      <rect width={s} height={s} rx={s * 0.195} fill="none" stroke="#C4922E" strokeWidth={s * 0.008} opacity="0.4"/>
+      {/* Outer hexagon */}
+      <polygon
+        points={[p(256,60),p(420,155),p(420,345),p(256,440),p(92,345),p(92,155)].join(' ')}
+        fill="none" stroke="#C4922E" strokeWidth={s * 0.023} opacity="0.9"
+      />
+      {/* Inner hexagon */}
+      <polygon
+        points={[p(256,110),p(375,175),p(375,305),p(256,370),p(137,305),p(137,175)].join(' ')}
+        fill="none" stroke="#C4922E" strokeWidth={s * 0.008} opacity="0.3"
+      />
+      {/* Cross lines */}
+      <line x1={p(256,80).split(',')[0]} y1={p(256,80).split(',')[1]} x2={p(256,432).split(',')[0]} y2={p(256,432).split(',')[1]}
+        stroke="#C4922E" strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity="0.35"/>
+      <line x1={p(80,256).split(',')[0]} y1={p(80,256).split(',')[1]} x2={p(432,256).split(',')[0]} y2={p(432,256).split(',')[1]}
+        stroke="#C4922E" strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity="0.35"/>
+      {/* Diagonal lines */}
+      <line x1={p(112,112).split(',')[0]} y1={p(112,112).split(',')[1]} x2={p(400,400).split(',')[0]} y2={p(400,400).split(',')[1]}
+        stroke="#C4922E" strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity="0.18"/>
+      <line x1={p(400,112).split(',')[0]} y1={p(400,112).split(',')[1]} x2={p(112,400).split(',')[0]} y2={p(112,400).split(',')[1]}
+        stroke="#C4922E" strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity="0.18"/>
+      {/* North arrow — solid gold */}
+      <polygon points={[p(256,82),p(238,168),p(256,152),p(274,168)].join(' ')} fill="#C4922E"/>
+      {/* South arrow — dim */}
+      <polygon points={[p(256,430),p(238,344),p(256,360),p(274,344)].join(' ')} fill="#C4922E" opacity="0.25"/>
+      {/* East arrow — bright */}
+      <polygon points={[p(430,256),p(344,238),p(360,256),p(344,274)].join(' ')} fill="#f5e09a"/>
+      {/* West arrow — dim */}
+      <polygon points={[p(82,256),p(168,238),p(152,256),p(168,274)].join(' ')} fill="#C4922E" opacity="0.25"/>
+      {/* Center ring */}
+      <circle cx={cx} cy={cy} r={s * 0.1015} fill="#1e1a14" stroke="#C4922E" strokeWidth={s * 0.0195}/>
+      {/* Center dot */}
+      <circle cx={cx} cy={cy} r={s * 0.043} fill="#C4922E"/>
+      {/* Inner dot */}
+      <circle cx={cx} cy={cy} r={s * 0.0195} fill="#f5e09a"/>
     </svg>
   );
 }
 
+/* ─────────────────────────────────────────────
+   TOKENS
+───────────────────────────────────────────── */
 const SB_BG     = '#2a2218';
 const SB_BORDER = 'rgba(201,168,76,0.22)';
 const LABEL_CLR = '#7a6a4e';
@@ -84,6 +118,9 @@ const ACTV_CLR  = '#f0d070';
 const ICON_OPC  = 0.65;
 const ACCENT_CLR= '#d4a96a';
 
+/* ─────────────────────────────────────────────
+   LAYOUT
+───────────────────────────────────────────── */
 export default function Layout({ children, currentPageName }) {
   const [user,         setUser]         = useState(null);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
@@ -159,16 +196,19 @@ export default function Layout({ children, currentPageName }) {
       <nav className="flex-1 py-2 px-2.5 overflow-y-auto overflow-x-hidden">
         {NAV_GROUPS.map((group, gi) => (
           <div key={group.label}>
+            {/* Divider between groups */}
             {gi > 0 && !collapsed && (
               <div style={{ height:1, background:'rgba(201,168,76,0.1)', margin:'4px 8px 2px' }} />
             )}
             <div style={{ paddingBottom: 2 }}>
+              {/* Group label */}
               {!collapsed && (
                 <p className="px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em]"
                   style={{ color: LABEL_CLR }}>
                   {group.label}
                 </p>
               )}
+              {/* Items */}
               {group.items.map(item => {
                 const active = currentPageName === item.page;
                 return (
@@ -236,6 +276,7 @@ export default function Layout({ children, currentPageName }) {
               )}
             </button>
 
+            {/* Dropdown */}
             {userMenuOpen && (
               <div
                 className={cn('absolute overflow-hidden mb-1', collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-0 right-0')}
@@ -272,6 +313,7 @@ export default function Layout({ children, currentPageName }) {
         <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
+      {/* Sidebar */}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out',
         'lg:relative lg:translate-x-0',
@@ -282,8 +324,10 @@ export default function Layout({ children, currentPageName }) {
         <SidebarContent />
       </aside>
 
+      {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
+        {/* Mobile topbar */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
           style={{ background: SB_BG, borderColor: SB_BORDER }}>
           <button onClick={() => setSidebarOpen(true)} style={{ color: ITEM_CLR }}>
@@ -298,6 +342,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </div>
 
+        {/* Page content */}
         <div className="flex-1 overflow-y-auto" style={{
           background: 'var(--parch-bg)',
           backgroundImage:`
