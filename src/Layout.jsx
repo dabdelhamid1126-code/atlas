@@ -14,9 +14,6 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-/* ─────────────────────────────────────────────
-   NAV STRUCTURE
-───────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
     label: 'Home',
@@ -49,13 +46,11 @@ const NAV_GROUPS = [
       { name: 'Settings',        page: 'Settings',       icon: SettingsIcon },
       { name: 'Payment Methods', page: 'PaymentMethods', icon: CreditCard   },
       { name: 'Rewards',         page: 'Rewards',        icon: Star         },
+      { name: 'Profile',         page: 'Profile',        icon: User         },
     ],
   },
 ];
 
-/* ─────────────────────────────────────────────
-   ATLAS LOGO SVG
-───────────────────────────────────────────── */
 function AtlasLogo({ size = 36 }) {
   const s = size, cx = s/2, cy = s/2, r = s*0.38;
   const arrowN = s*0.09, arrowE = s*0.1;
@@ -80,9 +75,6 @@ function AtlasLogo({ size = 36 }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   TOKENS
-───────────────────────────────────────────── */
 const SB_BG     = '#2a2218';
 const SB_BORDER = 'rgba(201,168,76,0.22)';
 const LABEL_CLR = '#7a6a4e';
@@ -92,9 +84,6 @@ const ACTV_CLR  = '#f0d070';
 const ICON_OPC  = 0.65;
 const ACCENT_CLR= '#d4a96a';
 
-/* ─────────────────────────────────────────────
-   LAYOUT
-───────────────────────────────────────────── */
 export default function Layout({ children, currentPageName }) {
   const [user,         setUser]         = useState(null);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
@@ -257,6 +246,11 @@ export default function Layout({ children, currentPageName }) {
                   style={{ borderBottom:'1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration:'none' }}>
                   <SettingsIcon style={{ width:14, height:14 }} /> Settings
                 </Link>
+                <Link to={createPageUrl('Profile')} onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 text-sm"
+                  style={{ borderBottom:'1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration:'none' }}>
+                  <User style={{ width:14, height:14 }} /> Profile
+                </Link>
                 <button onClick={() => { setUserMenuOpen(false); handleLogout(); }}
                   className="w-full flex items-center gap-2 px-4 py-3 text-sm"
                   style={{ color:'#8b3a2a', background:'none', border:'none', cursor:'pointer' }}>
@@ -278,7 +272,6 @@ export default function Layout({ children, currentPageName }) {
         <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out',
         'lg:relative lg:translate-x-0',
@@ -289,10 +282,8 @@ export default function Layout({ children, currentPageName }) {
         <SidebarContent />
       </aside>
 
-      {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
-        {/* Mobile topbar */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
           style={{ background: SB_BG, borderColor: SB_BORDER }}>
           <button onClick={() => setSidebarOpen(true)} style={{ color: ITEM_CLR }}>
@@ -307,7 +298,6 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </div>
 
-        {/* Page content */}
         <div className="flex-1 overflow-y-auto" style={{
           background: 'var(--parch-bg)',
           backgroundImage:`
