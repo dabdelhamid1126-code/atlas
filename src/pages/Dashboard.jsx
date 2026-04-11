@@ -698,34 +698,6 @@ export default function Dashboard() {
           {KPI_DEFS.slice(4).map(def => <KpiCard key={def.key} def={def} metrics={metrics} />)}
         </div>
 
-        {/* ── Profit Breakdown ── */}
-        <div className="card" style={{ marginBottom:12, overflow:"hidden" }}>
-          <button
-            onClick={() => setShowBreakdown(p=>!p)}
-            style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", background:"var(--parch-warm)", borderBottom: showBreakdown ? "1px solid var(--parch-line)" : "none", cursor:"pointer", border:"none", fontFamily:"var(--font-sans)" }}
-          >
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <Info size={13} color="var(--gold)" />
-              <span style={{ fontFamily:"var(--font-serif)", fontSize:11, fontWeight:700, color:"var(--ink)" }}>Profit Breakdown</span>
-            </div>
-            {showBreakdown ? <ChevronUp size={13} color="var(--ink-dim)" /> : <ChevronDown size={13} color="var(--ink-dim)" />}
-          </button>
-          {showBreakdown && (
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, padding:"10px 14px" }}>
-              {[
-                { label:"Revenue",    value:abbrev(metrics.saleRevenue), color:"var(--terrain)", bg:"var(--terrain-bg)", border:"var(--terrain-bdr)", prefix:"" },
-                { label:"Card Spend", value:abbrev(metrics.totalCost),   color:"var(--crimson)", bg:"var(--crimson-bg)", border:"var(--crimson-bdr)", prefix:"−" },
-                { label:"Cashback",   value:abbrev(metrics.cashback),    color:"var(--violet)",  bg:"var(--violet-bg)",  border:"var(--violet-bdr)",  prefix:"+" },
-                { label:"Net Profit", value:abbrev(metrics.netProfit),   color: metrics.netProfit>=0?"var(--gold)":"var(--crimson)", bg:metrics.netProfit>=0?"var(--gold-bg)":"var(--crimson-bg)", border:metrics.netProfit>=0?"var(--gold-bdr)":"var(--crimson-bdr)", prefix:"" },
-              ].map(b => (
-                <div key={b.label} className="breakdown-box" style={{ background:b.bg, border:`1px solid ${b.border}` }}>
-                  <div className="breakdown-label" style={{ color:b.color }}>{b.label}</div>
-                  <div className="breakdown-value" style={{ color:b.color }}>{b.prefix}{b.value}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* ── Pipeline ── */}
         <SectionDivider title="Route Map" dotColor="var(--ocean)" lineColor="rgba(26,82,118,0.25)" />
