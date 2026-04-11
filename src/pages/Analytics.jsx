@@ -534,6 +534,7 @@ export default function Analytics() {
           </div>
 
           <div className="grid-2col">
+            <ChartCard title="Cumulative Profit">
               {cumulativeData.length===0 ? <EmptyState/> : (
                 <>
                   <ResponsiveContainer width="100%" height={190}>
