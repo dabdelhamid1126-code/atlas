@@ -14,25 +14,25 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-/* ─────────────────────────────────────────────
-   NAV STRUCTURE
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  NAV STRUCTURE                                                       */
+/* ------------------------------------------------------------------ */
 const NAV_GROUPS = [
   {
     label: 'Home',
     items: [
       { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
-      { name: 'Analytics', page: 'Analytics', icon: BarChart3 },
-      { name: 'Forecast',  page: 'Forecast',  icon: TrendingUp },
+      { name: 'Analytics', page: 'Analytics', icon: BarChart3       },
+      { name: 'Forecast',  page: 'Forecast',  icon: TrendingUp      },
     ],
   },
   {
     label: 'Manage',
     items: [
-      { name: 'Inventory',   page: 'Inventory',    icon: Boxes      },
-      { name: 'New Order',   page: 'NewOrders',    icon: PlusCircle, accent: true },
-      { name: 'Products',    page: 'Products',     icon: Package    },
-      { name: 'Import',      page: 'ImportOrders', icon: Download   },
+      { name: 'Inventory',   page: 'Inventory',    icon: Boxes                        },
+      { name: 'New Order',   page: 'NewOrders',    icon: PlusCircle, accent: true      },
+      { name: 'Products',    page: 'Products',     icon: Package                      },
+      { name: 'Import',      page: 'ImportOrders', icon: Download                     },
     ],
   },
   {
@@ -54,73 +54,68 @@ const NAV_GROUPS = [
   },
 ];
 
-/* ─────────────────────────────────────────────
-   ATLAS LOGO SVG
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  ATLAS LOGO SVG                                                      */
+/* ------------------------------------------------------------------ */
 function AtlasLogo({ size = 82 }) {
   const s = size;
   const scale = s / 512;
-  // Scale a 512-viewBox point to current size
   const p = (x, y) => `${x * scale},${y * scale}`;
   const cx = s / 2, cy = s / 2;
   return (
     <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Dark background */}
       <rect width={s} height={s} rx={s * 0.195} fill="#1e1a14"/>
       <rect width={s} height={s} rx={s * 0.195} fill="none" stroke="#C4922E" strokeWidth={s * 0.008} opacity="0.4"/>
-      {/* Outer hexagon */}
       <polygon
         points={[p(256,60),p(420,155),p(420,345),p(256,440),p(92,345),p(92,155)].join(' ')}
         fill="none" stroke="#C4922E" strokeWidth={s * 0.023} opacity="0.9"
       />
-      {/* Inner hexagon */}
       <polygon
         points={[p(256,110),p(375,175),p(375,305),p(256,370),p(137,305),p(137,175)].join(' ')}
         fill="none" stroke="#C4922E" strokeWidth={s * 0.008} opacity="0.3"
       />
-      {/* Cross lines */}
       <line x1={p(256,80).split(',')[0]} y1={p(256,80).split(',')[1]} x2={p(256,432).split(',')[0]} y2={p(256,432).split(',')[1]}
         stroke="#C4922E" strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity="0.35"/>
       <line x1={p(80,256).split(',')[0]} y1={p(80,256).split(',')[1]} x2={p(432,256).split(',')[0]} y2={p(432,256).split(',')[1]}
         stroke="#C4922E" strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity="0.35"/>
-      {/* Diagonal lines */}
       <line x1={p(112,112).split(',')[0]} y1={p(112,112).split(',')[1]} x2={p(400,400).split(',')[0]} y2={p(400,400).split(',')[1]}
         stroke="#C4922E" strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity="0.18"/>
       <line x1={p(400,112).split(',')[0]} y1={p(400,112).split(',')[1]} x2={p(112,400).split(',')[0]} y2={p(112,400).split(',')[1]}
         stroke="#C4922E" strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity="0.18"/>
-      {/* North arrow — solid gold */}
       <polygon points={[p(256,82),p(238,168),p(256,152),p(274,168)].join(' ')} fill="#C4922E"/>
-      {/* South arrow — dim */}
       <polygon points={[p(256,430),p(238,344),p(256,360),p(274,344)].join(' ')} fill="#C4922E" opacity="0.25"/>
-      {/* East arrow — bright */}
       <polygon points={[p(430,256),p(344,238),p(360,256),p(344,274)].join(' ')} fill="#f5e09a"/>
-      {/* West arrow — dim */}
       <polygon points={[p(82,256),p(168,238),p(152,256),p(168,274)].join(' ')} fill="#C4922E" opacity="0.25"/>
-      {/* Center ring */}
       <circle cx={cx} cy={cy} r={s * 0.1015} fill="#1e1a14" stroke="#C4922E" strokeWidth={s * 0.0195}/>
-      {/* Center dot */}
       <circle cx={cx} cy={cy} r={s * 0.043} fill="#C4922E"/>
-      {/* Inner dot */}
       <circle cx={cx} cy={cy} r={s * 0.0195} fill="#f5e09a"/>
     </svg>
   );
 }
 
-/* ─────────────────────────────────────────────
-   TOKENS
-───────────────────────────────────────────── */
-const SB_BG     = '#2a2218';
-const SB_BORDER = 'rgba(201,168,76,0.22)';
-const LABEL_CLR = '#7a6a4e';
-const ITEM_CLR  = '#c4a96a';
-const HOVER_CLR = '#e0c878';
-const ACTV_CLR  = '#f0d070';
-const ICON_OPC  = 0.65;
-const ACCENT_CLR= '#d4a96a';
+/* ------------------------------------------------------------------ */
+/*  DESIGN TOKENS                                                       */
+/* ------------------------------------------------------------------ */
+const SB_BG      = '#2a2218';
+const SB_BORDER  = 'rgba(201,168,76,0.22)';
+const LABEL_CLR  = '#7a6a4e';
+const ITEM_CLR   = '#c4a96a';
+const HOVER_CLR  = '#e0c878';
+const ACTV_CLR   = '#f0d070';
+const ICON_OPC   = 0.65;
 
-/* ─────────────────────────────────────────────
-   LAYOUT
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  ACCENT COLOR for "New Order"                                        */
+/*  Uses gold with a subtle glow to stand out from regular nav items   */
+/* ------------------------------------------------------------------ */
+const ACCENT_CLR      = '#c9a84c';   // gold -- same family as logo
+const ACCENT_BG       = 'rgba(201,168,76,0.13)';
+const ACCENT_BORDER   = 'rgba(201,168,76,0.35)';
+const ACCENT_HOVER    = '#f5e09a';
+
+/* ------------------------------------------------------------------ */
+/*  LAYOUT                                                              */
+/* ------------------------------------------------------------------ */
 export default function Layout({ children, currentPageName }) {
   const [user,         setUser]         = useState(null);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
@@ -132,12 +127,12 @@ export default function Layout({ children, currentPageName }) {
   const openCmd = useCallback(() => setCmdOpen(true), []);
 
   useEffect(() => {
-    const h = (e) => { if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); setCmdOpen(true); } };
+    const h = (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(true); } };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(()=>{}); }, []);
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const handleLogout = () => base44.auth.logout();
@@ -145,12 +140,18 @@ export default function Layout({ children, currentPageName }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full" style={{ background: SB_BG, borderRight: `1px solid ${SB_BORDER}` }}>
 
-      {/* Logo */}
-      <div className={cn('flex items-center gap-3 px-4 py-4', collapsed && 'justify-center px-2')}
-        style={{ borderBottom: `1px solid ${SB_BORDER}` }}>
+      {/*    Logo    */}
+      <div
+        className={cn('flex items-center gap-3 px-4 py-4', collapsed && 'justify-center px-2')}
+        style={{ borderBottom: `1px solid ${SB_BORDER}` }}
+      >
         {collapsed ? (
-          <button className="hidden lg:flex p-1.5 rounded-lg" style={{ color: ITEM_CLR }}
-            onClick={() => setCollapsed(false)} title="Expand">
+          <button
+            className="hidden lg:flex p-1.5 rounded-lg"
+            style={{ color: ITEM_CLR }}
+            onClick={() => setCollapsed(false)}
+            title="Expand"
+          >
             <PanelLeftOpen className="w-[18px] h-[18px]" />
           </button>
         ) : (
@@ -161,15 +162,14 @@ export default function Layout({ children, currentPageName }) {
                 background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               }}>Atlas</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color:'#8a7a5e' }}>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: '#8a7a5e' }}>
                 Reselling, Quantified
               </p>
             </div>
-            <button onClick={openCmd} title="Search (⌘K)" className="p-1.5 rounded-lg" style={{ color: ITEM_CLR }}>
+            <button onClick={openCmd} title="Search (Cmd+K)" className="p-1.5 rounded-lg" style={{ color: ITEM_CLR }}>
               <Search className="w-[15px] h-[15px]" />
             </button>
-            <button className="hidden lg:flex p-1.5 rounded-lg" style={{ color: ITEM_CLR }}
-              onClick={() => setCollapsed(true)} title="Collapse">
+            <button className="hidden lg:flex p-1.5 rounded-lg" style={{ color: ITEM_CLR }} onClick={() => setCollapsed(true)} title="Collapse">
               <PanelLeftClose className="w-[17px] h-[17px]" />
             </button>
             <button className="lg:hidden" style={{ color: ITEM_CLR }} onClick={() => setSidebarOpen(false)}>
@@ -179,63 +179,102 @@ export default function Layout({ children, currentPageName }) {
         )}
       </div>
 
-      {/* Search bar */}
+      {/*    Search bar    */}
       {!collapsed && (
-        <button onClick={openCmd}
+        <button
+          onClick={openCmd}
           className="mx-3 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-xl text-xs w-[calc(100%-24px)]"
-          style={{ border:'1px solid rgba(201,168,76,0.18)', background:'rgba(201,168,76,0.06)', color: ITEM_CLR }}>
+          style={{ border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.06)', color: ITEM_CLR }}
+        >
           <Search className="w-3.5 h-3.5 shrink-0" />
           <span className="flex-1 text-left">Search the map...</span>
           <kbd className="text-[10px] rounded px-1 py-0.5" style={{
-            background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.15)', color: LABEL_CLR
-          }}>⌘K</kbd>
+            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.15)', color: LABEL_CLR,
+          }}>Cmd+K</kbd>
         </button>
       )}
 
-      {/* Nav */}
+      {/*    Nav    */}
       <nav className="flex-1 py-2 px-2.5 overflow-y-auto overflow-x-hidden">
         {NAV_GROUPS.map((group, gi) => (
           <div key={group.label}>
-            {/* Divider between groups */}
             {gi > 0 && !collapsed && (
-              <div style={{ height:1, background:'rgba(201,168,76,0.1)', margin:'4px 8px 2px' }} />
+              <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', margin: '4px 8px 2px' }} />
             )}
             <div style={{ paddingBottom: 2 }}>
-              {/* Group label */}
               {!collapsed && (
-                <p className="px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em]"
-                  style={{ color: LABEL_CLR }}>
+                <p
+                  className="px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em]"
+                  style={{ color: LABEL_CLR }}
+                >
                   {group.label}
                 </p>
               )}
-              {/* Items */}
               {group.items.map(item => {
-                const active = currentPageName === item.page;
+                const active  = currentPageName === item.page;
+                const isAccent = item.accent && !active;
+
+                /*    Color logic   
+                   active     gold highlight (same for all items)
+                   accent     gold with background pill to make "New Order" pop
+                   normal     standard item color
+                */
+                const itemColor  = active ? ACTV_CLR : isAccent ? ACCENT_CLR : ITEM_CLR;
+                const itemBg     = active
+                  ? 'linear-gradient(90deg,rgba(201,168,76,0.18),transparent)'
+                  : isAccent
+                    ? ACCENT_BG
+                    : 'transparent';
+                const itemBorder = active
+                  ? '2px solid #c9a84c'
+                  : isAccent
+                    ? `2px solid ${ACCENT_BORDER}`
+                    : '2px solid transparent';
+
                 return (
                   <Link
                     key={item.page}
                     to={createPageUrl(item.page)}
                     title={collapsed ? item.name : undefined}
                     style={{
-                      display:'flex', alignItems:'center', gap:9,
-                      padding:'7px 10px', borderRadius:8,
-                      fontSize:13.5, fontWeight: active ? 600 : 500,
-                      marginBottom:1, cursor:'pointer', textDecoration:'none',
+                      display: 'flex', alignItems: 'center', gap: 9,
+                      padding: '7px 10px', borderRadius: 8,
+                      fontSize: 13.5,
+                      fontWeight: active ? 600 : isAccent ? 600 : 500,
+                      marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
                       justifyContent: collapsed ? 'center' : undefined,
-                      borderLeft: active ? '2px solid #c9a84c' : '2px solid transparent',
-                      background: active ? 'linear-gradient(90deg,rgba(201,168,76,0.18),transparent)' : 'transparent',
-                      color: active ? ACTV_CLR : item.accent ? ACCENT_CLR : ITEM_CLR,
-                      transition:'color 0.15s, background 0.15s',
+                      borderLeft: itemBorder,
+                      background: itemBg,
+                      color: itemColor,
+                      transition: 'color 0.15s, background 0.15s',
                     }}
                     onMouseEnter={e => {
-                      if (!active) { e.currentTarget.style.color=HOVER_CLR; e.currentTarget.style.background='rgba(201,168,76,0.07)'; }
+                      if (!active) {
+                        e.currentTarget.style.color = isAccent ? ACCENT_HOVER : HOVER_CLR;
+                        e.currentTarget.style.background = isAccent
+                          ? 'rgba(201,168,76,0.18)'
+                          : 'rgba(201,168,76,0.07)';
+                      }
                     }}
                     onMouseLeave={e => {
-                      if (!active) { e.currentTarget.style.color=item.accent?ACCENT_CLR:ITEM_CLR; e.currentTarget.style.background='transparent'; }
+                      if (!active) {
+                        e.currentTarget.style.color = itemColor;
+                        e.currentTarget.style.background = itemBg;
+                      }
                     }}
                   >
-                    <item.icon style={{ width:14, height:14, flexShrink:0, opacity: active ? 1 : ICON_OPC }} />
-                    {!collapsed && <span className="truncate flex-1">{item.name}</span>}
+                    <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: active ? 1 : isAccent ? 0.9 : ICON_OPC }} />
+                    {!collapsed && (
+                      <span className="truncate flex-1">{item.name}</span>
+                    )}
+                    {/* Small dot indicator for accent items when not active */}
+                    {!collapsed && isAccent && (
+                      <span style={{
+                        width: 5, height: 5, borderRadius: '50%',
+                        background: ACCENT_CLR, flexShrink: 0,
+                        opacity: 0.7,
+                      }} />
+                    )}
                   </Link>
                 );
               })}
@@ -244,34 +283,36 @@ export default function Layout({ children, currentPageName }) {
         ))}
       </nav>
 
-      {/* User strip */}
+      {/*    User strip    */}
       {user && (
-        <div className="p-2.5" style={{ borderTop:'1px solid rgba(201,168,76,0.18)' }}>
+        <div className="p-2.5" style={{ borderTop: '1px solid rgba(201,168,76,0.18)' }}>
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className={cn('w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl', collapsed && 'justify-center px-1')}
-              style={{ border:'1px solid rgba(201,168,76,0.18)', background:'rgba(201,168,76,0.07)', cursor:'pointer' }}
+              style={{ border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.07)', cursor: 'pointer' }}
             >
               <div className="relative flex-shrink-0">
                 <Avatar className="h-8 w-8">
                   {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
-                  <AvatarFallback className="text-xs font-black" style={{ background:'linear-gradient(135deg,#8b6914,#c9a84c)', color:'#0a0800' }}>
+                  <AvatarFallback className="text-xs font-black" style={{ background: 'linear-gradient(135deg,#8b6914,#c9a84c)', color: '#0a0800' }}>
                     {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2"
-                  style={{ background:'#4a7a35', borderColor: SB_BG }} />
+                  style={{ background: '#4a7a35', borderColor: SB_BG }} />
               </div>
               {!collapsed && (
                 <>
                   <div className="flex-1 min-w-0 text-left">
-                    <p className="text-[13px] font-bold leading-tight truncate" style={{ color:'#c9a84c' }}>
+                    <p className="text-[13px] font-bold leading-tight truncate" style={{ color: '#c9a84c' }}>
                       {user.full_name || user.email?.split('@')[0] || 'User'}
                     </p>
-                    <p className="text-[10px]" style={{ color:'#8a7a5e', letterSpacing:'0.04em' }}>● Charting</p>
+                    <p className="text-[10px]" style={{ color: '#8a7a5e', letterSpacing: '0.04em' }}>
+                      Charting
+                    </p>
                   </div>
-                  <ChevronDown style={{ width:13, height:13, color: ITEM_CLR, flexShrink:0 }} />
+                  <ChevronDown style={{ width: 13, height: 13, color: ITEM_CLR, flexShrink: 0 }} />
                 </>
               )}
             </button>
@@ -279,23 +320,38 @@ export default function Layout({ children, currentPageName }) {
             {/* Dropdown */}
             {userMenuOpen && (
               <div
-                className={cn('absolute overflow-hidden mb-1', collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-0 right-0')}
-                style={{ background:'#1a1712', border:'1px solid rgba(201,168,76,0.2)', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.4)', minWidth: collapsed ? 160 : undefined, zIndex:50 }}
+                className={cn(
+                  'absolute overflow-hidden mb-1',
+                  collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-0 right-0'
+                )}
+                style={{
+                  background: '#1a1712', border: '1px solid rgba(201,168,76,0.2)',
+                  borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                  minWidth: collapsed ? 160 : undefined, zIndex: 50,
+                }}
               >
-                <Link to={createPageUrl('Settings')} onClick={() => setUserMenuOpen(false)}
+                <Link
+                  to={createPageUrl('Settings')}
+                  onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ borderBottom:'1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration:'none' }}>
-                  <SettingsIcon style={{ width:14, height:14 }} /> Settings
+                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration: 'none' }}
+                >
+                  <SettingsIcon style={{ width: 14, height: 14 }} /> Settings
                 </Link>
-                <Link to={createPageUrl('Profile')} onClick={() => setUserMenuOpen(false)}
+                <Link
+                  to={createPageUrl('Profile')}
+                  onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ borderBottom:'1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration:'none' }}>
-                  <User style={{ width:14, height:14 }} /> Profile
+                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration: 'none' }}
+                >
+                  <User style={{ width: 14, height: 14 }} /> Profile
                 </Link>
-                <button onClick={() => { setUserMenuOpen(false); handleLogout(); }}
+                <button
+                  onClick={() => { setUserMenuOpen(false); handleLogout(); }}
                   className="w-full flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ color:'#8b3a2a', background:'none', border:'none', cursor:'pointer' }}>
-                  <LogOut style={{ width:14, height:14 }} /> Sign Out
+                  style={{ color: '#8b3a2a', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  <LogOut style={{ width: 14, height: 14 }} /> Sign Out
                 </button>
               </div>
             )}
@@ -306,7 +362,7 @@ export default function Layout({ children, currentPageName }) {
   );
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background:'var(--parch-bg)' }}>
+    <div className="h-screen flex overflow-hidden" style={{ background: 'var(--parch-bg)' }}>
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
       {sidebarOpen && (
@@ -328,16 +384,18 @@ export default function Layout({ children, currentPageName }) {
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
         {/* Mobile topbar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
-          style={{ background: SB_BG, borderColor: SB_BORDER }}>
+        <div
+          className="lg:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
+          style={{ background: SB_BG, borderColor: SB_BORDER }}
+        >
           <button onClick={() => setSidebarOpen(true)} style={{ color: ITEM_CLR }}>
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
             <AtlasLogo size={26} />
             <span className="font-display font-black text-sm" style={{
-              background:'linear-gradient(135deg,#c9a84c,#f5e09a)',
-              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
+              background: 'linear-gradient(135deg,#c9a84c,#f5e09a)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             }}>Atlas</span>
           </div>
         </div>
@@ -345,13 +403,13 @@ export default function Layout({ children, currentPageName }) {
         {/* Page content */}
         <div className="flex-1 overflow-y-auto" style={{
           background: 'var(--parch-bg)',
-          backgroundImage:`
+          backgroundImage: `
             radial-gradient(ellipse at 15% 40%, rgba(160,114,42,0.04) 0%, transparent 50%),
             radial-gradient(ellipse at 85% 70%, rgba(74,122,53,0.03) 0%, transparent 40%),
             radial-gradient(ellipse at 50% 10%, rgba(42,92,122,0.03) 0%, transparent 40%)
           `,
         }}>
-          <div className="p-5 lg:p-7" style={{ maxWidth:1320, margin:'0 auto', width:'100%' }}>
+          <div className="p-5 lg:p-7" style={{ maxWidth: 1320, margin: '0 auto', width: '100%' }}>
             {children}
           </div>
         </div>
