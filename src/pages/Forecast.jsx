@@ -135,7 +135,7 @@ function ProductSearch({ userEmail, onSelect }) {
             image:       proxyImg(item.images?.[0] || item.images_url?.[0] || null),
             cost:        item.lowest_recorded_price || item.offers?.[0]?.price || '',
             upc:         item.upc,
-            offers:      (item.offers || []).filter(o => o.price).sort((a, b) => a.price - b.price).slice(0, 3),
+            offers:      (item.offers || []).filter(o => o.price).sort((a, b) => a.price - b.price).slice(0, 3).map(o => ({ merchant: o.merchant, price: o.price, shipping: o.shipping, link: o.link || null })),
           })));
         } else {
           setError('No product found for that UPC.');
@@ -466,12 +466,13 @@ function ProfitCalculator({ creditCards, userEmail }) {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {selectedProduct.offers.map((offer, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, background: idx === 0 ? 'var(--parch-card)' : 'transparent', border: idx === 0 ? '1px solid var(--terrain-bdr)' : '1px solid transparent' }}>
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, background: idx === 0 ? 'var(--parch-card)' : 'transparent', border: idx === 0 ? '1px solid var(--terrain-bdr)' : '1px solid transparent', cursor: offer.link ? 'pointer' : 'default' }}
+                onClick={() => offer.link && window.open(offer.link, '_blank', 'noopener,noreferrer')}>
                 <div style={{ width: 18, height: 18, borderRadius: '50%', background: idx === 0 ? 'var(--terrain)' : 'var(--parch-warm)', border: '1px solid var(--parch-line)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: idx === 0 ? '#fff' : 'var(--ink-dim)', flexShrink: 0 }}>{idx + 1}</div>
-                <span style={{ flex: 1, fontSize: 12, color: 'var(--ink)', fontWeight: idx === 0 ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{offer.merchant || 'Unknown Store'}</span>
+                <span style={{ flex: 1, fontSize: 12, color: offer.link ? 'var(--ocean)' : 'var(--ink)', fontWeight: idx === 0 ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: offer.link ? 'underline' : 'none' }}>{offer.merchant || 'Unknown Store'}</span>
                 {offer.shipping > 0 && <span style={{ fontSize: 10, color: 'var(--ink-ghost)' }}>+{fmt$(offer.shipping)} ship</span>}
                 <span style={{ fontSize: 13, fontWeight: 700, color: idx === 0 ? 'var(--terrain)' : 'var(--ink-dim)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{fmt$(offer.price)}</span>
-                {idx === 0 && offer.price && <button onClick={() => setUnitCost(String(offer.price))} style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'var(--terrain)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}>Use</button>}
+                {idx === 0 && offer.price && <button onClick={e => { e.stopPropagation(); setUnitCost(String(offer.price)); }} style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'var(--terrain)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}>Use</button>}
               </div>
             ))}
           </div>
