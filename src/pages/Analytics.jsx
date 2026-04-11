@@ -9,115 +9,10 @@ import {
 import { format, subMonths, parseISO } from 'date-fns';
 import {
   RefreshCw, TrendingUp, DollarSign, Percent,
-  CreditCard, Star, Gift, BarChart2, Filter,
-  Info, ChevronDown, ChevronUp, Download
+  CreditCard, Star, Gift, BarChart2, Filter, Download
 } from 'lucide-react';
 
-/* ─────────────────────────────────────────────
-   INJECTED CSS — same block as Dashboard.jsx
-   so both pages use identical tokens
-───────────────────────────────────────────── */
-const CSS = `
-  :root {
-    --font-serif: ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-sans:  ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
-
-    --ne-cream:    #FFDBBB;
-    --ne-greige:   #CCBEB1;
-    --ne-brown:    #997E67;
-    --ne-espresso: #664930;
-
-    --parch:       #FDF5EC;
-    --parch-card:  #FFF8F0;
-    --parch-warm:  #F5EDE0;
-    --parch-line:  rgba(153,126,103,0.18);
-
-    --ink:         #3D2B1A;
-    --ink-dim:     #664930;
-    --ink-faded:   #8a6d56;
-    --ink-ghost:   #b89e8a;
-
-    --gold:        #A0722A;
-    --gold2:       #C4922E;
-    --gold-bg:     rgba(160,114,42,0.08);
-    --gold-bdr:    rgba(160,114,42,0.22);
-
-    --terrain:     #4a7a35;
-    --terrain2:    #5a8c42;
-    --terrain-bg:  rgba(74,122,53,0.08);
-    --terrain-bdr: rgba(74,122,53,0.2);
-
-    --crimson:     #8b3a2a;
-    --crimson2:    #a34535;
-    --crimson-bg:  rgba(139,58,42,0.08);
-    --crimson-bdr: rgba(139,58,42,0.2);
-
-    --ocean:       #2a5c7a;
-    --ocean2:      #336e90;
-    --ocean-bg:    rgba(42,92,122,0.08);
-    --ocean-bdr:   rgba(42,92,122,0.2);
-
-    --violet:      #5a3a6e;
-    --violet2:     #6e4a85;
-    --violet-bg:   rgba(90,58,110,0.08);
-    --violet-bdr:  rgba(90,58,110,0.2);
-
-    --rose:        #8b3a2a;
-    --rose-bg:     rgba(139,58,42,0.08);
-    --rose-bdr:    rgba(139,58,42,0.2);
-
-    --shadow-sm:   0 1px 4px rgba(61,43,26,0.07);
-    --shadow-md:   0 4px 20px rgba(61,43,26,0.10);
-  }
-`;
-
-/* ─────────────────────────────────────────────
-   CSS VARIABLE TOKENS — match Dashboard exactly
-───────────────────────────────────────────── */
-const V = {
-  bg:        'var(--parch)',
-  card:      'var(--parch-card)',
-  warm:      'var(--parch-warm)',
-  border:    'var(--parch-line)',
-
-  ink:       'var(--ink)',
-  inkDim:    'var(--ink-dim)',
-  inkFaded:  'var(--ink-faded)',
-  inkGhost:  'var(--ink-ghost)',
-
-  gold:      'var(--gold)',
-  gold2:     'var(--gold2)',
-  goldBg:    'var(--gold-bg)',
-  goldBdr:   'var(--gold-bdr)',
-
-  terrain:   'var(--terrain)',
-  terrain2:  'var(--terrain2)',
-  terrBg:    'var(--terrain-bg)',
-  terrBdr:   'var(--terrain-bdr)',
-
-  ocean:     'var(--ocean)',
-  ocean2:    'var(--ocean2)',
-  oceanBg:   'var(--ocean-bg)',
-  oceanBdr:  'var(--ocean-bdr)',
-
-  violet:    'var(--violet)',
-  violet2:   'var(--violet2)',
-  violBg:    'var(--violet-bg)',
-  violBdr:   'var(--violet-bdr)',
-
-  crimson:   'var(--crimson)',
-  crimson2:  'var(--crimson2)',
-  crimBg:    'var(--crimson-bg)',
-  crimBdr:   'var(--crimson-bdr)',
-
-  rose:      'var(--rose)',
-  roseBg:    'var(--rose-bg)',
-  roseBdr:   'var(--rose-bdr)',
-};
-
 // Hex values for recharts (can't use CSS vars inside SVG)
-// Match dashboard chart colors exactly
 const CH = {
   revenue:  '#A0722A',  // --gold
   profit:   '#4a7a35',  // --terrain
@@ -133,26 +28,26 @@ const CH = {
 const PIE_COLORS = [CH.profit, CH.violet, CH.ocean, CH.revenue, CH.crimson, CH.rose, '#7a5a3a', '#3a6a5a'];
 
 const CARD_STYLE = {
-  background:   V.card,
-  border:       `1px solid ${V.border}`,
+  background:   'var(--parch-card)',
+  border:       '1px solid var(--parch-line)',
   borderRadius: 14,
-  boxShadow:    '0 1px 4px rgba(28,20,10,0.07)',
+  boxShadow:    'var(--shadow-sm)',
 };
 
 const TOOLTIP_STYLE = {
   borderRadius: 10,
-  border:       `1px solid var(--parch-line)`,
+  border:       '1px solid var(--parch-line)',
   fontSize:     11,
-  background: 'var(--parch-card)',
+  background:   'var(--parch-card)',
   color:        'var(--ink)',
-  boxShadow:    '0 4px 16px rgba(28,20,10,0.10)',
+  boxShadow:    'var(--shadow-md)',
 };
 
 const INP_STYLE = {
-  background:   V.warm,
-  border:       `1px solid ${V.border}`,
+  background:   'var(--parch-warm)',
+  border:       '1px solid var(--parch-line)',
   borderRadius: 8,
-  color:        V.ink,
+  color:        'var(--ink)',
   padding:      '6px 10px',
   fontSize:     12,
   outline:      'none',
@@ -284,8 +179,8 @@ function DonutChart({ data, colors, fmtFn }) {
 function EmptyState({ label='No data yet' }) {
   return (
     <div style={{ height:190, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
-      <div style={{ width:36, height:36, borderRadius:10, background:V.goldBg, border:`1px solid ${V.goldBdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <BarChart2 size={16} color={V.gold} />
+      <div style={{ width:36, height:36, borderRadius:10, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <BarChart2 size={16} color='var(--gold)' />
       </div>
       <p style={{ fontSize:12, color:'var(--ink-ghost)' }}>{label}</p>
       <p style={{ fontSize:10, color:'var(--ink-ghost)', opacity:0.7 }}>Add transactions to unlock insights</p>
@@ -295,7 +190,7 @@ function EmptyState({ label='No data yet' }) {
 
 function PillGroup({ options, active, onChange }) {
   return (
-    <div style={{ display:'flex', gap:2, padding:3, borderRadius:8, background:V.warm, border:`1px solid ${V.border}` }}>
+    <div style={{ display:'flex', gap:2, padding:3, borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)' }}>
       {options.map(o => {
         const on = active===o.id;
         return (
@@ -312,7 +207,7 @@ function PillGroup({ options, active, onChange }) {
 
 function TabBar({ tabs, active, onChange }) {
   return (
-    <div style={{ display:'flex', gap:2, padding:3, borderRadius:10, background:V.card, border:`1px solid ${V.border}`, width:'fit-content' }}>
+    <div style={{ display:'flex', gap:2, padding:3, borderRadius:10, background:'var(--parch-card)', border:'1px solid var(--parch-line)', width:'fit-content' }}>
       {tabs.map(t => {
         const Icon=t.icon, on=active===t.id;
         return (
@@ -345,7 +240,7 @@ function Th({ children }) {
 
 function TotalsRow({ children }) {
   return (
-    <tr style={{ borderTop:`2px solid var(--parch-deep)`, background:V.warm }}>
+    <tr style={{ borderTop:'2px solid var(--parch-warm)', background:'var(--parch-warm)' }}>
       {children}
     </tr>
   );
@@ -371,12 +266,11 @@ export default function Analytics() {
   const [period,        setPeriod]        = useState('monthly');
   const [fromDate,      setFromDate]      = useState(() => format(subMonths(new Date(),12),'yyyy-MM-dd'));
   const [toDate,        setToDate]        = useState(() => format(new Date(),'yyyy-MM-dd'));
-  const [activeTab,     setActiveTab]     = useState('overview');
-  const [showBreakdown, setShowBreakdown] = useState(true);
-  const [userEmail,     setUserEmail]     = useState(null);
+  const [activeTab,  setActiveTab]  = useState('overview');
+  const [userEmail,  setUserEmail]  = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => { setUserEmail(u?.email||null); }).catch(()=>{});
+    base44.auth.me().then(u => setUserEmail(u?.email||null)).catch(()=>{});
   }, []);
 
   const { data:orders=[], isLoading, refetch } = useQuery({
@@ -526,22 +420,24 @@ export default function Analytics() {
   },[periodData,storeData,paymentData]);
 
   /* ── KPI card defs ── */
+  const profitPositive = kpis.profit >= 0;
+  const roiPositive    = kpis.roi >= 0;
+
   const KPI_CARDS = [
-    { label:'Sale Revenue',   value:fmt$(kpis.revenue),      sub:`${filteredOrders.filter(o=>calcRevenue(o)>0).length} sold`,   icon:TrendingUp, accentColor:V.terrain2, bgColor:V.terrBg, bdrColor:V.terrBdr },
-    { label:'Total Cost',     value:fmt$(kpis.cost),         sub:`${filteredOrders.length} orders`,                             icon:CreditCard, accentColor:V.ocean2,   bgColor:V.oceanBg,bdrColor:V.oceanBdr },
-    { label:'Net Profit',
-                              value:fmt$(kpis.profit),       sub:fmtPct(kpis.roi)+' ROI',                                       icon:DollarSign, accentColor:kpis.profit>=0?V.gold:V.crimson2,   bgColor:kpis.profit>=0?V.goldBg:V.crimBg,  bdrColor:kpis.profit>=0?V.goldBdr:V.crimBdr },
-    { label:'ROI',            value:fmtPct(kpis.roi),        sub:'return on investment',                                        icon:Percent,    accentColor:kpis.roi>=0?V.ocean2:V.crimson2,     bgColor:V.oceanBg, bdrColor:V.oceanBdr },
-    { label:'Card Cashback',  value:fmt$(kpis.cardCashback), sub:'credit card rewards',                                         icon:CreditCard, accentColor:V.violet2,  bgColor:V.violBg, bdrColor:V.violBdr },
-    { label:'YA Cashback',    value:fmt$(kpis.yaCashback),   sub:'Young Adult rewards',                                         icon:Star,       accentColor:V.gold,     bgColor:V.goldBg, bdrColor:V.goldBdr },
-    { label:'Points Earned',  value:fmtPts(kpis.points),     sub:'reward points',                                               icon:Gift,       accentColor:V.rose,     bgColor:V.roseBg, bdrColor:V.roseBdr },
-    { label:'Total Cashback', value:fmt$(kpis.totalUSD),     sub:'card CB + YA combined',                                       icon:TrendingUp, accentColor:V.terrain,  bgColor:V.terrBg, bdrColor:V.terrBdr },
+    { label:'Sale Revenue',  value:fmt$(kpis.revenue),      sub:`${filteredOrders.filter(o=>calcRevenue(o)>0).length} sold`,   icon:TrendingUp, accentColor:'var(--terrain2)', bgColor:'var(--terrain-bg)', bdrColor:'var(--terrain-bdr)' },
+    { label:'Total Cost',    value:fmt$(kpis.cost),         sub:`${filteredOrders.length} orders`,                             icon:CreditCard, accentColor:'var(--ocean2)',   bgColor:'var(--ocean-bg)',   bdrColor:'var(--ocean-bdr)'   },
+    { label:'Net Profit',    value:fmt$(kpis.profit),       sub:fmtPct(kpis.roi)+' ROI',                                       icon:DollarSign, accentColor:profitPositive?'var(--gold)':'var(--crimson2)',  bgColor:profitPositive?'var(--gold-bg)':'var(--crimson-bg)',  bdrColor:profitPositive?'var(--gold-bdr)':'var(--crimson-bdr)' },
+    { label:'ROI',           value:fmtPct(kpis.roi),        sub:'return on investment',                                        icon:Percent,    accentColor:roiPositive?'var(--ocean2)':'var(--crimson2)',    bgColor:'var(--ocean-bg)',   bdrColor:'var(--ocean-bdr)'   },
+    { label:'Card Cashback', value:fmt$(kpis.cardCashback), sub:'credit card rewards',                                         icon:CreditCard, accentColor:'var(--violet2)',  bgColor:'var(--violet-bg)',  bdrColor:'var(--violet-bdr)'  },
+    { label:'YA Cashback',   value:fmt$(kpis.yaCashback),   sub:'Young Adult rewards',                                         icon:Star,       accentColor:'var(--gold)',     bgColor:'var(--gold-bg)',    bdrColor:'var(--gold-bdr)'    },
+    { label:'Points Earned', value:fmtPts(kpis.points),     sub:'reward points',                                               icon:Gift,       accentColor:'var(--rose)',     bgColor:'var(--rose-bg)',    bdrColor:'var(--rose-bdr)'    },
+    { label:'Total Cashback',value:fmt$(kpis.totalUSD),     sub:'card CB + YA combined',                                       icon:TrendingUp, accentColor:'var(--terrain)',  bgColor:'var(--terrain-bg)', bdrColor:'var(--terrain-bdr)' },
   ];
 
   if (isLoading) return (
     <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, paddingBottom:40 }}>
       {[...Array(8)].map((_,i)=>(
-        <div key={i} style={{ height:76, borderRadius:12, background:V.warm, border:`1px solid ${V.border}` }} />
+        <div key={i} style={{ height:76, borderRadius:12, background:'var(--parch-warm)', border:'1px solid var(--parch-line)' }} />
       ))}
     </div>
   );
@@ -549,9 +445,7 @@ export default function Analytics() {
   const tdMono = (color, extra={}) => ({ padding:'10px 14px', color, fontWeight:600, fontFamily:'var(--font-mono)', fontSize:12, ...extra });
 
   return (
-    <>
-      <style>{CSS}</style>
-      <div style={{ paddingBottom:40 }}>
+    <div style={{ paddingBottom:40 }}>
 
       {/* ── HEADER ── */}
       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:16 }}>
@@ -584,7 +478,7 @@ export default function Analytics() {
           <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:8 }}>Date Range</p>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={INP_STYLE}/>
-            <span style={{ color:V.inkGhost, fontSize:12 }}>→</span>
+            <span style={{ color:'var(--ink-ghost)', fontSize:12 }}>→</span>
             <input type="date" value={toDate}   onChange={e=>setToDate(e.target.value)}   style={INP_STYLE}/>
           </div>
         </div>
@@ -592,10 +486,12 @@ export default function Analytics() {
 
       {/* ── KPI GRID ── */}
       <SectionDivider title="Survey Markers" />
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:10 }}>
-        {KPI_CARDS.map(k => <KpiCard key={k.label} {...k}/>)}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:8 }}>
+        {KPI_CARDS.slice(0,4).map(k => <KpiCard key={k.label} {...k}/>)}
       </div>
-
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:16 }}>
+        {KPI_CARDS.slice(4).map(k => <KpiCard key={k.label} {...k}/>)}
+      </div>
 
       {/* ── TAB BAR ── */}
       <div style={{ marginBottom:14 }}>
@@ -612,7 +508,7 @@ export default function Analytics() {
                   <ResponsiveContainer width="100%" height={200}>
                     <AreaChart data={periodData} margin={{top:4,right:4,left:0,bottom:0}}>
                       <defs>
-                        {[[  'gRev',CH.revenue],['gPro',CH.profit],['gCash',CH.cashback]].map(([id,c])=>(
+                        {[['gRev',CH.revenue],['gPro',CH.profit],['gCash',CH.cashback]].map(([id,c])=>(
                           <linearGradient key={id} id={id} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%"  stopColor={c} stopOpacity={0.2}/>
                             <stop offset="95%" stopColor={c} stopOpacity={0}/>
@@ -727,10 +623,10 @@ export default function Analytics() {
               <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:14 }}>Store Summary</p>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 {[
-                  { label:'Total Revenue', value:fmt$(storeData.reduce((s,x)=>s+x.revenue,0)), color:V.terrain2, bg:V.terrBg, bdr:V.terrBdr },
-                  { label:'Total Profit',  value:fmt$(storeData.reduce((s,x)=>s+x.profit,0)),  color:V.gold,     bg:V.goldBg, bdr:V.goldBdr },
-                  { label:'Total CB',      value:fmt$(storeData.reduce((s,x)=>s+x.cashback,0)),color:V.violet2,  bg:V.violBg, bdr:V.violBdr },
-                  { label:'Avg ROI',       value:fmtPct(kpis.roi),                              color:V.ocean2,   bg:V.oceanBg,bdr:V.oceanBdr },
+                  { label:'Total Revenue', value:fmt$(storeData.reduce((s,x)=>s+x.revenue,0)), color:'var(--terrain2)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)' },
+                  { label:'Total Profit',  value:fmt$(storeData.reduce((s,x)=>s+x.profit,0)),  color:'var(--gold)',     bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'   },
+                  { label:'Total CB',      value:fmt$(storeData.reduce((s,x)=>s+x.cashback,0)),color:'var(--violet2)',  bg:'var(--violet-bg)',  bdr:'var(--violet-bdr)' },
+                  { label:'Avg ROI',       value:fmtPct(kpis.roi),                              color:'var(--ocean2)',  bg:'var(--ocean-bg)',   bdr:'var(--ocean-bdr)'  },
                 ].map(s=>(
                   <div key={s.label} style={{ borderRadius:10, padding:12, background:s.bg, border:`1px solid ${s.bdr}` }}>
                     <p style={{ fontSize:9, color:s.color, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:4 }}>{s.label}</p>
@@ -748,9 +644,9 @@ export default function Analytics() {
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
             {[
-              { label:'Card Cashback', value:fmt$(kpis.cardCashback), sub:'From credit cards',   color:V.violet2, bg:V.violBg,  bdr:V.violBdr  },
-              { label:'YA Cashback',   value:fmt$(kpis.yaCashback),   sub:'Young Adult rewards', color:V.gold,    bg:V.goldBg,  bdr:V.goldBdr  },
-              { label:'Points Earned', value:fmtPts(kpis.points),     sub:'Reward points',       color:V.rose,    bg:V.roseBg,  bdr:V.roseBdr  },
+              { label:'Card Cashback', value:fmt$(kpis.cardCashback), sub:'From credit cards',   color:'var(--violet2)', bg:'var(--violet-bg)',  bdr:'var(--violet-bdr)'  },
+              { label:'YA Cashback',   value:fmt$(kpis.yaCashback),   sub:'Young Adult rewards', color:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'    },
+              { label:'Points Earned', value:fmtPts(kpis.points),     sub:'Reward points',       color:'var(--rose)',    bg:'var(--rose-bg)',    bdr:'var(--rose-bdr)'    },
             ].map(c=>(
               <div key={c.label} style={{ ...CARD_STYLE, padding:14, borderTop:`3px solid ${c.color}` }}>
                 <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:c.color, marginBottom:6 }}>{c.label}</p>
@@ -806,31 +702,31 @@ export default function Analytics() {
             )}
           </ChartCard>
 
-          <TableWrap title="Payment Method Performance" badge={`${paymentData.length} cards`} badgeColor={V.violet2} badgeBg={V.violBg} badgeBdr={V.violBdr}>
+          <TableWrap title="Payment Method Performance" badge={`${paymentData.length} cards`} badgeColor='var(--violet2)' badgeBg='var(--violet-bg)' badgeBdr='var(--violet-bdr)'>
             <table className='dash-table'>
               <thead><tr>{['Card','Txns','Spent','Cashback','Stated %','Effective %','Variance'].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
               <tbody>
                 {paymentData.map(p=>(
-                  <tr key={p.id} style={{borderTop:`1px solid var(--parch-line)`}}
+                  <tr key={p.id} style={{borderTop:'1px solid var(--parch-line)'}}
                     onMouseEnter={e=>e.currentTarget.style.background='var(--gold-bg)'}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                     <td style={{padding:'9px 13px',fontWeight:700,color:'var(--ink)'}}>{p.name}</td>
                     <td style={{padding:'9px 13px',color:'var(--ink-faded)'}}>{p.txns}</td>
-                    <td style={tdMono(V.ocean2)}>{fmt$(p.spent)}</td>
-                    <td style={tdMono(V.violet2)}>{fmt$(p.cashback)}</td>
-                    <td style={{padding:'9px 13px',color:V.inkFaded}}>{fmtPct(p.statedRate)}</td>
-                    <td style={tdMono(p.effectiveRate>=p.statedRate?V.terrain2:V.gold)}>{fmtPct(p.effectiveRate)}</td>
-                    <td style={tdMono(p.variance>=0?V.terrain2:V.crimson2)}>{p.variance>=0?'+':''}{fmtPct(p.variance)}</td>
+                    <td style={tdMono('var(--ocean2)')}>{fmt$(p.spent)}</td>
+                    <td style={tdMono('var(--violet2)')}>{fmt$(p.cashback)}</td>
+                    <td style={{padding:'9px 13px',color:'var(--ink-faded)'}}>{fmtPct(p.statedRate)}</td>
+                    <td style={tdMono(p.effectiveRate>=p.statedRate?'var(--terrain2)':'var(--gold)')}>{fmtPct(p.effectiveRate)}</td>
+                    <td style={tdMono(p.variance>=0?'var(--terrain2)':'var(--crimson2)')}>{p.variance>=0?'+':''}{fmtPct(p.variance)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <TotalsRow>
-                  <td style={{padding:'9px 13px',fontWeight:800,color:V.ink}}>TOTAL</td>
+                  <td style={{padding:'9px 13px',fontWeight:800,color:'var(--ink)'}}>TOTAL</td>
                   <td style={{padding:'9px 13px',fontWeight:800,color:'var(--ink-dim)'}}>{paymentData.reduce((s,p)=>s+p.txns,0)}</td>
-                  <td style={tdMono(V.ocean2,{fontWeight:800})}>{fmt$(paymentData.reduce((s,p)=>s+p.spent,0))}</td>
-                  <td style={tdMono(V.violet2,{fontWeight:800})}>{fmt$(paymentData.reduce((s,p)=>s+p.cashback,0))}</td>
-                  <td colSpan={3} style={{padding:'9px 13px',color:V.inkGhost,fontSize:10}}>
+                  <td style={tdMono('var(--ocean2)',{fontWeight:800})}>{fmt$(paymentData.reduce((s,p)=>s+p.spent,0))}</td>
+                  <td style={tdMono('var(--violet2)',{fontWeight:800})}>{fmt$(paymentData.reduce((s,p)=>s+p.cashback,0))}</td>
+                  <td colSpan={3} style={{padding:'9px 13px',color:'var(--ink-ghost)',fontSize:10}}>
                     Best card: <span style={{color:'var(--gold)',fontWeight:700}}>{[...paymentData].sort((a,b)=>b.effectiveRate-a.effectiveRate)[0]?.name||'—'}</span>
                   </td>
                 </TotalsRow>
@@ -844,32 +740,32 @@ export default function Analytics() {
       {activeTab==='tables' && (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
 
-          <TableWrap title="Store Breakdown" badge={`${storeData.length} stores`} badgeColor={V.terrain2} badgeBg={V.terrBg} badgeBdr={V.terrBdr}>
+          <TableWrap title="Store Breakdown" badge={`${storeData.length} stores`} badgeColor='var(--terrain2)' badgeBg='var(--terrain-bg)' badgeBdr='var(--terrain-bdr)'>
             <table className='dash-table'>
               <thead><tr>{['Store','Cost','Revenue','Profit','Cashback','ROI','Txns'].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
               <tbody>
                 {storeData.map(s=>(
-                  <tr key={s.store} style={{borderTop:`1px solid var(--parch-line)`}}
+                  <tr key={s.store} style={{borderTop:'1px solid var(--parch-line)'}}
                     onMouseEnter={e=>e.currentTarget.style.background='var(--gold-bg)'}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                     <td style={{padding:'9px 13px',fontWeight:700,color:'var(--ink)'}}>{s.store}</td>
-                    <td style={tdMono(V.ocean2)}>{fmt$(s.cost)}</td>
-                    <td style={tdMono(V.terrain2)}>{fmt$(s.revenue)}</td>
-                    <td style={tdMono(s.profit>=0?V.terrain2:V.crimson2)}>{fmt$(s.profit)}</td>
-                    <td style={tdMono(V.violet2)}>{fmt$(s.cashback)}</td>
-                    <td style={tdMono(s.roi>=0?V.terrain2:V.crimson2)}>{fmtPct(s.roi)}</td>
+                    <td style={tdMono('var(--ocean2)')}>{fmt$(s.cost)}</td>
+                    <td style={tdMono('var(--terrain2)')}>{fmt$(s.revenue)}</td>
+                    <td style={tdMono(s.profit>=0?'var(--terrain2)':'var(--crimson2)')}>{fmt$(s.profit)}</td>
+                    <td style={tdMono('var(--violet2)')}>{fmt$(s.cashback)}</td>
+                    <td style={tdMono(s.roi>=0?'var(--terrain2)':'var(--crimson2)')}>{fmtPct(s.roi)}</td>
                     <td style={{padding:'9px 13px',color:'var(--ink-faded)'}}>{s.txns}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <TotalsRow>
-                  <td style={{padding:'9px 13px',fontWeight:800,color:V.ink}}>TOTAL</td>
-                  <td style={tdMono(V.ocean2,{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.cost,0))}</td>
-                  <td style={tdMono(V.terrain2,{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.revenue,0))}</td>
-                  <td style={tdMono(storeData.reduce((s,x)=>s+x.profit,0)>=0?V.terrain2:V.crimson2,{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.profit,0))}</td>
-                  <td style={tdMono(V.violet2,{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.cashback,0))}</td>
-                  <td style={tdMono(kpis.roi>=0?V.terrain2:V.crimson2,{fontWeight:800})}>{fmtPct(kpis.roi)}</td>
+                  <td style={{padding:'9px 13px',fontWeight:800,color:'var(--ink)'}}>TOTAL</td>
+                  <td style={tdMono('var(--ocean2)',{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.cost,0))}</td>
+                  <td style={tdMono('var(--terrain2)',{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.revenue,0))}</td>
+                  <td style={tdMono(storeData.reduce((s,x)=>s+x.profit,0)>=0?'var(--terrain2)':'var(--crimson2)',{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.profit,0))}</td>
+                  <td style={tdMono('var(--violet2)',{fontWeight:800})}>{fmt$(storeData.reduce((s,x)=>s+x.cashback,0))}</td>
+                  <td style={tdMono(kpis.roi>=0?'var(--terrain2)':'var(--crimson2)',{fontWeight:800})}>{fmtPct(kpis.roi)}</td>
                   <td style={{padding:'9px 13px',fontWeight:800,color:'var(--ink-dim)'}}>{storeData.reduce((s,x)=>s+x.txns,0)}</td>
                 </TotalsRow>
               </tfoot>
@@ -881,15 +777,15 @@ export default function Analytics() {
               <thead><tr>{['Period','Cost','Revenue','Cashback','Net Profit','Margin'].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
               <tbody>
                 {periodData.map(p=>(
-                  <tr key={p.period} style={{borderTop:`1px solid var(--parch-line)`}}
+                  <tr key={p.period} style={{borderTop:'1px solid var(--parch-line)'}}
                     onMouseEnter={e=>e.currentTarget.style.background='var(--gold-bg)'}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                    <td style={{padding:'9px 13px',fontWeight:600,color:V.inkFaded}}>{p.period}</td>
-                    <td style={tdMono(V.ocean2)}>{fmt$(p.cost)}</td>
-                    <td style={tdMono(V.terrain2)}>{fmt$(p.revenue)}</td>
-                    <td style={tdMono(V.violet2)}>{fmt$(p.cashback)}</td>
-                    <td style={tdMono(p.profit>=0?V.gold:V.crimson2)}>{fmt$(p.profit)}</td>
-                    <td style={tdMono(p.revenue>0?(p.profit/p.revenue*100)>=0?V.terrain2:V.crimson2:V.inkGhost)}>
+                    <td style={{padding:'9px 13px',fontWeight:600,color:'var(--ink-faded)'}}>{p.period}</td>
+                    <td style={tdMono('var(--ocean2)')}>{fmt$(p.cost)}</td>
+                    <td style={tdMono('var(--terrain2)')}>{fmt$(p.revenue)}</td>
+                    <td style={tdMono('var(--violet2)')}>{fmt$(p.cashback)}</td>
+                    <td style={tdMono(p.profit>=0?'var(--gold)':'var(--crimson2)')}>{fmt$(p.profit)}</td>
+                    <td style={tdMono(p.revenue>0?(p.profit/p.revenue*100)>=0?'var(--terrain2)':'var(--crimson2)':'var(--ink-ghost)')}>
                       {p.revenue>0?fmtPct(p.profit/p.revenue*100):'—'}
                     </td>
                   </tr>
@@ -897,12 +793,12 @@ export default function Analytics() {
               </tbody>
               <tfoot>
                 <TotalsRow>
-                  <td style={{padding:'9px 13px',fontWeight:800,color:V.ink}}>TOTAL</td>
-                  <td style={tdMono(V.ocean2,{fontWeight:800})}>{fmt$(kpis.cost)}</td>
-                  <td style={tdMono(V.terrain2,{fontWeight:800})}>{fmt$(kpis.revenue)}</td>
-                  <td style={tdMono(V.violet2,{fontWeight:800})}>{fmt$(kpis.totalUSD)}</td>
-                  <td style={tdMono(kpis.profit>=0?V.gold:V.crimson2,{fontWeight:800})}>{fmt$(kpis.profit)}</td>
-                  <td style={tdMono(kpis.revenue>0?(kpis.profit/kpis.revenue*100)>=0?V.terrain2:V.crimson2:V.inkGhost,{fontWeight:800})}>
+                  <td style={{padding:'9px 13px',fontWeight:800,color:'var(--ink)'}}>TOTAL</td>
+                  <td style={tdMono('var(--ocean2)',{fontWeight:800})}>{fmt$(kpis.cost)}</td>
+                  <td style={tdMono('var(--terrain2)',{fontWeight:800})}>{fmt$(kpis.revenue)}</td>
+                  <td style={tdMono('var(--violet2)',{fontWeight:800})}>{fmt$(kpis.totalUSD)}</td>
+                  <td style={tdMono(kpis.profit>=0?'var(--gold)':'var(--crimson2)',{fontWeight:800})}>{fmt$(kpis.profit)}</td>
+                  <td style={tdMono(kpis.revenue>0?(kpis.profit/kpis.revenue*100)>=0?'var(--terrain2)':'var(--crimson2)':'var(--ink-ghost)',{fontWeight:800})}>
                     {kpis.revenue>0?fmtPct(kpis.profit/kpis.revenue*100):'—'}
                   </td>
                 </TotalsRow>
@@ -913,6 +809,5 @@ export default function Analytics() {
         </div>
       )}
     </div>
-    </>
   );
 }
