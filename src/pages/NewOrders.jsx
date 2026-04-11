@@ -308,22 +308,15 @@ function GiftCardSection({ giftCards, selectedIds, onChange, retailer, orderTota
   const normRetailer = (s) =>
     String(s || '').toLowerCase().replace(/[\s\-_.']/g, '').replace(/[^a-z0-9]/g, '');
 
-  /* Match gift card to retailer */
+  /* Match gift card to retailer -- only filter if card has explicit retailer field */
   const gcMatchesRetailer = useCallback((gc, ret) => {
     if (!ret) return true;
+    // Only filter if the card itself has a retailer/vendor field explicitly set
+    const gcRetailer = gc.retailer || gc.vendor || gc.store || '';
+    if (!gcRetailer) return true; // No retailer on card = show for all vendors
     const r  = normRetailer(ret);
-    const cn = normRetailer(gc.card_name || gc.name || gc.retailer || '');
-    const gr = normRetailer(gc.retailer || '');
-    if (r.includes('bestbuy'))  return cn.includes('bestbuy')  || gr.includes('bestbuy');
-    if (r.includes('amazon'))   return cn.includes('amazon')   || gr.includes('amazon');
-    if (r.includes('walmart'))  return cn.includes('walmart')  || gr.includes('walmart');
-    if (r.includes('target'))   return cn.includes('target')   || gr.includes('target');
-    if (r.includes('costco'))   return cn.includes('costco')   || gr.includes('costco');
-    if (r.includes('samsclub')||r.includes('sams')) return cn.includes('sams') || gr.includes('sams');
-    if (r.includes('staples'))  return cn.includes('staples')  || gr.includes('staples');
-    if (r.includes('apple'))    return cn.includes('apple')    || gr.includes('apple');
-    /* For unrecognised retailers show all */
-    return true;
+    const gr = normRetailer(gcRetailer);
+    return gr.includes(r) || r.includes(gr);
   }, []);
 
   /* Available cards: non-zero balance only, vendor-matched */
@@ -396,9 +389,7 @@ function GiftCardSection({ giftCards, selectedIds, onChange, retailer, orderTota
 
       {availableCards.length === 0 ? (
         <p style={{ fontSize:11, color:'var(--ink-ghost)', textAlign:'center', padding:'8px 0' }}>
-          {retailer
-            ? `No ${retailer} gift cards with available balance`
-            : 'No gift cards with available balance'}
+          No gift cards with available balance
         </p>
       ) : (
         <>
@@ -421,7 +412,7 @@ function GiftCardSection({ giftCards, selectedIds, onChange, retailer, orderTota
             {/* Info */}
             <div style={{ flex:1, minWidth:0 }}>
               <p style={{ fontSize:12, fontWeight:700, color: selectedCards.length > 0 ? 'var(--gold2)' : 'var(--ink)' }}>
-                {retailer ? `${retailer} Gift Cards` : 'Gift Cards'}
+                Gift Cards
               </p>
               <p style={{ fontSize:9, color:'var(--ink-ghost)', marginTop:1, fontFamily:'var(--font-mono)' }}>
                 {selectedCards.length > 0
