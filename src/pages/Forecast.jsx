@@ -120,10 +120,9 @@ function ProductSearch({ userEmail, onSelect }) {
 
     try {
       if (isUpc) {
-        // ── UPC lookup via UPCitemdb free tier ──
-        const res  = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${q}`);
-        const data = await res.json();
-        // Proxy image through weserv.nl to bypass CORS on UPCitemdb images
+        // ── UPC lookup via backend proxy (avoids CORS) ──
+        const res  = await base44.functions.invoke('lookupUPCProxy', { upc: q });
+        const data = res.data;
         const proxyImg = (url) => url ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=200&h=200&fit=contain&bg=white` : null;
 
         if (data.items?.length) {
