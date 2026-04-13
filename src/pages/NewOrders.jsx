@@ -950,7 +950,7 @@ export default function NewOrders() {
           <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, padding:16, marginBottom:14 }}>
             <SectionHeader color="var(--gold)" title="Vendor & Order"/>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))', gap:10, marginBottom:10 }}>
               <div>
                 <LBL>Vendor *</LBL>
                 <VendorAutocomplete value={form.retailer} onChange={v=>set('retailer',v)} savedVendors={savedVendors}/>
@@ -970,7 +970,7 @@ export default function NewOrders() {
               </div>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:10, marginBottom:10 }}>
               <div>
                 <LBL>Order Date</LBL>
                 <Input type="date" style={INP} className="h-9" value={form.order_date} onChange={e=>set('order_date',e.target.value)}/>
