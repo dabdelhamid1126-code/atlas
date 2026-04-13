@@ -18,7 +18,7 @@ import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplet
 /*  CONSTANTS                                                           */
 /* ------------------------------------------------------------------ */
 const DEFAULT_VENDORS = ['Amazon','Best Buy','Walmart','Target','Costco',"Sam's Club",'eBay','Woot','Apple','Staples'];
-const QUICK_RETAILERS = ['Best Buy','Amazon','Walmart',"Sam's Club",'Costco','Target'];
+const QUICK_RETAILERS = ['Best Buy','Amazon','Walmart',"Sam's Club",'Costco','Target','Staples','Apple'];
 const CHURNING_STATUSES   = [{ value:'pending',label:'Pending' },{ value:'ordered',label:'Ordered' },{ value:'shipped',label:'Shipped' },{ value:'received',label:'Received' }];
 const MARKETPLACE_STATUSES = [{ value:'pending',label:'Pending' },{ value:'ordered',label:'Listed' },{ value:'shipped',label:'Sold' },{ value:'received',label:'Completed' }];
 
@@ -288,9 +288,8 @@ function UPCLookupBar({ products, onApply }) {
 /*  VENDOR AUTOCOMPLETE                                                 */
 /* ------------------------------------------------------------------ */
 function VendorAutocomplete({ value, onChange, savedVendors }) {
-  const [query,   setQuery]   = useState(value || '');
-  const [open,    setOpen]    = useState(false);
-  const [focused, setFocused] = useState(false);
+  const [query, setQuery] = useState(value || '');
+  const [open,  setOpen]  = useState(false);
   const ref = useRef(null);
 
   useEffect(() => { setQuery(value || ''); }, [value]);
@@ -307,48 +306,46 @@ function VendorAutocomplete({ value, onChange, savedVendors }) {
   }, [savedVendors]);
 
   const suggestions = useMemo(() => {
-    if (!query.trim()) return allVendors.slice(0, 8);
+    if (!query.trim()) return [];
     const q = query.toLowerCase();
     return allVendors.filter(v => v.toLowerCase().includes(q)).slice(0, 8);
   }, [query, allVendors]);
 
-  const select = (vendor) => {
-    setQuery(vendor);
-    onChange(vendor);
-    setOpen(false);
-  };
+  const select = (vendor) => { setQuery(vendor); onChange(vendor); setOpen(false); };
 
   const handleInput = (e) => {
     const val = e.target.value;
     setQuery(val);
     onChange(val);
-    setOpen(true);
+    setOpen(val.trim().length > 0);
   };
 
   const handleBlur = () => {
     setTimeout(() => setOpen(false), 150);
-    setFocused(false);
   };
+
+  const isMatched = allVendors.some(v => v.toLowerCase() === query.toLowerCase());
+  const matchedVendor = isMatched ? allVendors.find(v => v.toLowerCase() === query.toLowerCase()) : null;
 
   return (
     <div ref={ref} style={{ position:'relative' }}>
       <div style={{ position:'relative', display:'flex', alignItems:'center' }}>
-        {query && (
+        {matchedVendor && (
           <div style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', zIndex:1 }}>
-            <BrandLogo domain={getStoreDomain(query)} size={16} fallback={query}/>
+            <BrandLogo domain={getStoreDomain(matchedVendor)} size={16} fallback={matchedVendor}/>
           </div>
         )}
         <input
           type="text"
           value={query}
           onChange={handleInput}
-          onFocus={() => { setFocused(true); setOpen(true); }}
+          onFocus={() => {}}
           onBlur={handleBlur}
           placeholder="Type vendor name..."
           style={{
             ...INP_STYLE,
-            paddingLeft: query ? 32 : 10,
-            borderColor: focused ? 'var(--gold-bdr)' : 'var(--parch-line)',
+            paddingLeft: matchedVendor ? 32 : 10,
+            borderColor: open ? 'var(--gold-bdr)' : 'var(--parch-line)',
             transition: 'border-color 0.15s',
           }}
         />
