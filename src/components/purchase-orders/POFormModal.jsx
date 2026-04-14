@@ -481,7 +481,13 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
   };
   const removeSaleEvent     = (id) => setFormData(prev=>({...prev,sale_events:prev.sale_events.filter(e=>e.id!==id)}));
   const updateSaleEvent     = (id,f,v) => setFormData(prev=>({...prev,sale_events:prev.sale_events.map(e=>e.id!==id?e:{...e,[f]:v})}));
-  const updateSaleEventItem = (eid,idx,f,v) => setFormData(prev=>({...prev,sale_events:prev.sale_events.map(e=>{if(e.id!==eid)return e;return{...e,items:e.items.map((it,i)=>i===idx?{...it,[f]:v}:it)};})});
+  const updateSaleEventItem = (eid,idx,f,v) => setFormData(prev=>({
+    ...prev,
+    sale_events: prev.sale_events.map(e => {
+      if (e.id !== eid) return e;
+      return { ...e, items: e.items.map((it,i) => i===idx ? {...it,[f]:v} : it) };
+    })
+  }));
 
   /* Calculations */
   const tax          = parseFloat(formData.tax)||0;
