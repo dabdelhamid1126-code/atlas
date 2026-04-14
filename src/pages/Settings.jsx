@@ -130,9 +130,41 @@ function BtnGhost({ onClick, children }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  VENDORS TAB                                                         */
-/* ------------------------------------------------------------------ */
+const BRANDFETCH = '1idzVIG0BYPKsFIDJDI';
+
+const getStoreDomain = (v) => {
+  const n = String(v||'').toLowerCase().replace(/[\s\-_.']/g,'').replace(/[^a-z0-9]/g,'');
+  if (n.includes('bestbuy'))  return 'bestbuy.com';
+  if (n.includes('amazon'))   return 'amazon.com';
+  if (n.includes('walmart'))  return 'walmart.com';
+  if (n.includes('apple'))    return 'apple.com';
+  if (n.includes('target'))   return 'target.com';
+  if (n.includes('costco'))   return 'costco.com';
+  if (n.includes('samsclub')||n.includes('sams')) return 'samsclub.com';
+  if (n.includes('staples'))  return 'staples.com';
+  if (n.includes('ebay'))     return 'ebay.com';
+  if (n.includes('woot'))     return 'woot.com';
+  if (n.includes('homedepot')) return 'homedepot.com';
+  if (n.includes('bjs'))      return 'bjs.com';
+  if (n.includes('kroger'))   return 'kroger.com';
+  if (n.includes('macys'))    return 'macys.com';
+  return null;
+};
+
+function VendorLogo({ name, size=28 }) {
+  const [err, setErr] = useState(false);
+  const domain = getStoreDomain(name);
+  const url = domain ? `https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH}` : null;
+  if (!url || err) return (
+    <div style={{ width:size, height:size, borderRadius:'50%', background:C.goldBg, border:`1px solid ${C.goldBdr}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:C.gold2, flexShrink:0, fontFamily:FONT }}>
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+  return (
+    <img src={url} alt={name} onError={()=>setErr(true)}
+      style={{ width:size, height:size, borderRadius:'50%', objectFit:'cover', flexShrink:0, border:`1px solid ${C.parchLine}` }}/>
+  );
+}
 function VendorsTab() {
   const DEFAULT_VENDORS = ['Amazon','Best Buy','Walmart','Target','Costco',"Sam's Club",'eBay','Woot','Apple','Staples'];
   const [vendors,  setVendors]  = useState([]);
@@ -207,10 +239,8 @@ function VendorsTab() {
       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
         {vendors.map((v,i)=>(
           <div key={v+i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, background:C.parchWarm, border:`1px solid ${C.parchLine}` }}>
-            {/* Logo placeholder */}
-            <div style={{ width:28, height:28, borderRadius:'50%', background:C.goldBg, border:`1px solid ${C.goldBdr}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:C.gold2, flexShrink:0, fontFamily:FONT }}>
-              {v.charAt(0).toUpperCase()}
-            </div>
+            {/* Logo */}
+            <VendorLogo name={v} size={28}/>
 
             {editing?.index===i ? (
               <input
