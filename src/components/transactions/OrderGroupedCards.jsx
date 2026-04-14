@@ -128,7 +128,7 @@ function ItemImg({ src, name, qty = 1 }) {
   return (
     <div style={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
       {src && !err
-        ? <img src={src} alt={name} onError={() => setErr(true)} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--parch-line)', display: 'block' }} />
+        ? <img src={src} alt={name} onError={() => setErr(true)} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'contain', objectPosition: 'center', border: '1px solid var(--parch-line)', display: 'block', background: 'var(--parch-warm)', padding: 3 }} />
         : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--terrain)', fontSize: 14, fontWeight: 700 }}>
             {initial}
           </div>
