@@ -307,7 +307,8 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
 
 const PAGE_SIZE = 25;
 
-export default function OrderGroupedCards({ data = [], creditCards = [], rewards = [], products = [], onEdit, onDelete, isLoading, selectedIds, onSelectionChange, onClearFilters }) {
+export default function OrderGroupedCards({ data: rawData = [], creditCards = [], rewards = [], products = [], onEdit, onDelete, isLoading, selectedIds, onSelectionChange, onClearFilters }) {
+  const data = useMemo(() => (Array.isArray(rawData) ? rawData.filter(Boolean) : []), [rawData]);
   const [page, setPage] = useState(1);
   const totalPages = Math.ceil(data.length / PAGE_SIZE);
   const paged = useMemo(() => data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [data, page]);
