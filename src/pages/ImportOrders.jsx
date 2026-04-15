@@ -280,7 +280,7 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders }) {
             <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-faded)', marginBottom:8 }}>
               {emails.length} Email{emails.length!==1?'s':''} Found
             </p>
-            <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:400, overflowY:'auto' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:600, overflowY:'auto' }}>
               {emails.map(email => (
                 <EmailRow key={email.id} email={email} onImport={handleImport} importing={importing===email.id}/>
               ))}
@@ -331,37 +331,37 @@ function EmailRow({ email, onImport, importing }) {
   const typeBdr   = { order:'var(--gold-bdr)', pickup:'var(--terrain-bdr)', shipped:'var(--ocean-bdr)' };
 
   return (
-    <div style={{ borderRadius:10, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', cursor:'pointer' }} onClick={()=>setExpanded(!expanded)}>
+    <div style={{ borderRadius:12, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden', marginBottom:2 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', cursor:'pointer' }} onClick={()=>setExpanded(!expanded)}>
         
         {/* Retailer logo */}
-        <div style={{ width:36, height:36, borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
-          <RetailerLogo retailer={retailer} size={36} />
+        <div style={{ width:40, height:40, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
+          <RetailerLogo retailer={retailer} size={40} />
         </div>
 
         {/* Info */}
         <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ fontSize:12, fontWeight:600, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:2 }}>
+          <p style={{ fontSize:13, fontWeight:600, color:'var(--ink)', marginBottom:4, lineHeight:1.3, wordBreak:'break-word' }}>
             {email.subject}
           </p>
-          <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-            <span style={{ fontSize:10, fontWeight:700, color:'var(--ink-dim)' }}>{retailer}</span>
-            <span style={{ fontSize:10, color:'var(--ink-ghost)' }}>·</span>
-            <span style={{ fontSize:10, color:'var(--ink-ghost)' }}>{dateStr}</span>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            <span style={{ fontSize:11, fontWeight:700, color:'var(--ink-dim)' }}>{retailer}</span>
+            <span style={{ fontSize:11, color:'var(--ink-ghost)' }}>·</span>
+            <span style={{ fontSize:11, color:'var(--ink-ghost)' }}>{dateStr}</span>
+            <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:typeBg[emailType], color:typeColor[emailType], border:`1px solid ${typeBdr[emailType]}` }}>
+              {typeLabel[emailType]}
+            </span>
             {email.emailCount > 1 && (
-              <span style={{ fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
-                {email.emailCount} emails
+              <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
+                {email.emailCount} emails grouped
               </span>
             )}
           </div>
         </div>
 
-        {/* Type + chevron */}
-        <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-          <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:typeBg[emailType], color:typeColor[emailType], border:`1px solid ${typeBdr[emailType]}` }}>
-            {typeLabel[emailType]}
-          </span>
-          {expanded ? <ChevronUp style={{ width:13, height:13, color:'var(--ink-ghost)' }}/> : <ChevronDown style={{ width:13, height:13, color:'var(--ink-ghost)' }}/>}
+        {/* Chevron */}
+        <div style={{ flexShrink:0 }}>
+          {expanded ? <ChevronUp style={{ width:16, height:16, color:'var(--ink-ghost)' }}/> : <ChevronDown style={{ width:16, height:16, color:'var(--ink-ghost)' }}/>}
         </div>
       </div>
 
