@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-const EXTRACTION_PROMPT = `You are extracting order data from a retail invoice or order confirmation image or PDF.
+const EXTRACTION_PROMPT = `You are extracting order data from a retail invoice or order confirmation.
 
 Extract the following and return ONLY valid JSON, no markdown, no explanation:
 
@@ -19,7 +19,7 @@ Extract the following and return ONLY valid JSON, no markdown, no explanation:
   ],
   "items": [
     {
-      "product_name": "full specific product name including brand, model, storage, color (e.g. 'Apple iPhone 15 Pro 256GB Natural Titanium')",
+      "product_name": "full specific product name including brand, model, storage, color",
       "sku": "SKU, UPC, or barcode number if present, else null",
       "model": "model number if present",
       "quantity": 1,
@@ -32,18 +32,15 @@ Extract the following and return ONLY valid JSON, no markdown, no explanation:
 }
 
 RULES:
-- product_name MUST be the actual product being purchased, NOT the store/retailer name. Include brand + model + specs.
-- Example good product_name: "Apple AirPods Pro 2nd Generation", "Samsung 65\" QLED 4K TV QN65Q80C", "Nintendo Switch OLED White"
-- Example BAD product_name: "Apple" (too vague), "Best Buy" (that's the retailer), "Item" (not a real name)
+- product_name MUST be the actual product being purchased, NOT the store/retailer name
+- Include brand + model + specs in product_name
 - Merge items with identical SKU into one entry with combined quantity
-- Skip all free items ($0.00) — free trials, digital freebies, gift-with-purchase
-- Skip items where product_name contains "Free" and total_cost is 0
+- Skip all free items ($0.00)
 - For gift cards extract last 4 digits from masked number (e.g. ****2067 -> "2067")
-- order_type_hint: use "churning" if this looks like a resale purchase (electronics, appliances, toys), "marketplace" otherwise
+- order_type_hint: use "churning" if electronics/appliances/toys, "marketplace" otherwise
 - If order_date not found use today's date in YYYY-MM-DD format
 - All money values as numbers not strings
-- tracking_numbers: empty array [] if none found
-- pickup_location: include store name/city if it is a store pickup order`;
+- tracking_numbers: empty array [] if none found`;
 
 Deno.serve(async (req) => {
   try {
@@ -53,13 +50,73 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { file_url, file_type } = await req.json();
+    const body = await req.json();
+    const { file_url, file_type, email_body, email_subject, email_from } = body;
 
-    if (!file_url) {
-      return Response.json({ error: 'file_url is required' }, { status: 400 });
+    // ── Mode 1: Email body (from Gmail sync) ──────────────────────────────
+    if (email_body) {
+      const emailPrompt = `${EXTRACTION_PROMPT}
+
+You are reading a raw order confirmation email. Here is the email content:
+
+FROM: ${email_from || ''}
+SUBJECT: ${email_subject || ''}
+
+EMAIL BODY:
+${email_body.substring(0, 8000)}`; // limit to 8k chars to stay within context
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: emailPrompt,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            retailer: { type: 'string' },
+            order_number: { type: 'string' },
+            order_date: { type: 'string' },
+            tracking_numbers: { type: 'array', items: { type: 'string' } },
+            tax: { type: 'number' },
+            shipping_cost: { type: 'number' },
+            fees: { type: 'number' },
+            order_total: { type: 'number' },
+            payment_method_last_four: { type: 'string' },
+            pickup_location: { type: 'string' },
+            order_type_hint: { type: 'string' },
+            gift_cards: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  last_four: { type: 'string' },
+                  amount: { type: 'number' },
+                },
+              },
+            },
+            items: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  product_name: { type: 'string' },
+                  sku: { type: 'string' },
+                  model: { type: 'string' },
+                  quantity: { type: 'number' },
+                  unit_cost: { type: 'number' },
+                  total_cost: { type: 'number' },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return Response.json({ extracted: result });
     }
 
-    // Use the built-in InvokeLLM integration with file_urls for vision
+    // ── Mode 2: File URL (existing upload flow) ───────────────────────────
+    if (!file_url) {
+      return Response.json({ error: 'file_url or email_body is required' }, { status: 400 });
+    }
+
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: EXTRACTION_PROMPT,
       file_urls: [file_url],
