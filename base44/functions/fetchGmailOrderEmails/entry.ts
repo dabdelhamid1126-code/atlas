@@ -122,8 +122,17 @@ Deno.serve(async (req) => {
     // Group by order number
     const extractOrderNum = (subject, snippet) => {
       const text = `${subject} ${snippet}`;
-      const match = text.match(/(?:order\s*#?\s*|#)([A-Z0-9\-]{6,})/i);
-      return match ? match[1].toUpperCase() : null;
+      // Match BBY01-XXXXXXX, order #XXXXX, #XXXXX, or plain order numbers
+      const patterns = [
+        /BBY0\d-(\d{9,})/i,           // Best Buy: BBY01-807161257379
+        /(?:order\s*#?\s*)([A-Z0-9\-]{6,})/i,  // order #XXXXX
+        /#([A-Z0-9\-]{6,})/i,          // #210313507
+      ];
+      for (const pattern of patterns) {
+        const match = text.match(pattern);
+        if (match) return match[0].toUpperCase().replace(/\s/g, '');
+      }
+      return null;
     };
 
     const groups = [];
