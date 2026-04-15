@@ -344,7 +344,8 @@ function detectType(subject) {
   return 'order';
 }
 
-function EmailRow({ email, onImport, importing, isAlreadyImported }) {
+function EmailRow({ email, onImport, importing }) {
+  const [expanded, setExpanded] = useState(false);
   const retailer  = detectRetailer(email.from, email.subject);
   const emailType = detectType(email.subject);
 
@@ -356,27 +357,22 @@ function EmailRow({ email, onImport, importing, isAlreadyImported }) {
   const typeBdr   = { order:'var(--gold-bdr)', pickup:'var(--terrain-bdr)', shipped:'var(--ocean-bdr)' };
   const typeLabel = { order:'Order', pickup:'Pickup', shipped:'Shipped' };
 
-  if (isAlreadyImported) return null;
-
   return (
     <div style={{ borderRadius:12, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden' }}>
-      <div style={{ display:'flex', alignItems:'flex-start', gap:12, padding:'14px 16px' }}>
-        
-        {/* Retailer logo */}
-        <div style={{ width:44, height:44, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden', marginTop:2 }}>
-          <RetailerLogo retailer={retailer} size={44} />
+      {/* Always visible header */}
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', cursor:'pointer' }} onClick={()=>setExpanded(!expanded)}>
+        <div style={{ width:40, height:40, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
+          <RetailerLogo retailer={retailer} size={40} />
         </div>
-
-        {/* Info */}
         <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ fontSize:13, fontWeight:600, color:'var(--ink)', marginBottom:4, lineHeight:1.3 }}>
+          <p style={{ fontSize:13, fontWeight:600, color:'var(--ink)', lineHeight:1.3, marginBottom:3 }}>
             {email.subject}
           </p>
-          <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', marginBottom:6 }}>
-            <span style={{ fontSize:11, fontWeight:700, color:'var(--ink-dim)' }}>{retailer}</span>
+          <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+            <span style={{ fontSize:11, fontWeight:600, color:'var(--ink-dim)' }}>{retailer}</span>
             <span style={{ fontSize:11, color:'var(--ink-ghost)' }}>·</span>
             <span style={{ fontSize:11, color:'var(--ink-ghost)' }}>{dateStr}</span>
-            <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:typeBg[emailType], color:typeColor[emailType], border:`1px solid ${typeBdr[emailType]}` }}>
+            <span style={{ fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:99, background:typeBg[emailType], color:typeColor[emailType], border:`1px solid ${typeBdr[emailType]}` }}>
               {typeLabel[emailType]}
             </span>
             {email.emailCount > 1 && (
@@ -385,20 +381,30 @@ function EmailRow({ email, onImport, importing, isAlreadyImported }) {
               </span>
             )}
           </div>
+        </div>
+        {/* Expand chevron */}
+        <div style={{ flexShrink:0, color:'var(--ink-ghost)' }}>
+          {expanded ? <ChevronUp style={{ width:16, height:16 }}/> : <ChevronDown style={{ width:16, height:16 }}/>}
+        </div>
+      </div>
+
+      {/* Expanded content */}
+      {expanded && (
+        <div style={{ padding:'0 14px 14px', borderTop:'1px solid var(--parch-line)', paddingTop:12 }}>
           {email.snippet && (
-            <p style={{ fontSize:11, color:'var(--ink-ghost)', lineHeight:1.5, marginBottom:10 }}>
-              {email.snippet.length > 140 ? email.snippet.slice(0, 140) + '...' : email.snippet}
+            <p style={{ fontSize:11, color:'var(--ink-dim)', lineHeight:1.6, marginBottom:10 }}>
+              {email.snippet.length > 160 ? email.snippet.slice(0, 160) + '...' : email.snippet}
             </p>
           )}
-          <button onClick={()=>onImport(email)} disabled={importing}
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'var(--font-serif)', opacity:importing?0.6:1 }}>
+          <button onClick={(e)=>{ e.stopPropagation(); onImport(email); }} disabled={importing}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:'var(--font-serif)', opacity:importing?0.6:1 }}>
             {importing
-              ? <><Loader style={{ width:12, height:12, animation:'spin 0.8s linear infinite' }}/> Extracting...</>
-              : <><Plus style={{ width:12, height:12 }}/> Import</>
+              ? <><Loader style={{ width:13, height:13, animation:'spin 0.8s linear infinite' }}/> Extracting...</>
+              : <><Plus style={{ width:13, height:13 }}/> Import This Order</>
             }
           </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
