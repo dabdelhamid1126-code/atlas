@@ -126,57 +126,180 @@ function DropZone({ onFiles, loading }) {
   );
 }
 
+// ── Group emails by order number / sender proximity ───────────────────────
+
+function groupEmails(emails) {
+  const extractOrderNum = (subject, snippet) => {
+    const text = `${subject} ${snippet}`;
+    const patterns = [
+      /BBY0\d-\d{9,}/i,
+      /(?:order\s*(?:number|#|no\.?)\s*)([A-Z0-9\-]{6,})/i,
+      /#([A-Z0-9\-]{6,})/i,
+      /\b(\d{3}-\d{7,}-\d{7,})\b/,
+    ];
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m) return m[0].toUpperCase().replace(/\s/g, '');
+    }
+    return null;
+  };
+  const getSenderDomain = (from) => {
+    const m = from.match(/@([\w.]+)/);
+    return m ? m[1].toLowerCase() : from.toLowerCase();
+  };
+
+  const groups = [];
+  const usedIds = new Set();
+  const sorted = [...emails].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  for (const email of sorted) {
+    if (usedIds.has(email.id)) continue;
+    const orderNum  = extractOrderNum(email.subject, email.snippet || '');
+    const domain    = getSenderDomain(email.from);
+    const emailTime = new Date(email.date).getTime();
+
+    const related = emails.filter(other => {
+      if (other.id === email.id || usedIds.has(other.id)) return false;
+      if (orderNum) {
+        const otherNum = extractOrderNum(other.subject, other.snippet || '');
+        if (otherNum && otherNum === orderNum) return true;
+      }
+      const otherDomain = getSenderDomain(other.from);
+      const otherTime   = new Date(other.date).getTime();
+      const daysDiff    = Math.abs(emailTime - otherTime) / (1000 * 60 * 60 * 24);
+      if (domain === otherDomain && daysDiff <= 7) {
+        const otherNum = extractOrderNum(other.subject, other.snippet || '');
+        if (!otherNum || !orderNum || otherNum === orderNum) return true;
+      }
+      return false;
+    });
+
+    const groupEmails = [email, ...related];
+    groupEmails.forEach(e => usedIds.add(e.id));
+    groups.push({
+      id:         email.id,
+      ids:        groupEmails.map(e => e.id),
+      subject:    email.subject,
+      from:       email.from,
+      date:       email.date,
+      snippet:    email.snippet || '',
+      emailCount: groupEmails.length,
+      hasTracking: false,
+      emails:     groupEmails,
+    });
+  }
+  return groups.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
 // ── Gmail Panel ───────────────────────────────────────────────────────────
 
-function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [] }) {
-  const [status,    setStatus]    = useState('checking');
-  const [syncing,   setSyncing]   = useState(false);
-  const [emails,    setEmails]    = useState([]);
-  const [daysBack,  setDaysBack]  = useState(30);
-  const [syncError, setSyncError] = useState('');
-  const [importing, setImporting] = useState(null);
+const VERCEL_API = 'https://atlas-five-ashy.vercel.app';
+const SUPABASE_URL = 'https://xawgusnshspjclaeccar.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhhd2d1c25zaHNwamNsYWVjY2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTUyNTUsImV4cCI6MjA5MTc5MTI1NX0.Dwdx1u35DYfIz036A_YTsjf6bpp6rGztBUb-1X2l_tQ';
 
+function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [], userEmail }) {
+  const [status,       setStatus]       = useState('checking');
+  const [gmailAddress, setGmailAddress] = useState('');
+  const [syncing,      setSyncing]      = useState(false);
+  const [emails,       setEmails]       = useState([]);
+  const [daysBack,     setDaysBack]     = useState(30);
+  const [syncError,    setSyncError]    = useState('');
+  const [importing,    setImporting]    = useState(null);
+
+  // Check URL params for OAuth result
   useEffect(() => {
-    base44.functions.invoke('getGmailStatus', {})
-      .then(res => {
-        if (res.data?.connected) setStatus('connected');
-        else setStatus('disconnected');
-      })
-      .catch(() => setStatus('disconnected'));
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('gmail_connected');
+    const error     = params.get('gmail_error');
+    if (connected) {
+      setGmailAddress(decodeURIComponent(connected));
+      setStatus('connected');
+      toast.success(`Gmail connected: ${decodeURIComponent(connected)}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    if (error) {
+      setStatus('disconnected');
+      toast.error(`Gmail connection failed: ${error}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
-  const handleConnect = async () => {
+  // Check if this user has a token in Supabase
+  useEffect(() => {
+    if (!userEmail) return;
+    fetch(`${SUPABASE_URL}/rest/v1/gmail_tokens?user_email=eq.${encodeURIComponent(userEmail)}&select=gmail_address`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data?.length > 0) {
+        setGmailAddress(data[0].gmail_address || '');
+        setStatus('connected');
+      } else {
+        setStatus('disconnected');
+      }
+    })
+    .catch(() => setStatus('disconnected'));
+  }, [userEmail]);
+
+  const handleConnect = () => {
+    if (!userEmail) { toast.error('Please wait — loading user info'); return; }
+    window.location.href = `${VERCEL_API}/api/auth/google?user_email=${encodeURIComponent(userEmail)}`;
+  };
+
+  const handleDisconnect = async () => {
     try {
-      const res = await base44.functions.invoke('requestGmailOAuth', {});
-      if (res.data?.url) window.location.href = res.data.url;
-      else toast.error('Could not get OAuth URL');
-    } catch { toast.error('Failed to start Gmail connection'); }
+      await fetch(`${VERCEL_API}/api/gmail/disconnect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_email: userEmail }),
+      });
+      setStatus('disconnected');
+      setGmailAddress('');
+      setEmails([]);
+      toast.success('Gmail disconnected');
+    } catch { toast.error('Failed to disconnect'); }
   };
 
   const handleSync = async () => {
     setSyncing(true); setSyncError(''); setEmails([]);
     try {
-      const afterDate = format(new Date(Date.now() - daysBack * 86400000), 'yyyy-MM-dd');
-      const res = await base44.functions.invoke('fetchGmailOrderEmails', { afterDate });
-      const emailList = res.data?.emails || [];
-      setEmails(emailList);
-      if (emailList.length === 0) setSyncError(`No order emails found in the last ${daysBack} days.`);
-      else toast.success(`Found ${emailList.length} order email${emailList.length!==1?'s':''}`);
-    } catch { setSyncError('Sync failed — try again'); }
-    finally { setSyncing(false); }
+      const res = await fetch(`${VERCEL_API}/api/gmail/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_email: userEmail, days_back: daysBack, max_emails: 50 }),
+      });
+      const data = await res.json();
+      if (data.error) { setSyncError(data.error); return; }
+
+      // Now group the raw emails using the same logic as fetchGmailOrderEmails
+      const rawEmails = data.emails || [];
+      const grouped = groupEmails(rawEmails);
+      setEmails(grouped);
+      if (grouped.length === 0) setSyncError(`No order emails found in the last ${daysBack} days.`);
+      else toast.success(`Found ${grouped.length} order${grouped.length!==1?'s':''}`);
+    } catch (err) {
+      setSyncError('Sync failed — try again');
+    } finally { setSyncing(false); }
   };
 
   const handleImport = async (emailGroup) => {
     setImporting(emailGroup.id);
     try {
-      const bodyRes = await base44.functions.invoke('fetchGmailEmails', {
-        messageIds: emailGroup.ids || [emailGroup.id],
+      // Fetch full bodies via Vercel
+      const bodyRes = await fetch(`${VERCEL_API}/api/gmail/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_email: userEmail, message_ids: emailGroup.ids || [emailGroup.id], fetch_bodies: true }),
       });
-      const emailData = bodyRes.data;
+      const bodyData = await bodyRes.json();
+      const emailBody = bodyData.body || emailGroup.snippet || '';
+
+      // Extract via base44 extractInvoice
       const extractRes = await base44.functions.invoke('extractInvoice', {
-        email_body:    emailData.body,
-        email_subject: emailData.subject,
-        email_from:    emailData.from,
+        email_body:    emailBody,
+        email_subject: emailGroup.subject,
+        email_from:    emailGroup.from,
       });
       const extracted = extractRes.data.extracted;
       extracted.items = (extracted.items||[]).map(it=>({...it, id:crypto.randomUUID()}));
@@ -186,7 +309,7 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [] })
         if (cardMatch) extracted.credit_card_id = cardMatch.id;
       }
       const isDuplicate = extracted.order_number && existingOrders.some(o=>o.order_number===extracted.order_number);
-      onAddDrafts([{ id:crypto.randomUUID(), filename:emailData.subject||'Gmail email', status:isDuplicate?'duplicate':'ready', extracted, error:null, isDuplicate, source:'gmail' }]);
+      onAddDrafts([{ id:crypto.randomUUID(), filename:emailGroup.subject||'Gmail email', status:isDuplicate?'duplicate':'ready', extracted, error:null, isDuplicate, source:'gmail' }]);
       toast.success('Order extracted — review and confirm in Upload tab');
       setEmails(prev=>prev.filter(e=>e.id!==emailGroup.id));
     } catch (err) {
@@ -207,34 +330,28 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [] })
         <Mail style={{ width:28, height:28, color:'var(--ink-faded)' }}/>
       </div>
       <h2 style={{ fontFamily:'var(--font-serif)', fontSize:16, fontWeight:700, color:'var(--ink)', marginBottom:8 }}>Connect Your Gmail</h2>
-      <p style={{ fontSize:12, color:'var(--ink-dim)', maxWidth:400, margin:'0 auto 20px', lineHeight:1.6 }}>
+      <p style={{ fontSize:12, color:'var(--ink-dim)', maxWidth:400, margin:'0 auto 24px', lineHeight:1.6 }}>
         Connect your Gmail to automatically detect and import order confirmation emails from Amazon, Best Buy, Walmart, Target, Sam's Club and more.
       </p>
-
-      {/* Step-by-step instructions */}
-      <div style={{ maxWidth:440, margin:'0 auto 24px', textAlign:'left', display:'flex', flexDirection:'column', gap:10 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, maxWidth:480, margin:'0 auto 24px', textAlign:'left' }}>
         {[
-          { step:'1', text:'Go to Settings in the left sidebar' },
-          { step:'2', text:'Click Integrations' },
-          { step:'3', text:'Find Gmail and click Connect' },
-          { step:'4', text:'Authorize with your Google account' },
-          { step:'5', text:'Come back here and refresh the page' },
-        ].map(s => (
-          <div key={s.step} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'var(--parch-warm)', borderRadius:10, border:'1px solid var(--parch-line)' }}>
-            <div style={{ width:24, height:24, borderRadius:'50%', background:'var(--ink)', color:'var(--ne-cream)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, flexShrink:0 }}>
-              {s.step}
-            </div>
-            <p style={{ fontSize:12, color:'var(--ink)', margin:0 }}>{s.text}</p>
+          { icon:Inbox,     label:'Auto-detect orders',  desc:'Finds confirmations automatically' },
+          { icon:RefreshCw, label:'One-click sync',       desc:'Import all at once, review before saving' },
+          { icon:Lock,      label:'Read-only access',     desc:'We never send, delete, or modify emails' },
+        ].map(f => (
+          <div key={f.label} style={{ padding:12, background:'var(--parch-warm)', borderRadius:10, border:'1px solid var(--parch-line)' }}>
+            <f.icon style={{ width:14, height:14, color:'var(--gold)', marginBottom:6 }}/>
+            <p style={{ fontSize:11, fontWeight:700, color:'var(--ink)', marginBottom:2 }}>{f.label}</p>
+            <p style={{ fontSize:10, color:'var(--ink-ghost)' }}>{f.desc}</p>
           </div>
         ))}
       </div>
-
-      <button onClick={() => window.location.reload()}
-        style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:10, background:'var(--parch-warm)', color:'var(--ink)', border:'1px solid var(--parch-line)', cursor:'pointer', fontSize:12, fontWeight:600, fontFamily:'var(--font-serif)' }}>
-        <RefreshCw style={{ width:13, height:13 }}/> Refresh after connecting
+      <button onClick={handleConnect}
+        style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:10, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:13, fontWeight:700, fontFamily:'var(--font-serif)' }}>
+        <Mail style={{ width:15, height:15 }}/> Connect Gmail Account
       </button>
       <p style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:12 }}>
-        Only read permission is requested. We never send, delete, or modify your emails.
+        Each user connects their own Gmail — your emails stay private.
       </p>
     </div>
   );
@@ -247,8 +364,12 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [] })
         </div>
         <div style={{ flex:1 }}>
           <p style={{ fontSize:12, fontWeight:700, color:'var(--terrain)' }}>Gmail Connected</p>
-          <p style={{ fontSize:11, color:'var(--ink-faded)' }}>Ready to sync order emails</p>
+          <p style={{ fontSize:11, color:'var(--ink-faded)' }}>{gmailAddress || 'Ready to sync order emails'}</p>
         </div>
+        <button onClick={handleDisconnect}
+          style={{ fontSize:11, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontFamily:'var(--font-serif)', fontWeight:600 }}>
+          Disconnect
+        </button>
       </div>
 
       <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:12, padding:16 }}>
@@ -749,7 +870,7 @@ export default function ImportOrders() {
         </div>
       )}
       {tab==='gmail' && (
-        <GmailPanel onAddDrafts={handleAddDrafts} products={products} creditCards={creditCards} existingOrders={existingOrders}/>
+        <GmailPanel onAddDrafts={handleAddDrafts} products={products} creditCards={creditCards} existingOrders={existingOrders} userEmail={userEmail}/>
       )}
     </div>
   );
