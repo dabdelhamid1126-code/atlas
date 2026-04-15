@@ -174,7 +174,7 @@ function GmailPanel({ userEmail }) {
   // Check if already connected
   useEffect(() => {
     if (!userEmail) return;
-    fetch(`${process.env.SUPABASE_URL || 'https://xawgusnshspjclaeccar.supabase.co'}/rest/v1/gmail_tokens?user_email=eq.${encodeURIComponent(userEmail)}&select=gmail_address`, {
+    fetch(`https://xawgusnshspjclaeccar.supabase.co/rest/v1/gmail_tokens?user_email=eq.${encodeURIComponent(userEmail)}&select=gmail_address`, {
       headers: {
         'apikey':        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhhd2d1c25zaHNwamNsYWVjY2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTUyNTUsImV4cCI6MjA5MTc5MTI1NX0.Dwdx1u35DYfIz036A_YTsjf6bpp6rGztBUb-1X2l_tQ',
         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhhd2d1c25zaHNwamNsYWVjY2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTUyNTUsImV4cCI6MjA5MTc5MTI1NX0.Dwdx1u35DYfIz036A_YTsjf6bpp6rGztBUb-1X2l_tQ',
