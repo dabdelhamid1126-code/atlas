@@ -348,7 +348,7 @@ export default function OrderGroupedCards({ data = [], creditCards = [], rewards
   return (
     <div>
       <div>
-        {paged.map(order => (
+        {paged.filter(Boolean).map(order => (
           <OrderCard key={order.id} order={order} creditCards={creditCards} rewards={rewards} products={products}
             onEdit={onEdit} onDelete={onDelete} isSelected={selectedIds.has(order.id)} onToggleSelect={toggleSelect} />
         ))}
