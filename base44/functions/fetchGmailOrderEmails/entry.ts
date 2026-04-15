@@ -122,17 +122,22 @@ Deno.serve(async (req) => {
     // Group by order number
     const extractOrderNum = (subject, snippet) => {
       const text = `${subject} ${snippet}`;
-      // Match BBY01-XXXXXXX, order #XXXXX, #XXXXX, or plain order numbers
       const patterns = [
-        /BBY0\d-(\d{9,})/i,           // Best Buy: BBY01-807161257379
-        /(?:order\s*#?\s*)([A-Z0-9\-]{6,})/i,  // order #XXXXX
-        /#([A-Z0-9\-]{6,})/i,          // #210313507
+        /BBY0\d-\d{9,}/i,                        // Best Buy: BBY01-807161257379
+        /(?:order\s*(?:number|#|no\.?)\s*)([A-Z0-9\-]{6,})/i,
+        /#([A-Z0-9\-]{6,})/i,
+        /\b(\d{3}-\d{7,}-\d{7,})\b/,             // Amazon: 112-1234567-1234567
       ];
       for (const pattern of patterns) {
         const match = text.match(pattern);
         if (match) return match[0].toUpperCase().replace(/\s/g, '');
       }
       return null;
+    };
+
+    const getSenderDomain = (from) => {
+      const match = from.match(/@([\w.]+)/);
+      return match ? match[1].toLowerCase() : from.toLowerCase();
     };
 
     const groups = [];
@@ -145,26 +150,46 @@ Deno.serve(async (req) => {
 
     for (const email of sorted) {
       if (usedIds.has(email.id)) continue;
-      const orderNum = extractOrderNum(email.subject, email.snippet);
-      const related = orderNum ? emails.filter(other => {
+      const orderNum   = extractOrderNum(email.subject, email.snippet);
+      const domain     = getSenderDomain(email.from);
+      const emailTime  = new Date(email.date).getTime();
+
+      const related = emails.filter(other => {
         if (other.id === email.id || usedIds.has(other.id)) return false;
-        const otherNum = extractOrderNum(other.subject, other.snippet);
-        return otherNum && otherNum === orderNum;
-      }) : [];
+
+        // Match by order number (strongest signal)
+        if (orderNum) {
+          const otherNum = extractOrderNum(other.subject, other.snippet);
+          if (otherNum && otherNum === orderNum) return true;
+        }
+
+        // Match by same sender domain + within 7 days (for pickup reminder chains)
+        const otherDomain = getSenderDomain(other.from);
+        const otherTime   = new Date(other.date).getTime();
+        const daysDiff    = Math.abs(emailTime - otherTime) / (1000 * 60 * 60 * 24);
+        if (domain === otherDomain && daysDiff <= 7) {
+          // Only group if neither has a conflicting order number
+          const otherNum = extractOrderNum(other.subject, other.snippet);
+          if (!otherNum || !orderNum || otherNum === orderNum) return true;
+        }
+
+        return false;
+      });
+
       const groupEmails = [email, ...related];
       groupEmails.forEach(e => usedIds.add(e.id));
-      const hasTracking = groupEmails.some(e => e.type === 'tracking');
-      const primarySubject = groupEmails.find(e => e.type === 'order')?.subject || email.subject;
+      const hasTracking   = groupEmails.some(e => e.type === 'tracking');
+      const primaryEmail  = groupEmails.find(e => e.type === 'order') || email;
       groups.push({
-        id:          email.id,
-        ids:         groupEmails.map(e => e.id),
-        subject:     primarySubject,
-        from:        email.from,
-        date:        email.date,
-        snippet:     email.snippet,
-        emailCount:  groupEmails.length,
+        id:         email.id,
+        ids:        groupEmails.map(e => e.id),
+        subject:    primaryEmail.subject,
+        from:       email.from,
+        date:       primaryEmail.date,
+        snippet:    primaryEmail.snippet,
+        emailCount: groupEmails.length,
         hasTracking,
-        emails:      groupEmails
+        emails:     groupEmails,
       });
     }
 
