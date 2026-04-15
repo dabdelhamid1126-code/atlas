@@ -560,7 +560,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
                 {(form.tracking_numbers?.length||1)>1&&<button onClick={()=>set('tracking_numbers',form.tracking_numbers.filter((_,i)=>i!==ti))} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition"><X className="h-3.5 w-3.5"/></button>}
               </div>
             ))}
-            <button onClick={()=>set('tracking_numbers',[...(form.tracking_numbers||['']),'''])} className="flex items-center gap-1 text-xs text-violet-500 hover:text-violet-700 font-medium"><Plus className="h-3 w-3"/>Add tracking number</button>
+            <button onClick={()=>set('tracking_numbers',[...(form.tracking_numbers||['']), ''])} className="flex items-center gap-1 text-xs text-violet-500 hover:text-violet-700 font-medium"><Plus className="h-3 w-3"/>Add tracking number</button>
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -586,7 +586,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
             <Select value={form.credit_card_id||''} onValueChange={v=>set('credit_card_id',v)}>
               <SelectTrigger className="bg-slate-50 h-9"><SelectValue placeholder={form.payment_method_last_four?`Card ending ••••${form.payment_method_last_four} — select to match`:'Select payment method...'}/></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No card</SelectItem>
+                <SelectItem value={null}>No card</SelectItem>
                 {creditCards.map(c=><SelectItem key={c.id} value={c.id}>{c.card_name}{c.last_4_digits?` ••••${c.last_4_digits}`:''}</SelectItem>)}
               </SelectContent>
             </Select>
