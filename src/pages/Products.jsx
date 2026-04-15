@@ -422,7 +422,8 @@ export default function Products() {
     if (rawUpcs.length===0) { toast.error('Paste at least one UPC'); return; }
     setImportRows(rawUpcs.map(upc=>({ upc, name:'', image:'', category:'', status:'loading', selected:true })));
     setLookingUp(true);
-    const existingUpcs = new Set(products.map(p=>(p.upc||'').trim()));
+    const existingUpcs  = new Set(products.map(p=>(p.upc||'').trim()).filter(Boolean));
+    const existingNames = new Set(products.map(p=>(p.name||'').trim().toLowerCase()).filter(Boolean));
     for (const upc of rawUpcs) {
       if (existingUpcs.has(upc)) {
         setImportRows(prev=>prev.map(r=>r.upc===upc?{ ...r, status:'duplicate', selected:false, name:products.find(p=>p.upc===upc)?.name||'' }:r));
@@ -433,7 +434,8 @@ export default function Products() {
         const results  = data.results||[];
         const best     = results.find(r=>r.source==='Best Buy')||results[0];
         if (best) {
-          setImportRows(prev=>prev.map(r=>r.upc===upc?{ ...r, name:best.title, image:best.image||'', category:guessCategory(best.title), source:best.source, status:'new', selected:true }:r));
+          const nameAlreadyExists = existingNames.has((best.title||'').trim().toLowerCase());
+          setImportRows(prev=>prev.map(r=>r.upc===upc?{ ...r, name:best.title, image:best.image||'', category:guessCategory(best.title), source:best.source, status:nameAlreadyExists?'duplicate':'new', selected:!nameAlreadyExists }:r));
         } else {
           setImportRows(prev=>prev.map(r=>r.upc===upc?{ ...r, status:'not_found', selected:false }:r));
         }
@@ -454,6 +456,34 @@ export default function Products() {
     queryClient.invalidateQueries({ queryKey:['products'] });
     toast.success(`${created} product${created!==1?'s':''} added to catalog`);
     setImporting(false); setImportOpen(false); setUpcInput(''); setImportRows([]);
+  };
+
+  const handleRemoveDuplicates = async () => {
+    // Find duplicates by name (keep first occurrence, hide the rest)
+    const seen = new Map(); // normalized name -> first product id
+    const toHide = [];
+    const sorted = [...allProducts].sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
+    for (const p of sorted) {
+      const key = (p.name||'').trim().toLowerCase();
+      if (!key) continue;
+      if (seen.has(key)) { toHide.push(p); }
+      else seen.set(key, p.id);
+    }
+    // Also check UPC duplicates
+    const seenUpc = new Map();
+    for (const p of sorted) {
+      const upc = (p.upc||'').trim();
+      if (!upc) continue;
+      if (seenUpc.has(upc)) { if (!toHide.find(x=>x.id===p.id)) toHide.push(p); }
+      else seenUpc.set(upc, p.id);
+    }
+    if (toHide.length===0) { toast.success('No duplicates found!'); return; }
+    for (const p of toHide) {
+      const hidden = [...new Set([...(p.hidden_by||[]), ...(userEmail?[userEmail]:[])])];
+      await base44.entities.Product.update(p.id, { hidden_by: hidden });
+    }
+    queryClient.invalidateQueries({ queryKey:['products'] });
+    toast.success(`Removed ${toHide.length} duplicate${toHide.length!==1?'s':''}`);
   };
 
   const toggleRow       = (upc) => setImportRows(prev=>prev.map(r=>r.upc===upc?{ ...r, selected:!r.selected }:r));
@@ -491,6 +521,10 @@ export default function Products() {
           <p style={{ fontSize:11, color:C.inkDim, marginTop:4 }}>Master product catalog  {products.length} total  shared with all users</p>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button onClick={handleRemoveDuplicates}
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:600, background:C.crimsonBg, border:`1px solid ${C.crimsonBdr}`, color:C.crimson, cursor:'pointer', fontFamily:FONT }}>
+            <Trash2 style={{ width:13, height:13 }}/> Remove Duplicates
+          </button>
           {/* Import UPCs -- matches ghost button style in Analytics */}
           <button onClick={()=>setImportOpen(true)}
             style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:600, background:C.parchCard, border:`1px solid ${C.parchLine}`, color:C.inkFaded, cursor:'pointer', fontFamily:FONT }}>
