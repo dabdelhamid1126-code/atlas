@@ -128,7 +128,7 @@ function DropZone({ onFiles, loading }) {
 
 // ── Gmail Panel ───────────────────────────────────────────────────────────
 
-function GmailPanel({ onAddDrafts, products, creditCards, existingOrders }) {
+function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [] }) {
   const [status,    setStatus]    = useState('checking');
   const [syncing,   setSyncing]   = useState(false);
   const [emails,    setEmails]    = useState([]);
@@ -277,14 +277,41 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders }) {
         )}
         {emails.length > 0 && (
           <div>
-            <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-faded)', marginBottom:8 }}>
-              {emails.length} Email{emails.length!==1?'s':''} Found
-            </p>
-            <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:600, overflowY:'auto' }}>
-              {emails.map(email => (
-                <EmailRow key={email.id} email={email} onImport={handleImport} importing={importing===email.id}/>
-              ))}
-            </div>
+            {(() => {
+              const visibleEmails = emails.filter(email => {
+                // Extract order number from subject/snippet
+                const text = `${email.subject} ${email.snippet}`;
+                const match = text.match(/(?:order\s*#?\s*|#|BBY01-|bby01-)([A-Z0-9\-]{6,})/i);
+                const orderNum = match ? match[1].toUpperCase() : null;
+                if (!orderNum) return true; // no order number, always show
+                return !existingOrders.some(o => o.order_number?.toUpperCase() === orderNum);
+              });
+              const hiddenCount = emails.length - visibleEmails.length;
+              return (
+                <>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+                    <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-faded)' }}>
+                      {visibleEmails.length} Email{visibleEmails.length!==1?'s':''} to Import
+                    </p>
+                    {hiddenCount > 0 && (
+                      <p style={{ fontSize:10, color:'var(--terrain)', fontWeight:600 }}>
+                        ✓ {hiddenCount} already imported
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:600, overflowY:'auto' }}>
+                    {visibleEmails.map(email => (
+                      <EmailRow key={email.id} email={email} onImport={handleImport} importing={importing===email.id}/>
+                    ))}
+                    {visibleEmails.length === 0 && (
+                      <div style={{ textAlign:'center', padding:'24px', color:'var(--terrain)', fontSize:13, fontWeight:600 }}>
+                        ✓ All orders already imported
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </div>
@@ -317,34 +344,35 @@ function detectType(subject) {
   return 'order';
 }
 
-function EmailRow({ email, onImport, importing }) {
-  const [expanded, setExpanded] = useState(false);
+function EmailRow({ email, onImport, importing, isAlreadyImported }) {
   const retailer  = detectRetailer(email.from, email.subject);
   const emailType = detectType(email.subject);
 
   let dateStr = '—';
   try { dateStr = email.date ? format(new Date(email.date), 'MMM d, yyyy') : '—'; } catch {}
 
-  const typeLabel = { order:'Order', pickup:'Pickup', shipped:'Shipped' };
   const typeColor = { order:'var(--gold)', pickup:'var(--terrain)', shipped:'var(--ocean)' };
   const typeBg    = { order:'var(--gold-bg)', pickup:'var(--terrain-bg)', shipped:'var(--ocean-bg)' };
   const typeBdr   = { order:'var(--gold-bdr)', pickup:'var(--terrain-bdr)', shipped:'var(--ocean-bdr)' };
+  const typeLabel = { order:'Order', pickup:'Pickup', shipped:'Shipped' };
+
+  if (isAlreadyImported) return null;
 
   return (
-    <div style={{ borderRadius:12, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden', marginBottom:2 }}>
-      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', cursor:'pointer' }} onClick={()=>setExpanded(!expanded)}>
+    <div style={{ borderRadius:12, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden' }}>
+      <div style={{ display:'flex', alignItems:'flex-start', gap:12, padding:'14px 16px' }}>
         
         {/* Retailer logo */}
-        <div style={{ width:40, height:40, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
-          <RetailerLogo retailer={retailer} size={40} />
+        <div style={{ width:44, height:44, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden', marginTop:2 }}>
+          <RetailerLogo retailer={retailer} size={44} />
         </div>
 
         {/* Info */}
         <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ fontSize:13, fontWeight:600, color:'var(--ink)', marginBottom:4, lineHeight:1.3, wordBreak:'break-word' }}>
+          <p style={{ fontSize:13, fontWeight:600, color:'var(--ink)', marginBottom:4, lineHeight:1.3 }}>
             {email.subject}
           </p>
-          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', marginBottom:6 }}>
             <span style={{ fontSize:11, fontWeight:700, color:'var(--ink-dim)' }}>{retailer}</span>
             <span style={{ fontSize:11, color:'var(--ink-ghost)' }}>·</span>
             <span style={{ fontSize:11, color:'var(--ink-ghost)' }}>{dateStr}</span>
@@ -352,41 +380,25 @@ function EmailRow({ email, onImport, importing }) {
               {typeLabel[emailType]}
             </span>
             {email.emailCount > 1 && (
-              <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
-                {email.emailCount} emails grouped
+              <span style={{ fontSize:10, padding:'2px 8px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
+                {email.emailCount} emails
               </span>
             )}
           </div>
-        </div>
-
-        {/* Chevron */}
-        <div style={{ flexShrink:0 }}>
-          {expanded ? <ChevronUp style={{ width:16, height:16, color:'var(--ink-ghost)' }}/> : <ChevronDown style={{ width:16, height:16, color:'var(--ink-ghost)' }}/>}
-        </div>
-      </div>
-
-      {expanded && (
-        <div style={{ padding:'12px', borderTop:'1px solid var(--parch-line)', background:'var(--parch-warm)' }}>
           {email.snippet && (
-            <p style={{ fontSize:11, color:'var(--ink-dim)', marginBottom:8, lineHeight:1.5 }}>{email.snippet}</p>
-          )}
-          <p style={{ fontSize:10, color:'var(--ink-ghost)', marginBottom:12, fontFamily:'var(--font-mono)' }}>
-            From: {email.from}
-          </p>
-          {email.emailCount > 1 && (
-            <p style={{ fontSize:10, color:'var(--ocean)', marginBottom:10 }}>
-              {email.emailCount} related emails will be combined (order + tracking)
+            <p style={{ fontSize:11, color:'var(--ink-ghost)', lineHeight:1.5, marginBottom:10 }}>
+              {email.snippet.length > 140 ? email.snippet.slice(0, 140) + '...' : email.snippet}
             </p>
           )}
           <button onClick={()=>onImport(email)} disabled={importing}
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'var(--font-serif)', opacity:importing?0.6:1 }}>
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'var(--font-serif)', opacity:importing?0.6:1 }}>
             {importing
-              ? <><Loader style={{ width:12, height:12, animation:'spin 0.8s linear infinite' }}/> Extracting order data...</>
-              : <><Plus style={{ width:12, height:12 }}/> Import This Order</>
+              ? <><Loader style={{ width:12, height:12, animation:'spin 0.8s linear infinite' }}/> Extracting...</>
+              : <><Plus style={{ width:12, height:12 }}/> Import</>
             }
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
