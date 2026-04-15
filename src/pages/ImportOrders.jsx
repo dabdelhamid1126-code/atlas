@@ -5,10 +5,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
-  Upload, FileText, Mail, X, Check, Loader, AlertCircle,
+  Upload, Mail, X, Check, Loader, AlertCircle,
   ChevronDown, ChevronUp, Plus, Package, Tag, Globe,
-  Gift, Hash, Truck, Calendar, RefreshCw, Lock, ImageOff,
-  Sparkles, Database, Wifi, WifiOff, Inbox, ExternalLink,
+  Hash, Truck, Calendar, RefreshCw, Lock, ImageOff,
+  Sparkles, Database, Inbox,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,27 +19,12 @@ import {
 } from '@/components/ui/select';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
 
-const API_BASE = 'https://atlas-five-ashy.vercel.app';
-
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 const fmt$      = (v) => `$${(parseFloat(v) || 0).toFixed(2)}`;
 const today     = () => format(new Date(), 'yyyy-MM-dd');
 const normalize = (s) => String(s || '').replace(/\D/g, '');
 const lower     = (s) => String(s || '').toLowerCase().trim();
-
-export function parseSplitPayments(raw, creditCards = []) {
-  if (!raw || typeof raw !== 'string') return [];
-  const parts = raw.split('|').map(p => p.trim()).filter(Boolean);
-  if (parts.length < 2) return [];
-  return parts.map(p => {
-    const [name, amtStr] = p.split(':');
-    const cardName = (name || '').trim();
-    const amount   = parseFloat(amtStr) || 0;
-    const card     = creditCards.find(c => c.card_name?.toLowerCase() === cardName.toLowerCase());
-    return { card_id: card?.id || '', card_name: cardName, amount };
-  });
-}
 
 const RETAILERS = [
   'Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco',
@@ -141,186 +126,140 @@ function DropZone({ onFiles, loading }) {
   );
 }
 
-// ── Gmail connection panel ────────────────────────────────────────────────
+// ── Gmail Panel ───────────────────────────────────────────────────────────
 
-function GmailPanel({ userEmail }) {
-  const [status,       setStatus]       = useState('checking'); // checking | connected | disconnected
-  const [gmailAddress, setGmailAddress] = useState('');
-  const [syncing,      setSyncing]      = useState(false);
-  const [emails,       setEmails]       = useState([]);
-  const [daysBack,     setDaysBack]     = useState(30);
-  const [syncError,    setSyncError]    = useState('');
-  const [processing,   setProcessing]   = useState(false);
+function GmailPanel({ onAddDrafts, products, creditCards, existingOrders }) {
+  const [status,    setStatus]    = useState('checking');
+  const [syncing,   setSyncing]   = useState(false);
+  const [emails,    setEmails]    = useState([]);
+  const [daysBack,  setDaysBack]  = useState(30);
+  const [syncError, setSyncError] = useState('');
+  const [importing, setImporting] = useState(null);
 
-  // Check URL params for OAuth result
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const connected = params.get('gmail_connected');
-    const error     = params.get('gmail_error');
-    if (connected) {
-      setGmailAddress(decodeURIComponent(connected));
-      setStatus('connected');
-      toast.success(`Gmail connected: ${decodeURIComponent(connected)}`);
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    if (error) {
-      setStatus('disconnected');
-      toast.error(`Gmail connection failed: ${error}`);
-      window.history.replaceState({}, '', window.location.pathname);
-    }
+    base44.functions.invoke('getGmailStatus', {})
+      .then(res => {
+        if (res.data?.connected) setStatus('connected');
+        else setStatus('disconnected');
+      })
+      .catch(() => setStatus('disconnected'));
   }, []);
 
-  // Check if already connected
-  useEffect(() => {
-    if (!userEmail) return;
-    fetch(`https://xawgusnshspjclaeccar.supabase.co/rest/v1/gmail_tokens?user_email=eq.${encodeURIComponent(userEmail)}&select=gmail_address`, {
-      headers: {
-        'apikey':        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhhd2d1c25zaHNwamNsYWVjY2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTUyNTUsImV4cCI6MjA5MTc5MTI1NX0.Dwdx1u35DYfIz036A_YTsjf6bpp6rGztBUb-1X2l_tQ',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhhd2d1c25zaHNwamNsYWVjY2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTUyNTUsImV4cCI6MjA5MTc5MTI1NX0.Dwdx1u35DYfIz036A_YTsjf6bpp6rGztBUb-1X2l_tQ',
-      }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.length > 0) {
-        setGmailAddress(data[0].gmail_address || '');
-        setStatus('connected');
-      } else {
-        setStatus('disconnected');
-      }
-    })
-    .catch(() => setStatus('disconnected'));
-  }, [userEmail]);
-
-  const handleConnect = () => {
-    if (!userEmail) { toast.error('Please wait — loading user info'); return; }
-    window.location.href = `${API_BASE}/api/auth/google?user_email=${encodeURIComponent(userEmail)}`;
-  };
-
-  const handleDisconnect = async () => {
+  const handleConnect = async () => {
     try {
-      await fetch(`${API_BASE}/api/gmail/disconnect`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ user_email: userEmail }),
-      });
-      setStatus('disconnected');
-      setGmailAddress('');
-      setEmails([]);
-      toast.success('Gmail disconnected');
-    } catch {
-      toast.error('Failed to disconnect');
-    }
+      const res = await base44.functions.invoke('requestGmailOAuth', {});
+      if (res.data?.url) window.location.href = res.data.url;
+      else toast.error('Could not get OAuth URL');
+    } catch { toast.error('Failed to start Gmail connection'); }
   };
 
   const handleSync = async () => {
-    setSyncing(true);
-    setSyncError('');
-    setEmails([]);
+    setSyncing(true); setSyncError(''); setEmails([]);
     try {
-      const res  = await fetch(`${API_BASE}/api/gmail/sync`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ user_email: userEmail, days_back: daysBack, max_emails: 20 }),
-      });
-      const data = await res.json();
-      if (data.error) { setSyncError(data.error); return; }
-      setEmails(data.emails || []);
-      if (data.emails?.length === 0) {
-        setSyncError(`No order confirmation emails found in the last ${daysBack} days.`);
-      } else {
-        toast.success(`Found ${data.emails.length} order email${data.emails.length!==1?'s':''}`);
-      }
-    } catch (err) {
-      setSyncError('Sync failed — try again');
-    } finally {
-      setSyncing(false);
-    }
+      const afterDate = format(new Date(Date.now() - daysBack * 86400000), 'yyyy-MM-dd');
+      const res = await base44.functions.invoke('fetchGmailOrderEmails', { afterDate });
+      const emailList = res.data?.emails || [];
+      setEmails(emailList);
+      if (emailList.length === 0) setSyncError(`No order emails found in the last ${daysBack} days.`);
+      else toast.success(`Found ${emailList.length} order email${emailList.length!==1?'s':''}`);
+    } catch { setSyncError('Sync failed — try again'); }
+    finally { setSyncing(false); }
   };
 
-  if (status === 'checking') {
-    return (
-      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:16, padding:40, textAlign:'center' }}>
-        <Loader style={{ width:24, height:24, color:'var(--gold)', margin:'0 auto 8px', animation:'spin 1s linear infinite' }}/>
-        <p style={{ color:'var(--ink-ghost)', fontSize:13 }}>Checking Gmail connection...</p>
+  const handleImport = async (emailGroup) => {
+    setImporting(emailGroup.id);
+    try {
+      const bodyRes = await base44.functions.invoke('fetchGmailEmails', {
+        messageIds: emailGroup.ids || [emailGroup.id],
+      });
+      const emailData = bodyRes.data;
+      const extractRes = await base44.functions.invoke('extractInvoice', {
+        email_body:    emailData.body,
+        email_subject: emailData.subject,
+        email_from:    emailData.from,
+      });
+      const extracted = extractRes.data.extracted;
+      extracted.items = (extracted.items||[]).map(it=>({...it, id:crypto.randomUUID()}));
+      extracted.items = await Promise.all(extracted.items.map(it=>enrichItem(it, products)));
+      if (extracted.payment_method_last_four) {
+        const cardMatch = creditCards.find(c=>String(c.last_4_digits)===String(extracted.payment_method_last_four));
+        if (cardMatch) extracted.credit_card_id = cardMatch.id;
+      }
+      const isDuplicate = extracted.order_number && existingOrders.some(o=>o.order_number===extracted.order_number);
+      onAddDrafts([{ id:crypto.randomUUID(), filename:emailData.subject||'Gmail email', status:isDuplicate?'duplicate':'ready', extracted, error:null, isDuplicate, source:'gmail' }]);
+      toast.success('Order extracted — review and confirm in Upload tab');
+      setEmails(prev=>prev.filter(e=>e.id!==emailGroup.id));
+    } catch (err) {
+      toast.error(`Failed to import: ${err.message}`);
+    } finally { setImporting(null); }
+  };
+
+  if (status === 'checking') return (
+    <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:16, padding:40, textAlign:'center' }}>
+      <Loader style={{ width:24, height:24, color:'var(--gold)', margin:'0 auto 8px', animation:'spin 1s linear infinite' }}/>
+      <p style={{ color:'var(--ink-ghost)', fontSize:13 }}>Checking Gmail connection...</p>
+    </div>
+  );
+
+  if (status === 'disconnected') return (
+    <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:16, padding:40, textAlign:'center' }}>
+      <div style={{ width:64, height:64, borderRadius:16, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+        <Mail style={{ width:28, height:28, color:'var(--ink-faded)' }}/>
       </div>
-    );
-  }
+      <h2 style={{ fontFamily:'var(--font-serif)', fontSize:16, fontWeight:700, color:'var(--ink)', marginBottom:8 }}>Connect Your Gmail</h2>
+      <p style={{ fontSize:12, color:'var(--ink-dim)', maxWidth:400, margin:'0 auto 20px', lineHeight:1.6 }}>
+        Connect your Gmail to automatically detect and import order confirmation emails from Amazon, Best Buy, Walmart, Target, Sam's Club and more.
+      </p>
 
-  if (status === 'disconnected') {
-    return (
-      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:16, padding:40, textAlign:'center' }}>
-        <div style={{ width:64, height:64, borderRadius:16, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-          <Mail style={{ width:28, height:28, color:'var(--ink-faded)' }}/>
-        </div>
-        <h2 style={{ fontFamily:'var(--font-serif)', fontSize:16, fontWeight:700, color:'var(--ink)', marginBottom:8 }}>Connect Your Gmail</h2>
-        <p style={{ fontSize:12, color:'var(--ink-dim)', maxWidth:400, margin:'0 auto 24px', lineHeight:1.6 }}>
-          Connect your Gmail account to automatically detect and import order confirmation emails from Amazon, Best Buy, Walmart, Target, Sam's Club and more.
-        </p>
-
-        {/* Features */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, maxWidth:480, margin:'0 auto 24px', textAlign:'left' }}>
-          {[
-            { icon:Inbox,     label:'Auto-detect orders',   desc:'Finds confirmations automatically' },
-            { icon:RefreshCw, label:'One-click sync',        desc:'Import all at once, review before saving' },
-            { icon:Lock,      label:'Read-only access',      desc:'We never send, delete, or modify emails' },
-          ].map(f => (
-            <div key={f.label} style={{ padding:'12px', background:'var(--parch-warm)', borderRadius:10, border:'1px solid var(--parch-line)' }}>
-              <f.icon style={{ width:14, height:14, color:'var(--gold)', marginBottom:6 }}/>
-              <p style={{ fontSize:11, fontWeight:700, color:'var(--ink)', marginBottom:2 }}>{f.label}</p>
-              <p style={{ fontSize:10, color:'var(--ink-ghost)' }}>{f.desc}</p>
+      {/* Step-by-step instructions */}
+      <div style={{ maxWidth:440, margin:'0 auto 24px', textAlign:'left', display:'flex', flexDirection:'column', gap:10 }}>
+        {[
+          { step:'1', text:'Go to Settings in the left sidebar' },
+          { step:'2', text:'Click Integrations' },
+          { step:'3', text:'Find Gmail and click Connect' },
+          { step:'4', text:'Authorize with your Google account' },
+          { step:'5', text:'Come back here and refresh the page' },
+        ].map(s => (
+          <div key={s.step} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'var(--parch-warm)', borderRadius:10, border:'1px solid var(--parch-line)' }}>
+            <div style={{ width:24, height:24, borderRadius:'50%', background:'var(--ink)', color:'var(--ne-cream)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, flexShrink:0 }}>
+              {s.step}
             </div>
-          ))}
-        </div>
-
-        <button onClick={handleConnect}
-          style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:10, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:13, fontWeight:700, fontFamily:'var(--font-serif)' }}>
-          <Mail style={{ width:15, height:15 }}/> Connect Gmail Account
-        </button>
-        <p style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:12 }}>
-          You'll be redirected to Google to authorize access. Only read permission is requested.
-        </p>
+            <p style={{ fontSize:12, color:'var(--ink)', margin:0 }}>{s.text}</p>
+          </div>
+        ))}
       </div>
-    );
-  }
 
-  // Connected state
+      <button onClick={() => window.location.reload()}
+        style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:10, background:'var(--parch-warm)', color:'var(--ink)', border:'1px solid var(--parch-line)', cursor:'pointer', fontSize:12, fontWeight:600, fontFamily:'var(--font-serif)' }}>
+        <RefreshCw style={{ width:13, height:13 }}/> Refresh after connecting
+      </button>
+      <p style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:12 }}>
+        Only read permission is requested. We never send, delete, or modify your emails.
+      </p>
+    </div>
+  );
+
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-
-      {/* Connected header */}
       <div style={{ background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:12 }}>
         <div style={{ width:36, height:36, borderRadius:10, background:'var(--parch-card)', border:'1px solid var(--terrain-bdr)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           <Mail style={{ width:16, height:16, color:'var(--terrain)' }}/>
         </div>
         <div style={{ flex:1 }}>
           <p style={{ fontSize:12, fontWeight:700, color:'var(--terrain)' }}>Gmail Connected</p>
-          <p style={{ fontSize:11, color:'var(--ink-faded)' }}>{gmailAddress}</p>
+          <p style={{ fontSize:11, color:'var(--ink-faded)' }}>Ready to sync order emails</p>
         </div>
-        <button onClick={handleDisconnect}
-          style={{ fontSize:11, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontFamily:'var(--font-serif)', fontWeight:600 }}>
-          Disconnect
-        </button>
       </div>
 
-      {/* Sync controls */}
       <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:12, padding:16 }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-          <div>
-            <p style={{ fontFamily:'var(--font-serif)', fontSize:11, fontWeight:700, color:'var(--ink)', letterSpacing:'0.1em', textTransform:'uppercase' }}>Sync Order Emails</p>
-            <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:2 }}>Scans for order confirmations from Amazon, Best Buy, Walmart, Target and more</p>
-          </div>
-        </div>
-
+        <p style={{ fontFamily:'var(--font-serif)', fontSize:11, fontWeight:700, color:'var(--ink)', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Sync Order Emails</p>
+        <p style={{ fontSize:11, color:'var(--ink-dim)', marginBottom:12 }}>Scans for order confirmations from Amazon, Best Buy, Walmart, Target and more</p>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:8, padding:'6px 12px' }}>
             <span style={{ fontSize:11, color:'var(--ink-faded)' }}>Last</span>
             {[7,14,30,60].map(d => (
               <button key={d} onClick={()=>setDaysBack(d)}
-                style={{ padding:'3px 8px', borderRadius:6, fontSize:11, fontWeight:600, cursor:'pointer', border:'none',
-                  background: daysBack===d ? 'var(--ink)' : 'transparent',
-                  color:      daysBack===d ? 'var(--ne-cream)' : 'var(--ink-faded)',
-                }}>
+                style={{ padding:'3px 8px', borderRadius:6, fontSize:11, fontWeight:600, cursor:'pointer', border:'none', background:daysBack===d?'var(--ink)':'transparent', color:daysBack===d?'var(--ne-cream)':'var(--ink-faded)' }}>
                 {d}d
               </button>
             ))}
@@ -330,22 +269,20 @@ function GmailPanel({ userEmail }) {
             {syncing ? <><Loader style={{ width:13, height:13, animation:'spin 0.8s linear infinite' }}/> Scanning...</> : <><RefreshCw style={{ width:13, height:13 }}/> Scan Emails</>}
           </button>
         </div>
-
         {syncError && (
           <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px', borderRadius:8, background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', marginBottom:12 }}>
             <AlertCircle style={{ width:13, height:13, color:'var(--crimson)', flexShrink:0 }}/>
             <p style={{ fontSize:11, color:'var(--crimson)' }}>{syncError}</p>
           </div>
         )}
-
         {emails.length > 0 && (
           <div>
             <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--ink-faded)', marginBottom:8 }}>
-              {emails.length} Email{emails.length!==1?'s':''} Found — Select to Import
+              {emails.length} Email{emails.length!==1?'s':''} Found
             </p>
-            <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:360, overflowY:'auto' }}>
-              {emails.map((email, i) => (
-                <EmailRow key={email.id} email={email} index={i} />
+            <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:400, overflowY:'auto' }}>
+              {emails.map(email => (
+                <EmailRow key={email.id} email={email} onImport={handleImport} importing={importing===email.id}/>
               ))}
             </div>
           </div>
@@ -357,9 +294,8 @@ function GmailPanel({ userEmail }) {
 
 // ── Email row ─────────────────────────────────────────────────────────────
 
-function EmailRow({ email, index }) {
+function EmailRow({ email, onImport, importing }) {
   const [expanded, setExpanded] = useState(false);
-
   const detectRetailer = (from) => {
     const f = lower(from);
     if (f.includes('amazon'))  return 'Amazon';
@@ -367,15 +303,14 @@ function EmailRow({ email, index }) {
     if (f.includes('walmart')) return 'Walmart';
     if (f.includes('target'))  return 'Target';
     if (f.includes('costco'))  return 'Costco';
-    if (f.includes('samsclub')||f.includes('sam\'s')) return "Sam's Club";
+    if (f.includes('samsclub')||f.includes("sam's")) return "Sam's Club";
     if (f.includes('apple'))   return 'Apple';
     if (f.includes('staples')) return 'Staples';
-    return 'Unknown';
+    return 'Order';
   };
-
   const retailer = detectRetailer(email.from);
-  const dateStr  = email.date ? format(new Date(email.date), 'MMM d, yyyy') : '—';
-
+  let dateStr = '—';
+  try { dateStr = email.date ? format(new Date(email.date), 'MMM d, yyyy') : '—'; } catch {}
   return (
     <div style={{ borderRadius:10, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', overflow:'hidden' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', cursor:'pointer' }} onClick={()=>setExpanded(!expanded)}>
@@ -384,12 +319,14 @@ function EmailRow({ email, index }) {
         </div>
         <div style={{ flex:1, minWidth:0 }}>
           <p style={{ fontSize:12, fontWeight:600, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{email.subject}</p>
-          <p style={{ fontSize:10, color:'var(--ink-faded)' }}>{retailer} · {dateStr}</p>
+          <p style={{ fontSize:10, color:'var(--ink-faded)' }}>
+            {retailer} · {dateStr}
+            {email.emailCount>1&&<span style={{ color:'var(--ocean)', marginLeft:6 }}>{email.emailCount} emails</span>}
+            {email.hasTracking&&<span style={{ color:'var(--terrain)', marginLeft:6 }}>+ tracking</span>}
+          </p>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-          <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--gold-bg)', color:'var(--gold)', border:'1px solid var(--gold-bdr)' }}>
-            {retailer}
-          </span>
+          <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--gold-bg)', color:'var(--gold)', border:'1px solid var(--gold-bdr)' }}>{retailer}</span>
           {expanded ? <ChevronUp style={{ width:13, height:13, color:'var(--ink-ghost)' }}/> : <ChevronDown style={{ width:13, height:13, color:'var(--ink-ghost)' }}/>}
         </div>
       </div>
@@ -397,14 +334,9 @@ function EmailRow({ email, index }) {
         <div style={{ padding:'10px 12px', borderTop:'1px solid var(--parch-line)', background:'var(--parch-card)' }}>
           <p style={{ fontSize:10, color:'var(--ink-dim)', marginBottom:8 }}>{email.snippet}</p>
           <p style={{ fontSize:10, color:'var(--ink-ghost)', marginBottom:12, fontFamily:'var(--font-mono)' }}>From: {email.from}</p>
-          <button
-            onClick={() => {
-              // This would trigger extractInvoice with email body
-              // For now show a toast — full wiring requires base44 function update
-              toast.info('Use the Upload tab — paste the email body as text or PDF');
-            }}
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'var(--font-serif)' }}>
-            <Plus style={{ width:12, height:12 }}/> Import This Order
+          <button onClick={()=>onImport(email)} disabled={importing}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'var(--font-serif)', opacity:importing?0.6:1 }}>
+            {importing ? <><Loader style={{ width:12, height:12, animation:'spin 0.8s linear infinite' }}/> Extracting...</> : <><Plus style={{ width:12, height:12 }}/> Import This Order</>}
           </button>
         </div>
       )}
@@ -417,19 +349,14 @@ function EmailRow({ email, index }) {
 function ItemRow({ item, onUpdate, onRemove, products = [] }) {
   const total = (parseFloat(item.unit_cost)||0) * (parseInt(item.quantity)||1);
   const sourceLabel = {
-    catalog:       { text:'Matched from your product catalog',                 color:'text-emerald-600', icon:Sparkles },
-    catalog_fuzzy: { text:`Closest match: "${item.suggested_product||''}"`,    color:'text-amber-600',   icon:Sparkles },
-    upcitemdb:     { text:'Product info from UPC Item DB',                     color:'text-blue-600',    icon:Database },
+    catalog:       { text:'Matched from your product catalog', color:'text-emerald-600', icon:Sparkles },
+    catalog_fuzzy: { text:`Closest match: "${item.suggested_product||''}"`, color:'text-amber-600', icon:Sparkles },
+    upcitemdb:     { text:'Product info from UPC Item DB', color:'text-blue-600', icon:Database },
   };
   const src = sourceLabel[item.image_source];
   const handleSelectProduct = (p) => {
-    onUpdate('product_id',    p.id);
-    onUpdate('product_name',  p.name);
-    onUpdate('upc',           p.upc   || '');
-    onUpdate('sku',           p.upc   || '');
-    onUpdate('image_url',     p.image || null);
-    onUpdate('catalog_match', true);
-    onUpdate('image_source',  'catalog');
+    onUpdate('product_id',p.id); onUpdate('product_name',p.name); onUpdate('upc',p.upc||'');
+    onUpdate('sku',p.upc||''); onUpdate('image_url',p.image||null); onUpdate('catalog_match',true); onUpdate('image_source','catalog');
   };
   return (
     <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 space-y-3">
@@ -481,10 +408,10 @@ function ItemRow({ item, onUpdate, onRemove, products = [] }) {
 
 function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, onConfirm, onDiscard, confirming }) {
   const [expanded, setExpanded] = useState(true);
-  const [form,     setForm]     = useState(draft.extracted);
-  const set     = (k,v)      => { const f={...form,[k]:v}; setForm(f); onUpdate(idx,f); };
-  const setItem = (iid,k,v)  => set('items',form.items.map(it=>it.id===iid?{...it,[k]:v}:it));
-  const removeItem = (iid)   => set('items',form.items.filter(it=>it.id!==iid));
+  const [form, setForm] = useState(draft.extracted);
+  const set = (k,v) => { const f={...form,[k]:v}; setForm(f); onUpdate(idx,f); };
+  const setItem = (iid,k,v) => set('items',form.items.map(it=>it.id===iid?{...it,[k]:v}:it));
+  const removeItem = (iid) => set('items',form.items.filter(it=>it.id!==iid));
   const addItem = () => set('items',[...(form.items||[]),{ id:crypto.randomUUID(), product_name:'', sku:'', upc:'', model:'', quantity:1, unit_cost:'', sale_price:'', image_url:null, catalog_match:false, image_source:null }]);
   const itemsTotal   = (form.items||[]).reduce((s,it)=>s+(parseFloat(it.unit_cost)||0)*(parseInt(it.quantity)||1),0);
   const gcTotal      = (form.gift_cards||[]).reduce((s,gc)=>s+(parseFloat(gc.amount)||0),0);
@@ -500,7 +427,9 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
           <RetailerLogo retailer={form.retailer} size={36}/>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-800 truncate">
-              {form.retailer||'Unknown Retailer'}{form.order_number&&<span className="text-slate-400 font-normal ml-2">#{form.order_number}</span>}
+              {form.retailer||'Unknown Retailer'}
+              {form.order_number&&<span className="text-slate-400 font-normal ml-2">#{form.order_number}</span>}
+              {draft.source==='gmail'&&<span className="ml-2 text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full">Gmail</span>}
             </p>
             <p className="text-xs text-slate-400 mt-0.5">
               {form.items?.length||0} item(s) · {fmt$(itemsTotal)}
@@ -586,7 +515,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
             <Select value={form.credit_card_id||''} onValueChange={v=>set('credit_card_id',v)}>
               <SelectTrigger className="bg-slate-50 h-9"><SelectValue placeholder={form.payment_method_last_four?`Card ending ••••${form.payment_method_last_four} — select to match`:'Select payment method...'}/></SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>No card</SelectItem>
+                <SelectItem value="">No card</SelectItem>
                 {creditCards.map(c=><SelectItem key={c.id} value={c.id}>{c.card_name}{c.last_4_digits?` ••••${c.last_4_digits}`:''}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -632,12 +561,6 @@ export default function ImportOrders() {
 
   useEffect(()=>{ base44.auth.me().then(u=>setUserEmail(u?.email||null)).catch(()=>{}); },[]);
 
-  // Check for gmail tab in URL params
-  useEffect(()=>{
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('gmail_connected') || params.get('gmail_error')) setTab('gmail');
-  },[]);
-
   const { data:creditCards    =[] } = useQuery({ queryKey:['creditCards',userEmail],    queryFn:()=>userEmail?base44.entities.CreditCard.filter({created_by:userEmail}):[], enabled:!!userEmail });
   const { data:giftCards      =[] } = useQuery({ queryKey:['giftCards',userEmail],      queryFn:()=>userEmail?base44.entities.GiftCard.filter({created_by:userEmail}):[], enabled:!!userEmail });
   const { data:products       =[] } = useQuery({ queryKey:['products'],                 queryFn:()=>base44.entities.Product.list() });
@@ -667,6 +590,11 @@ export default function ImportOrders() {
     setExtracting(false);
   };
 
+  const handleAddDrafts = useCallback((newDrafts) => {
+    setDrafts(prev=>[...newDrafts,...prev]);
+    setTab('upload');
+  }, []);
+
   const handleUpdate  = (idx,form) => setDrafts(prev=>prev.map((d,i)=>i===idx?{...d,extracted:form}:d));
   const handleDiscard = (idx)      => setDrafts(prev=>prev.filter((_,i)=>i!==idx));
 
@@ -691,7 +619,7 @@ export default function ImportOrders() {
         tax, shipping_cost:shipping, fees, total_cost:totalCost, gift_card_value:gcTotal, final_cost:finalCost,
         credit_card_id:primaryCardId, payment_splits:hasSplits?form.payment_splits:[],
         gift_card_ids:matchedGcIds, tracking_numbers:(form.tracking_numbers||[]).filter(Boolean),
-        notes:form.notes||null, imported_from:'invoice_upload',
+        notes:form.notes||null, imported_from:form.source==='gmail'?'gmail_sync':'invoice_upload',
         items:(form.items||[]).map(it=>({ product_id:it.product_id||null, product_name:it.product_name, sku:it.sku||null, upc:it.upc||null, model:it.model||null, quantity_ordered:parseInt(it.quantity)||1, quantity_received:0, unit_cost:parseFloat(it.unit_cost)||0, sale_price:parseFloat(it.sale_price)||0 })),
       });
       for (const gcId of matchedGcIds) await base44.entities.GiftCard.update(gcId,{status:'used',used_order_number:form.order_number});
@@ -710,9 +638,7 @@ export default function ImportOrders() {
     } catch (err) {
       setDrafts(prev=>prev.map((d,i)=>i===idx?{...d,status:'error',error:err.message}:d));
       toast.error('Failed to save order');
-    } finally {
-      setConfirmingIdx(null);
-    }
+    } finally { setConfirmingIdx(null); }
   };
 
   const pendingCount   = drafts.filter(d=>d.status!=='confirmed').length;
@@ -721,32 +647,21 @@ export default function ImportOrders() {
   return (
     <div style={{ maxWidth:860, margin:'0 auto', paddingBottom:40 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-
       <div style={{ marginBottom:20 }}>
         <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px' }}>Import Orders</h1>
         <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:3 }}>Upload invoices or sync from Gmail to auto-import orders</p>
       </div>
-
-      {/* Tab bar */}
       <div className="tab-bar" style={{ marginBottom:20, width:'fit-content' }}>
         {[
-          { key:'upload', label:'Upload Invoice', icon:Upload, badge: pendingCount||null },
+          { key:'upload', label:'Upload Invoice', icon:Upload, badge:pendingCount||null },
           { key:'gmail',  label:'Gmail Sync',     icon:Mail },
         ].map(t=>(
-          <button key={t.key} onClick={()=>setTab(t.key)} className={`tab-btn${tab===t.key?' active':''}`}
-            style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <t.icon style={{ width:13, height:13 }}/>
-            {t.label}
-            {t.badge && (
-              <span style={{ fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:99, background: tab===t.key?'rgba(255,219,187,0.3)':'var(--parch-line)', color: tab===t.key?'var(--ne-cream)':'var(--ink-faded)' }}>
-                {t.badge}
-              </span>
-            )}
+          <button key={t.key} onClick={()=>setTab(t.key)} className={`tab-btn${tab===t.key?' active':''}`} style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <t.icon style={{ width:13, height:13 }}/>{t.label}
+            {t.badge&&<span style={{ fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:99, background:tab===t.key?'rgba(255,219,187,0.3)':'var(--parch-line)', color:tab===t.key?'var(--ne-cream)':'var(--ink-faded)' }}>{t.badge}</span>}
           </button>
         ))}
       </div>
-
-      {/* Upload tab */}
       {tab==='upload' && (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           <DropZone onFiles={handleFiles} loading={extracting}/>
@@ -764,15 +679,13 @@ export default function ImportOrders() {
             ))}
           </div>
           {drafts.length===0&&!extracting&&(
-            <p style={{ textAlign:'center', padding:'32px 0', fontSize:13, color:'var(--ink-ghost)' }}>
-              Upload a PDF or image of any order confirmation to get started
-            </p>
+            <p style={{ textAlign:'center', padding:'32px 0', fontSize:13, color:'var(--ink-ghost)' }}>Upload a PDF or image of any order confirmation to get started</p>
           )}
         </div>
       )}
-
-      {/* Gmail tab */}
-      {tab==='gmail' && <GmailPanel userEmail={userEmail}/>}
+      {tab==='gmail' && (
+        <GmailPanel onAddDrafts={handleAddDrafts} products={products} creditCards={creditCards} existingOrders={existingOrders}/>
+      )}
     </div>
   );
 }
