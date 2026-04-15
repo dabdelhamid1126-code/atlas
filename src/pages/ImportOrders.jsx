@@ -294,49 +294,96 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders }) {
 
 // ── Email row ─────────────────────────────────────────────────────────────
 
+function detectRetailer(from, subject) {
+  const f = lower(from);
+  const s = lower(subject);
+  const combined = `${f} ${s}`;
+  if (combined.includes('amazon'))   return 'Amazon';
+  if (combined.includes('bestbuy') || combined.includes('best buy') || combined.includes('bby')) return 'Best Buy';
+  if (combined.includes('walmart'))  return 'Walmart';
+  if (combined.includes('target'))   return 'Target';
+  if (combined.includes('costco'))   return 'Costco';
+  if (combined.includes('samsclub') || combined.includes("sam's club")) return "Sam's Club";
+  if (combined.includes('apple'))    return 'Apple';
+  if (combined.includes('staples'))  return 'Staples';
+  if (combined.includes('woot'))     return 'Woot';
+  return 'Other';
+}
+
+function detectType(subject) {
+  const s = lower(subject);
+  if (s.includes('pickup') || s.includes('pick up') || s.includes('ready') || s.includes('picked up')) return 'pickup';
+  if (s.includes('shipped') || s.includes('tracking') || s.includes('delivery') || s.includes('on the way')) return 'shipped';
+  return 'order';
+}
+
 function EmailRow({ email, onImport, importing }) {
   const [expanded, setExpanded] = useState(false);
-  const detectRetailer = (from) => {
-    const f = lower(from);
-    if (f.includes('amazon'))  return 'Amazon';
-    if (f.includes('bestbuy')) return 'Best Buy';
-    if (f.includes('walmart')) return 'Walmart';
-    if (f.includes('target'))  return 'Target';
-    if (f.includes('costco'))  return 'Costco';
-    if (f.includes('samsclub')||f.includes("sam's")) return "Sam's Club";
-    if (f.includes('apple'))   return 'Apple';
-    if (f.includes('staples')) return 'Staples';
-    return 'Order';
-  };
-  const retailer = detectRetailer(email.from);
+  const retailer  = detectRetailer(email.from, email.subject);
+  const emailType = detectType(email.subject);
+
   let dateStr = '—';
   try { dateStr = email.date ? format(new Date(email.date), 'MMM d, yyyy') : '—'; } catch {}
+
+  const typeLabel = { order:'Order', pickup:'Pickup', shipped:'Shipped' };
+  const typeColor = { order:'var(--gold)', pickup:'var(--terrain)', shipped:'var(--ocean)' };
+  const typeBg    = { order:'var(--gold-bg)', pickup:'var(--terrain-bg)', shipped:'var(--ocean-bg)' };
+  const typeBdr   = { order:'var(--gold-bdr)', pickup:'var(--terrain-bdr)', shipped:'var(--ocean-bdr)' };
+
   return (
-    <div style={{ borderRadius:10, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', overflow:'hidden' }}>
+    <div style={{ borderRadius:10, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', cursor:'pointer' }} onClick={()=>setExpanded(!expanded)}>
-        <div style={{ width:32, height:32, borderRadius:8, background:'var(--parch-card)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:12, fontWeight:700, color:'var(--ink-dim)' }}>
-          {retailer.charAt(0)}
+        
+        {/* Retailer logo */}
+        <div style={{ width:36, height:36, borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
+          <RetailerLogo retailer={retailer} size={36} />
         </div>
+
+        {/* Info */}
         <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ fontSize:12, fontWeight:600, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{email.subject}</p>
-          <p style={{ fontSize:10, color:'var(--ink-faded)' }}>
-            {retailer} · {dateStr}
-            {email.emailCount>1&&<span style={{ color:'var(--ocean)', marginLeft:6 }}>{email.emailCount} emails</span>}
-            {email.hasTracking&&<span style={{ color:'var(--terrain)', marginLeft:6 }}>+ tracking</span>}
+          <p style={{ fontSize:12, fontWeight:600, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:2 }}>
+            {email.subject}
           </p>
+          <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+            <span style={{ fontSize:10, fontWeight:700, color:'var(--ink-dim)' }}>{retailer}</span>
+            <span style={{ fontSize:10, color:'var(--ink-ghost)' }}>·</span>
+            <span style={{ fontSize:10, color:'var(--ink-ghost)' }}>{dateStr}</span>
+            {email.emailCount > 1 && (
+              <span style={{ fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
+                {email.emailCount} emails
+              </span>
+            )}
+          </div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-          <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--gold-bg)', color:'var(--gold)', border:'1px solid var(--gold-bdr)' }}>{retailer}</span>
+
+        {/* Type + chevron */}
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+          <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:99, background:typeBg[emailType], color:typeColor[emailType], border:`1px solid ${typeBdr[emailType]}` }}>
+            {typeLabel[emailType]}
+          </span>
           {expanded ? <ChevronUp style={{ width:13, height:13, color:'var(--ink-ghost)' }}/> : <ChevronDown style={{ width:13, height:13, color:'var(--ink-ghost)' }}/>}
         </div>
       </div>
+
       {expanded && (
-        <div style={{ padding:'10px 12px', borderTop:'1px solid var(--parch-line)', background:'var(--parch-card)' }}>
-          <p style={{ fontSize:10, color:'var(--ink-dim)', marginBottom:8 }}>{email.snippet}</p>
-          <p style={{ fontSize:10, color:'var(--ink-ghost)', marginBottom:12, fontFamily:'var(--font-mono)' }}>From: {email.from}</p>
+        <div style={{ padding:'12px', borderTop:'1px solid var(--parch-line)', background:'var(--parch-warm)' }}>
+          {email.snippet && (
+            <p style={{ fontSize:11, color:'var(--ink-dim)', marginBottom:8, lineHeight:1.5 }}>{email.snippet}</p>
+          )}
+          <p style={{ fontSize:10, color:'var(--ink-ghost)', marginBottom:12, fontFamily:'var(--font-mono)' }}>
+            From: {email.from}
+          </p>
+          {email.emailCount > 1 && (
+            <p style={{ fontSize:10, color:'var(--ocean)', marginBottom:10 }}>
+              {email.emailCount} related emails will be combined (order + tracking)
+            </p>
+          )}
           <button onClick={()=>onImport(email)} disabled={importing}
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'var(--font-serif)', opacity:importing?0.6:1 }}>
-            {importing ? <><Loader style={{ width:12, height:12, animation:'spin 0.8s linear infinite' }}/> Extracting...</> : <><Plus style={{ width:12, height:12 }}/> Import This Order</>}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:8, background:'var(--ink)', color:'var(--ne-cream)', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, fontFamily:'var(--font-serif)', opacity:importing?0.6:1 }}>
+            {importing
+              ? <><Loader style={{ width:12, height:12, animation:'spin 0.8s linear infinite' }}/> Extracting order data...</>
+              : <><Plus style={{ width:12, height:12 }}/> Import This Order</>
+            }
           </button>
         </div>
       )}
