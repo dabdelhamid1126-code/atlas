@@ -187,14 +187,17 @@ export default function Transactions() {
   /* ------------------------------------------------------------------ */
   const stats = useMemo(() => {
     const totalItems = filteredOrders.reduce((s, o) => s + (o.items?.length || 0), 0);
-    const totalCost  = filteredOrders.reduce((s, o) => s + (parseFloat(o.final_cost || o.total_cost) || 0), 0);
+    const totalCost  = filteredOrders.reduce((s, o) => s + (parseFloat(o.total_cost) || 0), 0);
     const totalSale  = filteredOrders.reduce((s, o) => {
-      return s + (o.sale_events || []).reduce((es, ev) =>
+      const fromEvents = (o.sale_events || []).reduce((es, ev) =>
         es + (ev.items || []).reduce((is, item) =>
           is + (parseFloat(item.sale_price) || 0) * (parseInt(item.qty || item.quantity) || 1), 0), 0);
+      if (fromEvents > 0) return s + fromEvents;
+      return s + (o.items || []).reduce((is, item) =>
+        is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity_ordered) || 1), 0);
     }, 0);
     const totalCashback = rewards
-      .filter(r => r.currency === 'USD' && filteredOrders.some(o => o.id === r.purchase_order_id))
+      .filter(r => filteredOrders.some(o => o.id === r.purchase_order_id))
       .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
     const totalProfit = totalSale > 0 ? totalSale - totalCost + totalCashback : 0;
     return { totalItems, totalCost, totalSale, totalCashback, totalProfit };
@@ -340,19 +343,21 @@ export default function Transactions() {
             border: '1px solid var(--parch-line)',
             borderTop: `3px solid ${s.accent}`,
             borderRadius: 12,
-            padding: '12px 14px',
+            padding: '16px 16px 14px',
+            display: 'flex',
+            flexDirection: 'column',
           }}>
-            <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:0 }}>
+            <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:'0 0 8px 0' }}>
               {s.label}
             </p>
-            <p style={{ fontFamily:'var(--font-mono)', fontSize:20, fontWeight:900, color:s.valColor, margin:'6px 0 4px', lineHeight:1 }}>
+            <p style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:900, color:s.valColor, margin:'0 0 5px 0', lineHeight:1.1 }}>
               {s.val}
             </p>
-            <p style={{ fontSize:10, color:'var(--ink-ghost)', margin:0 }}>
+            <p style={{ fontSize:11, color:'var(--ink-ghost)', margin:'0 0 12px 0', flex:1 }}>
               {s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost + CB' : 'USD rewards'}
             </p>
-            <div style={{ marginTop:10, width:26, height:26, borderRadius:7, background:s.bg, border:`1px solid ${s.bdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <s.Icon size={13} color={s.accent}/>
+            <div style={{ width:32, height:32, borderRadius:8, background:s.bg, border:`1px solid ${s.bdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <s.Icon size={15} color={s.accent}/>
             </div>
           </div>
         ))}
