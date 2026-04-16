@@ -367,13 +367,13 @@ const getInitialForm = (o) => {
     gift_card_ids:o.gift_card_ids||[], fulfillment_type,
     dropship_to:o.dropship_to||'', pickup_location:o.pickup_location||'',
     order_date:o.order_date||'', notes:o.notes||'', items,
-    // ← normalize old 'qty' field to 'quantity' on load
+    // load from schema field 'qty', keep as qty in form state
     sale_events: (o.sale_events||[]).map(ev => ({
       ...ev,
       id: ev.id || crypto.randomUUID(),
       items: (ev.items||[]).map(it => ({
         ...it,
-        quantity: parseInt(it.quantity ?? it.qty) || 1,
+        qty: parseInt(it.qty ?? it.quantity) || 1,
       }))
     })),
     tax:o.tax??0, shipping_cost:o.shipping_cost??0, fees:o.fees??0,
@@ -439,7 +439,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
     formData.sale_events.forEach(ev => {
       (ev.items || []).forEach(it => {
         const key = it.product_name || '';
-        map[key] = (map[key] || 0) + (parseInt(it.quantity ?? it.qty) || 1);
+        map[key] = (map[key] || 0) + (parseInt(it.qty ?? it.quantity) || 1);
       });
     });
     return map;
@@ -454,9 +454,9 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
         const totalOrdered = parseInt(it.quantity_ordered) || 1;
         const alreadySold  = soldQtyByProduct[it.product_name] || 0;
         const remaining    = Math.max(0, totalOrdered - alreadySold);
-        return { product_name: it.product_name, quantity: remaining, sale_price: it.sale_price || 0 };
+        return { product_name: it.product_name, qty: remaining, sale_price: it.sale_price || 0 };
       })
-      .filter(it => it.quantity > 0); // only show items that still have remaining qty
+      .filter(it => it.qty > 0); // only show items that still have remaining qty
     if (ev.items.length === 0) ev.items = [{ product_name: '', quantity: 1, sale_price: 0 }];
     setFormData(prev => ({ ...prev, sale_events: [...prev.sale_events, ev] }));
   };
@@ -487,7 +487,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
   // ── FIX 2: totalRevenue reads quantity ?? qty ─────────────────────────────
   const totalRevenue = formData.sale_events.reduce((s,ev)=>
     s+ev.items.reduce((ss,it)=>
-      ss+(parseFloat(it.sale_price)||0)*(parseInt(it.quantity??it.qty??1)||1),0),0);
+      ss+(parseFloat(it.sale_price)||0)*(parseInt(it.qty??1)||1),0),0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -496,12 +496,12 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
     const splitsTotal=(formData.payment_splits||[]).reduce((s,sp)=>s+(parseFloat(sp.amount)||0),0);
     if(hasSplits&&Math.abs(splitsTotal-totalPrice)>0.01){toast.error(`Split amounts (${fmt$(splitsTotal)}) must equal total (${fmt$(totalPrice)})`);return;}
 
-    // ── FIX 3: always save as 'quantity', handle both qty and quantity field names ──
+    // save using schema field name 'qty'
     const saleEvents = formData.sale_events.map(ev => ({
       ...ev,
       items: ev.items.map(it => ({
         product_name: it.product_name || '',
-        quantity:     parseInt(it.quantity ?? it.qty ?? 1) || 1,
+        qty:          parseInt(it.quantity ?? it.qty ?? 1) || 1,
         sale_price:   parseFloat(it.sale_price) || 0,
       }))
     }));
@@ -805,16 +805,16 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             const totalOrdered = formData.items.find(i=>i.product_name===it.product_name) ? parseInt(formData.items.find(i=>i.product_name===it.product_name).quantity_ordered)||1 : 99;
                             const soldInOtherEvents = formData.sale_events
                               .filter(e=>e.id!==ev.id)
-                              .reduce((s,e)=>s+(e.items||[]).filter(i=>i.product_name===it.product_name).reduce((ss,i)=>ss+(parseInt(i.quantity??i.qty)||1),0),0);
+                              .reduce((s,e)=>s+(e.items||[]).filter(i=>i.product_name===it.product_name).reduce((ss,i)=>ss+(parseInt(i.qty)||1),0),0);
                             const maxQty = Math.max(1, totalOrdered - soldInOtherEvents);
                             return (
                             <div key={itIdx} style={{display:'grid',gridTemplateColumns:'4fr 1.5fr 2.5fr 20px',gap:6,alignItems:'center'}}>
                               <input style={INP} value={it.product_name||''} placeholder="Product" onChange={e=>updateSaleEventItem(ev.id,itIdx,'product_name',e.target.value)}/>
                               <div style={{position:'relative'}}>
                                 <input style={{...INP,textAlign:'center',paddingBottom:16}} type="number" min="1" max={maxQty}
-                                  value={parseInt(it.quantity ?? it.qty) || 1}
+                                  value={parseInt(it.qty) || 1}
                                   placeholder="1"
-                                  onChange={e=>updateSaleEventItem(ev.id,itIdx,'quantity',Math.min(parseInt(e.target.value)||1, maxQty))}/>
+                                  onChange={e=>updateSaleEventItem(ev.id,itIdx,'qty',Math.min(parseInt(e.target.value)||1, maxQty))}/>
                                 <span style={{position:'absolute',bottom:3,left:0,right:0,textAlign:'center',fontSize:9,color:C.inkGhost,pointerEvents:'none',fontFamily:MONO}}>max {maxQty}</span>
                               </div>
                               <div style={{position:'relative'}}>
@@ -825,13 +825,13 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
                             </div>
                             );
                           })}
-                          <button type="button" onClick={()=>updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',quantity:1,sale_price:0}])}
+                          <button type="button" onClick={()=>updateSaleEvent(ev.id,'items',[...ev.items,{product_name:'',qty:1,sale_price:0}])}
                             style={{fontSize:11,color:C.terrain2,background:'none',border:'none',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:4,fontFamily:FONT}}>
                             <Plus style={{width:11,height:11}}/> Add item
                           </button>
                           {ev.items.length>0&&(
                             <div style={{textAlign:'right',fontSize:11,color:C.terrain2,fontWeight:600,fontFamily:MONO}}>
-                              Sale total: {fmt$(ev.items.reduce((s,it)=>s+(parseFloat(it.sale_price)||0)*(parseInt(it.quantity??it.qty??1)||1),0))}
+                              Sale total: {fmt$(ev.items.reduce((s,it)=>s+(parseFloat(it.sale_price)||0)*(parseInt(it.qty)||1),0))}
                             </div>
                           )}
                         </div>
