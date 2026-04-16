@@ -2,8 +2,9 @@ import React from 'react';
 import { Package, Tag, CheckCircle2, CreditCard, TrendingUp } from 'lucide-react';
 
 export default function TransactionsStatsBar({ orders = [] }) {
+  // ✅ FIX: Use qty (not quantity_ordered) for total items
   const totalItems = orders.reduce((sum, o) =>
-    sum + (o.items?.reduce((s, i) => s + (parseInt(i.quantity_ordered) || 0), 0) || 0), 0);
+    sum + (o.items?.reduce((s, i) => s + (parseInt(i.qty || i.quantity_ordered) || 0), 0) || 0), 0);
 
   const listedCount = orders.filter(o =>
     o.status === 'ordered' || o.status === 'shipped' || o.status === 'processing').length;
@@ -12,35 +13,45 @@ export default function TransactionsStatsBar({ orders = [] }) {
 
   const totalCost = orders.reduce((sum, o) => sum + (parseFloat(o.total_cost) || 0), 0);
 
-  // Profit from item.sale_price (direct) OR sale_events (marketplace)
+  // ✅ FIX: Profit calculated ONLY on sold units, not total order cost
   const totalProfit = orders.reduce((sum, order) => {
-    // Try item.sale_price first
-    const itemSaleTotal = (order.items || []).reduce((s, i) =>
-      s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
+    const items = order.items || [];
+    const saleEvents = order.sale_events || [];
 
-    if (itemSaleTotal > 0) {
-      const cost = parseFloat(order.total_cost) || 0;
-      return sum + (itemSaleTotal - cost);
-    }
+    // Total units ordered
+    const totalOrdered = items.reduce((s, i) => s + (parseInt(i.qty || i.quantity_ordered) || 1), 0);
+    
+    // Total units actually sold
+    const totalSold = saleEvents.reduce((s, ev) =>
+      s + (ev.items || []).reduce((ss, it) => ss + (parseInt(it.qty) || 1), 0), 0);
 
-    // Fall back to sale_events
-    const events = order.sale_events || [];
-    if (events.length > 0) {
-      const revenue = events.reduce((s, ev) =>
-        s + (ev.items || []).reduce((is, item) =>
-          is + (parseFloat(item.sale_price) || 0) * (parseInt(item.qty) || 1), 0), 0);
-      const cost = parseFloat(order.total_cost) || 0;
-      const cb   = parseFloat(order.cashback_amount) || 0;
-      return sum + revenue - cost + cb;
+    // Total cost for ALL items (per-item cost × qty)
+    const totalItemsCost = items.reduce((s, i) =>
+      s + (parseFloat(i.unit_cost) || 0) * (parseInt(i.qty || i.quantity_ordered) || 1), 0);
+
+    // Only calculate cost for SOLD units
+    const costPerUnit = totalOrdered > 0 ? totalItemsCost / totalOrdered : 0;
+    const costForSoldUnits = costPerUnit * totalSold;
+
+    // Revenue from sale events
+    const revenue = saleEvents.reduce((s, ev) =>
+      s + (ev.items || []).reduce((ss, it) =>
+        ss + (parseFloat(it.sale_price) || 0) * (parseInt(it.qty) || 1), 0), 0);
+
+    // Cashback
+    const cb = parseFloat(order.cashback_amount) || 0;
+
+    // Profit = revenue - (cost of sold units) + cashback
+    if (revenue > 0) {
+      return sum + (revenue - costForSoldUnits + cb);
     }
 
     return sum;
   }, 0);
 
   const hasAnySales = orders.some(o => {
-    const hasItemSale   = (o.items || []).some(i => parseFloat(i.sale_price) > 0);
     const hasSaleEvents = (o.sale_events || []).length > 0;
-    return hasItemSale || hasSaleEvents;
+    return hasSaleEvents;
   });
 
   const profitColor = hasAnySales
