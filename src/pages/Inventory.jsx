@@ -203,44 +203,44 @@ function StatCard({ label, value, sub, color, icon: Icon }) {
   return (
     <div style={{
       background: 'var(--parch-card)',
-      border: '1px solid var(--parch-line)',
+      border: 'none',
       borderTop: '3px solid ' + color,
       borderRadius: 12,
-      padding: '16px 16px 14px',
+      padding: '14px 16px 12px',
       display: 'flex',
       flexDirection: 'column',
+      boxShadow: '0 1px 4px rgba(61,43,26,0.06)',
     }}>
       <p style={{
-        fontFamily: 'var(--font-serif)', fontSize: 10, fontWeight: 700,
+        fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700,
         letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: 'var(--ink-dim)', margin: '0 0 8px 0',
-        display: 'flex', alignItems: 'center', gap: 5,
+        color: 'var(--ink-dim)', margin: '0 0 6px 0',
       }}>
         {label}
       </p>
       <p style={{
-        fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 900,
-        color, margin: '0 0 5px 0', lineHeight: 1.1,
+        fontFamily: 'var(--font-mono)', fontSize: 24, fontWeight: 900,
+        color, margin: '0 0 4px 0', lineHeight: 1,
       }}>
         {value}
       </p>
       {sub && (
         <p style={{
-          fontSize: 11, color: 'var(--ink-ghost)',
-          margin: '0 0 12px 0', flex: 1,
+          fontSize: 10, color: 'var(--ink-ghost)',
+          margin: '0 0 14px 0', flex: 1,
         }}>
           {sub}
         </p>
       )}
       {Icon && (
         <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: color.replace(')', '-bg)').replace('var(--', 'var(--'),
-          border: '1px solid ' + color.replace(')', '-bdr)').replace('var(--', 'var(--'),
+          width: 28, height: 28, borderRadius: 7,
+          background: color.includes('ocean') ? 'var(--ocean-bg)' : color.includes('violet') ? 'var(--violet-bg)' : color.includes('gold') ? 'var(--gold-bg)' : color.includes('terrain') ? 'var(--terrain-bg)' : 'var(--parch-warm)',
+          border: '1px solid ' + (color.includes('ocean') ? 'var(--ocean-bdr)' : color.includes('violet') ? 'var(--violet-bdr)' : color.includes('gold') ? 'var(--gold-bdr)' : color.includes('terrain') ? 'var(--terrain-bdr)' : 'var(--parch-line)'),
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginTop: sub ? 0 : 12,
+          marginTop: sub ? 0 : 14,
         }}>
-          <Icon style={{ width: 15, height: 15, color }} />
+          <Icon style={{ width: 13, height: 13, color }} />
         </div>
       )}
     </div>
