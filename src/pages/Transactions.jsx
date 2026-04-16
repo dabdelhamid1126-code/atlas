@@ -1,22 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Download, Trash2, X, Zap, LayoutGrid, Globe,
-  ChevronLeft, ChevronRight, Search, SlidersHorizontal,
-  Package, CreditCard, Tag, TrendingUp, Sparkles,
-} from 'lucide-react';
+import { Download, Trash2, X, Zap, LayoutGrid, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import TransactionsStatsBar from '@/components/transactions/TransactionsStatsBar.jsx';
+import TransactionsFilters from '@/components/transactions/TransactionsFilters.jsx';
 import OrderGroupedCards from '@/components/transactions/OrderGroupedCards';
 import POFormModal from '@/components/purchase-orders/POFormModal';
 import PODetailsModal from '@/components/purchase-orders/PODetailsModal';
 
 const PAGE_SIZE = 20;
-
-const fmt$ = (v) => {
-  const n = parseFloat(v) || 0;
-  return n < 0 ? `-$${Math.abs(n).toFixed(2)}` : `$${n.toFixed(2)}`;
-};
 
 export default function Transactions() {
   const queryClient = useQueryClient();
@@ -28,11 +21,9 @@ export default function Transactions() {
   const [toDate,              setToDate]              = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   const [categoryFilter,      setCategoryFilter]      = useState('all');
-  const [showMoreFilters,     setShowMoreFilters]     = useState(false);
+  const [accountFilter,       setAccountFilter]       = useState('all');
   const [formOpen,            setFormOpen]            = useState(false);
-  const [detailsOpen,         setDetailsOpen]         = useState(false);
   const [editingOrder,        setEditingOrder]        = useState(null);
-  const [selectedOrder,       setSelectedOrder]       = useState(null);
   const [selectedIds,         setSelectedIds]         = useState(new Set());
   const [currentPage,         setCurrentPage]         = useState(1);
   const [userEmail,           setUserEmail]           = useState(null);
@@ -52,6 +43,7 @@ export default function Transactions() {
   const { data: rewards     = [] } = useQuery({ queryKey: ['rewards'],     queryFn: () => base44.entities.Reward.list() });
   const { data: sellers     = [] } = useQuery({ queryKey: ['sellers'],     queryFn: () => base44.entities.Seller.list() });
 
+  // ── Reward helper ────────────────────────────────────────────────────────
   const createRewardForOrder = async (order) => {
     const card = creditCards.find(c => c.id === order.credit_card_id);
     if (!card) return;
@@ -60,18 +52,18 @@ export default function Transactions() {
       : (order.final_cost || order.total_cost);
     const cashbackRate = card.cashback_rate || 0;
     const pointsRate   = card.points_rate   || 1;
-    const rewardsToCreate = [];
+    const toCreate = [];
     if (card.reward_type === 'cashback' && cashbackRate > 0)
-      rewardsToCreate.push({ type:'cashback', currency:'USD', amount: parseFloat((base * cashbackRate / 100).toFixed(2)), notes:`Auto from order ${order.order_number}` });
+      toCreate.push({ type:'cashback', currency:'USD', amount: parseFloat((base * cashbackRate / 100).toFixed(2)), notes:`Auto from order ${order.order_number}` });
     else if (card.reward_type === 'points' && pointsRate > 0)
-      rewardsToCreate.push({ type:'points', currency:'points', amount: Math.round(base * pointsRate), notes:`Auto from order ${order.order_number}` });
+      toCreate.push({ type:'points', currency:'points', amount: Math.round(base * pointsRate), notes:`Auto from order ${order.order_number}` });
     if (order.extra_cashback_percent > 0)
-      rewardsToCreate.push({ type:'cashback', currency:'USD', amount: parseFloat((base * order.extra_cashback_percent / 100).toFixed(2)), notes:`Extra ${order.extra_cashback_percent}% on ${order.order_number}` });
+      toCreate.push({ type:'cashback', currency:'USD', amount: parseFloat((base * order.extra_cashback_percent / 100).toFixed(2)), notes:`Extra ${order.extra_cashback_percent}% on ${order.order_number}` });
     if (order.bonus_amount > 0) {
       const isPYA = order.bonus_notes?.toLowerCase().includes('prime young adult');
-      rewardsToCreate.push({ type: isPYA ? 'cashback' : 'loyalty_rewards', currency: isPYA ? 'USD' : 'points', amount: order.bonus_amount, notes: order.bonus_notes || `Bonus from ${order.order_number}` });
+      toCreate.push({ type: isPYA ? 'cashback' : 'loyalty_rewards', currency: isPYA ? 'USD' : 'points', amount: order.bonus_amount, notes: order.bonus_notes || `Bonus from ${order.order_number}` });
     }
-    for (const r of rewardsToCreate) {
+    for (const r of toCreate) {
       if (r.amount > 0) await base44.entities.Reward.create({
         credit_card_id: order.credit_card_id, card_name: card.card_name, source: card.card_name,
         type: r.type, purchase_amount: base, amount: r.amount, currency: r.currency,
@@ -82,6 +74,7 @@ export default function Transactions() {
     queryClient.invalidateQueries({ queryKey: ['rewards'] });
   };
 
+  // ── Mutations ─────────────────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const o = await base44.entities.PurchaseOrder.create(data);
@@ -120,14 +113,15 @@ export default function Transactions() {
       return o;
     },
     onSuccess: async (o) => {
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      await queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
       toast.success('Order updated');
       if (o.credit_card_id && o.total_cost) {
         const existing = await base44.entities.Reward.filter({ purchase_order_id: o.id });
         for (const r of existing) await base44.entities.Reward.delete(r.id);
         await createRewardForOrder(o);
       }
-      setFormOpen(false); setEditingOrder(null);
+      setEditingOrder(o);
+      setFormOpen(false);
     },
     onError: () => toast.error('Failed to update order'),
   });
@@ -142,22 +136,22 @@ export default function Transactions() {
       await base44.entities.PurchaseOrder.delete(order.id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['rewards'] });
-      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrders', 'rewards', 'giftCards'] });
       toast.success('Order deleted');
     },
     onError: () => toast.error('Failed to delete order'),
   });
 
+  // Quick status update (for Next Step button)
   const handleQuickStatus = async (order, newStatus) => {
     try {
       await base44.entities.PurchaseOrder.update(order.id, { status: newStatus });
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      toast.success(`Marked as ${newStatus}`);
+      toast.success(`Marked as ${newStatus.replace(/_/g, ' ')}`);
     } catch { toast.error('Failed to update status'); }
   };
 
+  // ── Filtering ─────────────────────────────────────────────────────────────
   const filteredOrders = useMemo(() => orders.filter(o => {
     if (mode === 'churning'    && o.order_type !== 'churning')    return false;
     if (mode === 'marketplace' && o.order_type !== 'marketplace') return false;
@@ -167,11 +161,11 @@ export default function Transactions() {
           !o.retailer?.toLowerCase().includes(s) &&
           !o.items?.some(i => i.product_name?.toLowerCase().includes(s))) return false;
     }
-    if (statusFilter !== 'all' && o.status !== statusFilter)       return false;
-    if (vendorFilter !== 'all' && o.retailer !== vendorFilter)     return false;
+    if (statusFilter !== 'all' && o.status !== statusFilter)                       return false;
+    if (vendorFilter !== 'all' && o.retailer !== vendorFilter)                     return false;
     if (paymentMethodFilter !== 'all' && o.credit_card_id !== paymentMethodFilter) return false;
-    if (categoryFilter !== 'all' && o.category !== categoryFilter) return false;
-    if (fromDate) { const fd = new Date(fromDate); if (new Date(o.order_date || o.created_date) < fd) return false; }
+    if (categoryFilter !== 'all' && o.category !== categoryFilter)                 return false;
+    if (fromDate) { if (new Date(o.order_date || o.created_date) < new Date(fromDate)) return false; }
     if (toDate)   { const td = new Date(toDate); td.setHours(23,59,59,999); if (new Date(o.order_date || o.created_date) > td) return false; }
     return true;
   }), [orders, mode, search, statusFilter, vendorFilter, paymentMethodFilter, categoryFilter, fromDate, toDate]);
@@ -182,40 +176,18 @@ export default function Transactions() {
     return bv - av;
   }), [filteredOrders]);
 
-  /* ------------------------------------------------------------------ */
-  /*  STATS -- sale_events use "qty" per entity schema                   */
-  /* ------------------------------------------------------------------ */
-  const stats = useMemo(() => {
-    const totalItems = filteredOrders.reduce((s, o) => s + (o.items?.length || 0), 0);
-    const totalCost  = filteredOrders.reduce((s, o) => s + (parseFloat(o.total_cost) || 0), 0);
-    const totalSale  = filteredOrders.reduce((s, o) => {
-      const fromEvents = (o.sale_events || []).reduce((es, ev) =>
-        es + (ev.items || []).reduce((is, item) =>
-          is + (parseFloat(item.sale_price) || 0) * (parseInt(item.qty || item.quantity) || 1), 0), 0);
-      if (fromEvents > 0) return s + fromEvents;
-      return s + (o.items || []).reduce((is, item) =>
-        is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity_ordered) || 1), 0);
-    }, 0);
-    const totalCashback = rewards
-      .filter(r => filteredOrders.some(o => o.id === r.purchase_order_id))
-      .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-    const totalProfit = totalSale > 0 ? totalSale - totalCost + totalCashback : 0;
-    return { totalItems, totalCost, totalSale, totalCashback, totalProfit };
-  }, [filteredOrders, rewards]);
-
+  // ── Pagination ────────────────────────────────────────────────────────────
   const totalPages  = Math.max(1, Math.ceil(sortedOrders.length / PAGE_SIZE));
   const safePage    = Math.min(currentPage, totalPages);
   const pagedOrders = useMemo(() => sortedOrders.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [sortedOrders, safePage]);
   useMemo(() => setCurrentPage(1), [mode, search, statusFilter, vendorFilter, paymentMethodFilter, categoryFilter, fromDate, toDate]);
 
+  // ── CSV export ────────────────────────────────────────────────────────────
   const handleCSVDownload = () => {
     const headers = ['Date','Retailer','Order #','Items','Cost','Sale','Profit','Cashback','Card','Status','Type'];
     const rows = sortedOrders.map(o => {
       const card = creditCards.find(c => c.id === o.credit_card_id);
-      const sale = (o.sale_events || []).reduce((s, ev) =>
-        s + (ev.items || []).reduce((is, item) =>
-          is + (parseFloat(item.sale_price) || 0) * (parseInt(item.qty || item.quantity) || 1), 0), 0)
-        || (o.items || []).reduce((s, i) => s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
+      const sale = (o.items || []).reduce((s, i) => s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
       const profit = sale > 0 ? sale - (parseFloat(o.total_cost) || 0) : 0;
       const cb = rewards.filter(r => r.purchase_order_id === o.id).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
       return [
@@ -227,10 +199,11 @@ export default function Transactions() {
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
     a.href = url; a.download = `atlas-transactions-${new Date().toISOString().split('T')[0]}.csv`;
     a.click(); URL.revokeObjectURL(url);
+    toast.success(`Exported ${sortedOrders.length} orders`);
   };
 
   const handleBulkDelete = async () => {
@@ -248,19 +221,9 @@ export default function Transactions() {
 
   const clearFilters = () => {
     setSearch(''); setStatusFilter('all'); setVendorFilter('all');
-    setFromDate(''); setToDate(''); setPaymentMethodFilter('all'); setCategoryFilter('all');
+    setFromDate(''); setToDate(''); setPaymentMethodFilter('all');
+    setCategoryFilter('all'); setAccountFilter('all');
   };
-
-  const hasActiveFilters = search || statusFilter !== 'all' || vendorFilter !== 'all' ||
-    paymentMethodFilter !== 'all' || categoryFilter !== 'all' || fromDate || toDate;
-
-  const STATUSES = [
-    { value:'ordered',            label:'Ordered'            },
-    { value:'shipped',            label:'Shipped'            },
-    { value:'received',           label:'Received'           },
-    { value:'partially_received', label:'Partially Received' },
-    { value:'cancelled',          label:'Cancelled'          },
-  ];
 
   const MODES = [
     { id:'all',         label:'All',         Icon: LayoutGrid },
@@ -268,37 +231,13 @@ export default function Transactions() {
     { id:'marketplace', label:'Marketplace', Icon: Globe      },
   ];
 
-  /* stat card definitions -- matches Dashboard KPI style exactly */
-  const STAT_CARDS = [
-    { label:'Items',      val: String(stats.totalItems),
-      Icon: Package,   accent:'var(--ocean)',   bg:'var(--ocean-bg)',   bdr:'var(--ocean-bdr)',   valColor:'var(--ocean)'   },
-    { label:'Total Cost', val: fmt$(stats.totalCost),
-      Icon: CreditCard, accent:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)',    valColor:'var(--gold)'    },
-    { label:'Total Sale', val: stats.totalSale > 0 ? fmt$(stats.totalSale) : '--',
-      Icon: Tag,        accent:'var(--terrain)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)', valColor: stats.totalSale > 0 ? 'var(--terrain)' : 'var(--ink-ghost)' },
-    { label:'Profit',     val: stats.totalSale > 0 ? fmt$(stats.totalProfit) : '--',
-      Icon: TrendingUp,
-      accent: stats.totalProfit > 0 ? 'var(--terrain)' : stats.totalProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)',
-      bg:     stats.totalProfit > 0 ? 'var(--terrain-bg)' : stats.totalProfit < 0 ? 'var(--crimson-bg)' : 'var(--parch-warm)',
-      bdr:    stats.totalProfit > 0 ? 'var(--terrain-bdr)' : stats.totalProfit < 0 ? 'var(--crimson-bdr)' : 'var(--parch-line)',
-      valColor: stats.totalProfit > 0 ? 'var(--terrain)' : stats.totalProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)',
-    },
-    { label:'Cashback',   val: stats.totalCashback > 0 ? fmt$(stats.totalCashback) : '--',
-      Icon: Sparkles,  accent:'var(--violet)',  bg:'var(--violet-bg)',  bdr:'var(--violet-bdr)',  valColor:'var(--violet)'  },
-  ];
-
-  const INP = { padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer' };
-
   return (
     <div style={{ paddingBottom: 40 }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      {/* -- Header -- */}
+      {/* ── Header ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:22, flexWrap:'wrap', gap:14 }}>
         <div>
-          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', margin:0 }}>
-            Transactions
-          </h1>
+          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px' }}>Transactions</h1>
           <p style={{ fontSize:12, color:'var(--ink-dim)', marginTop:4 }}>Track and manage your purchases</p>
         </div>
         <button onClick={handleCSVDownload}
@@ -307,69 +246,33 @@ export default function Transactions() {
         </button>
       </div>
 
-      {/* -- Mode tabs -- */}
+      {/* ── Mode tabs ── */}
       <div style={{ display:'flex', gap:2, padding:3, borderRadius:10, width:'fit-content', background:'var(--parch-card)', border:'1px solid var(--parch-line)', marginBottom:18 }}>
-        {MODES.map(m => {
-          const active = mode === m.id;
-          return (
-            <button key={m.id} onClick={() => setMode(m.id)}
-              style={{
-                display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8,
-                fontSize:12, fontWeight: active ? 700 : 500, cursor:'pointer', border:'none',
-                fontFamily:'var(--font-serif)', transition:'all 0.15s',
-                background: active ? 'var(--ink)' : 'transparent',
-                color:      active ? 'var(--ne-cream)' : 'var(--ink-dim)',
-              }}>
-              <m.Icon style={{ width:13, height:13, opacity: active ? 1 : 0.6 }}/>
-              {m.label}
-              <span style={{ fontSize:10, opacity:0.65, fontFamily:'var(--font-mono)' }}>({modeCounts[m.id]})</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* -- Section divider -- matches Dashboard SectionDivider -- */}
-      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:12 }}>
-        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)', flexShrink:0 }}/>
-        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--gold)', whiteSpace:'nowrap' }}>Performance</span>
-        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(160,114,42,0.25),rgba(160,114,42,0.06),transparent)' }}/>
-      </div>
-
-      {/* -- KPI Stats -- */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10, marginBottom:20 }}>
-        {STAT_CARDS.map(s => (
-          <div key={s.label} style={{
-            background: 'var(--parch-card)',
-            border: 'none',
-            borderTop: `3px solid ${s.accent}`,
-            borderRadius: 12,
-            padding: '14px 16px 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 1px 4px rgba(61,43,26,0.06)',
-          }}>
-            <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:'0 0 6px 0' }}>
-              {s.label}
-            </p>
-            <p style={{ fontFamily:'var(--font-mono)', fontSize:24, fontWeight:900, color:s.valColor, margin:'0 0 4px 0', lineHeight:1 }}>
-              {s.val}
-            </p>
-            <p style={{ fontSize:10, color:'var(--ink-ghost)', margin:'0 0 14px 0', flex:1 }}>
-              {s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost + CB' : 'USD rewards'}
-            </p>
-            <div style={{ width:28, height:28, borderRadius:7, background:s.bg, border:`1px solid ${s.bdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <s.Icon size={13} color={s.accent}/>
-            </div>
-          </div>
+        {MODES.map(m => (
+          <button key={m.id} onClick={() => setMode(m.id)}
+            style={{
+              display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8,
+              fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'var(--font-serif)',
+              border:'none',
+              background: mode === m.id ? 'var(--ink)' : 'transparent',
+              color:      mode === m.id ? 'var(--gold)' : 'var(--ink-dim)',
+            }}>
+            <m.Icon style={{ width:13, height:13 }}/>
+            {m.label}
+            <span style={{ fontSize:10, opacity:0.65 }}>({modeCounts[m.id]})</span>
+          </button>
         ))}
       </div>
 
-      {/* -- Bulk actions -- */}
+      {/* ── Stats bar ── */}
+      <TransactionsStatsBar orders={filteredOrders}/>
+
+      {/* ── Bulk actions ── */}
       {selectedIds.size > 0 && (
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16, padding:'10px 16px', borderRadius:10, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)' }}>
           <span style={{ fontWeight:700, color:'var(--gold)', fontSize:13, fontFamily:'var(--font-serif)' }}>{selectedIds.size} selected</span>
           <button onClick={handleBulkDelete}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:7, fontSize:11, fontWeight:700, background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', color:'var(--crimson)', cursor:'pointer', fontFamily:'var(--font-serif)' }}>
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:7, fontSize:11, fontWeight:700, background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', color:'var(--crimson)', cursor:'pointer' }}>
             <Trash2 style={{ width:13, height:13 }}/> Delete
           </button>
           <button onClick={() => setSelectedIds(new Set())}
@@ -379,89 +282,28 @@ export default function Transactions() {
         </div>
       )}
 
-      {/* -- Section divider for filters -- */}
-      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
-        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--ocean)', flexShrink:0 }}/>
-        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--ocean)', whiteSpace:'nowrap' }}>Filters</span>
-        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(42,92,122,0.25),rgba(42,92,122,0.06),transparent)' }}/>
-      </div>
+      {/* ── Filters ── */}
+      <TransactionsFilters
+        search={search}               onSearchChange={setSearch}
+        statusFilter={statusFilter}   onStatusChange={setStatusFilter}
+        vendorFilter={vendorFilter}   onVendorChange={setVendorFilter}
+        fromDate={fromDate}           onFromDateChange={setFromDate}
+        toDate={toDate}               onToDateChange={setToDate}
+        paymentMethodFilter={paymentMethodFilter} onPaymentMethodChange={setPaymentMethodFilter}
+        categoryFilter={categoryFilter}           onCategoryChange={setCategoryFilter}
+        accountFilter={accountFilter}             onAccountChange={setAccountFilter}
+        vendors={vendors} creditCards={creditCards}
+      />
 
-      {/* -- Filters -- */}
-      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:10, padding:'12px 14px', marginBottom:14 }}>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
-          <div style={{ flex:1, minWidth:180, position:'relative', display:'flex', alignItems:'center' }}>
-            <Search style={{ position:'absolute', left:10, color:'var(--ink-ghost)', pointerEvents:'none', width:14, height:14 }}/>
-            <input
-              style={{ width:'100%', padding:'7px 10px 7px 32px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink)', outline:'none' }}
-              placeholder="Search products, stores, order #..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <select style={INP} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-            <option value="all">All statuses</option>
-            {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-          <select style={INP} value={vendorFilter} onChange={e => setVendorFilter(e.target.value)}>
-            <option value="all">All vendors</option>
-            {vendors.map(v => <option key={v} value={v}>{v}</option>)}
-          </select>
-          <select style={INP} value={paymentMethodFilter} onChange={e => setPaymentMethodFilter(e.target.value)}>
-            <option value="all">All cards</option>
-            {creditCards.map(c => <option key={c.id} value={c.id}>{c.card_name}{c.last_4_digits ? ` ....${c.last_4_digits}` : ''}</option>)}
-          </select>
-          <button
-            style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'var(--ink-faded)', cursor:'pointer', padding:'6px 10px', borderRadius:7, border:'1px solid var(--parch-line)', background:'transparent', fontWeight:600, fontFamily:'var(--font-serif)' }}
-            onClick={() => setShowMoreFilters(v => !v)}>
-            <SlidersHorizontal style={{ width:12, height:12 }}/> {showMoreFilters ? 'Less' : 'More'} filters
-            {hasActiveFilters && <span style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)', display:'inline-block', marginLeft:2 }}/>}
-          </button>
-          {hasActiveFilters && (
-            <button style={{ fontSize:11, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontWeight:600, fontFamily:'var(--font-serif)' }} onClick={clearFilters}>
-              Clear all
-            </button>
-          )}
-        </div>
-        {showMoreFilters && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:8, marginTop:10, paddingTop:10, borderTop:'1px solid var(--parch-line)' }}>
-            {[
-              { label:'From Date', el: <input type="date" style={{ ...INP, width:'100%' }} value={fromDate} onChange={e=>setFromDate(e.target.value)}/> },
-              { label:'To Date',   el: <input type="date" style={{ ...INP, width:'100%' }} value={toDate}   onChange={e=>setToDate(e.target.value)}/> },
-              { label:'Category',  el: (
-                <select style={{ ...INP, width:'100%' }} value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
-                  <option value="all">All categories</option>
-                  {['Electronics','Home & Garden','Toys & Games','Health & Beauty','Sports','Clothing','Tools','Gift Cards','Other'].map(c=><option key={c} value={c}>{c}</option>)}
-                </select>
-              )},
-            ].map(f => (
-              <div key={f.label}>
-                <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, color:'var(--ink-faded)', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:4 }}>{f.label}</p>
-                {f.el}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* -- Count -- */}
+      {/* ── Results count ── */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-        <span style={{ fontSize:11, color:'var(--ink-dim)', fontFamily:'var(--font-serif)' }}>
-          Showing{' '}
-          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{Math.min((safePage-1)*PAGE_SIZE+1, sortedOrders.length)}</strong>
-          {' to '}
-          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{Math.min(safePage*PAGE_SIZE, sortedOrders.length)}</strong>
-          {' of '}
-          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{sortedOrders.length}</strong>
-          {' orders'}
+        <span style={{ fontSize:11, color:'var(--ink-dim)' }}>
+          Showing <strong style={{ color:'var(--ink)' }}>{Math.min((safePage-1)*PAGE_SIZE+1, sortedOrders.length)}–{Math.min(safePage*PAGE_SIZE, sortedOrders.length)}</strong> of <strong style={{ color:'var(--ink)' }}>{sortedOrders.length}</strong> orders
         </span>
-        {totalPages > 1 && (
-          <span style={{ fontSize:11, color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>
-            Page {safePage} of {totalPages}
-          </span>
-        )}
+        {totalPages > 1 && <span style={{ fontSize:11, color:'var(--ink-dim)' }}>Page {safePage} of {totalPages}</span>}
       </div>
 
-      {/* -- Order Cards -- */}
+      {/* ── Order cards ── */}
       <OrderGroupedCards
         data={pagedOrders}
         creditCards={creditCards}
@@ -477,48 +319,41 @@ export default function Transactions() {
         onClearFilters={clearFilters}
       />
 
-      {/* -- Pagination -- */}
+      {/* ── Pagination ── */}
       {totalPages > 1 && (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:24, paddingBottom:8 }}>
           <button onClick={() => setCurrentPage(p => Math.max(1,p-1))} disabled={safePage===1}
-            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', fontFamily:'var(--font-serif)',
-              color: safePage===1 ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===1 ? 'not-allowed' : 'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', color: safePage===1 ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===1 ? 'not-allowed' : 'pointer' }}>
             <ChevronLeft style={{ width:14, height:14 }}/> Prev
           </button>
           <div style={{ display:'flex', gap:4 }}>
             {Array.from({ length:totalPages }, (_,i)=>i+1)
               .filter(p => p===1 || p===totalPages || Math.abs(p-safePage)<=1)
-              .reduce((acc,p,i,arr) => { if(i>0 && p-arr[i-1]>1) acc.push('...'); acc.push(p); return acc; }, [])
-              .map((p,i) => p==='...'
-                ? <span key={`e${i}`} style={{ padding:'7px 6px', fontSize:12, color:'var(--ink-ghost)', fontFamily:'var(--font-mono)' }}>...</span>
-                : <button key={p} onClick={()=>setCurrentPage(p)}
-                    style={{ width:34, height:34, borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'var(--font-mono)',
-                      fontWeight: p===safePage ? 700 : 500,
-                      border: '1px solid',
-                      borderColor: p===safePage ? 'var(--gold-bdr)' : 'var(--parch-line)',
-                      background:  p===safePage ? 'var(--gold-bg)'  : 'var(--parch-card)',
-                      color:       p===safePage ? 'var(--gold)'     : 'var(--ink-faded)' }}>
+              .reduce((acc,p,i,arr) => { if(i>0 && p-arr[i-1]>1) acc.push('…'); acc.push(p); return acc; }, [])
+              .map((p,i) => p==='…'
+                ? <span key={`e${i}`} style={{ padding:'7px 6px', fontSize:12, color:'var(--ink-ghost)' }}>…</span>
+                : <button key={p} onClick={() => setCurrentPage(p)}
+                    style={{ width:34, height:34, borderRadius:8, fontSize:12, fontWeight: p===safePage?700:500, border:'1px solid', cursor:'pointer',
+                      borderColor: p===safePage ? 'var(--gold-bdr)'  : 'var(--parch-line)',
+                      background:  p===safePage ? 'var(--gold-bg)'   : 'var(--parch-card)',
+                      color:       p===safePage ? 'var(--gold)'      : 'var(--ink-faded)' }}>
                     {p}
                   </button>
               )}
           </div>
           <button onClick={() => setCurrentPage(p => Math.min(totalPages,p+1))} disabled={safePage===totalPages}
-            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', fontFamily:'var(--font-serif)',
-              color: safePage===totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===totalPages ? 'not-allowed' : 'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', color: safePage===totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===totalPages ? 'not-allowed' : 'pointer' }}>
             Next <ChevronRight style={{ width:14, height:14 }}/>
           </button>
         </div>
       )}
 
+      {/* ── Modals ── */}
       <POFormModal
         open={formOpen} onOpenChange={setFormOpen} order={editingOrder}
         onSubmit={(data) => { if (editingOrder) updateMutation.mutate({ id:editingOrder.id, data }); else createMutation.mutate(data); }}
         products={products} creditCards={creditCards} giftCards={giftCards} sellers={sellers}
         isPending={createMutation.isPending || updateMutation.isPending}
-      />
-      <PODetailsModal
-        open={detailsOpen} onOpenChange={setDetailsOpen}
-        order={selectedOrder} products={products} rewards={rewards} creditCards={creditCards}
       />
     </div>
   );
