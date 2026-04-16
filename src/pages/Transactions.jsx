@@ -1,523 +1,817 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Download, Trash2, X, Zap, LayoutGrid, Globe,
-  ChevronLeft, ChevronRight, Search, SlidersHorizontal,
-  Package, CreditCard, Tag, TrendingUp, Sparkles,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import OrderGroupedCards from '@/components/transactions/OrderGroupedCards';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Package, TrendingUp, Boxes, DollarSign, ShoppingCart, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import POFormModal from '@/components/purchase-orders/POFormModal';
-import PODetailsModal from '@/components/purchase-orders/PODetailsModal';
 
-const PAGE_SIZE = 20;
+const fmt = (n) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
 
-const fmt$ = (v) => {
-  const n = parseFloat(v) || 0;
-  return n < 0 ? `-$${Math.abs(n).toFixed(2)}` : `$${n.toFixed(2)}`;
+const fmtDate = (d) =>
+  d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+
+const daysAgo = (dateStr) => {
+  if (!dateStr) return null;
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return '1 day ago';
+  return diff + ' days ago';
 };
 
-export default function Transactions() {
-  const queryClient = useQueryClient();
-  const [mode,                setMode]                = useState('all');
-  const [search,              setSearch]              = useState('');
-  const [statusFilter,        setStatusFilter]        = useState('all');
-  const [vendorFilter,        setVendorFilter]        = useState('all');
-  const [fromDate,            setFromDate]            = useState('');
-  const [toDate,              setToDate]              = useState('');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
-  const [categoryFilter,      setCategoryFilter]      = useState('all');
-  const [showMoreFilters,     setShowMoreFilters]     = useState(false);
-  const [formOpen,            setFormOpen]            = useState(false);
-  const [detailsOpen,         setDetailsOpen]         = useState(false);
-  const [editingOrder,        setEditingOrder]        = useState(null);
-  const [selectedOrder,       setSelectedOrder]       = useState(null);
-  const [selectedIds,         setSelectedIds]         = useState(new Set());
-  const [currentPage,         setCurrentPage]         = useState(1);
-  const [userEmail,           setUserEmail]           = useState(null);
+const marginPct = (profit, cost) => {
+  if (!cost || cost <= 0) return null;
+  return ((profit / cost) * 100).toFixed(1) + '%';
+};
 
-  useEffect(() => {
-    base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {});
-  }, []);
+const getStoreDomain = (vendorName) => {
+  const n = String(vendorName || '').toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+  if (n.includes('bestbuy'))  return 'bestbuy.com';
+  if (n.includes('amazon'))   return 'amazon.com';
+  if (n.includes('walmart'))  return 'walmart.com';
+  if (n.includes('apple'))    return 'apple.com';
+  if (n.includes('target'))   return 'target.com';
+  if (n.includes('costco'))   return 'costco.com';
+  if (n.includes('samsclub') || n.includes('sam')) return 'samsclub.com';
+  if (n.includes('staples'))  return 'staples.com';
+  if (n.includes('ebay'))     return 'ebay.com';
+  return n + '.com';
+};
 
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['purchaseOrders', userEmail],
-    queryFn: () => userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }, '-created_date') : [],
-    enabled: userEmail !== null,
-  });
-  const { data: products    = [] } = useQuery({ queryKey: ['products'],    queryFn: () => base44.entities.Product.list() });
-  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards'], queryFn: () => base44.entities.CreditCard.list() });
-  const { data: giftCards   = [] } = useQuery({ queryKey: ['giftCards'],   queryFn: () => base44.entities.GiftCard.list() });
-  const { data: rewards     = [] } = useQuery({ queryKey: ['rewards'],     queryFn: () => base44.entities.Reward.list() });
-  const { data: sellers     = [] } = useQuery({ queryKey: ['sellers'],     queryFn: () => base44.entities.Seller.list() });
+const BRANDFETCH_CLIENT_ID = '1idzVIG0BYPKsFIDJDI';
+const brandfetch = (domain) =>
+  'https://cdn.brandfetch.io/domain/' + domain + '?c=' + BRANDFETCH_CLIENT_ID;
 
-  const createRewardForOrder = async (order) => {
-    const card = creditCards.find(c => c.id === order.credit_card_id);
-    if (!card) return;
-    const base = order.rewards_on_original_price
-      ? (order.original_price || order.total_cost)
-      : (order.final_cost || order.total_cost);
-    const cashbackRate = card.cashback_rate || 0;
-    const pointsRate   = card.points_rate   || 1;
-    const rewardsToCreate = [];
-    if (card.reward_type === 'cashback' && cashbackRate > 0)
-      rewardsToCreate.push({ type:'cashback', currency:'USD', amount: parseFloat((base * cashbackRate / 100).toFixed(2)), notes:`Auto from order ${order.order_number}` });
-    else if (card.reward_type === 'points' && pointsRate > 0)
-      rewardsToCreate.push({ type:'points', currency:'points', amount: Math.round(base * pointsRate), notes:`Auto from order ${order.order_number}` });
-    if (order.extra_cashback_percent > 0)
-      rewardsToCreate.push({ type:'cashback', currency:'USD', amount: parseFloat((base * order.extra_cashback_percent / 100).toFixed(2)), notes:`Extra ${order.extra_cashback_percent}% on ${order.order_number}` });
-    if (order.bonus_amount > 0) {
-      const isPYA = order.bonus_notes?.toLowerCase().includes('prime young adult');
-      rewardsToCreate.push({ type: isPYA ? 'cashback' : 'loyalty_rewards', currency: isPYA ? 'USD' : 'points', amount: order.bonus_amount, notes: order.bonus_notes || `Bonus from ${order.order_number}` });
-    }
-    for (const r of rewardsToCreate) {
-      if (r.amount > 0) await base44.entities.Reward.create({
-        credit_card_id: order.credit_card_id, card_name: card.card_name, source: card.card_name,
-        type: r.type, purchase_amount: base, amount: r.amount, currency: r.currency,
-        purchase_order_id: order.id, order_number: order.order_number,
-        date_earned: order.order_date, status: order.status === 'received' ? 'earned' : 'pending', notes: r.notes,
-      });
-    }
-    queryClient.invalidateQueries({ queryKey: ['rewards'] });
-  };
-
-  const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const o = await base44.entities.PurchaseOrder.create(data);
-      if (data.gift_card_ids?.length > 0) {
-        for (const id of data.gift_card_ids)
-          await base44.entities.GiftCard.update(id, { status:'used', used_order_number: data.order_number });
-        queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      }
-      return o;
-    },
-    onSuccess: async (o) => {
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      toast.success('Order created');
-      if ((o.status === 'received' || o.status === 'partially_received') && o.items?.length > 0) {
-        for (const item of o.items) {
-          const qty = parseInt(item.quantity_received) || 0;
-          if (qty > 0 && item.product_id)
-            await base44.entities.InventoryItem.create({ product_id: item.product_id, product_name: item.product_name, quantity: qty, status:'in_stock', purchase_order_id: o.id, unit_cost: parseFloat(item.unit_cost) || 0 });
-        }
-        queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      }
-      if (o.credit_card_id && o.total_cost) await createRewardForOrder(o);
-      setFormOpen(false); setEditingOrder(null);
-    },
-    onError: () => toast.error('Failed to create order'),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
-      const o = await base44.entities.PurchaseOrder.update(id, data);
-      if (data.gift_card_ids?.length > 0) {
-        for (const gid of data.gift_card_ids)
-          await base44.entities.GiftCard.update(gid, { status:'used', used_order_number: data.order_number });
-        queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      }
-      return o;
-    },
-    onSuccess: async (o) => {
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      toast.success('Order updated');
-      if (o.credit_card_id && o.total_cost) {
-        const existing = await base44.entities.Reward.filter({ purchase_order_id: o.id });
-        for (const r of existing) await base44.entities.Reward.delete(r.id);
-        await createRewardForOrder(o);
-      }
-      setFormOpen(false); setEditingOrder(null);
-    },
-    onError: () => toast.error('Failed to update order'),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (order) => {
-      const orderRewards = await base44.entities.Reward.filter({ purchase_order_id: order.id });
-      for (const r of orderRewards) await base44.entities.Reward.delete(r.id);
-      if (order.gift_card_ids?.length > 0)
-        for (const id of order.gift_card_ids)
-          await base44.entities.GiftCard.update(id, { status:'available', used_order_number: null });
-      await base44.entities.PurchaseOrder.delete(order.id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['rewards'] });
-      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      toast.success('Order deleted');
-    },
-    onError: () => toast.error('Failed to delete order'),
-  });
-
-  const handleQuickStatus = async (order, newStatus) => {
-    try {
-      await base44.entities.PurchaseOrder.update(order.id, { status: newStatus });
-      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-      toast.success(`Marked as ${newStatus}`);
-    } catch { toast.error('Failed to update status'); }
-  };
-
-  const filteredOrders = useMemo(() => orders.filter(o => {
-    if (mode === 'churning'    && o.order_type !== 'churning')    return false;
-    if (mode === 'marketplace' && o.order_type !== 'marketplace') return false;
-    if (search) {
-      const s = search.toLowerCase();
-      if (!o.order_number?.toLowerCase().includes(s) &&
-          !o.retailer?.toLowerCase().includes(s) &&
-          !o.items?.some(i => i.product_name?.toLowerCase().includes(s))) return false;
-    }
-    if (statusFilter !== 'all' && o.status !== statusFilter)       return false;
-    if (vendorFilter !== 'all' && o.retailer !== vendorFilter)     return false;
-    if (paymentMethodFilter !== 'all' && o.credit_card_id !== paymentMethodFilter) return false;
-    if (categoryFilter !== 'all' && o.category !== categoryFilter) return false;
-    if (fromDate) { const fd = new Date(fromDate); if (new Date(o.order_date || o.created_date) < fd) return false; }
-    if (toDate)   { const td = new Date(toDate); td.setHours(23,59,59,999); if (new Date(o.order_date || o.created_date) > td) return false; }
-    return true;
-  }), [orders, mode, search, statusFilter, vendorFilter, paymentMethodFilter, categoryFilter, fromDate, toDate]);
-
-  const sortedOrders = useMemo(() => [...filteredOrders].sort((a, b) => {
-    const av = new Date(a.order_date || a.created_date);
-    const bv = new Date(b.order_date || b.created_date);
-    return bv - av;
-  }), [filteredOrders]);
-
-  /* ------------------------------------------------------------------ */
-  /*  STATS -- sale_events use "qty" per entity schema                   */
-  /* ------------------------------------------------------------------ */
-  const stats = useMemo(() => {
-    const totalItems = filteredOrders.reduce((s, o) => s + (o.items?.length || 0), 0);
-    const totalCost  = filteredOrders.reduce((s, o) => s + (parseFloat(o.total_cost) || 0), 0);
-    const totalSale  = filteredOrders.reduce((s, o) => {
-      const fromEvents = (o.sale_events || []).reduce((es, ev) =>
-        es + (ev.items || []).reduce((is, item) =>
-          is + (parseFloat(item.sale_price) || 0) * (parseInt(item.qty || item.quantity) || 1), 0), 0);
-      if (fromEvents > 0) return s + fromEvents;
-      return s + (o.items || []).reduce((is, item) =>
-        is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity_ordered) || 1), 0);
+const unsoldQty = (order, productName) => {
+  const name = productName.toLowerCase();
+  const totalQty = (order.items || [])
+    .filter((i) => (i.product_name || '').toLowerCase() === name)
+    .reduce((s, i) => {
+      const received = parseInt(i.quantity_received) || 0;
+      const ordered  = parseInt(i.quantity_ordered)  || 0;
+      return s + (received > 0 ? received : ordered);
     }, 0);
-    const totalCashback = rewards
-      .filter(r => filteredOrders.some(o => o.id === r.purchase_order_id))
-      .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-    const totalProfit = totalSale > 0 ? totalSale - totalCost + totalCashback : 0;
-    return { totalItems, totalCost, totalSale, totalCashback, totalProfit };
-  }, [filteredOrders, rewards]);
+  const soldQty = (order.sale_events || []).reduce(
+    (s, ev) =>
+      s + (ev.items || [])
+        .filter((si) => (si.product_name || '').toLowerCase() === name)
+        .reduce((ss, si) => ss + (parseInt(si.qty || si.quantity) || 1), 0),
+    0
+  );
+  return Math.max(0, totalQty - soldQty);
+};
 
-  const totalPages  = Math.max(1, Math.ceil(sortedOrders.length / PAGE_SIZE));
-  const safePage    = Math.min(currentPage, totalPages);
-  const pagedOrders = useMemo(() => sortedOrders.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [sortedOrders, safePage]);
-  useMemo(() => setCurrentPage(1), [mode, search, statusFilter, vendorFilter, paymentMethodFilter, categoryFilter, fromDate, toDate]);
+const soldQtyForProduct = (order, productName) => {
+  const name = productName.toLowerCase();
+  return (order.sale_events || []).reduce(
+    (s, ev) =>
+      s + (ev.items || [])
+        .filter((si) => (si.product_name || '').toLowerCase() === name)
+        .reduce((ss, si) => ss + (parseInt(si.qty || si.quantity) || 1), 0),
+    0
+  );
+};
 
-  const handleCSVDownload = () => {
-    const headers = ['Date','Retailer','Order #','Items','Cost','Sale','Profit','Cashback','Card','Status','Type'];
-    const rows = sortedOrders.map(o => {
-      const card = creditCards.find(c => c.id === o.credit_card_id);
-      const sale = (o.sale_events || []).reduce((s, ev) =>
-        s + (ev.items || []).reduce((is, item) =>
-          is + (parseFloat(item.sale_price) || 0) * (parseInt(item.qty || item.quantity) || 1), 0), 0)
-        || (o.items || []).reduce((s, i) => s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
-      const profit = sale > 0 ? sale - (parseFloat(o.total_cost) || 0) : 0;
-      const cb = rewards.filter(r => r.purchase_order_id === o.id).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-      return [
-        o.order_date || '', o.retailer || '', o.order_number || '',
-        o.items?.length || 0,
-        (parseFloat(o.total_cost) || 0).toFixed(2),
-        sale.toFixed(2), profit.toFixed(2), cb.toFixed(2),
-        card ? card.card_name : '', o.status || '', o.order_type || '',
-      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
-    });
-    const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = `atlas-transactions-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+const STOP_WORDS = new Set([
+  'the','a','an','and','or','with','for','of','in','to','by','gb',
+  'free','live','tv','wi','fi','black','white','silver','pink','blue',
+  'streaming','device','cable','satellite',
+]);
+const getKeywords = (str) =>
+  str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+
+const findMatchedProduct = (itemName, itemProductId, products) => {
+  if (itemProductId) {
+    const byId = products.find((p) => p.id === itemProductId);
+    if (byId) return byId;
+  }
+  const exactName = (itemName || '').toLowerCase();
+  const byExact = products.find((p) => p.name?.toLowerCase() === exactName);
+  if (byExact) return byExact;
+  const itemWords = new Set(getKeywords(itemName || ''));
+  if (itemWords.size === 0) return null;
+  let bestScore = 0.3, bestProduct = null;
+  products.forEach((p) => {
+    if (!p.name) return;
+    const productWords = new Set(getKeywords(p.name));
+    const shared = [...itemWords].filter((w) => productWords.has(w)).length;
+    const score  = shared / Math.max(itemWords.size, productWords.size);
+    if (score > bestScore) { bestScore = score; bestProduct = p; }
+  });
+  return bestScore >= 0.3 ? bestProduct : null;
+};
+
+const STATUS_PRIORITY = ['ordered', 'shipped', 'partially_received', 'received', 'paid', 'completed'];
+
+/* ------------------------------------------------------------------ */
+/*  STATUS BADGE                                                        */
+/* ------------------------------------------------------------------ */
+const STATUS_STYLES = {
+  received:           { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
+  partially_received: { bg: 'var(--gold-bg)',    color: 'var(--gold)',    border: 'var(--gold-bdr)'    },
+  paid:               { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
+  ordered:            { bg: 'var(--ocean-bg)',   color: 'var(--ocean)',   border: 'var(--ocean-bdr)'   },
+  pending:            { bg: 'var(--gold-bg)',    color: 'var(--gold)',    border: 'var(--gold-bdr)'    },
+  shipped:            { bg: 'var(--violet-bg)',  color: 'var(--violet)',  border: 'var(--violet-bdr)'  },
+  cancelled:          { bg: 'var(--crimson-bg)', color: 'var(--crimson)', border: 'var(--crimson-bdr)' },
+  completed:          { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
+};
+
+function StatusBadge({ status, small = false }) {
+  const s = STATUS_STYLES[status] || STATUS_STYLES.pending;
+  const label = status === 'partially_received' ? 'Partial' : (status || 'unknown');
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: small ? '1px 6px' : '2px 8px',
+      borderRadius: 99,
+      fontSize: small ? 8 : 9,
+      fontWeight: 700,
+      letterSpacing: '0.05em',
+      textTransform: 'uppercase',
+      background: s.bg, color: s.color,
+      border: '1px solid ' + s.border,
+      whiteSpace: 'nowrap',
+      fontFamily: 'var(--font-serif)',
+    }}>
+      {label}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  STORE LOGO                                                          */
+/* ------------------------------------------------------------------ */
+function StoreLogo({ retailer, size = 26 }) {
+  const [err, setErr] = useState(false);
+  const domain   = getStoreDomain(retailer);
+  const initials = String(retailer || '??').slice(0, 2).toUpperCase();
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+      background: 'var(--parch-card)', border: '1px solid var(--parch-line)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.3, fontWeight: 800, color: 'var(--ocean)',
+      fontFamily: 'var(--font-serif)',
+    }}>
+      {!err
+        ? <img src={brandfetch(domain)} alt={retailer} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setErr(true)} />
+        : initials}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PRODUCT IMAGE                                                       */
+/* ------------------------------------------------------------------ */
+function ProductImg({ src, name, retailer, qty, accentColor }) {
+  const [imgErr,   setImgErr]   = useState(false);
+  const [brandErr, setBrandErr] = useState(false);
+  const brandUrl = retailer ? brandfetch(getStoreDomain(retailer)) : null;
+  const initials = (name || '?').slice(0, 2).toUpperCase();
+  return (
+    <div style={{ position: 'relative', flexShrink: 0 }}>
+      <div style={{
+        width: 46, height: 46, borderRadius: 10, overflow: 'hidden',
+        background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {src && !imgErr
+          ? <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} onError={() => setImgErr(true)} />
+          : brandUrl && !brandErr
+          ? <img src={brandUrl} alt={retailer} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrandErr(true)} />
+          : <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-dim)' }}>{initials}</span>}
+      </div>
+      <div style={{
+        position: 'absolute', bottom: -4, right: -4,
+        minWidth: 18, height: 18, borderRadius: 9,
+        background: accentColor || 'var(--ocean)', color: '#fff',
+        fontSize: 9, fontWeight: 800,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: '1.5px solid var(--parch-card)',
+        padding: '0 3px', fontFamily: 'var(--font-mono)',
+      }}>
+        {qty}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  STAT CARD -- matches Dashboard KpiCard proportions exactly         */
+/* ------------------------------------------------------------------ */
+function StatCard({ label, value, sub, color, icon: Icon }) {
+  return (
+    <div style={{
+      background: 'var(--parch-card)',
+      border: '1px solid var(--parch-line)',
+      borderTop: '3px solid ' + color,
+      borderRadius: 12,
+      padding: '16px 16px 14px',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      <p style={{
+        fontFamily: 'var(--font-serif)', fontSize: 10, fontWeight: 700,
+        letterSpacing: '0.14em', textTransform: 'uppercase',
+        color: 'var(--ink-dim)', margin: '0 0 8px 0',
+        display: 'flex', alignItems: 'center', gap: 5,
+      }}>
+        {label}
+      </p>
+      <p style={{
+        fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 900,
+        color, margin: '0 0 5px 0', lineHeight: 1.1,
+      }}>
+        {value}
+      </p>
+      {sub && (
+        <p style={{
+          fontSize: 11, color: 'var(--ink-ghost)',
+          margin: '0 0 12px 0', flex: 1,
+        }}>
+          {sub}
+        </p>
+      )}
+      {Icon && (
+        <div style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: color.replace(')', '-bg)').replace('var(--', 'var(--'),
+          border: '1px solid ' + color.replace(')', '-bdr)').replace('var(--', 'var(--'),
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginTop: sub ? 0 : 12,
+        }}>
+          <Icon style={{ width: 15, height: 15, color }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  SECTION DIVIDER                                                     */
+/* ------------------------------------------------------------------ */
+function SectionDivider({ title, count, dotColor = 'var(--gold)', lineColor = 'rgba(160,114,42,0.25)' }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, marginTop: 4 }}>
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+      <span style={{
+        fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700,
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+        color: dotColor, whiteSpace: 'nowrap',
+      }}>{title}</span>
+      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,' + lineColor + ',transparent)' }} />
+      {count && (
+        <span style={{
+          fontSize: 9, fontWeight: 600, color: 'var(--ink-ghost)',
+          background: 'var(--parch-warm)', padding: '2px 8px',
+          borderRadius: 99, border: '1px solid var(--parch-line)',
+          whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)',
+        }}>{count}</span>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  SOURCE ORDER ROW                                                    */
+/* ------------------------------------------------------------------ */
+function SourceOrderRow({ order, qty, costPerUnit, onEdit, onMarkReceived }) {
+  const [marking, setMarking] = useState(false);
+  const [marked,  setMarked]  = useState(false);
+
+  const ago = daysAgo(order.order_date);
+  const isReceived = marked || ['received', 'paid', 'completed'].includes(order.status);
+
+  const agoBg  = isReceived ? 'var(--terrain-bg)'  : order.status === 'shipped' ? 'var(--violet-bg)'  : 'var(--ocean-bg)';
+  const agoClr = isReceived ? 'var(--terrain)'      : order.status === 'shipped' ? 'var(--violet)'     : 'var(--ocean)';
+  const agoBdr = isReceived ? 'var(--terrain-bdr)'  : order.status === 'shipped' ? 'var(--violet-bdr)' : 'var(--ocean-bdr)';
+
+  const handleMark = async (e) => {
+    e.stopPropagation();
+    if (isReceived || marking) return;
+    setMarking(true);
+    try {
+      await onMarkReceived(order.id);
+      setMarked(true);
+    } finally {
+      setMarking(false);
+    }
   };
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedIds.size} selected order(s)?`)) return;
-    for (const o of orders.filter(x => selectedIds.has(x.id))) await deleteMutation.mutateAsync(o);
-    setSelectedIds(new Set());
-  };
-
-  const vendors = useMemo(() => [...new Set(orders.map(o => o.retailer).filter(Boolean))].sort(), [orders]);
-  const modeCounts = useMemo(() => ({
-    all:         orders.length,
-    churning:    orders.filter(o => o.order_type === 'churning').length,
-    marketplace: orders.filter(o => o.order_type === 'marketplace').length,
-  }), [orders]);
-
-  const clearFilters = () => {
-    setSearch(''); setStatusFilter('all'); setVendorFilter('all');
-    setFromDate(''); setToDate(''); setPaymentMethodFilter('all'); setCategoryFilter('all');
-  };
-
-  const hasActiveFilters = search || statusFilter !== 'all' || vendorFilter !== 'all' ||
-    paymentMethodFilter !== 'all' || categoryFilter !== 'all' || fromDate || toDate;
-
-  const STATUSES = [
-    { value:'ordered',            label:'Ordered'            },
-    { value:'shipped',            label:'Shipped'            },
-    { value:'received',           label:'Received'           },
-    { value:'partially_received', label:'Partially Received' },
-    { value:'cancelled',          label:'Cancelled'          },
-  ];
-
-  const MODES = [
-    { id:'all',         label:'All',         Icon: LayoutGrid },
-    { id:'churning',    label:'Churning',    Icon: Zap        },
-    { id:'marketplace', label:'Marketplace', Icon: Globe      },
-  ];
-
-  /* stat card definitions -- matches Dashboard KPI style exactly */
-  const STAT_CARDS = [
-    { label:'Items',      val: String(stats.totalItems),
-      Icon: Package,   accent:'var(--ocean)',   bg:'var(--ocean-bg)',   bdr:'var(--ocean-bdr)',   valColor:'var(--ocean)'   },
-    { label:'Total Cost', val: fmt$(stats.totalCost),
-      Icon: CreditCard, accent:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)',    valColor:'var(--gold)'    },
-    { label:'Total Sale', val: stats.totalSale > 0 ? fmt$(stats.totalSale) : '--',
-      Icon: Tag,        accent:'var(--terrain)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)', valColor: stats.totalSale > 0 ? 'var(--terrain)' : 'var(--ink-ghost)' },
-    { label:'Profit',     val: stats.totalSale > 0 ? fmt$(stats.totalProfit) : '--',
-      Icon: TrendingUp,
-      accent: stats.totalProfit > 0 ? 'var(--terrain)' : stats.totalProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)',
-      bg:     stats.totalProfit > 0 ? 'var(--terrain-bg)' : stats.totalProfit < 0 ? 'var(--crimson-bg)' : 'var(--parch-warm)',
-      bdr:    stats.totalProfit > 0 ? 'var(--terrain-bdr)' : stats.totalProfit < 0 ? 'var(--crimson-bdr)' : 'var(--parch-line)',
-      valColor: stats.totalProfit > 0 ? 'var(--terrain)' : stats.totalProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)',
-    },
-    { label:'Cashback',   val: stats.totalCashback > 0 ? fmt$(stats.totalCashback) : '--',
-      Icon: Sparkles,  accent:'var(--violet)',  bg:'var(--violet-bg)',  bdr:'var(--violet-bdr)',  valColor:'var(--violet)'  },
-  ];
-
-  const INP = { padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer' };
 
   return (
-    <div style={{ paddingBottom: 40 }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-
-      {/* -- Header -- */}
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:22, flexWrap:'wrap', gap:14 }}>
-        <div>
-          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', margin:0 }}>
-            Transactions
-          </h1>
-          <p style={{ fontSize:12, color:'var(--ink-dim)', marginTop:4 }}>Track and manage your purchases</p>
+    <div
+      onClick={() => onEdit(order)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '9px 12px', borderBottom: '1px solid var(--parch-line)',
+        cursor: 'pointer', transition: 'background 0.12s',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gold-bg)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+    >
+      <StoreLogo retailer={order.retailer} size={26} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ocean)' }}>
+          {order.retailer || 'Unknown'}   {order.order_number || ('#' + (order.id || '').slice(0, 8))}
         </div>
-        <button onClick={handleCSVDownload}
-          style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'var(--parch-card)', border:'1px solid var(--parch-line)', color:'var(--ink-faded)', cursor:'pointer', fontFamily:'var(--font-serif)' }}>
-          <Download style={{ width:14, height:14 }}/> Export CSV
+        <div style={{ fontSize: 9, color: 'var(--ink-ghost)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+          {fmtDate(order.order_date)}   x{qty} unit{qty !== 1 ? 's' : ''}
+          {ago && (
+            <span style={{
+              fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 99,
+              background: agoBg, color: agoClr, border: '1px solid ' + agoBdr,
+              fontFamily: 'var(--font-mono)',
+            }}>{ago}</span>
+          )}
+        </div>
+      </div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
+        {fmt(costPerUnit * qty)}
+      </div>
+      <StatusBadge status={marked ? 'received' : order.status} small />
+      {!isReceived && (
+        <button
+          onClick={handleMark}
+          disabled={marking}
+          style={{
+            fontSize: 8, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+            background: 'var(--terrain-bg)', color: 'var(--terrain)',
+            border: '1px solid var(--terrain-bdr)', cursor: 'pointer',
+            fontFamily: 'var(--font-serif)', letterSpacing: '0.04em',
+            whiteSpace: 'nowrap', flexShrink: 0, opacity: marking ? 0.6 : 1,
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          {marking ? '...' : <><Check style={{ width: 8, height: 8 }} /> Mark Received</>}
         </button>
-      </div>
+      )}
+    </div>
+  );
+}
 
-      {/* -- Mode tabs -- */}
-      <div style={{ display:'flex', gap:2, padding:3, borderRadius:10, width:'fit-content', background:'var(--parch-card)', border:'1px solid var(--parch-line)', marginBottom:18 }}>
-        {MODES.map(m => {
-          const active = mode === m.id;
-          return (
-            <button key={m.id} onClick={() => setMode(m.id)}
-              style={{
-                display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8,
-                fontSize:12, fontWeight: active ? 700 : 500, cursor:'pointer', border:'none',
-                fontFamily:'var(--font-serif)', transition:'all 0.15s',
-                background: active ? 'var(--ink)' : 'transparent',
-                color:      active ? 'var(--ne-cream)' : 'var(--ink-dim)',
-              }}>
-              <m.Icon style={{ width:13, height:13, opacity: active ? 1 : 0.6 }}/>
-              {m.label}
-              <span style={{ fontSize:10, opacity:0.65, fontFamily:'var(--font-mono)' }}>({modeCounts[m.id]})</span>
-            </button>
-          );
-        })}
-      </div>
+/* ------------------------------------------------------------------ */
+/*  PRODUCT CARD                                                        */
+/* ------------------------------------------------------------------ */
+function ProductCard({ group, expanded, onToggle, onEdit, onMarkReceived }) {
+  const accentColor =
+    group.dominantStatus === 'shipped'            ? 'var(--violet)'  :
+    ['received','paid','completed'].includes(group.dominantStatus) ? 'var(--terrain)' :
+    group.dominantStatus === 'partially_received' ? 'var(--gold)'    :
+    'var(--ocean)';
 
-      {/* -- Section divider -- matches Dashboard SectionDivider -- */}
-      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:12 }}>
-        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)', flexShrink:0 }}/>
-        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--gold)', whiteSpace:'nowrap' }}>Performance</span>
-        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(160,114,42,0.25),rgba(160,114,42,0.06),transparent)' }}/>
-      </div>
+  const orderedQty  = group.sources.filter((s) => s.order.status === 'ordered').reduce((a, s) => a + s.qty, 0);
+  const shippedQty  = group.sources.filter((s) => s.order.status === 'shipped').reduce((a, s) => a + s.qty, 0);
+  const receivedQty = group.sources.filter((s) => ['received','paid','completed','partially_received'].includes(s.order.status)).reduce((a, s) => a + s.qty, 0);
 
-      {/* -- KPI Stats -- */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10, marginBottom:20 }}>
-        {STAT_CARDS.map(s => (
-          <div key={s.label} style={{
-            background: 'var(--parch-card)',
-            border: '1px solid var(--parch-line)',
-            borderTop: `3px solid ${s.accent}`,
-            borderRadius: 12,
-            padding: '16px 16px 14px',
-            display: 'flex',
-            flexDirection: 'column',
+  const estProfit = group.listPrice
+    ? (parseFloat(group.listPrice) - group.avgCostPerUnit) * group.totalQty
+    : null;
+  const mPct = estProfit !== null ? marginPct(estProfit, group.totalCost) : null;
+
+  const totalSold = group.sources.reduce((s, src) => s + soldQtyForProduct(src.order, group.productName), 0);
+  const remaining = group.totalQty;
+
+  const deliveryDates = group.sources
+    .map((s) => s.order.expected_delivery_date || s.order.delivery_date || s.order.estimated_delivery)
+    .filter(Boolean)
+    .sort();
+  const nearestDelivery = deliveryDates[0] || null;
+
+  const retailers = [...new Set(group.sources.map((s) => s.order.retailer).filter(Boolean))];
+
+  return (
+    <div
+      style={{
+        background: 'var(--parch-card)',
+        border: '1px solid ' + (expanded ? 'var(--gold-bdr)' : 'var(--parch-line)'),
+        borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
+        boxShadow: expanded ? '0 4px 20px rgba(201,168,76,0.14)' : 'none',
+        transition: 'box-shadow 0.18s, border-color 0.18s',
+      }}
+      onClick={onToggle}
+    >
+      <div style={{ height: 3, background: accentColor }} />
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 12px 9px' }}>
+        <ProductImg
+          src={group.imageUrl}
+          name={group.productName}
+          retailer={retailers[0]}
+          qty={group.totalQty}
+          accentColor={accentColor}
+        />
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 2 }}>
+            {group.productName}
+          </div>
+          <div style={{
+            fontSize: 9, color: 'var(--ink-faded)', marginBottom: 6,
+            fontFamily: 'var(--font-serif)', letterSpacing: '0.03em',
           }}>
-            <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:'0 0 8px 0' }}>
-              {s.label}
-            </p>
-            <p style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:900, color:s.valColor, margin:'0 0 5px 0', lineHeight:1.1 }}>
-              {s.val}
-            </p>
-            <p style={{ fontSize:11, color:'var(--ink-ghost)', margin:'0 0 12px 0', flex:1 }}>
-              {s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost + CB' : 'USD rewards'}
-            </p>
-            <div style={{ width:32, height:32, borderRadius:8, background:s.bg, border:`1px solid ${s.bdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <s.Icon size={15} color={s.accent}/>
+            {group.sources.length} source order{group.sources.length !== 1 ? 's' : ''}   {retailers.join(', ')}
+          </div>
+
+          {nearestDelivery && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 9, padding: '2px 7px', borderRadius: 6, marginBottom: 7,
+              background: 'var(--terrain-bg)', color: 'var(--terrain)',
+              border: '1px solid var(--terrain-bdr)', fontFamily: 'var(--font-mono)',
+            }}>
+              Est. delivery {fmtDate(nearestDelivery)}
             </div>
+          )}
+
+          <div style={{
+            height: 5, borderRadius: 99, overflow: 'hidden',
+            background: 'var(--parch-warm)', marginBottom: 5,
+            display: 'flex', border: '1px solid var(--parch-line)',
+          }}>
+            {orderedQty  > 0 && <div style={{ flex: orderedQty,  background: 'var(--ocean)',   height: '100%', borderRadius: shippedQty === 0 && receivedQty === 0 ? 99 : '99px 0 0 99px' }} />}
+            {shippedQty  > 0 && <div style={{ flex: shippedQty,  background: 'var(--violet)',  height: '100%', borderRadius: orderedQty === 0 && receivedQty === 0 ? 99 : 0 }} />}
+            {receivedQty > 0 && <div style={{ flex: receivedQty, background: 'var(--terrain)', height: '100%', borderRadius: orderedQty === 0 && shippedQty === 0 ? 99 : '0 99px 99px 0' }} />}
+            {orderedQty + shippedQty + receivedQty === 0 && <div style={{ flex: 1, background: 'var(--parch-line)', height: '100%', borderRadius: 99 }} />}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+            {[
+              { label: 'Ordered',   n: orderedQty,  color: 'var(--ocean)'   },
+              { label: 'Shipped',   n: shippedQty,  color: 'var(--violet)'  },
+              { label: 'Available', n: receivedQty, color: 'var(--terrain)' },
+            ].map(({ label, n, color }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8, color: 'var(--ink-ghost)' }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                {label} <span style={{ fontWeight: 700, color: 'var(--ink-dim)', fontFamily: 'var(--font-mono)' }}>{n}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {totalSold > 0 && (
+              <span style={{
+                fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 99,
+                background: 'var(--terrain-bg)', color: 'var(--terrain)',
+                border: '1px solid var(--terrain-bdr)', fontFamily: 'var(--font-mono)',
+              }}>{totalSold} sold</span>
+            )}
+            <span style={{
+              fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 99,
+              background: 'var(--parch-warm)', color: 'var(--ink-ghost)',
+              border: '1px solid var(--parch-line)', fontFamily: 'var(--font-mono)',
+            }}>{remaining} remaining</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 7, flexShrink: 0, paddingTop: 1 }}>
+          <StatusBadge status={group.dominantStatus} />
+          <div style={{
+            width: 20, height: 20, borderRadius: 6,
+            background: expanded ? 'var(--gold-bg)'  : 'var(--parch-warm)',
+            border: '1px solid ' + (expanded ? 'var(--gold-bdr)' : 'var(--parch-line)'),
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: expanded ? 'var(--gold)' : 'var(--ink-ghost)',
+            transition: 'all 0.2s',
+            transform: expanded ? 'rotate(180deg)' : 'none',
+          }}>
+            <ChevronDown style={{ width: 12, height: 12 }} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', borderTop: '1px solid var(--parch-line)', background: 'var(--parch-warm)' }}>
+        {[
+          { label: 'Avg Cost',    value: fmt(group.avgCostPerUnit), color: 'var(--gold)'    },
+          { label: 'Total Cost',  value: fmt(group.totalCost),      color: 'var(--gold)'    },
+          { label: 'Est. Margin', value: estProfit !== null ? fmt(estProfit) : '--', color: estProfit !== null ? 'var(--terrain)' : 'var(--ink-ghost)', extra: mPct },
+        ].map(({ label, value, color, extra }) => (
+          <div key={label} style={{ flex: 1, padding: '7px 8px', textAlign: 'center', borderLeft: label !== 'Avg Cost' ? '1px solid var(--parch-line)' : 'none' }}>
+            <p style={{ fontFamily: 'var(--font-serif)', fontSize: 7, color: 'var(--ink-ghost)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 3 }}>{label}</p>
+            <p style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', color, lineHeight: 1 }}>{value}</p>
+            {extra && (
+              <span style={{
+                display: 'inline-flex', fontSize: 8, fontWeight: 700, padding: '1px 5px',
+                borderRadius: 99, marginTop: 3, fontFamily: 'var(--font-mono)',
+                background: 'var(--terrain-bg)', color: 'var(--terrain)',
+                border: '1px solid var(--terrain-bdr)',
+              }}>{extra}</span>
+            )}
           </div>
         ))}
       </div>
 
-      {/* -- Bulk actions -- */}
-      {selectedIds.size > 0 && (
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16, padding:'10px 16px', borderRadius:10, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)' }}>
-          <span style={{ fontWeight:700, color:'var(--gold)', fontSize:13, fontFamily:'var(--font-serif)' }}>{selectedIds.size} selected</span>
-          <button onClick={handleBulkDelete}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:7, fontSize:11, fontWeight:700, background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', color:'var(--crimson)', cursor:'pointer', fontFamily:'var(--font-serif)' }}>
-            <Trash2 style={{ width:13, height:13 }}/> Delete
-          </button>
-          <button onClick={() => setSelectedIds(new Set())}
-            style={{ marginLeft:'auto', fontSize:11, color:'var(--ink-dim)', background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
-            <X style={{ width:13, height:13 }}/> Clear
-          </button>
+      {expanded && (
+        <div style={{ background: 'var(--parch-warm)', borderTop: '1px solid var(--parch-line)' }}>
+          <div style={{ padding: '6px 12px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-ghost)' }}>
+              Source Orders
+            </span>
+            <span style={{ fontSize: 9, color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+              {group.sources.length} order{group.sources.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          {group.sources.map(({ order, qty, costPerUnit }, idx) => (
+            <SourceOrderRow
+              key={order.id + '-' + idx}
+              order={order}
+              qty={qty}
+              costPerUnit={costPerUnit}
+              onEdit={onEdit}
+              onMarkReceived={onMarkReceived}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  MAIN PAGE                                                           */
+/* ------------------------------------------------------------------ */
+export default function Inventory() {
+  const queryClient = useQueryClient();
+  const [search,         setSearch]         = useState('');
+  const [statusFilter,   setStatusFilter]   = useState('');
+  const [retailerFilter, setRetailerFilter] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [editingOrder,   setEditingOrder]   = useState(null);
+  const [formOpen,       setFormOpen]       = useState(false);
+  const [userEmail,      setUserEmail]      = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then((u) => setUserEmail(u?.email)).catch(() => {});
+  }, []);
+
+  const { data: orders      = [], isLoading } = useQuery({ queryKey: ['purchaseOrders', userEmail], queryFn: () => userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }, '-created_date') : [], enabled: userEmail !== null });
+  const { data: products    = [] }            = useQuery({ queryKey: ['products'],    queryFn: () => base44.entities.Product.list() });
+  const { data: creditCards = [] }            = useQuery({ queryKey: ['creditCards', userEmail], queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
+  const { data: giftCards   = [] }            = useQuery({ queryKey: ['giftCards',   userEmail], queryFn: () => userEmail ? base44.entities.GiftCard.filter({ created_by: userEmail }) : [],   enabled: userEmail !== null });
+  const { data: sellers     = [] }            = useQuery({ queryKey: ['sellers'],     queryFn: () => base44.entities.Seller.list() });
+
+  const relevantOrders = useMemo(() =>
+    orders.filter((o) => ['received','partially_received','ordered','shipped','paid','completed'].includes(o.status)),
+    [orders]
+  );
+
+  const groups = useMemo(() => {
+    const map = {};
+    relevantOrders.forEach((order) => {
+      (order.items || []).forEach((item) => {
+        const name = (item.product_name || 'Unknown Product').trim();
+        const qty  = unsoldQty(order, name);
+        if (qty <= 0) return;
+        const costPerUnit = parseFloat(item.unit_cost || 0);
+        if (!map[name]) {
+          const matched  = findMatchedProduct(name, item.product_id, products);
+          const imageUrl = matched?.image || item.product_image_url || item.product_image || item.image_url || null;
+          map[name] = {
+            productName: name, imageUrl,
+            listPrice: item.list_price || item.listing_price || null,
+            sources: [], totalQty: 0, totalCost: 0, statuses: [],
+          };
+        }
+        map[name].sources.push({ order, qty, costPerUnit });
+        map[name].totalQty  += qty;
+        map[name].totalCost += costPerUnit * qty;
+        map[name].statuses.push(order.status);
+      });
+    });
+    return Object.values(map).map((g) => ({
+      ...g,
+      avgCostPerUnit: g.totalQty > 0 ? g.totalCost / g.totalQty : 0,
+      dominantStatus: [...g.statuses].sort((a, b) => STATUS_PRIORITY.indexOf(a) - STATUS_PRIORITY.indexOf(b))[0] || 'received',
+    }));
+  }, [relevantOrders, products]);
+
+  const stats = useMemo(() => {
+    const inHand    = groups.filter((g) => ['received','partially_received','paid','completed'].includes(g.dominantStatus));
+    const inbound   = groups.filter((g) => ['ordered','shipped'].includes(g.dominantStatus));
+    const withProfit = groups.filter((g) => g.listPrice);
+    const estMargin  = withProfit.reduce((s, g) => s + (parseFloat(g.listPrice) - g.avgCostPerUnit) * g.totalQty, 0);
+    const costBasis  = groups.reduce((s, g) => s + g.totalCost, 0);
+    const mPct = costBasis > 0 && estMargin > 0 ? ((estMargin / costBasis) * 100).toFixed(1) + '%' : null;
+    return {
+      uniqueProducts:  groups.length,
+      unitsAvailable:  inHand.reduce((s, g)  => s + g.totalQty, 0),
+      unitsInbound:    inbound.reduce((s, g) => s + g.totalQty, 0),
+      costBasis,
+      estMargin,
+      mPct,
+    };
+  }, [groups]);
+
+  const retailersInData = useMemo(() => {
+    const set = new Set();
+    groups.forEach((g) => g.sources.forEach((s) => { if (s.order.retailer) set.add(s.order.retailer); }));
+    return [...set].sort();
+  }, [groups]);
+
+  const filtered = useMemo(() => {
+    let g = groups;
+    if (search)         g = g.filter((x) => x.productName.toLowerCase().includes(search.toLowerCase()));
+    if (statusFilter)   g = g.filter((x) => x.dominantStatus === statusFilter);
+    if (retailerFilter) g = g.filter((x) => x.sources.some((s) => s.order.retailer === retailerFilter));
+    return g;
+  }, [groups, search, statusFilter, retailerFilter]);
+
+  const inboundGroups   = filtered.filter((g) => ['ordered','shipped'].includes(g.dominantStatus));
+  const availableGroups = filtered.filter((g) => !['ordered','shipped'].includes(g.dominantStatus));
+
+  const toggleGroup = (name) =>
+    setExpandedGroups((prev) => ({ ...prev, [name]: !prev[name] }));
+
+  const handleEdit = (order) => { setEditingOrder(order); setFormOpen(true); };
+
+  const handleMarkReceived = useCallback(async (orderId) => {
+    await base44.entities.PurchaseOrder.update(orderId, { status: 'received' });
+    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+  }, [queryClient]);
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+      {/* Header */}
+      <div style={{ marginBottom: 16 }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>
+          Inventory On Hand
+        </h1>
+        <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 3 }}>
+          Grouped by product   derived from your purchase orders
+        </p>
+      </div>
+
+      {/* Overview section divider */}
+      <SectionDivider title="Overview" dotColor="var(--gold)" lineColor="rgba(201,168,76,0.25)" />
+
+      {/* Stat cards -- 2x2 grid matching Dashboard KpiCard style */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 16 }}>
+        <StatCard label="Available"   value={String(stats.unitsAvailable)} sub="units in hand"          color="var(--ocean)"   icon={Package}      />
+        <StatCard label="Inbound"     value={String(stats.unitsInbound)}   sub="ordered & shipped"      color="var(--violet)"  icon={ShoppingCart} />
+        <StatCard label="Cost Basis"  value={fmt(stats.costBasis)}         sub="total inventory spend"   color="var(--gold)"    icon={DollarSign}   />
+        <StatCard
+          label="Est. Margin"
+          value={stats.estMargin > 0 ? fmt(stats.estMargin) + (stats.mPct ? ' (' + stats.mPct + ')' : '') : '--'}
+          sub="if all units sell"
+          color="var(--terrain)"
+          icon={TrendingUp}
+        />
+      </div>
+
+      {/* Retailer filter chips */}
+      {retailersInData.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {['', ...retailersInData].map((r) => (
+            <button
+              key={r || 'all'}
+              onClick={() => setRetailerFilter(r)}
+              style={{
+                padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700,
+                border: '1px solid ' + (retailerFilter === r ? 'var(--ink)' : 'var(--parch-line)'),
+                background: retailerFilter === r ? 'var(--ink)' : 'var(--parch-card)',
+                color: retailerFilter === r ? 'var(--ne-cream)' : 'var(--ink-faded)',
+                cursor: 'pointer', fontFamily: 'var(--font-serif)', letterSpacing: '0.03em',
+                transition: 'all 0.12s',
+              }}
+            >
+              {r || 'All Retailers'}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* -- Section divider for filters -- */}
-      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
-        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--ocean)', flexShrink:0 }}/>
-        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--ocean)', whiteSpace:'nowrap' }}>Filters</span>
-        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(42,92,122,0.25),rgba(42,92,122,0.06),transparent)' }}/>
+      {/* Search + filter bar */}
+      <div style={{
+        display: 'flex', gap: 8, alignItems: 'center',
+        background: 'var(--parch-card)', border: '1px solid var(--parch-line)',
+        borderRadius: 10, padding: '8px 12px', marginBottom: 14,
+      }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 12, pointerEvents: 'none' }}>
+            &#128269;
+          </span>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: '100%', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
+              borderRadius: 7, padding: '6px 10px 6px 28px',
+              fontSize: 12, color: 'var(--ink)', outline: 'none',
+            }}
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{
+            background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
+            borderRadius: 7, padding: '6px 10px',
+            fontSize: 11, color: 'var(--ink-faded)', outline: 'none', cursor: 'pointer',
+          }}
+        >
+          <option value="">All statuses</option>
+          <option value="ordered">Ordered</option>
+          <option value="shipped">Shipped</option>
+          <option value="received">Received</option>
+          <option value="partially_received">Partially received</option>
+          <option value="paid">Paid</option>
+        </select>
+        <div style={{ fontSize: 10, color: 'var(--ink-ghost)', whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)' }}>
+          {filtered.length} product{filtered.length !== 1 ? 's' : ''}   tap to expand
+        </div>
       </div>
 
-      {/* -- Filters -- */}
-      <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:10, padding:'12px 14px', marginBottom:14 }}>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
-          <div style={{ flex:1, minWidth:180, position:'relative', display:'flex', alignItems:'center' }}>
-            <Search style={{ position:'absolute', left:10, color:'var(--ink-ghost)', pointerEvents:'none', width:14, height:14 }}/>
-            <input
-              style={{ width:'100%', padding:'7px 10px 7px 32px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink)', outline:'none' }}
-              placeholder="Search products, stores, order #..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <select style={INP} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-            <option value="all">All statuses</option>
-            {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-          <select style={INP} value={vendorFilter} onChange={e => setVendorFilter(e.target.value)}>
-            <option value="all">All vendors</option>
-            {vendors.map(v => <option key={v} value={v}>{v}</option>)}
-          </select>
-          <select style={INP} value={paymentMethodFilter} onChange={e => setPaymentMethodFilter(e.target.value)}>
-            <option value="all">All cards</option>
-            {creditCards.map(c => <option key={c.id} value={c.id}>{c.card_name}{c.last_4_digits ? ` ....${c.last_4_digits}` : ''}</option>)}
-          </select>
-          <button
-            style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'var(--ink-faded)', cursor:'pointer', padding:'6px 10px', borderRadius:7, border:'1px solid var(--parch-line)', background:'transparent', fontWeight:600, fontFamily:'var(--font-serif)' }}
-            onClick={() => setShowMoreFilters(v => !v)}>
-            <SlidersHorizontal style={{ width:12, height:12 }}/> {showMoreFilters ? 'Less' : 'More'} filters
-            {hasActiveFilters && <span style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)', display:'inline-block', marginLeft:2 }}/>}
-          </button>
-          {hasActiveFilters && (
-            <button style={{ fontSize:11, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontWeight:600, fontFamily:'var(--font-serif)' }} onClick={clearFilters}>
-              Clear all
-            </button>
-          )}
+      {/* Loading */}
+      {isLoading && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid var(--terrain-bg)', borderTopColor: 'var(--terrain)', animation: 'spin 0.8s linear infinite' }} />
         </div>
-        {showMoreFilters && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:8, marginTop:10, paddingTop:10, borderTop:'1px solid var(--parch-line)' }}>
-            {[
-              { label:'From Date', el: <input type="date" style={{ ...INP, width:'100%' }} value={fromDate} onChange={e=>setFromDate(e.target.value)}/> },
-              { label:'To Date',   el: <input type="date" style={{ ...INP, width:'100%' }} value={toDate}   onChange={e=>setToDate(e.target.value)}/> },
-              { label:'Category',  el: (
-                <select style={{ ...INP, width:'100%' }} value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
-                  <option value="all">All categories</option>
-                  {['Electronics','Home & Garden','Toys & Games','Health & Beauty','Sports','Clothing','Tools','Gift Cards','Other'].map(c=><option key={c} value={c}>{c}</option>)}
-                </select>
-              )},
-            ].map(f => (
-              <div key={f.label}>
-                <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, color:'var(--ink-faded)', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:4 }}>{f.label}</p>
-                {f.el}
-              </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--parch-card)', borderRadius: 12, border: '1px solid var(--parch-line)' }}>
+          <Package style={{ width: 36, height: 36, color: 'var(--ink-ghost)', margin: '0 auto 12px' }} />
+          <p style={{ color: 'var(--ink-dim)', fontSize: 13, fontFamily: 'var(--font-serif)' }}>No inventory found.</p>
+          <p style={{ color: 'var(--ink-ghost)', fontSize: 11, marginTop: 4 }}>Items appear here once orders are marked as received, shipped, or ordered.</p>
+        </div>
+      )}
+
+      {/* Inbound section */}
+      {!isLoading && inboundGroups.length > 0 && (
+        <>
+          <SectionDivider
+            title="Inbound"
+            count={inboundGroups.length + ' products   ' + inboundGroups.reduce((s, g) => s + g.totalQty, 0) + ' units'}
+            dotColor="var(--ocean)"
+            lineColor="rgba(42,92,122,0.25)"
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 16 }}>
+            {inboundGroups.map((group) => (
+              <ProductCard
+                key={group.productName}
+                group={group}
+                expanded={!!expandedGroups[group.productName]}
+                onToggle={() => toggleGroup(group.productName)}
+                onEdit={handleEdit}
+                onMarkReceived={handleMarkReceived}
+              />
             ))}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* -- Count -- */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-        <span style={{ fontSize:11, color:'var(--ink-dim)', fontFamily:'var(--font-serif)' }}>
-          Showing{' '}
-          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{Math.min((safePage-1)*PAGE_SIZE+1, sortedOrders.length)}</strong>
-          {' to '}
-          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{Math.min(safePage*PAGE_SIZE, sortedOrders.length)}</strong>
-          {' of '}
-          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{sortedOrders.length}</strong>
-          {' orders'}
-        </span>
-        {totalPages > 1 && (
-          <span style={{ fontSize:11, color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>
-            Page {safePage} of {totalPages}
-          </span>
-        )}
-      </div>
-
-      {/* -- Order Cards -- */}
-      <OrderGroupedCards
-        data={pagedOrders}
-        creditCards={creditCards}
-        rewards={rewards}
-        products={products}
-        giftCards={giftCards}
-        onEdit={(order) => { setEditingOrder(order); setFormOpen(true); }}
-        onDelete={(order) => { if (confirm('Delete this order?')) deleteMutation.mutate(order); }}
-        onQuickStatus={handleQuickStatus}
-        isLoading={isLoading}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
-        onClearFilters={clearFilters}
-      />
-
-      {/* -- Pagination -- */}
-      {totalPages > 1 && (
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:24, paddingBottom:8 }}>
-          <button onClick={() => setCurrentPage(p => Math.max(1,p-1))} disabled={safePage===1}
-            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', fontFamily:'var(--font-serif)',
-              color: safePage===1 ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===1 ? 'not-allowed' : 'pointer' }}>
-            <ChevronLeft style={{ width:14, height:14 }}/> Prev
-          </button>
-          <div style={{ display:'flex', gap:4 }}>
-            {Array.from({ length:totalPages }, (_,i)=>i+1)
-              .filter(p => p===1 || p===totalPages || Math.abs(p-safePage)<=1)
-              .reduce((acc,p,i,arr) => { if(i>0 && p-arr[i-1]>1) acc.push('...'); acc.push(p); return acc; }, [])
-              .map((p,i) => p==='...'
-                ? <span key={`e${i}`} style={{ padding:'7px 6px', fontSize:12, color:'var(--ink-ghost)', fontFamily:'var(--font-mono)' }}>...</span>
-                : <button key={p} onClick={()=>setCurrentPage(p)}
-                    style={{ width:34, height:34, borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'var(--font-mono)',
-                      fontWeight: p===safePage ? 700 : 500,
-                      border: '1px solid',
-                      borderColor: p===safePage ? 'var(--gold-bdr)' : 'var(--parch-line)',
-                      background:  p===safePage ? 'var(--gold-bg)'  : 'var(--parch-card)',
-                      color:       p===safePage ? 'var(--gold)'     : 'var(--ink-faded)' }}>
-                    {p}
-                  </button>
-              )}
+      {/* Available section */}
+      {!isLoading && availableGroups.length > 0 && (
+        <>
+          <SectionDivider
+            title="Available"
+            count={availableGroups.length + ' products   ' + availableGroups.reduce((s, g) => s + g.totalQty, 0) + ' units'}
+            dotColor="var(--terrain)"
+            lineColor="rgba(74,122,53,0.25)"
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 16 }}>
+            {availableGroups.map((group) => (
+              <ProductCard
+                key={group.productName}
+                group={group}
+                expanded={!!expandedGroups[group.productName]}
+                onToggle={() => toggleGroup(group.productName)}
+                onEdit={handleEdit}
+                onMarkReceived={handleMarkReceived}
+              />
+            ))}
           </div>
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages,p+1))} disabled={safePage===totalPages}
-            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', fontFamily:'var(--font-serif)',
-              color: safePage===totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===totalPages ? 'not-allowed' : 'pointer' }}>
-            Next <ChevronRight style={{ width:14, height:14 }}/>
-          </button>
+        </>
+      )}
+
+      {/* Footer count */}
+      {!isLoading && filtered.length > 0 && (
+        <div style={{ textAlign: 'right', fontSize: 10, color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginTop: 4 }}>
+          {filtered.reduce((s, g) => s + g.totalQty, 0)} total units across {filtered.length} products
         </div>
       )}
 
       <POFormModal
-        open={formOpen} onOpenChange={setFormOpen} order={editingOrder}
-        onSubmit={(data) => { if (editingOrder) updateMutation.mutate({ id:editingOrder.id, data }); else createMutation.mutate(data); }}
-        products={products} creditCards={creditCards} giftCards={giftCards} sellers={sellers}
-        isPending={createMutation.isPending || updateMutation.isPending}
-      />
-      <PODetailsModal
-        open={detailsOpen} onOpenChange={setDetailsOpen}
-        order={selectedOrder} products={products} rewards={rewards} creditCards={creditCards}
+        open={formOpen}
+        onOpenChange={(open) => { setFormOpen(open); if (!open) setEditingOrder(null); }}
+        order={editingOrder}
+        onSubmit={async (data) => {
+          if (editingOrder) {
+            await base44.entities.PurchaseOrder.update(editingOrder.id, data);
+            queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+          }
+          setFormOpen(false);
+          setEditingOrder(null);
+        }}
+        products={products}
+        creditCards={creditCards}
+        giftCards={giftCards}
+        sellers={sellers}
+        isPending={false}
       />
     </div>
   );
