@@ -8,7 +8,7 @@ import { Search, Filter } from 'lucide-react';
 
 const inp = { background: 'var(--parch-warm)', color: 'var(--ink)', borderColor: 'var(--parch-line)' };
 const lbl = {
-  fontFamily: "'Playfair Display', serif", fontSize: 8, fontWeight: 700,
+  fontFamily: "var(--font-serif)", fontSize: 8, fontWeight: 700,
   letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-dim)',
   display: 'block', marginBottom: 6,
 };
@@ -97,7 +97,7 @@ export default function TransactionsFilters({
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-            cursor: 'pointer', fontFamily: "'Playfair Display', serif",
+            cursor: 'pointer', fontFamily: "var(--font-serif)",
             transition: 'all 0.15s',
             ...(expanded
               ? { background: 'var(--gold-bg)', border: '1px solid var(--gold-bdr)', color: 'var(--gold)' }

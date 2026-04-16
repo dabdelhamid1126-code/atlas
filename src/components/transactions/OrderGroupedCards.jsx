@@ -205,7 +205,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
         <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 4 }}>
             {order.order_number
-              ? <span style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace', fontWeight: 700, color: 'var(--ocean)' }} title={`#${order.order_number}`}>#{order.order_number}</span>
+              ? <span style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ocean)' }} title={`#${order.order_number}`}>#{order.order_number}</span>
               : (order.retailer || 'Unknown')}
           </div>
           <span style={{ fontSize: 10, color: 'var(--ink-ghost)', fontWeight: 400, whiteSpace: 'nowrap' }}>
@@ -215,7 +215,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
 
         {/* Order type badge */}
         {order.order_type && (
-          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: order.order_type === 'churning' ? 'var(--gold-bg)' : 'var(--ocean-bg)', color: order.order_type === 'churning' ? 'var(--gold)' : 'var(--ocean)', border: `1px solid ${order.order_type === 'churning' ? 'var(--gold-bdr)' : 'var(--ocean-bdr)'}`, fontFamily: 'var(--font-serif)', flexShrink: 0 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: order.order_type === 'churning' ? 'var(--gold-bg)' : 'var(--ocean-bg)', color: order.order_type === 'churning' ? 'var(--gold)' : 'var(--ocean)', border: `1px solid ${order.order_type === 'churning' ? 'var(--gold-bdr)' : 'var(--ocean-bdr)'}`, fontFamily: 'var(--font-serif)', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
             {order.order_type}
           </span>
         )}
@@ -242,7 +242,7 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
           {order.credit_card_id && card?.last_4_digits && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <CardLogo cardName={paymentLabel} size={16} />
-              <span style={{ fontSize: 11, color: 'var(--ink-dim)', fontFamily: 'monospace', fontWeight: 700 }}>....{card.last_4_digits}</span>
+              <span style={{ fontSize: 11, color: 'var(--ink-dim)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>....{card.last_4_digits}</span>
             </div>
           )}
           <StatusBadge status={order.status} />
@@ -315,11 +315,11 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
       {/* Footer */}
       <div style={{ borderTop: '1px solid var(--parch-line)', background: 'var(--parch-warm)', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 11, color: 'var(--ink-dim)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', rowGap: 2, gap: 0 }}>
-          <span>Total: <span style={{ color: 'var(--ocean)', fontWeight: 600 }}>{fmt$(totalCost)}</span></span>
-          {totalRevenue > 0 && <><span style={{ margin: '0 6px' }}> </span><span>Revenue: <span style={{ color: 'var(--terrain)', fontWeight: 600 }}>{fmt$(totalRevenue)}</span></span></>}
-          {cashback > 0 && <><span style={{ margin: '0 6px' }}> </span><span>CB: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{fmt$(cashback)}</span></span></>}
-          {hasSales && <><span style={{ margin: '0 6px' }}> </span><span>Profit: <span style={{ color: profit >= 0 ? 'var(--terrain)' : 'var(--crimson)', fontWeight: 600 }}>{fmt$(profit)}</span></span></>}
-          {order.order_number && <><span style={{ margin: '0 6px' }}> </span><span>Order #: <span style={{ color: 'var(--ink-faded)' }}>{order.order_number}</span></span></>}
+          <span>Total: <span style={{ color: 'var(--ocean)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt$(totalCost)}</span></span>
+          {totalRevenue > 0 && <><span style={{ margin: '0 6px' }}> </span><span>Revenue: <span style={{ color: 'var(--terrain)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt$(totalRevenue)}</span></span></>}
+          {cashback > 0 && <><span style={{ margin: '0 6px' }}> </span><span>CB: <span style={{ color: 'var(--violet)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt$(cashback)}</span></span></>}
+          {hasSales && <><span style={{ margin: '0 6px' }}> </span><span>Profit: <span style={{ color: profit >= 0 ? 'var(--terrain)' : 'var(--crimson)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt$(profit)}</span></span></>}
+          {order.order_number && <><span style={{ margin: '0 6px' }}> </span><span style={{ fontFamily: 'var(--font-serif)' }}>Order #: <span style={{ color: 'var(--ink-faded)', fontFamily: 'var(--font-mono)' }}>{order.order_number}</span></span></>}
           {order.fulfillment_type === 'direct_dropship' && order.dropship_to && <><span style={{ margin: '0 6px' }}> </span><span style={{ color: 'var(--gold)', fontWeight: 600 }}>Dropship to {order.dropship_to}</span></>}
           {order.fulfillment_type === 'store_pickup' && <><span style={{ margin: '0 6px' }}> </span><span style={{ color: 'var(--violet)', fontWeight: 600 }}>Pickup</span></>}
         </div>
@@ -389,17 +389,17 @@ export default function OrderGroupedCards({ data = [], creditCards = [], rewards
 
       {data.length > PAGE_SIZE && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, padding: '12px 0' }}>
-          <span style={{ fontSize: 12, color: 'var(--ink-dim)' }}>
+          <span style={{ fontSize: 12, color: 'var(--ink-dim)', fontFamily: 'var(--font-serif)' }}>
             Showing {(page - 1) * PAGE_SIZE + 1} to {Math.min(page * PAGE_SIZE, data.length)} of {data.length} orders
           </span>
           <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: page === 1 ? 'not-allowed' : 'pointer', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: page === 1 ? 'var(--ink-ghost)' : 'var(--ink-faded)' }}>
+              style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: page === 1 ? 'not-allowed' : 'pointer', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: page === 1 ? 'var(--ink-ghost)' : 'var(--ink-faded)', fontFamily: 'var(--font-serif)' }}>
               Prev
             </button>
-            <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--ink-ghost)' }}>{page} / {totalPages}</span>
+            <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{page} / {totalPages}</span>
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: page === totalPages ? 'not-allowed' : 'pointer', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: page === totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)' }}>
+              style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: page === totalPages ? 'not-allowed' : 'pointer', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: page === totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)', fontFamily: 'var(--font-serif)' }}>
               Next
             </button>
           </div>

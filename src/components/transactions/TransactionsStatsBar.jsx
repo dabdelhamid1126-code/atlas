@@ -84,7 +84,7 @@ export default function TransactionsStatsBar({ orders = [] }) {
               </div>
               <div style={{ minWidth: 0 }}>
                 <p style={{
-                  fontFamily: 'var(--font-serif)', fontSize: 8, fontWeight: 700,
+                  fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700,
                   letterSpacing: '0.12em', textTransform: 'uppercase',
                   color: 'var(--ink-dim)', marginBottom: 1,
                 }}>

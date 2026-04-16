@@ -62,7 +62,7 @@ function StatusBadge({ status }) {
     <span style={{
       display:'inline-flex', alignItems:'center', fontSize:10, fontWeight:700,
       padding:'3px 8px', borderRadius:99, whiteSpace:'nowrap',
-      fontFamily:"'Playfair Display', serif",
+      fontFamily:"var(--font-serif)",
       background:meta.bg, color:meta.color, border:`1px solid ${meta.bdr}`,
     }}>
       {meta.label}
@@ -143,7 +143,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, onQ
 
         {/* Order # + date */}
         <div style={{ minWidth:0, flexShrink:0, width:180 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:'var(--ocean)', fontFamily:"'Playfair Display', serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'var(--ocean)', fontFamily:"var(--font-serif)", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
             {order.order_number ? `#${order.order_number}` : '—'}
           </p>
           <p style={{ fontSize:11, color:'var(--ink-faded)', marginTop:1 }}>{fmtDate(order.order_date || order.created_date)}</p>
@@ -171,21 +171,21 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, onQ
         {/* Metrics */}
         <div style={{ display:'flex', alignItems:'center', gap:20, flexShrink:0 }}>
           <div style={{ textAlign:'right', minWidth:70 }}>
-            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Cost</p>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"var(--font-serif)" }}>Cost</p>
             <p style={{ fontSize:13, fontWeight:700, color:'var(--ink)' }}>${totalCost.toFixed(2)}</p>
           </div>
           <div style={{ textAlign:'right', minWidth:70 }}>
-            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Profit</p>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"var(--font-serif)" }}>Profit</p>
             <p style={{ fontSize:13, fontWeight:700, color: profit === null ? 'var(--ink-ghost)' : profit >= 0 ? 'var(--terrain)' : 'var(--crimson)' }}>
               {profit === null ? '—' : `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`}
             </p>
           </div>
           <div style={{ textAlign:'right', minWidth:70 }}>
-            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Cashback</p>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"var(--font-serif)" }}>Cashback</p>
             <p style={{ fontSize:13, fontWeight:700, color:'var(--ocean)' }}>{cashback || '—'}</p>
           </div>
           <div style={{ textAlign:'right', minWidth:110 }}>
-            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Payment</p>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"var(--font-serif)" }}>Payment</p>
             {order.payment_splits?.length > 1 ? (
               <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
                 Split ×{order.payment_splits.length}
@@ -200,7 +200,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, onQ
           <ProgressDots status={order.status}/>
           {nextStep && (
             <button onClick={handleNextStep} disabled={updatingStatus}
-              style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--ocean-bdr)', background:'var(--ocean-bg)', color:'var(--ocean)', cursor: updatingStatus ? 'not-allowed' : 'pointer', opacity: updatingStatus ? 0.6 : 1, fontFamily:"'Playfair Display', serif", whiteSpace:'nowrap' }}>
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--ocean-bdr)', background:'var(--ocean-bg)', color:'var(--ocean)', cursor: updatingStatus ? 'not-allowed' : 'pointer', opacity: updatingStatus ? 0.6 : 1, fontFamily:"var(--font-serif)", whiteSpace:'nowrap' }}>
               {updatingStatus
                 ? <Loader style={{ width:11, height:11, animation:'spin 0.8s linear infinite' }}/>
                 : <nextStep.Icon style={{ width:11, height:11 }}/>
@@ -264,7 +264,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, onQ
                       { label:'Profit',    val: itemProfit !== null ? `${itemProfit >= 0 ? '+' : ''}$${itemProfit.toFixed(2)}` : '—', color: itemProfit === null ? 'var(--ink-ghost)' : itemProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)' },
                     ].map(col => (
                       <div key={col.label} style={{ textAlign:'right', minWidth:60 }}>
-                        <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>{col.label}</p>
+                        <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"var(--font-serif)" }}>{col.label}</p>
                         <p style={{ fontSize:12, fontWeight:700, color:col.color }}>{col.val}</p>
                       </div>
                     ))}
@@ -277,7 +277,7 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, onQ
           {/* Split payment */}
           {order.payment_splits?.length > 1 && (
             <div style={{ background:'var(--ocean-bg)', border:'1px solid var(--ocean-bdr)', borderRadius:10, padding:'10px 12px', marginBottom:12 }}>
-              <p style={{ fontSize:9, fontWeight:700, color:'var(--ocean)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:8, fontFamily:"'Playfair Display', serif" }}>Split payment</p>
+              <p style={{ fontSize:9, fontWeight:700, color:'var(--ocean)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:8, fontFamily:"var(--font-serif)" }}>Split payment</p>
               {order.payment_splits.map((sp, i) => (
                 <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
                   <span style={{ color:'var(--ink-dim)', fontWeight:600 }}>{sp.card_name}</span>
@@ -301,11 +301,11 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, onQ
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }} onClick={e => e.stopPropagation()}>
               <button onClick={() => onEdit?.(order)}
-                style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--parch-line)', background:'transparent', color:'var(--ink-faded)', cursor:'pointer', fontFamily:"'Playfair Display', serif" }}>
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--parch-line)', background:'transparent', color:'var(--ink-faded)', cursor:'pointer', fontFamily:"var(--font-serif)" }}>
                 <Pencil style={{ width:11, height:11 }}/> Edit
               </button>
               <button onClick={() => onDelete?.(order)}
-                style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--crimson-bdr)', background:'var(--crimson-bg)', color:'var(--crimson)', cursor:'pointer', fontFamily:"'Playfair Display', serif" }}>
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--crimson-bdr)', background:'var(--crimson-bg)', color:'var(--crimson)', cursor:'pointer', fontFamily:"var(--font-serif)" }}>
                 <Trash2 style={{ width:11, height:11 }}/> Delete
               </button>
             </div>
@@ -361,7 +361,7 @@ export default function TransactionsTableMerged({
           onChange={e => handleSelectAll(e.target.checked)}
           style={{ accentColor:'var(--gold)', width:14, height:14, cursor:'pointer' }}
         />
-        <span style={{ fontSize:10, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', fontFamily:"'Playfair Display', serif" }}>
+        <span style={{ fontSize:10, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', fontFamily:"var(--font-serif)" }}>
           {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
         </span>
       </div>

@@ -110,10 +110,10 @@ const STATUS_PRIORITY = ['ordered', 'shipped', 'partially_received', 'received',
 ───────────────────────────────────────────── */
 const STATUS_STYLES = {
   received:           { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
-  partially_received: { bg: 'var(--gold-bg)',    color: 'var(--gold2)',   border: 'var(--gold-border)' },
+  partially_received: { bg: 'var(--gold-bg)',    color: 'var(--gold2)',   border: 'var(--gold-bdr)'    },
   paid:               { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
   ordered:            { bg: 'var(--ocean-bg)',   color: 'var(--ocean2)',  border: 'var(--ocean-bdr)'   },
-  pending:            { bg: 'var(--gold-bg)',    color: 'var(--gold2)',   border: 'var(--gold-border)' },
+  pending:            { bg: 'var(--gold-bg)',    color: 'var(--gold2)',   border: 'var(--gold-bdr)'    },
   shipped:            { bg: 'var(--violet-bg)',  color: 'var(--violet)',  border: 'var(--violet-bdr)'  },
   cancelled:          { bg: 'var(--crimson-bg)', color: 'var(--crimson)', border: 'var(--crimson-bdr)' },
   completed:          { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
@@ -443,8 +443,8 @@ function ProductCard({ group, expanded, onToggle, onEdit, onMarkReceived }) {
           <StatusBadge status={group.dominantStatus} />
           <div style={{
             width: 20, height: 20, borderRadius: 6,
-            background: expanded ? 'var(--gold-bg)' : 'var(--parch-warm)',
-            border: '1px solid ' + (expanded ? 'var(--gold-border)' : 'var(--parch-line)'),
+            background: expanded ? 'var(--gold-bg)'   : 'var(--parch-warm)',
+            border: '1px solid ' + (expanded ? 'var(--gold-bdr)' : 'var(--parch-line)'),
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: expanded ? 'var(--gold)' : 'var(--ink-ghost)',
             transition: 'all 0.2s',
@@ -609,7 +609,7 @@ export default function Inventory() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>
           Inventory On Hand
         </h1>
         <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 3 }}>
@@ -643,7 +643,7 @@ export default function Inventory() {
                 border: '1px solid ' + (retailerFilter === r ? 'var(--ink)' : 'var(--parch-line)'),
                 background: retailerFilter === r ? 'var(--ink)' : 'var(--parch-card)',
                 color: retailerFilter === r ? 'var(--gold)' : 'var(--ink-faded)',
-                cursor: 'pointer', fontFamily: 'var(--font-sans)', letterSpacing: '0.03em',
+                cursor: 'pointer', fontFamily: 'var(--font-serif)', letterSpacing: '0.03em',
                 transition: 'all 0.12s',
               }}
             >
@@ -671,7 +671,7 @@ export default function Inventory() {
               width: '100%', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
               borderRadius: 7, padding: '6px 10px 6px 28px',
               fontSize: 12, color: 'var(--ink)', outline: 'none',
-              fontFamily: 'var(--font-sans)',
+              fontFamily: 'var(--font-serif)',
             }}
           />
         </div>
