@@ -4,9 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Package, TrendingUp, Boxes, DollarSign, ShoppingCart, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import POFormModal from '@/components/purchase-orders/POFormModal';
 
-/* ─────────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────────── */
 const fmt = (n) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
 
@@ -57,7 +54,7 @@ const unsoldQty = (order, productName) => {
     (s, ev) =>
       s + (ev.items || [])
         .filter((si) => (si.product_name || '').toLowerCase() === name)
-        .reduce((ss, si) => ss + (parseInt(si.quantity) || 1), 0),
+        .reduce((ss, si) => ss + (parseInt(si.qty || si.quantity) || 1), 0),
     0
   );
   return Math.max(0, totalQty - soldQty);
@@ -69,7 +66,7 @@ const soldQtyForProduct = (order, productName) => {
     (s, ev) =>
       s + (ev.items || [])
         .filter((si) => (si.product_name || '').toLowerCase() === name)
-        .reduce((ss, si) => ss + (parseInt(si.quantity) || 1), 0),
+        .reduce((ss, si) => ss + (parseInt(si.qty || si.quantity) || 1), 0),
     0
   );
 };
@@ -105,15 +102,15 @@ const findMatchedProduct = (itemName, itemProductId, products) => {
 
 const STATUS_PRIORITY = ['ordered', 'shipped', 'partially_received', 'received', 'paid', 'completed'];
 
-/* ─────────────────────────────────────────────
-   STATUS BADGE
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  STATUS BADGE                                                        */
+/* ------------------------------------------------------------------ */
 const STATUS_STYLES = {
   received:           { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
-  partially_received: { bg: 'var(--gold-bg)',    color: 'var(--gold2)',   border: 'var(--gold-bdr)'    },
+  partially_received: { bg: 'var(--gold-bg)',    color: 'var(--gold)',    border: 'var(--gold-bdr)'    },
   paid:               { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
-  ordered:            { bg: 'var(--ocean-bg)',   color: 'var(--ocean2)',  border: 'var(--ocean-bdr)'   },
-  pending:            { bg: 'var(--gold-bg)',    color: 'var(--gold2)',   border: 'var(--gold-bdr)'    },
+  ordered:            { bg: 'var(--ocean-bg)',   color: 'var(--ocean)',   border: 'var(--ocean-bdr)'   },
+  pending:            { bg: 'var(--gold-bg)',    color: 'var(--gold)',    border: 'var(--gold-bdr)'    },
   shipped:            { bg: 'var(--violet-bg)',  color: 'var(--violet)',  border: 'var(--violet-bdr)'  },
   cancelled:          { bg: 'var(--crimson-bg)', color: 'var(--crimson)', border: 'var(--crimson-bdr)' },
   completed:          { bg: 'var(--terrain-bg)', color: 'var(--terrain)', border: 'var(--terrain-bdr)' },
@@ -141,9 +138,9 @@ function StatusBadge({ status, small = false }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   STORE LOGO
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  STORE LOGO                                                          */
+/* ------------------------------------------------------------------ */
 function StoreLogo({ retailer, size = 26 }) {
   const [err, setErr] = useState(false);
   const domain   = getStoreDomain(retailer);
@@ -163,9 +160,9 @@ function StoreLogo({ retailer, size = 26 }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   PRODUCT IMAGE
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  PRODUCT IMAGE                                                       */
+/* ------------------------------------------------------------------ */
 function ProductImg({ src, name, retailer, qty, accentColor }) {
   const [imgErr,   setImgErr]   = useState(false);
   const [brandErr, setBrandErr] = useState(false);
@@ -199,40 +196,67 @@ function ProductImg({ src, name, retailer, qty, accentColor }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   STAT CARD
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  STAT CARD -- matches Dashboard KpiCard proportions exactly         */
+/* ------------------------------------------------------------------ */
 function StatCard({ label, value, sub, color, icon: Icon }) {
   return (
     <div style={{
-      background: 'var(--parch-card)', border: '1px solid var(--parch-line)',
-      borderRadius: 12, padding: '10px 13px', borderTop: '3px solid ' + color,
+      background: 'var(--parch-card)',
+      border: '1px solid var(--parch-line)',
+      borderTop: '3px solid ' + color,
+      borderRadius: 12,
+      padding: '16px 16px 14px',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       <p style={{
-        fontFamily: 'var(--font-serif)', fontSize: 8, fontWeight: 700,
-        letterSpacing: '0.1em', textTransform: 'uppercase',
-        color: 'var(--ink-faded)', marginBottom: 5,
+        fontFamily: 'var(--font-serif)', fontSize: 10, fontWeight: 700,
+        letterSpacing: '0.14em', textTransform: 'uppercase',
+        color: 'var(--ink-dim)', margin: '0 0 8px 0',
         display: 'flex', alignItems: 'center', gap: 5,
       }}>
-        {Icon && <Icon style={{ width: 10, height: 10 }} />}
         {label}
       </p>
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color, lineHeight: 1 }}>{value}</p>
-      {sub && <p style={{ fontSize: 9, color: 'var(--ink-ghost)', marginTop: 3 }}>{sub}</p>}
+      <p style={{
+        fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 900,
+        color, margin: '0 0 5px 0', lineHeight: 1.1,
+      }}>
+        {value}
+      </p>
+      {sub && (
+        <p style={{
+          fontSize: 11, color: 'var(--ink-ghost)',
+          margin: '0 0 12px 0', flex: 1,
+        }}>
+          {sub}
+        </p>
+      )}
+      {Icon && (
+        <div style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: color.replace(')', '-bg)').replace('var(--', 'var(--'),
+          border: '1px solid ' + color.replace(')', '-bdr)').replace('var(--', 'var(--'),
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginTop: sub ? 0 : 12,
+        }}>
+          <Icon style={{ width: 15, height: 15, color }} />
+        </div>
+      )}
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   SECTION DIVIDER
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  SECTION DIVIDER                                                     */
+/* ------------------------------------------------------------------ */
 function SectionDivider({ title, count, dotColor = 'var(--gold)', lineColor = 'rgba(160,114,42,0.25)' }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, marginTop: 4 }}>
-      <div style={{ width: 7, height: 7, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
       <span style={{
         fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700,
-        letterSpacing: '0.14em', textTransform: 'uppercase',
+        letterSpacing: '0.18em', textTransform: 'uppercase',
         color: dotColor, whiteSpace: 'nowrap',
       }}>{title}</span>
       <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,' + lineColor + ',transparent)' }} />
@@ -248,9 +272,9 @@ function SectionDivider({ title, count, dotColor = 'var(--gold)', lineColor = 'r
   );
 }
 
-/* ─────────────────────────────────────────────
-   SOURCE ORDER ROW
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  SOURCE ORDER ROW                                                    */
+/* ------------------------------------------------------------------ */
 function SourceOrderRow({ order, qty, costPerUnit, onEdit, onMarkReceived }) {
   const [marking, setMarking] = useState(false);
   const [marked,  setMarked]  = useState(false);
@@ -259,7 +283,7 @@ function SourceOrderRow({ order, qty, costPerUnit, onEdit, onMarkReceived }) {
   const isReceived = marked || ['received', 'paid', 'completed'].includes(order.status);
 
   const agoBg  = isReceived ? 'var(--terrain-bg)'  : order.status === 'shipped' ? 'var(--violet-bg)'  : 'var(--ocean-bg)';
-  const agoClr = isReceived ? 'var(--terrain)'      : order.status === 'shipped' ? 'var(--violet)'     : 'var(--ocean2)';
+  const agoClr = isReceived ? 'var(--terrain)'      : order.status === 'shipped' ? 'var(--violet)'     : 'var(--ocean)';
   const agoBdr = isReceived ? 'var(--terrain-bdr)'  : order.status === 'shipped' ? 'var(--violet-bdr)' : 'var(--ocean-bdr)';
 
   const handleMark = async (e) => {
@@ -288,10 +312,10 @@ function SourceOrderRow({ order, qty, costPerUnit, onEdit, onMarkReceived }) {
       <StoreLogo retailer={order.retailer} size={26} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ocean)' }}>
-          {order.retailer || 'Unknown'} · {order.order_number || ('#' + (order.id || '').slice(0, 8))}
+          {order.retailer || 'Unknown'}   {order.order_number || ('#' + (order.id || '').slice(0, 8))}
         </div>
         <div style={{ fontSize: 9, color: 'var(--ink-ghost)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-          {fmtDate(order.order_date)} · x{qty} unit{qty !== 1 ? 's' : ''}
+          {fmtDate(order.order_date)}   x{qty} unit{qty !== 1 ? 's' : ''}
           {ago && (
             <span style={{
               fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 99,
@@ -325,9 +349,9 @@ function SourceOrderRow({ order, qty, costPerUnit, onEdit, onMarkReceived }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   PRODUCT CARD
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  PRODUCT CARD                                                        */
+/* ------------------------------------------------------------------ */
 function ProductCard({ group, expanded, onToggle, onEdit, onMarkReceived }) {
   const accentColor =
     group.dominantStatus === 'shipped'            ? 'var(--violet)'  :
@@ -359,9 +383,9 @@ function ProductCard({ group, expanded, onToggle, onEdit, onMarkReceived }) {
     <div
       style={{
         background: 'var(--parch-card)',
-        border: '1px solid ' + (expanded ? 'var(--gold-border)' : 'var(--parch-line)'),
+        border: '1px solid ' + (expanded ? 'var(--gold-bdr)' : 'var(--parch-line)'),
         borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
-        boxShadow: expanded ? '0 4px 20px rgba(201,168,76,0.14)' : 'var(--shadow-md)',
+        boxShadow: expanded ? '0 4px 20px rgba(201,168,76,0.14)' : 'none',
         transition: 'box-shadow 0.18s, border-color 0.18s',
       }}
       onClick={onToggle}
@@ -385,7 +409,7 @@ function ProductCard({ group, expanded, onToggle, onEdit, onMarkReceived }) {
             fontSize: 9, color: 'var(--ink-faded)', marginBottom: 6,
             fontFamily: 'var(--font-serif)', letterSpacing: '0.03em',
           }}>
-            {group.sources.length} source order{group.sources.length !== 1 ? 's' : ''} &middot; {retailers.join(', ')}
+            {group.sources.length} source order{group.sources.length !== 1 ? 's' : ''}   {retailers.join(', ')}
           </div>
 
           {nearestDelivery && (
@@ -443,7 +467,7 @@ function ProductCard({ group, expanded, onToggle, onEdit, onMarkReceived }) {
           <StatusBadge status={group.dominantStatus} />
           <div style={{
             width: 20, height: 20, borderRadius: 6,
-            background: expanded ? 'var(--gold-bg)'   : 'var(--parch-warm)',
+            background: expanded ? 'var(--gold-bg)'  : 'var(--parch-warm)',
             border: '1px solid ' + (expanded ? 'var(--gold-bdr)' : 'var(--parch-line)'),
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: expanded ? 'var(--gold)' : 'var(--ink-ghost)',
@@ -502,9 +526,9 @@ function ProductCard({ group, expanded, onToggle, onEdit, onMarkReceived }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   MAIN PAGE
-───────────────────────────────────────────── */
+/* ------------------------------------------------------------------ */
+/*  MAIN PAGE                                                           */
+/* ------------------------------------------------------------------ */
 export default function Inventory() {
   const queryClient = useQueryClient();
   const [search,         setSearch]         = useState('');
@@ -608,21 +632,24 @@ export default function Inventory() {
     <div style={{ paddingBottom: 32 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
+      {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>
           Inventory On Hand
         </h1>
         <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 3 }}>
-          Grouped by product &middot; derived from your purchase orders
+          Grouped by product   derived from your purchase orders
         </p>
       </div>
 
+      {/* Overview section divider */}
       <SectionDivider title="Overview" dotColor="var(--gold)" lineColor="rgba(201,168,76,0.25)" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, marginBottom: 14 }}>
-        <StatCard label="Available"   value={stats.unitsAvailable} sub="units in hand"         color="var(--ocean)"   icon={Package}      />
-        <StatCard label="Inbound"     value={stats.unitsInbound}   sub="ordered & shipped"     color="var(--violet)"  icon={ShoppingCart} />
-        <StatCard label="Cost Basis"  value={fmt(stats.costBasis)} sub="total inventory spend"  color="var(--gold)"    icon={DollarSign}   />
+      {/* Stat cards -- 2x2 grid matching Dashboard KpiCard style */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 16 }}>
+        <StatCard label="Available"   value={String(stats.unitsAvailable)} sub="units in hand"          color="var(--ocean)"   icon={Package}      />
+        <StatCard label="Inbound"     value={String(stats.unitsInbound)}   sub="ordered & shipped"      color="var(--violet)"  icon={ShoppingCart} />
+        <StatCard label="Cost Basis"  value={fmt(stats.costBasis)}         sub="total inventory spend"   color="var(--gold)"    icon={DollarSign}   />
         <StatCard
           label="Est. Margin"
           value={stats.estMargin > 0 ? fmt(stats.estMargin) + (stats.mPct ? ' (' + stats.mPct + ')' : '') : '--'}
@@ -632,6 +659,7 @@ export default function Inventory() {
         />
       </div>
 
+      {/* Retailer filter chips */}
       {retailersInData.length > 1 && (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
           {['', ...retailersInData].map((r) => (
@@ -642,7 +670,7 @@ export default function Inventory() {
                 padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700,
                 border: '1px solid ' + (retailerFilter === r ? 'var(--ink)' : 'var(--parch-line)'),
                 background: retailerFilter === r ? 'var(--ink)' : 'var(--parch-card)',
-                color: retailerFilter === r ? 'var(--gold)' : 'var(--ink-faded)',
+                color: retailerFilter === r ? 'var(--ne-cream)' : 'var(--ink-faded)',
                 cursor: 'pointer', fontFamily: 'var(--font-serif)', letterSpacing: '0.03em',
                 transition: 'all 0.12s',
               }}
@@ -653,6 +681,7 @@ export default function Inventory() {
         </div>
       )}
 
+      {/* Search + filter bar */}
       <div style={{
         display: 'flex', gap: 8, alignItems: 'center',
         background: 'var(--parch-card)', border: '1px solid var(--parch-line)',
@@ -671,7 +700,6 @@ export default function Inventory() {
               width: '100%', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
               borderRadius: 7, padding: '6px 10px 6px 28px',
               fontSize: 12, color: 'var(--ink)', outline: 'none',
-              fontFamily: 'var(--font-serif)',
             }}
           />
         </div>
@@ -691,30 +719,33 @@ export default function Inventory() {
           <option value="partially_received">Partially received</option>
           <option value="paid">Paid</option>
         </select>
-        <div style={{ fontSize: 10, color: 'var(--ink-ghost)', whiteSpace: 'nowrap' }}>
-          {filtered.length} product{filtered.length !== 1 ? 's' : ''} &middot; tap to expand
+        <div style={{ fontSize: 10, color: 'var(--ink-ghost)', whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)' }}>
+          {filtered.length} product{filtered.length !== 1 ? 's' : ''}   tap to expand
         </div>
       </div>
 
+      {/* Loading */}
       {isLoading && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid var(--terrain-bg)', borderTopColor: 'var(--terrain)', animation: 'spin 0.8s linear infinite' }} />
         </div>
       )}
 
+      {/* Empty state */}
       {!isLoading && filtered.length === 0 && (
         <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--parch-card)', borderRadius: 12, border: '1px solid var(--parch-line)' }}>
           <Package style={{ width: 36, height: 36, color: 'var(--ink-ghost)', margin: '0 auto 12px' }} />
-          <p style={{ color: 'var(--ink-dim)', fontSize: 13 }}>No inventory found.</p>
+          <p style={{ color: 'var(--ink-dim)', fontSize: 13, fontFamily: 'var(--font-serif)' }}>No inventory found.</p>
           <p style={{ color: 'var(--ink-ghost)', fontSize: 11, marginTop: 4 }}>Items appear here once orders are marked as received, shipped, or ordered.</p>
         </div>
       )}
 
+      {/* Inbound section */}
       {!isLoading && inboundGroups.length > 0 && (
         <>
           <SectionDivider
             title="Inbound"
-            count={inboundGroups.length + ' products \u00b7 ' + inboundGroups.reduce((s, g) => s + g.totalQty, 0) + ' units'}
+            count={inboundGroups.length + ' products   ' + inboundGroups.reduce((s, g) => s + g.totalQty, 0) + ' units'}
             dotColor="var(--ocean)"
             lineColor="rgba(42,92,122,0.25)"
           />
@@ -733,11 +764,12 @@ export default function Inventory() {
         </>
       )}
 
+      {/* Available section */}
       {!isLoading && availableGroups.length > 0 && (
         <>
           <SectionDivider
             title="Available"
-            count={availableGroups.length + ' products \u00b7 ' + availableGroups.reduce((s, g) => s + g.totalQty, 0) + ' units'}
+            count={availableGroups.length + ' products   ' + availableGroups.reduce((s, g) => s + g.totalQty, 0) + ' units'}
             dotColor="var(--terrain)"
             lineColor="rgba(74,122,53,0.25)"
           />
@@ -756,6 +788,7 @@ export default function Inventory() {
         </>
       )}
 
+      {/* Footer count */}
       {!isLoading && filtered.length > 0 && (
         <div style={{ textAlign: 'right', fontSize: 10, color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginTop: 4 }}>
           {filtered.reduce((s, g) => s + g.totalQty, 0)} total units across {filtered.length} products
