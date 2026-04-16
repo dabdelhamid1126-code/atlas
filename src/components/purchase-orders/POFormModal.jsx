@@ -405,8 +405,7 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
   useEffect(()=>{
     if (open) { setFormData(getInitialForm(order)); setActiveTab('details'); requestAnimationFrame(()=>setVisible(true)); }
     else setVisible(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[open]);
+  },[open, order]);
 
   useEffect(()=>{
     const h=(e)=>{ if(e.key==='Escape'&&open) onOpenChange(false); };
