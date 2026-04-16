@@ -1,37 +1,23 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink, Package } from 'lucide-react';
+import { Pencil, Trash2, ChevronDown, ChevronUp, ExternalLink, Package, Truck, CheckCircle2, Loader } from 'lucide-react';
 import RetailerLogo from '@/components/shared/BrandLogo';
 
-const ROWS_PER_PAGE = 15;
+// ── Helpers ───────────────────────────────────────────────────────────────
 
-function getStatusStyles(status) {
-  const s = status?.toLowerCase() || '';
-  const map = {
-    received: { bg: 'bg-green-100', text: 'text-green-700', label: 'Received' },
-    shipped: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Shipped' },
-    ordered: { bg: 'bg-indigo-100', text: 'text-indigo-700', label: 'Ordered' },
-    pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Pending' },
-    cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'Cancelled' },
-    partially_received: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Partial' },
-  };
-  return map[s] || { bg: 'bg-slate-100', text: 'text-slate-600', label: status || '—' };
-}
-
-function formatDate(dateStr) {
+function fmtDate(dateStr) {
   if (!dateStr) return '—';
   const [year, month, day] = dateStr.split('T')[0].split('-');
   return `${parseInt(month)}/${parseInt(day)}/${year}`;
 }
 
 function getCashbackDisplay(rewards, orderId) {
-  const orderRewards = rewards.filter(r => r.purchase_order_id === orderId);
-  if (!orderRewards.length) return null;
-  const usdTotal = orderRewards.filter(r => r.currency === 'USD').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
-  const ptsTotal = orderRewards.filter(r => r.currency === 'points').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
-  if (usdTotal > 0 && ptsTotal > 0) return `$${usdTotal.toFixed(2)} + ${Math.round(ptsTotal)} pts`;
-  if (usdTotal > 0) return `$${usdTotal.toFixed(2)}`;
-  if (ptsTotal > 0) return `${Math.round(ptsTotal)} pts`;
+  const r = rewards.filter(r => r.purchase_order_id === orderId);
+  if (!r.length) return null;
+  const usd = r.filter(x => x.currency === 'USD').reduce((s, x) => s + parseFloat(x.amount || 0), 0);
+  const pts = r.filter(x => x.currency === 'points').reduce((s, x) => s + parseFloat(x.amount || 0), 0);
+  if (usd > 0 && pts > 0) return `$${usd.toFixed(2)} + ${Math.round(pts)} pts`;
+  if (usd > 0) return `$${usd.toFixed(2)}`;
+  if (pts > 0) return `${Math.round(pts)} pts`;
   return null;
 }
 
@@ -45,233 +31,282 @@ function getTrackingUrl(trackingNumber, carrier) {
   return `https://www.google.com/search?q=${encodeURIComponent(trackingNumber)}+package+tracking`;
 }
 
-function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isSelected, onSelectChange }) {
-  const [expanded, setExpanded] = useState(false);
+// ── Status config ─────────────────────────────────────────────────────────
 
-  const itemCount = order.items?.length || 0;
-  const totalQty = order.items?.reduce((s, i) => s + (parseInt(i.quantity_ordered) || 0), 0) || 0;
-  const totalCost = order.total_cost || 0;
-  const totalSale = order.items?.reduce((s, i) => s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0) || 0;
-  const profit = totalSale - totalCost;
-  const isLoss = profit < 0 && totalSale > 0;
+const STATUS_META = {
+  ordered:            { label:'Ordered',     color:'var(--ocean)',   bg:'var(--ocean-bg)',   bdr:'var(--ocean-bdr)'   },
+  processing:         { label:'Processing',  color:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'    },
+  shipped:            { label:'Shipped',     color:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'    },
+  delivered:          { label:'Delivered',   color:'var(--terrain)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)' },
+  received:           { label:'Received',    color:'var(--terrain)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)' },
+  partially_received: { label:'Partial',     color:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'    },
+  cancelled:          { label:'Cancelled',   color:'var(--crimson)', bg:'var(--crimson-bg)', bdr:'var(--crimson-bdr)' },
+  returned:           { label:'Returned',    color:'var(--crimson)', bg:'var(--crimson-bg)', bdr:'var(--crimson-bdr)' },
+  pending:            { label:'Pending',     color:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'    },
+};
 
-  const cashback = getCashbackDisplay(rewards, order.id);
-  const card = creditCards.find(c => c.id === order.credit_card_id);
-  const cardName = card?.card_name || order.card_name || '—';
-  const statusStyle = getStatusStyles(order.status);
+const STATUS_STEPS = ['ordered', 'shipped', 'delivered', 'received'];
+
+const NEXT_STEP = {
+  ordered:    { status:'shipped',   label:'Mark shipped',   Icon: Truck        },
+  processing: { status:'shipped',   label:'Mark shipped',   Icon: Truck        },
+  shipped:    { status:'delivered', label:'Mark delivered', Icon: Package      },
+  delivered:  { status:'received',  label:'Mark received',  Icon: CheckCircle2 },
+};
+
+// ── Sub-components ────────────────────────────────────────────────────────
+
+function StatusBadge({ status }) {
+  const meta = STATUS_META[status] || { label: status || '—', color:'var(--ink-faded)', bg:'var(--parch-warm)', bdr:'var(--parch-line)' };
+  return (
+    <span style={{
+      display:'inline-flex', alignItems:'center', fontSize:10, fontWeight:700,
+      padding:'3px 8px', borderRadius:99, whiteSpace:'nowrap',
+      fontFamily:"'Playfair Display', serif",
+      background:meta.bg, color:meta.color, border:`1px solid ${meta.bdr}`,
+    }}>
+      {meta.label}
+    </span>
+  );
+}
+
+function ProgressDots({ status }) {
+  const idx  = STATUS_STEPS.indexOf(status);
+  const done = status === 'received';
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:3, flexShrink:0 }}>
+      {STATUS_STEPS.map((step, i) => {
+        const isDone   = done || i < idx;
+        const isActive = i === idx && !done;
+        return (
+          <React.Fragment key={step}>
+            <div style={{
+              width:7, height:7, borderRadius:'50%', flexShrink:0,
+              background: isDone ? 'var(--terrain)' : isActive ? 'var(--gold)' : 'var(--parch-line)',
+              outline: isActive ? '2px solid var(--gold-bdr)' : 'none',
+              outlineOffset: 1,
+            }}/>
+            {i < STATUS_STEPS.length - 1 && (
+              <div style={{ width:10, height:2, borderRadius:1, flexShrink:0, background: isDone ? 'var(--terrain)' : 'var(--parch-line)' }}/>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Order row ─────────────────────────────────────────────────────────────
+
+function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, onQuickStatus, isSelected, onSelectChange }) {
+  const [expanded,       setExpanded]       = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const totalCost = parseFloat(order.total_cost) || 0;
+  const totalSale = (order.items || []).reduce((s, i) => s + (parseFloat(i.sale_price) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
+  const profit    = totalSale > 0 ? totalSale - totalCost : null;
+  const cashback  = getCashbackDisplay(rewards, order.id);
+  const card      = creditCards.find(c => c.id === order.credit_card_id);
+  const nextStep  = NEXT_STEP[order.status];
+
+  const handleNextStep = async (e) => {
+    e.stopPropagation();
+    if (!nextStep || updatingStatus || !onQuickStatus) return;
+    setUpdatingStatus(true);
+    try { await onQuickStatus(order, nextStep.status); }
+    finally { setUpdatingStatus(false); }
+  };
 
   return (
-    <div className={`rounded-xl border mb-2 overflow-hidden transition-all ${isLoss ? 'border-red-200 bg-red-50/30' : 'border-slate-200 bg-white'} ${isSelected ? 'ring-2 ring-purple-400' : ''}`}>
-      {/* Main Row */}
+    <div style={{
+      background:'var(--parch-card)', border:'1px solid var(--parch-line)',
+      borderRadius:12, marginBottom:8, overflow:'hidden',
+    }}>
+      {/* ── Header row ── */}
       <div
-        className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition select-none ${expanded ? 'border-b border-slate-100' : ''}`}
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setExpanded(v => !v)}
+        style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', cursor:'pointer', borderBottom: expanded ? '1px solid var(--parch-line)' : 'none' }}
       >
         {/* Checkbox */}
         <div onClick={e => e.stopPropagation()}>
           <input
-            type="checkbox"
-            checked={isSelected}
+            type="checkbox" checked={isSelected}
             onChange={e => onSelectChange?.(order.id, e.target.checked)}
-            className="rounded border-slate-300 accent-purple-600 h-4 w-4"
+            style={{ accentColor:'var(--gold)', width:14, height:14, cursor:'pointer' }}
           />
         </div>
 
-        {/* Vendor Logo / Icon */}
-        <RetailerLogo retailer={order.retailer} size={44} />
+        {/* Logo */}
+        <div style={{ width:40, height:40, borderRadius:9, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
+          <RetailerLogo retailer={order.retailer} size={40}/>
+        </div>
 
-        {/* Order # + Date */}
-        <div className="min-w-0 flex-shrink-0 w-48">
-          <p className="font-bold text-slate-900 text-sm truncate">
+        {/* Order # + date */}
+        <div style={{ minWidth:0, flexShrink:0, width:180 }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'var(--ocean)', fontFamily:"'Playfair Display', serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
             {order.order_number ? `#${order.order_number}` : '—'}
           </p>
-          <p className="text-xs text-slate-400">{formatDate(order.order_date || order.created_date)}</p>
+          <p style={{ fontSize:11, color:'var(--ink-faded)', marginTop:1 }}>{fmtDate(order.order_date || order.created_date)}</p>
         </div>
 
         {/* Items badge */}
-        <span className="flex-shrink-0 px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[11px] font-bold whitespace-nowrap">
-          {totalQty} {totalQty === 1 ? 'item' : 'items'}
+        <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--parch-warm)', color:'var(--ink-faded)', border:'1px solid var(--parch-line)', flexShrink:0, whiteSpace:'nowrap' }}>
+          {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
         </span>
 
+        {/* Order type */}
+        {order.order_type && (
+          <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:99, flexShrink:0,
+            background: order.order_type === 'churning' ? 'var(--gold-bg)' : 'var(--ocean-bg)',
+            color:      order.order_type === 'churning' ? 'var(--gold)'    : 'var(--ocean)',
+            border:     `1px solid ${order.order_type === 'churning' ? 'var(--gold-bdr)' : 'var(--ocean-bdr)'}`,
+          }}>
+            {order.order_type}
+          </span>
+        )}
+
         {/* Spacer */}
-        <div className="flex-1 min-w-0" />
+        <div style={{ flex:1 }}/>
 
-        {/* Metrics row */}
-        <div className="hidden sm:flex items-center gap-6 flex-shrink-0 text-sm">
-          {/* Total Cost */}
-          <div className="text-right min-w-[70px]">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Cost</p>
-            <p className="font-semibold text-slate-800">${totalCost.toFixed(2)}</p>
+        {/* Metrics */}
+        <div style={{ display:'flex', alignItems:'center', gap:20, flexShrink:0 }}>
+          <div style={{ textAlign:'right', minWidth:70 }}>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Cost</p>
+            <p style={{ fontSize:13, fontWeight:700, color:'var(--ink)' }}>${totalCost.toFixed(2)}</p>
           </div>
-
-          {/* Profit */}
-          <div className="text-right min-w-[70px]">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Profit</p>
-            <p className={`font-bold ${totalSale === 0 ? 'text-slate-400' : profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {totalSale === 0 ? '—' : `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`}
+          <div style={{ textAlign:'right', minWidth:70 }}>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Profit</p>
+            <p style={{ fontSize:13, fontWeight:700, color: profit === null ? 'var(--ink-ghost)' : profit >= 0 ? 'var(--terrain)' : 'var(--crimson)' }}>
+              {profit === null ? '—' : `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`}
             </p>
           </div>
-
-          {/* Cashback */}
-          <div className="text-right min-w-[70px]">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Cashback</p>
-            <p className="font-semibold text-blue-600">{cashback || '—'}</p>
+          <div style={{ textAlign:'right', minWidth:70 }}>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Cashback</p>
+            <p style={{ fontSize:13, fontWeight:700, color:'var(--ocean)' }}>{cashback || '—'}</p>
           </div>
-
-          {/* Payment */}
-          <div className="text-right min-w-[110px]">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Payment</p>
+          <div style={{ textAlign:'right', minWidth:110 }}>
+            <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>Payment</p>
             {order.payment_splits?.length > 1 ? (
-              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+              <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
                 Split ×{order.payment_splits.length}
               </span>
             ) : (
-              <p className="font-medium text-slate-700 text-xs truncate max-w-[110px]">{cardName}</p>
+              <p style={{ fontSize:11, fontWeight:600, color:'var(--ink-dim)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:110 }}>
+                {card ? `${card.card_name}${card.last_4_digits ? ` ••••${card.last_4_digits}` : ''}` : '—'}
+              </p>
             )}
           </div>
-
-          {/* Status */}
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${statusStyle.bg} ${statusStyle.text}`}>
-            {statusStyle.label}
-          </span>
+          <StatusBadge status={order.status}/>
+          <ProgressDots status={order.status}/>
+          {nextStep && (
+            <button onClick={handleNextStep} disabled={updatingStatus}
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--ocean-bdr)', background:'var(--ocean-bg)', color:'var(--ocean)', cursor: updatingStatus ? 'not-allowed' : 'pointer', opacity: updatingStatus ? 0.6 : 1, fontFamily:"'Playfair Display', serif", whiteSpace:'nowrap' }}>
+              {updatingStatus
+                ? <Loader style={{ width:11, height:11, animation:'spin 0.8s linear infinite' }}/>
+                : <nextStep.Icon style={{ width:11, height:11 }}/>
+              }
+              {nextStep.label}
+            </button>
+          )}
         </div>
 
         {/* Chevron */}
-        <div className="flex-shrink-0 ml-2 text-slate-400">
-          {expanded
-            ? <ChevronUp className="h-4 w-4 transition-transform duration-200" />
-            : <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-          }
+        <div style={{ flexShrink:0, color:'var(--ink-ghost)', marginLeft:4 }}>
+          {expanded ? <ChevronUp style={{ width:15, height:15 }}/> : <ChevronDown style={{ width:15, height:15 }}/>}
         </div>
       </div>
 
-      {/* Expanded Section */}
+      {/* ── Expanded section ── */}
       {expanded && (
-        <div className="bg-slate-50 px-4 py-3">
+        <div style={{ background:'var(--parch-warm)', padding:'12px 14px' }}>
+
           {/* Items */}
-          <div className="space-y-2 mb-3">
-            {(order.items || []).length === 0 ? (
-              <p className="text-xs text-slate-400 italic">No items recorded</p>
+          <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:12 }}>
+            {!(order.items?.length) ? (
+              <p style={{ fontSize:12, color:'var(--ink-ghost)', fontStyle:'italic' }}>No items recorded</p>
             ) : (order.items || []).map((item, idx) => {
-              const itemCost = parseFloat(item.unit_cost) || 0;
-              const itemSale = parseFloat(item.sale_price) || 0;
-              const itemQty = parseInt(item.quantity_ordered) || 1;
-              const itemProfit = (itemSale - itemCost) * itemQty;
-              const hasSale = itemSale > 0;
-              const trackingUrl = getTrackingUrl(order.tracking_number, order.carrier);
-              const productObj = products?.find(p => p.id === item.product_id);
-              const imgUrl = productObj?.image || null;
+              const itemCost   = parseFloat(item.unit_cost)  || 0;
+              const itemSale   = parseFloat(item.sale_price) || 0;
+              const itemQty    = parseInt(item.quantity_ordered) || 1;
+              const itemProfit = itemSale > 0 ? (itemSale - itemCost) * itemQty : null;
+              const hasSale    = itemSale > 0;
+              const trackUrl   = getTrackingUrl(order.tracking_number, order.carrier);
+              const prod       = products?.find(p => p.id === item.product_id);
+              const imgUrl     = item.image_url || prod?.image || null;
 
               return (
-                <div key={idx} className="bg-white rounded-lg border border-slate-200 px-4 py-3 flex items-center gap-4">
-                  {/* Thumbnail */}
-                  <div className="h-10 w-10 flex-shrink-0 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+                <div key={idx} style={{ background:'var(--parch-card)', borderRadius:10, border:'1px solid var(--parch-line)', padding:'10px 12px', display:'flex', alignItems:'center', gap:12 }}>
+                  {/* Image */}
+                  <div style={{ width:40, height:40, borderRadius:8, overflow:'hidden', border:'1px solid var(--parch-line)', background:'white', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                     {imgUrl
-                      ? <img src={imgUrl} alt={item.product_name} className="h-10 w-10 object-contain" />
-                      : <Package className="h-5 w-5 text-slate-400" />
+                      ? <img src={imgUrl} alt={item.product_name} style={{ width:40, height:40, objectFit:'contain' }}/>
+                      : <Package style={{ width:18, height:18, color:'var(--ink-ghost)' }}/>
                     }
                   </div>
-                  {/* Product name + tracking */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 text-sm truncate">{item.product_name || '—'}</p>
+
+                  {/* Name + tracking */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:12, fontWeight:700, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.product_name || '—'}</p>
                     {order.tracking_number && (
-                      <a
-                        href={trackingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 text-[11px] text-blue-500 hover:text-blue-700 hover:underline mt-0.5"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        {order.tracking_number}
+                      <a href={trackUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                        style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:10, color:'var(--ocean)', textDecoration:'none', marginTop:2 }}>
+                        <ExternalLink style={{ width:9, height:9 }}/>{order.tracking_number}
                       </a>
                     )}
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center gap-5 flex-shrink-0 text-xs">
-                    <div className="text-right">
-                      <p className="text-[10px] text-slate-400 uppercase">Qty</p>
-                      <p className="font-semibold text-slate-700">{itemQty}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] text-slate-400 uppercase">Cost/unit</p>
-                      <p className="font-semibold text-slate-700">${itemCost.toFixed(2)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] text-slate-400 uppercase">Sale/unit</p>
-                      <p className="font-semibold text-slate-700">{hasSale ? `$${itemSale.toFixed(2)}` : '—'}</p>
-                    </div>
-                    <div className="text-right min-w-[60px]">
-                      <p className="text-[10px] text-slate-400 uppercase">Profit</p>
-                      <p className={`font-bold ${!hasSale ? 'text-slate-400' : itemProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {!hasSale ? '—' : `${itemProfit >= 0 ? '+' : ''}$${itemProfit.toFixed(2)}`}
-                      </p>
-                    </div>
+                  <div style={{ display:'flex', alignItems:'center', gap:20, flexShrink:0, fontSize:12 }}>
+                    {[
+                      { label:'Qty',       val: String(itemQty),                                   color:'var(--ink-dim)'  },
+                      { label:'Cost/unit', val: `$${itemCost.toFixed(2)}`,                         color:'var(--ink)'      },
+                      { label:'Sale/unit', val: hasSale ? `$${itemSale.toFixed(2)}` : '—',         color: hasSale ? 'var(--terrain)' : 'var(--ink-ghost)' },
+                      { label:'Profit',    val: itemProfit !== null ? `${itemProfit >= 0 ? '+' : ''}$${itemProfit.toFixed(2)}` : '—', color: itemProfit === null ? 'var(--ink-ghost)' : itemProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)' },
+                    ].map(col => (
+                      <div key={col.label} style={{ textAlign:'right', minWidth:60 }}>
+                        <p style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:"'Playfair Display', serif" }}>{col.label}</p>
+                        <p style={{ fontSize:12, fontWeight:700, color:col.color }}>{col.val}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Split payment breakdown */}
+          {/* Split payment */}
           {order.payment_splits?.length > 1 && (
-            <div className="bg-purple-50 rounded-xl border border-purple-100 p-3 mb-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-purple-500 mb-2">Split Payment</p>
-              <div className="space-y-1">
-                {order.payment_splits.map((sp, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="text-slate-600 font-medium">{sp.card_name}</span>
-                    <span className="font-bold text-slate-800">${(sp.amount || 0).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
+            <div style={{ background:'var(--ocean-bg)', border:'1px solid var(--ocean-bdr)', borderRadius:10, padding:'10px 12px', marginBottom:12 }}>
+              <p style={{ fontSize:9, fontWeight:700, color:'var(--ocean)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:8, fontFamily:"'Playfair Display', serif" }}>Split payment</p>
+              {order.payment_splits.map((sp, i) => (
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
+                  <span style={{ color:'var(--ink-dim)', fontWeight:600 }}>{sp.card_name}</span>
+                  <span style={{ color:'var(--ink)', fontWeight:700 }}>${(sp.amount || 0).toFixed(2)}</span>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Summary Bar + Actions */}
-          <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-200 mt-1">
-            {/* Mini Summary */}
-            <div className="flex items-center gap-5 text-xs">
-              <div>
-                <span className="text-slate-400">Total Cost: </span>
-                <span className="font-bold text-slate-800">${totalCost.toFixed(2)}</span>
-              </div>
-              {totalSale > 0 && (
-                <div>
-                  <span className="text-slate-400">Total Sale: </span>
-                  <span className="font-bold text-slate-800">${totalSale.toFixed(2)}</span>
-                </div>
+          {/* Summary + actions */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, paddingTop:10, borderTop:'1px solid var(--parch-line)', flexWrap:'wrap' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:16, fontSize:12, color:'var(--ink-faded)', flexWrap:'wrap' }}>
+              <span>Cost: <strong style={{ color:'var(--ink)' }}>${totalCost.toFixed(2)}</strong></span>
+              {totalSale > 0 && <span>Sale: <strong style={{ color:'var(--ink)' }}>${totalSale.toFixed(2)}</strong></span>}
+              {profit !== null && (
+                <span>Profit: <strong style={{ color: profit >= 0 ? 'var(--terrain)' : 'var(--crimson)' }}>
+                  {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                </strong></span>
               )}
-              {totalSale > 0 && (
-                <div>
-                  <span className="text-slate-400">Profit: </span>
-                  <span className={`font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
-                  </span>
-                </div>
-              )}
-              {cashback && (
-                <div>
-                  <span className="text-slate-400">Cashback: </span>
-                  <span className="font-bold text-blue-600">{cashback}</span>
-                </div>
-              )}
+              {cashback && <span>Cashback: <strong style={{ color:'var(--ocean)' }}>{cashback}</strong></span>}
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={() => onEdit?.(order)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 text-xs font-medium transition"
-              >
-                <Pencil className="h-3.5 w-3.5" /> Edit
+            <div style={{ display:'flex', alignItems:'center', gap:8 }} onClick={e => e.stopPropagation()}>
+              <button onClick={() => onEdit?.(order)}
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--parch-line)', background:'transparent', color:'var(--ink-faded)', cursor:'pointer', fontFamily:"'Playfair Display', serif" }}>
+                <Pencil style={{ width:11, height:11 }}/> Edit
               </button>
-              <button
-                onClick={() => onDelete?.(order)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-500 hover:bg-red-50 text-xs font-medium transition"
-              >
-                <Trash2 className="h-3.5 w-3.5" /> Delete
+              <button onClick={() => onDelete?.(order)}
+                style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--crimson-bdr)', background:'var(--crimson-bg)', color:'var(--crimson)', cursor:'pointer', fontFamily:"'Playfair Display', serif" }}>
+                <Trash2 style={{ width:11, height:11 }}/> Delete
               </button>
             </div>
           </div>
@@ -281,29 +316,14 @@ function OrderRow({ order, creditCards, rewards, products, onEdit, onDelete, isS
   );
 }
 
+// ── Main export ───────────────────────────────────────────────────────────
+
 export default function TransactionsTableMerged({
-  data = [],
-  creditCards = [],
-  rewards = [],
-  products = [],
-  isLoading = false,
-  selectedIds = new Set(),
-  onSelectionChange,
-  onEdit,
-  onDelete,
-  // kept for API compatibility but not used in new design
-  visibleColumns,
-  sortColumn,
-  sortDirection,
-  onSort,
-  onView,
+  data = [], creditCards = [], rewards = [], products = [],
+  isLoading = false, selectedIds = new Set(),
+  onSelectionChange, onEdit, onDelete, onQuickStatus,
+  visibleColumns, sortColumn, sortDirection, onSort, onView,
 }) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
-  const paginatedData = data.slice(startIdx, startIdx + ROWS_PER_PAGE);
-  const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
-
   const handleSelectAll = (checked) => {
     onSelectionChange?.(checked ? new Set(data.map(o => o.id)) : new Set());
   };
@@ -314,47 +334,39 @@ export default function TransactionsTableMerged({
     onSelectionChange?.(next);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 rounded-xl bg-slate-100 animate-pulse" />
-        ))}
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      {[...Array(4)].map((_, i) => (
+        <div key={i} style={{ height:64, borderRadius:12, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', animation:'pulse 1.5s ease-in-out infinite', opacity: 1 - i * 0.15 }}/>
+      ))}
+    </div>
+  );
 
-  if (data.length === 0) {
-    return <div className="text-center py-16 text-slate-400 text-sm">No transactions found</div>;
-  }
+  if (!data.length) return (
+    <div style={{ textAlign:'center', padding:'48px 20px', color:'var(--ink-ghost)', fontSize:13 }}>
+      No transactions found
+    </div>
+  );
 
   return (
-    <div className="space-y-3">
-      {/* Header row */}
-      <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-        <div onClick={e => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={data.length > 0 && data.every(o => selectedIds.has(o.id))}
-            onChange={e => handleSelectAll(e.target.checked)}
-            className="rounded border-slate-300 accent-purple-600 h-4 w-4"
-          />
-        </div>
-        <div className="w-9 flex-shrink-0" />
-        <div className="w-48 flex-shrink-0">Order</div>
-        <div className="flex-1" />
-        <div className="hidden sm:flex items-center gap-6 flex-shrink-0">
-          <div className="text-right w-[70px]">Cost</div>
-          <div className="text-right w-[70px]">Profit</div>
-          <div className="text-right w-[70px]">Cashback</div>
-          <div className="text-right w-[110px]">Payment</div>
-          <div className="w-[70px]">Status</div>
-        </div>
-        <div className="w-4 flex-shrink-0" />
+    <div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+      {/* Select all header */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'6px 14px', marginBottom:4 }}>
+        <input
+          type="checkbox"
+          checked={data.length > 0 && data.every(o => selectedIds.has(o.id))}
+          onChange={e => handleSelectAll(e.target.checked)}
+          style={{ accentColor:'var(--gold)', width:14, height:14, cursor:'pointer' }}
+        />
+        <span style={{ fontSize:10, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', fontFamily:"'Playfair Display', serif" }}>
+          {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
+        </span>
       </div>
 
-      {/* Order rows */}
-      {paginatedData.map(order => (
+      {data.map(order => (
         <OrderRow
           key={order.id}
           order={order}
@@ -363,36 +375,11 @@ export default function TransactionsTableMerged({
           products={products}
           onEdit={onEdit}
           onDelete={onDelete}
+          onQuickStatus={onQuickStatus}
           isSelected={selectedIds.has(order.id)}
           onSelectChange={handleSelectRow}
         />
       ))}
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-gray-600 pt-2">
-        <span>
-          Showing {data.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + ROWS_PER_PAGE, data.length)} of {data.length}
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="px-3 text-sm">Page {data.length === 0 ? 0 : currentPage} of {totalPages || 1}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage >= totalPages || data.length === 0}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
