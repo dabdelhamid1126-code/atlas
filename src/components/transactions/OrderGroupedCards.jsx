@@ -293,15 +293,29 @@ function OrderCard({ order, creditCards, rewards, products = [], onEdit, onDelet
                 {hasSaleRows && (
                   <div style={{ marginTop: 2, marginLeft: 66, paddingLeft: 16, paddingBottom: 8, display: 'flex', flexDirection: 'column', gap: 0 }}>
                     {saleRows.map((row, i, arr) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', position: 'relative', borderBottom: i < arr.length - 1 ? '1px solid var(--parch-line)' : 'none' }}>
-                        <div style={{ position: 'absolute', left: -12, top: '50%', transform: 'translateY(-50%)', width: 7, height: 7, borderRadius: '50%', background: 'var(--terrain)', border: '2px solid var(--parch-card)', zIndex: 1 }} />
-                        <span style={{ color: 'var(--ocean)', fontSize: 11, fontWeight: 700, minWidth: 130 }}>{row.buyer}</span>
-                        <span style={{ color: 'var(--ink-dim)', fontSize: 10 }}>{row.quantity} unit{row.quantity !== 1 ? 's' : ''}</span>
-                        <span style={{ color: 'var(--ink-ghost)', fontSize: 10 }}>to</span>
-                        <span style={{ color: 'var(--terrain)', fontWeight: 700, fontSize: 12 }}>{fmt$(row.sale_price)}</span>
-                        <span style={{ background: row.profit >= 0 ? 'var(--terrain-bg)' : 'var(--crimson-bg)', color: row.profit >= 0 ? 'var(--terrain)' : 'var(--crimson)', border: `1px solid ${row.profit >= 0 ? 'var(--terrain-bdr)' : 'var(--crimson-bdr)'}`, padding: '2px 9px', borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
-                          {row.profit >= 0 ? '+' : ''}{fmt$(row.profit)}
-                        </span>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', position: 'relative', borderBottom: i < arr.length - 1 ? '1px solid var(--parch-line)' : 'none', borderRadius: i === 0 && arr.length === 1 ? 8 : 0 }}>
+                        {/* Buyer */}
+                        <div style={{ minWidth: 120, flex: 1 }}>
+                          <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-serif)', marginBottom: 1 }}>Buyer</p>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ocean)', fontFamily: 'var(--font-serif)' }}>{row.buyer}</p>
+                        </div>
+                        {/* Units */}
+                        <div style={{ textAlign: 'right', minWidth: 48 }}>
+                          <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-serif)', marginBottom: 1 }}>Units</p>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{row.quantity}</p>
+                        </div>
+                        {/* Sale */}
+                        <div style={{ textAlign: 'right', minWidth: 72 }}>
+                          <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-serif)', marginBottom: 1 }}>Sale Price</p>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--terrain)', fontFamily: 'var(--font-mono)' }}>{fmt$(row.sale_price * row.quantity)}</p>
+                        </div>
+                        {/* Profit */}
+                        <div style={{ textAlign: 'right', minWidth: 72 }}>
+                          <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-serif)', marginBottom: 1 }}>Profit</p>
+                          <p style={{ fontSize: 13, fontWeight: 800, fontFamily: 'var(--font-mono)', color: row.profit >= 0 ? 'var(--terrain)' : 'var(--crimson)' }}>
+                            {row.profit >= 0 ? '+' : ''}{fmt$(row.profit)}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
