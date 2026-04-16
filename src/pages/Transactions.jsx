@@ -310,7 +310,15 @@ export default function Transactions() {
         rewards={rewards}
         products={products}
         giftCards={giftCards}
-        onEdit={(order) => { setEditingOrder(order); setFormOpen(true); }}
+        onEdit={async (order) => {
+          try {
+            const fresh = await base44.entities.PurchaseOrder.get(order.id);
+            setEditingOrder(fresh || order);
+          } catch {
+            setEditingOrder(order);
+          }
+          setFormOpen(true);
+        }}
         onDelete={(order) => { if (confirm('Delete this order?')) deleteMutation.mutate(order); }}
         onQuickStatus={handleQuickStatus}
         isLoading={isLoading}
