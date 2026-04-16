@@ -405,7 +405,8 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
   useEffect(()=>{
     if (open) { setFormData(getInitialForm(order)); setActiveTab('details'); requestAnimationFrame(()=>setVisible(true)); }
     else setVisible(false);
-  },[open, order]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[open]);
 
   useEffect(()=>{
     const h=(e)=>{ if(e.key==='Escape'&&open) onOpenChange(false); };
@@ -504,7 +505,6 @@ export default function POFormModal({ open, onOpenChange, order, onSubmit, produ
     };
     delete data.amazon_yacb; delete data.cashback_rate_override;
     onSubmit(data);
-    queryClient.invalidateQueries({queryKey:['purchaseOrders']});
   };
 
   if (!open&&!visible) return null;
