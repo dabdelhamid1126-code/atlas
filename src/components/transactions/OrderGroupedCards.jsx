@@ -159,249 +159,238 @@ function OrderCard({ order, creditCards, rewards, products, giftCards, onEdit, o
   const itemsCost   = items.reduce((s, i) => s + (parseFloat(i.unit_cost) || 0) * (parseInt(i.quantity_ordered) || 1), 0);
   const revenue     = saleEventRevenue > 0 ? saleEventRevenue : itemSaleTotal;
   const hasSale     = revenue > 0;
-  const orderProfit = hasSale ? revenue - itemsCost + totalCashback : 0;
-  const profitColor = orderProfit > 0 ? 'var(--terrain)' : orderProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)';
+  
+  // ✅ FIX: Profit only on SOLD units, not order cost
+  const profitOnSold = hasSale 
+    ? totalUnitsSold > 0 
+      ? revenue - ((itemsCost / totalUnitsOrdered) * totalUnitsSold) + totalCashback
+      : 0
+    : 0;
+  
+  const orderProfit = profitOnSold;
+  const profitColor = hasSale
+    ? (orderProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)')
+    : 'var(--ink-ghost)';
 
-  // grid: checkbox | logo | info | [badges+progress+nextstep] | chevron
-  const GRID = '16px 40px 1fr auto 20px';
+  const profitMargin = hasSale && revenue > 0 
+    ? ((orderProfit / revenue) * 100).toFixed(1)
+    : 0;
 
   return (
-    <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:12, marginBottom:10, overflow:'hidden' }}>
-
+    <div style={{
+      background:'var(--parch-card)', border:'1px solid var(--parch-line)',
+      borderRadius:12, marginBottom:12, overflow:'hidden', transition:'all 0.2s'
+    }}>
       {/* ── Header ── */}
-      <div style={{ display:'grid', gridTemplateColumns:GRID, alignItems:'center', gap:10, padding:'12px 14px', borderBottom: expanded ? '1px solid var(--parch-line)' : 'none' }}>
+      <div style={{
+        display:'flex', alignItems:'center', justifyContent:'space-between', gap:12,
+        padding:'14px', background:'var(--parch-card)', borderBottom:'1px solid var(--parch-line)'
+      }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, flex:1, minWidth:0 }}>
+          <input type="checkbox" checked={selected} onChange={() => onToggleSelect(order.id)}
+            style={{ width:18, height:18, cursor:'pointer' }}/>
 
-        {/* Checkbox */}
-        <div onClick={e => { e.stopPropagation(); onToggleSelect(order.id); }}
-          style={{ width:16, height:16, borderRadius:4, border:`1px solid ${selected ? 'var(--ink)' : 'var(--parch-line)'}`, background: selected ? 'var(--ink)' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
-          {selected && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="var(--ne-cream)" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-        </div>
+          <RetailerLogo retailer={order.retailer} size={32}/>
 
-        {/* Logo */}
-        <div style={{ width:40, height:40, borderRadius:9, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
-          <RetailerLogo retailer={order.retailer} size={40}/>
-        </div>
-
-        {/* Order info */}
-        <div style={{ minWidth:0, cursor:'pointer' }} onClick={() => setExpanded(v => !v)}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:3 }}>
-            <span style={{ fontSize:13, fontWeight:700, color:'var(--ocean)', fontFamily:'var(--font-serif)' }}>
-              #{order.order_number || 'No order #'}
-            </span>
-            <StatusBadge status={order.status}/>
-            <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:99, background:'var(--parch-warm)', color:'var(--ink-faded)', border:'1px solid var(--parch-line)' }}>
-              {items.length} item{items.length !== 1 ? 's' : ''}
-            </span>
-            {totalUnitsSold > 0 && (
-              <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:99,
-                background: totalUnitsSold >= totalUnitsOrdered ? 'var(--terrain-bg)' : 'var(--gold-bg)',
-                color:      totalUnitsSold >= totalUnitsOrdered ? 'var(--terrain)'    : 'var(--gold)',
-                border:     `1px solid ${totalUnitsSold >= totalUnitsOrdered ? 'var(--terrain-bdr)' : 'var(--gold-bdr)'}`,
-              }}>
-                {totalUnitsSold}/{totalUnitsOrdered} sold
+          <div style={{ minWidth:0, flex:1 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3 }}>
+              <span style={{ fontFamily:'var(--font-serif)', fontSize:13, fontWeight:700, color:'var(--ink)' }}>
+                #{order.order_number || order.id?.slice(0,8)}
               </span>
-            )}
-            {order.order_type && (
-              <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:99,
-                background: order.order_type === 'churning' ? 'var(--gold-bg)' : 'var(--ocean-bg)',
-                color:      order.order_type === 'churning' ? 'var(--gold)'    : 'var(--ocean)',
-                border:     `1px solid ${order.order_type === 'churning' ? 'var(--gold-bdr)' : 'var(--ocean-bdr)'}`,
-              }}>
-                {order.order_type}
-              </span>
-            )}
-          </div>
-          <div style={{ fontSize:11, color:'var(--ink-faded)', display:'flex', alignItems:'center', gap:6 }}>
-            <span>{order.retailer || 'Unknown'}</span>
-            <span style={{ color:'var(--parch-line)' }}>·</span>
-            <span>{fmtDate(order.order_date)}</span>
-            {hasSale && (
-              <>
-                <span style={{ color:'var(--parch-line)' }}>·</span>
-                <span style={{ color: profitColor, fontWeight:700 }}>
-                  Profit: {orderProfit >= 0 ? '+' : ''}${orderProfit.toFixed(2)}
-                </span>
-              </>
-            )}
+              <StatusBadge status={order.status}/>
+            </div>
+            <span style={{ fontSize:11, color:'var(--ink-dim)', display:'block' }}>
+              {fmtDate(order.order_date)} • {order.retailer} • {totalUnitsOrdered} unit{totalUnitsOrdered !== 1 ? 's' : ''}
+            </span>
           </div>
         </div>
 
-        {/* Right controls */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
           <ProgressDots status={order.status}/>
-          {nextStep && (
-            <button onClick={handleNextStep} disabled={updatingStatus}
-              style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:7, fontSize:11, fontWeight:700, border:'1px solid var(--ocean-bdr)', background:'var(--ocean-bg)', color:'var(--ocean)', cursor: updatingStatus ? 'not-allowed' : 'pointer', opacity: updatingStatus ? 0.6 : 1, fontFamily:'var(--font-serif)', whiteSpace:'nowrap' }}>
-              {updatingStatus
-                ? <Loader style={{ width:11, height:11, animation:'spin 0.8s linear infinite' }}/>
-                : <nextStep.Icon style={{ width:11, height:11 }}/>
-              }
-              {nextStep.label}
-            </button>
-          )}
-        </div>
-
-        {/* Chevron */}
-        <div onClick={() => setExpanded(v => !v)} style={{ cursor:'pointer', color:'var(--ink-ghost)' }}>
-          {expanded ? <ChevronUp style={{ width:15, height:15 }}/> : <ChevronDown style={{ width:15, height:15 }}/>}
+          <button onClick={() => setExpanded(!expanded)}
+            style={{ width:32, height:32, borderRadius:8, background:'transparent', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'var(--ink-faded)' }}>
+            {expanded ? <ChevronUp style={{ width:16, height:16 }}/> : <ChevronDown style={{ width:16, height:16 }}/>}
+          </button>
         </div>
       </div>
 
-      {/* ── Expanded body ── */}
+      {/* ── Content ── */}
       {expanded && (
         <>
-          {/* Column headers */}
-          {items.length > 0 && (
-            <div style={{ display:'grid', gridTemplateColumns:'40px 1fr 44px 80px 80px 80px 80px 110px', gap:6, padding:'6px 14px', borderBottom:'1px solid var(--parch-line)', alignItems:'center' }}>
-              <div/>
-              <ColHdr align="left">Product</ColHdr>
-              <ColHdr>Qty</ColHdr>
-              <ColHdr>Cost/unit</ColHdr>
-              <ColHdr>Sale/unit</ColHdr>
-              <ColHdr>Profit</ColHdr>
-              <ColHdr>Cashback</ColHdr>
-              <ColHdr>Payment</ColHdr>
-            </div>
-          )}
+          {/* Items section */}
+          <div style={{ padding:'0 0' }}>
+            {items.map((item, idx) => {
+              const unitCost = parseFloat(item.unit_cost) || 0;
+              const qty = parseInt(item.quantity_ordered) || 1;
+              const itemTotal = unitCost * qty;
+              const itemImage = item.product_image || '';
+              const itemName = item.product_name || 'Unknown Product';
 
-          {/* Item rows */}
-          {items.map((item, idx) => {
-            const prod       = products?.find(p => p.id === item.product_id);
-            const imgSrc     = item.image_url || prod?.image || null;
-            const unitCost   = parseFloat(item.unit_cost)  || 0;
-            const qty        = parseInt(item.quantity_ordered) || 1;
-            const perItemCB  = totalCashback > 0 && items.length > 0 ? totalCashback / items.length : 0;
-            const isLast     = idx === items.length - 1;
-            const trackUrl   = getTrackingUrl((order.tracking_numbers || [])[0]);
+              // Units sold for THIS item
+              const itemUnitsSold = saleEvents.reduce((s, ev) =>
+                s + (ev.items || []).reduce((ss, evIt) =>
+                  evIt.product_name === itemName ? ss + (parseInt(evIt.qty) || 0) : ss, 0), 0);
 
-            // Sale events for this item
-            const itemSaleEvts = saleEvents.filter(ev =>
-              (ev.items || []).some(it =>
-                it.product_name === item.product_name ||
-                (item.product_id && it.product_id === item.product_id)
-              )
-            );
+              const itemRevenue = saleEvents.reduce((s, ev) =>
+                s + (ev.items || []).reduce((ss, evIt) =>
+                  evIt.product_name === itemName ? ss + (parseFloat(evIt.sale_price) || 0) * (parseInt(evIt.qty) || 1) : ss, 0), 0);
 
-            return (
-              <div key={idx} style={{ borderBottom: isLast ? 'none' : '1px solid var(--parch-line)' }}>
-                {/* Item row */}
-                <div style={{ display:'grid', gridTemplateColumns:'40px 1fr 80px 80px 80px 110px', gap:6, padding:'10px 14px', alignItems:'center' }}>
-                  <ProductImg src={imgSrc} name={item.product_name} size={36}/>
+              const itemProfit = itemRevenue > 0 
+                ? itemRevenue - (unitCost * itemUnitsSold) + (totalCashback / (items.length || 1))
+                : 0;
 
-                  {/* Name + SKU + tracking + qty */}
-                  <div style={{ minWidth:0 }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      <div style={{ fontSize:12, fontWeight:600, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }} title={item.product_name}>
-                        {item.product_name || 'Unknown product'}
+              const perItemCB = totalCashback / (items.length || 1);
+
+              return (
+                <div key={idx} style={{ borderTop: idx === 0 ? 'none' : '1px solid var(--parch-line)' }}>
+                  {/* ── Main item row (reorganized grid) ── */}
+                  <div style={{
+                    display:'grid',
+                    gridTemplateColumns:'120px 1fr 80px 100px 100px 100px 80px',
+                    gap:12,
+                    padding:'12px 14px',
+                    alignItems:'center',
+                    background:'var(--parch-card)'
+                  }}>
+                    {/* Product info (left) */}
+                    <div style={{ display:'flex', alignItems:'flex-start', gap:8, gridColumn:'1/3' }}>
+                      <ProductImg src={itemImage} name={itemName} size={48}/>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ fontSize:12, fontWeight:600, color:'var(--ink)', margin:'0 0 4px', lineHeight:1.3 }}>
+                          {itemName}
+                        </p>
+                        <p style={{ fontSize:10, color:'var(--ink-ghost)', margin:0, fontFamily:'var(--font-mono)', letterSpacing:'0.02em' }}>
+                          UPC: {item.upc || 'N/A'}
+                        </p>
                       </div>
-                      <span style={{ fontSize:11, fontWeight:700, color:'var(--ink-dim)', background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:6, padding:'1px 7px', flexShrink:0 }}>
-                        ×{qty}
-                      </span>
                     </div>
-                    {(item.sku || item.upc) && (
-                      <div style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:1 }}>SKU: {item.sku || item.upc}</div>
-                    )}
-                    {trackUrl && (order.tracking_numbers || []).length > 0 && (
-                      <a href={trackUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:10, color:'var(--ocean)', marginTop:2, textDecoration:'none' }}>
-                        <ExternalLink style={{ width:9, height:9 }}/> {order.tracking_numbers[0]}
-                      </a>
-                    )}
-                  </div>
 
-                  {/* Cost/unit */}
-                  <div style={{ fontSize:12, textAlign:'right', color:'var(--ink)' }}>
-                    {unitCost > 0 ? `$${unitCost.toFixed(2)}` : '—'}
-                  </div>
-
-                  {/* Revenue from sale events */}
-                  <div style={{ fontSize:12, textAlign:'right', fontWeight: revenue > 0 ? 700 : 400, color: revenue > 0 ? 'var(--terrain)' : 'var(--ink-ghost)' }}>
-                    {saleEventRevenue > 0 ? `$${saleEventRevenue.toFixed(2)}` : itemSaleTotal > 0 ? `$${itemSaleTotal.toFixed(2)}` : <span style={{ fontSize:10 }}>not set</span>}
-                  </div>
-
-                  {/* Cashback */}
-                  <div style={{ fontSize:12, textAlign:'right', color:'var(--violet)' }}>
-                    {perItemCB > 0 ? `$${perItemCB.toFixed(2)}` : '—'}
-                  </div>
-
-                  {/* Payment */}
-                  <div style={{ textAlign:'right' }}>
-                    {card ? (
-                      <span style={{ display:'inline-flex', alignItems:'center', fontSize:10, color:'var(--ink-faded)', background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:6, padding:'2px 7px' }}>
-                        {card.card_name}{card.last_4_digits ? ` ••••${card.last_4_digits}` : ''}
-                      </span>
-                    ) : order.payment_splits?.length > 1 ? (
-                      <span style={{ display:'inline-flex', alignItems:'center', fontSize:10, color:'var(--violet)', background:'var(--violet-bg,#f3f0ff)', border:'1px solid var(--violet-bdr,#d4caff)', borderRadius:6, padding:'2px 7px', fontWeight:700 }}>
-                        Split ×{order.payment_splits.length}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize:10, color:'var(--ink-ghost)' }}>—</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Sale event rows */}
-                {saleEvents.length > 0 && saleEvents.map((ev, evIdx) => {
-                  const evItems = ev.items || [];
-                  return evItems.map((it, itIdx) => {
-                    const evQty    = parseInt(it.qty) || 1;
-                    const evSale   = parseFloat(it.sale_price) || 0;
-                    const evCost   = unitCost * evQty;
-                    const evProfit = evSale > 0 ? evSale - evCost + (perItemCB / (saleEvents.length || 1)) : null;
-                    return (
-                      <div key={`${evIdx}-${itIdx}`} style={{ display:'grid', gridTemplateColumns:'40px 1fr 80px 80px 80px 110px', gap:6, padding:'5px 14px 5px 54px', alignItems:'center', background:'var(--parch-warm)', borderTop:'1px solid var(--parch-line)' }}>
-                        <div/>
-                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                          <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--terrain)', flexShrink:0 }}/>
-                          <span style={{ fontSize:11, color:'var(--terrain)', fontWeight:600 }}>{ev.buyer || 'Buyer'}</span>
-                        </div>
-                        <div style={{ fontSize:11, textAlign:'right', color:'var(--ink-dim)' }}>{evQty} unit{evQty !== 1 ? 's' : ''}</div>
-                        <div style={{ fontSize:11, textAlign:'right', color:'var(--terrain)', fontWeight:700 }}>
-                          {evSale > 0 ? `$${evSale.toFixed(2)}` : '—'}
-                        </div>
-                        <div style={{ fontSize:11, textAlign:'right', fontWeight:700, color: evProfit === null ? 'var(--ink-ghost)' : evProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)' }}>
-                          {evProfit !== null ? `${evProfit >= 0 ? '+' : ''}$${evProfit.toFixed(2)}` : '—'}
-                        </div>
-                        <div/>
+                    {/* Ordered qty */}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:10, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2, fontWeight:700 }}>Ordered</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:'var(--ink)' }}>
+                        {qty}×
                       </div>
-                    );
-                  });
-                })}
-              </div>
-            );
-          })}
+                    </div>
 
-          {items.length === 0 && (
-            <div style={{ padding:'18px 14px', textAlign:'center', fontSize:12, color:'var(--ink-ghost)' }}>No items recorded</div>
-          )}
+                    {/* Cost section */}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:10, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2, fontWeight:700 }}>Cost/Unit</div>
+                      <div style={{ fontSize:12, color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>
+                        {fmt$(unitCost)}
+                      </div>
+                    </div>
+
+                    {/* Sale status */}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:10, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2, fontWeight:700 }}>Sold</div>
+                      <div style={{ fontSize:13, fontWeight:700, color: itemUnitsSold > 0 ? 'var(--terrain)' : 'var(--ink-ghost)' }}>
+                        {itemUnitsSold}/{qty}
+                      </div>
+                    </div>
+
+                    {/* Sale price */}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:10, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2, fontWeight:700 }}>Sale Price</div>
+                      <div style={{ fontSize:12, color: itemRevenue > 0 ? 'var(--terrain)' : 'var(--ink-ghost)', fontFamily:'var(--font-mono)', fontWeight:600 }}>
+                        {itemRevenue > 0 ? fmt$(itemRevenue / (itemUnitsSold || 1)) : '—'}
+                      </div>
+                    </div>
+
+                    {/* Profit per item */}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:10, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2, fontWeight:700 }}>Profit</div>
+                      <div style={{
+                        fontSize:12, fontWeight:700, fontFamily:'var(--font-mono)',
+                        color: itemProfit > 0 ? 'var(--terrain)' : itemProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)'
+                      }}>
+                        {itemRevenue > 0 ? `${itemProfit >= 0 ? '+' : ''}${itemProfit.toFixed(2)}` : '—'}
+                      </div>
+                    </div>
+
+                    {/* Cashback */}
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:10, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:2, fontWeight:700 }}>CB</div>
+                      <div style={{ fontSize:12, color:'var(--violet)', fontWeight:600, fontFamily:'var(--font-mono)' }}>
+                        {perItemCB > 0 ? fmt$(perItemCB) : '—'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sale event rows (nested accordion) */}
+                  {saleEvents.length > 0 && saleEvents.map((ev, evIdx) => {
+                    const evItems = ev.items || [];
+                    const relevantItems = evItems.filter(it => it.product_name === itemName);
+                    
+                    return relevantItems.map((it, itIdx) => {
+                      const evQty    = parseInt(it.qty) || 1;
+                      const evSale   = parseFloat(it.sale_price) || 0;
+                      const evCost   = unitCost * evQty;
+                      const evProfit = evSale > 0 ? evSale - evCost + (perItemCB / (saleEvents.length || 1)) : null;
+                      
+                      return (
+                        <div key={`${evIdx}-${itIdx}`} style={{
+                          display:'grid',
+                          gridTemplateColumns:'120px 1fr 80px 100px 100px 100px 80px',
+                          gap:12,
+                          padding:'8px 14px 8px 62px',
+                          alignItems:'center',
+                          background:'var(--parch-warm)',
+                          borderTop:'1px solid var(--parch-line)',
+                          fontSize:11
+                        }}>
+                          <div/>
+                          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                            <div style={{ width:5, height:5, borderRadius:'50%', background:'var(--terrain)', flexShrink:0 }}/>
+                            <span style={{ color:'var(--terrain)', fontWeight:600 }}>{ev.buyer || 'Buyer'}</span>
+                            <span style={{ color:'var(--ink-ghost)', fontSize:10 }}>{fmtDate(ev.sale_date)}</span>
+                          </div>
+                          <div style={{ textAlign:'right', color:'var(--ink-dim)' }}>{evQty} unit{evQty !== 1 ? 's' : ''}</div>
+                          <div style={{ textAlign:'right', color:'var(--ink-dim)' }}>—</div>
+                          <div style={{ textAlign:'right', color:'var(--terrain)', fontWeight:700 }}>
+                            {evSale > 0 ? fmt$(evSale) : '—'}
+                          </div>
+                          <div style={{
+                            textAlign:'right', fontWeight:700, color: evProfit === null ? 'var(--ink-ghost)' : evProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)'
+                          }}>
+                            {evProfit !== null ? `${evProfit >= 0 ? '+' : ''}${evProfit.toFixed(2)}` : '—'}
+                          </div>
+                          <div/>
+                        </div>
+                      );
+                    });
+                  })}
+                </div>
+              );
+            })}
+
+            {items.length === 0 && (
+              <div style={{ padding:'18px 14px', textAlign:'center', fontSize:12, color:'var(--ink-ghost)' }}>No items recorded</div>
+            )}
+          </div>
 
           {/* ── Footer ── */}
-          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'var(--parch-warm)', flexWrap:'wrap', borderTop:'1px solid var(--parch-line)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', background:'var(--parch-warm)', flexWrap:'wrap', borderTop:'1px solid var(--parch-line)' }}>
             <span style={{ fontSize:12, color:'var(--ink-faded)' }}>
-              Total: <strong style={{ color:'var(--ink)', fontFamily:'var(--font-serif)' }}>${(parseFloat(order.total_cost) || 0).toFixed(2)}</strong>
+              Order total: <strong style={{ color:'var(--ink)', fontFamily:'var(--font-serif)' }}>${(parseFloat(order.total_cost) || 0).toFixed(2)}</strong>
             </span>
 
-            {order.order_number && (
-              <><span style={{ width:1, height:12, background:'var(--parch-line)', display:'inline-block' }}/><span style={{ fontSize:11, color:'var(--ink-ghost)' }}>#{order.order_number}</span></>
-            )}
-
             {hasSale && (
-              <><span style={{ width:1, height:12, background:'var(--parch-line)', display:'inline-block' }}/>
-              <span style={{ fontSize:11, fontWeight:700, color: profitColor, fontFamily:'var(--font-serif)' }}>
-                {orderProfit >= 0 ? '+' : ''}${orderProfit.toFixed(2)} profit
-              </span></>
-            )}
-
-            {gcUsed > 0 && (
-              <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--gold-bg)', color:'var(--gold)', border:'1px solid var(--gold-bdr)' }}>
-                GC: ${gcUsed.toFixed(2)}
-              </span>
+              <>
+                <span style={{ width:1, height:12, background:'var(--parch-line)', display:'inline-block' }}/>
+                <span style={{ fontSize:11, fontWeight:700, color: profitColor, fontFamily:'var(--font-serif)' }}>
+                  Profit: {orderProfit >= 0 ? '+' : ''}${Math.abs(orderProfit).toFixed(2)} ({profitMargin}%)
+                </span>
+              </>
             )}
 
             {totalCashback > 0 && (
-              <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
-                CB: ${totalCashback.toFixed(2)}
-              </span>
+              <>
+                <span style={{ width:1, height:12, background:'var(--parch-line)', display:'inline-block' }}/>
+                <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99, background:'var(--ocean-bg)', color:'var(--ocean)', border:'1px solid var(--ocean-bdr)' }}>
+                  CB: ${totalCashback.toFixed(2)}
+                </span>
+              </>
             )}
 
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:6 }}>
