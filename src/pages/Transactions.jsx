@@ -307,22 +307,25 @@ export default function Transactions() {
         </button>
       </div>
 
-      {/* -- Mode tabs -- matches Dashboard tab-bar style -- */}
+      {/* -- Mode tabs -- */}
       <div style={{ display:'flex', gap:2, padding:3, borderRadius:10, width:'fit-content', background:'var(--parch-card)', border:'1px solid var(--parch-line)', marginBottom:18 }}>
-        {MODES.map(m => (
-          <button key={m.id} onClick={() => setMode(m.id)}
-            style={{
-              display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8,
-              fontSize:12, fontWeight:700, cursor:'pointer', border:'none', transition:'all 0.15s',
-              fontFamily:'var(--font-serif)',
-              background: mode === m.id ? 'var(--ink)' : 'transparent',
-              color:      mode === m.id ? 'var(--gold)' : 'var(--ink-dim)',
-            }}>
-            <m.Icon style={{ width:13, height:13 }}/>
-            {m.label}
-            <span style={{ fontSize:10, opacity:0.65, fontFamily:'var(--font-mono)' }}>({modeCounts[m.id]})</span>
-          </button>
-        ))}
+        {MODES.map(m => {
+          const active = mode === m.id;
+          return (
+            <button key={m.id} onClick={() => setMode(m.id)}
+              style={{
+                display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8,
+                fontSize:12, fontWeight: active ? 700 : 500, cursor:'pointer', border:'none',
+                fontFamily:'var(--font-serif)', transition:'all 0.15s',
+                background: active ? 'var(--ink)' : 'transparent',
+                color:      active ? 'var(--ne-cream)' : 'var(--ink-dim)',
+              }}>
+              <m.Icon style={{ width:13, height:13, opacity: active ? 1 : 0.6 }}/>
+              {m.label}
+              <span style={{ fontSize:10, opacity:0.65, fontFamily:'var(--font-mono)' }}>({modeCounts[m.id]})</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* -- Section divider -- matches Dashboard SectionDivider -- */}
