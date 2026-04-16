@@ -191,17 +191,25 @@ export default function Transactions() {
   }), [filteredOrders, sortColumn, sortDirection]);
 
   // ── Stats ────────────────────────────────────────────────────────────────
-  const stats = useMemo(() => {
-    const totalItems    = filteredOrders.reduce((s, o) => s + (o.items?.length || 0), 0);
-    const totalCost     = filteredOrders.reduce((s, o) => s + (parseFloat(o.total_cost) || 0), 0);
-    const totalSale     = filteredOrders.reduce((s, o) => {
-      const saleTotal = (o.items || []).reduce((si, item) => si + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity_ordered) || 1), 0);
-      return s + saleTotal;
-    }, 0);
-    const totalCashback = rewards.filter(r => filteredOrders.some(o => o.id === r.purchase_order_id)).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-    const totalProfit   = totalSale > 0 ? totalSale - totalCost + totalCashback : 0;
-    return { totalItems, totalCost, totalSale, totalCashback, totalProfit };
-  }, [filteredOrders, rewards]);
+const stats = useMemo(() => {
+  const totalItems = filteredOrders.reduce((s, o) => s + (o.items?.length || 0), 0);
+  const totalCost  = filteredOrders.reduce((s, o) => s + (parseFloat(o.total_cost) || 0), 0);
+  const totalSale  = filteredOrders.reduce((s, o) => {
+    // Read from sale_events (entity schema uses "qty" not "quantity")
+    const fromEvents = (o.sale_events || []).reduce((es, ev) =>
+      es + (ev.items || []).reduce((is, item) =>
+        is + (parseFloat(item.sale_price) || 0) * (parseInt(item.qty || item.quantity) || 1), 0), 0);
+    if (fromEvents > 0) return s + fromEvents;
+    // Fallback: item-level sale_price
+    return s + (o.items || []).reduce((is, item) =>
+      is + (parseFloat(item.sale_price) || 0) * (parseInt(item.quantity_ordered) || 1), 0);
+  }, 0);
+  const totalCashback = rewards
+    .filter(r => filteredOrders.some(o => o.id === r.purchase_order_id))
+    .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const totalProfit = totalSale > 0 ? totalSale - totalCost + totalCashback : 0;
+  return { totalItems, totalCost, totalSale, totalCashback, totalProfit };
+}, [filteredOrders, rewards]);
 
   // ── Pagination ───────────────────────────────────────────────────────────
   const totalPages  = Math.max(1, Math.ceil(sortedOrders.length / PAGE_SIZE));
