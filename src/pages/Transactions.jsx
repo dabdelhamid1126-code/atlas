@@ -29,8 +29,6 @@ export default function Transactions() {
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   const [categoryFilter,      setCategoryFilter]      = useState('all');
   const [showMoreFilters,     setShowMoreFilters]     = useState(false);
-  const [sortColumn,          setSortColumn]          = useState('date');
-  const [sortDirection,       setSortDirection]       = useState('desc');
   const [formOpen,            setFormOpen]            = useState(false);
   const [detailsOpen,         setDetailsOpen]         = useState(false);
   const [editingOrder,        setEditingOrder]        = useState(null);
@@ -179,17 +177,13 @@ export default function Transactions() {
   }), [orders, mode, search, statusFilter, vendorFilter, paymentMethodFilter, categoryFilter, fromDate, toDate]);
 
   const sortedOrders = useMemo(() => [...filteredOrders].sort((a, b) => {
-    let av, bv;
-    if (sortColumn === 'date')        { av = new Date(a.order_date || a.created_date); bv = new Date(b.order_date || b.created_date); }
-    else if (sortColumn === 'vendor') { av = a.retailer || ''; bv = b.retailer || ''; }
-    else                              { av = a[sortColumn]; bv = b[sortColumn]; }
-    if (av < bv) return sortDirection === 'asc' ? -1 : 1;
-    if (av > bv) return sortDirection === 'asc' ?  1 : -1;
-    return 0;
-  }), [filteredOrders, sortColumn, sortDirection]);
+    const av = new Date(a.order_date || a.created_date);
+    const bv = new Date(b.order_date || b.created_date);
+    return bv - av;
+  }), [filteredOrders]);
 
   /* ------------------------------------------------------------------ */
-  /*  STATS -- reads sale_events with "qty" (entity schema field name)   */
+  /*  STATS -- sale_events use "qty" per entity schema                   */
   /* ------------------------------------------------------------------ */
   const stats = useMemo(() => {
     const totalItems = filteredOrders.reduce((s, o) => s + (o.items?.length || 0), 0);
@@ -262,13 +256,10 @@ export default function Transactions() {
 
   const STATUSES = [
     { value:'ordered',            label:'Ordered'            },
-    { value:'processing',         label:'Processing'         },
     { value:'shipped',            label:'Shipped'            },
-    { value:'delivered',          label:'Delivered'          },
     { value:'received',           label:'Received'           },
     { value:'partially_received', label:'Partially Received' },
     { value:'cancelled',          label:'Cancelled'          },
-    { value:'returned',           label:'Returned'           },
   ];
 
   const MODES = [
@@ -277,48 +268,37 @@ export default function Transactions() {
     { id:'marketplace', label:'Marketplace', Icon: Globe      },
   ];
 
-  /* stat card definitions */
+  /* stat card definitions -- matches Dashboard KPI style exactly */
   const STAT_CARDS = [
-    {
-      label: 'Items',
-      val:   String(stats.totalItems),
-      Icon:  Package,
-      color: 'var(--ocean)',
+    { label:'Items',      val: String(stats.totalItems),
+      Icon: Package,   accent:'var(--ocean)',   bg:'var(--ocean-bg)',   bdr:'var(--ocean-bdr)',   valColor:'var(--ocean)'   },
+    { label:'Total Cost', val: fmt$(stats.totalCost),
+      Icon: CreditCard, accent:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)',    valColor:'var(--gold)'    },
+    { label:'Total Sale', val: stats.totalSale > 0 ? fmt$(stats.totalSale) : '--',
+      Icon: Tag,        accent:'var(--terrain)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)', valColor: stats.totalSale > 0 ? 'var(--terrain)' : 'var(--ink-ghost)' },
+    { label:'Profit',     val: stats.totalSale > 0 ? fmt$(stats.totalProfit) : '--',
+      Icon: TrendingUp,
+      accent: stats.totalProfit > 0 ? 'var(--terrain)' : stats.totalProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)',
+      bg:     stats.totalProfit > 0 ? 'var(--terrain-bg)' : stats.totalProfit < 0 ? 'var(--crimson-bg)' : 'var(--parch-warm)',
+      bdr:    stats.totalProfit > 0 ? 'var(--terrain-bdr)' : stats.totalProfit < 0 ? 'var(--crimson-bdr)' : 'var(--parch-line)',
+      valColor: stats.totalProfit > 0 ? 'var(--terrain)' : stats.totalProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)',
     },
-    {
-      label: 'Total Cost',
-      val:   fmt$(stats.totalCost),
-      Icon:  CreditCard,
-      color: 'var(--gold)',
-    },
-    {
-      label: 'Total Sale',
-      val:   stats.totalSale > 0 ? fmt$(stats.totalSale) : '--',
-      Icon:  Tag,
-      color: stats.totalSale > 0 ? 'var(--terrain)' : 'var(--ink-ghost)',
-    },
-    {
-      label: 'Profit',
-      val:   stats.totalSale > 0 ? fmt$(stats.totalProfit) : '--',
-      Icon:  TrendingUp,
-      color: stats.totalProfit > 0 ? 'var(--terrain)' : stats.totalProfit < 0 ? 'var(--crimson)' : 'var(--ink-ghost)',
-    },
-    {
-      label: 'Cashback',
-      val:   stats.totalCashback > 0 ? fmt$(stats.totalCashback) : '--',
-      Icon:  Sparkles,
-      color: 'var(--violet)',
-    },
+    { label:'Cashback',   val: stats.totalCashback > 0 ? fmt$(stats.totalCashback) : '--',
+      Icon: Sparkles,  accent:'var(--violet)',  bg:'var(--violet-bg)',  bdr:'var(--violet-bdr)',  valColor:'var(--violet)'  },
   ];
+
+  const INP = { padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer' };
 
   return (
     <div style={{ paddingBottom: 40 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      {/* Header */}
+      {/* -- Header -- */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:22, flexWrap:'wrap', gap:14 }}>
         <div>
-          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', margin:0 }}>Transactions</h1>
+          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', margin:0 }}>
+            Transactions
+          </h1>
           <p style={{ fontSize:12, color:'var(--ink-dim)', marginTop:4 }}>Track and manage your purchases</p>
         </div>
         <button onClick={handleCSVDownload}
@@ -327,50 +307,46 @@ export default function Transactions() {
         </button>
       </div>
 
-      {/* Mode tabs */}
+      {/* -- Mode tabs -- matches Dashboard tab-bar style -- */}
       <div style={{ display:'flex', gap:2, padding:3, borderRadius:10, width:'fit-content', background:'var(--parch-card)', border:'1px solid var(--parch-line)', marginBottom:18 }}>
         {MODES.map(m => (
           <button key={m.id} onClick={() => setMode(m.id)}
             style={{
               display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8,
-              fontSize:12, fontWeight:700, cursor:'pointer', border:'none',
+              fontSize:12, fontWeight:700, cursor:'pointer', border:'none', transition:'all 0.15s',
               fontFamily:'var(--font-serif)',
               background: mode === m.id ? 'var(--ink)' : 'transparent',
               color:      mode === m.id ? 'var(--gold)' : 'var(--ink-dim)',
             }}>
             <m.Icon style={{ width:13, height:13 }}/>
             {m.label}
-            <span style={{ fontSize:10, opacity:0.65 }}>({modeCounts[m.id]})</span>
+            <span style={{ fontSize:10, opacity:0.65, fontFamily:'var(--font-mono)' }}>({modeCounts[m.id]})</span>
           </button>
         ))}
       </div>
 
-      {/* Stats */}
+      {/* -- Section divider -- matches Dashboard SectionDivider -- */}
+      <div className="section-div" style={{ marginBottom:12 }}>
+        <div className="section-div-dot" style={{ background:'var(--gold)' }}/>
+        <span className="section-div-label" style={{ color:'var(--gold)' }}>Performance</span>
+        <div className="section-div-line" style={{ background:'linear-gradient(90deg,rgba(160,114,42,0.25),rgba(160,114,42,0.06),transparent)' }}/>
+      </div>
+
+      {/* -- KPI Stats -- matches Dashboard KpiCard exactly -- */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10, marginBottom:20 }}>
         {STAT_CARDS.map(s => (
-          <div key={s.label} style={{
-            background: 'var(--parch-card)',
-            border: '1px solid var(--parch-line)',
-            borderTop: `3px solid ${s.color}`,
-            borderRadius: 12,
-            padding: '12px 14px',
-          }}>
-            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-              <div style={{ width:26, height:26, borderRadius:7, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <s.Icon style={{ width:12, height:12, color:s.color }}/>
-              </div>
-              <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--ink-faded)', margin:0 }}>
-                {s.label}
-              </p>
+          <div key={s.label} className="kpi-card" style={{ borderTopColor: s.accent }}>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value" style={{ color: s.valColor, margin:'6px 0 4px', fontFamily:'var(--font-mono)' }}>{s.val}</div>
+            <div className="kpi-sub">{s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost + CB' : 'USD rewards'}</div>
+            <div className="kpi-icon" style={{ marginTop:10, background: s.bg, borderColor: s.bdr }}>
+              <s.Icon size={13} color={s.accent}/>
             </div>
-            <p style={{ fontFamily:'var(--font-serif)', fontSize:18, fontWeight:900, color:s.color, margin:0, lineHeight:1 }}>
-              {s.val}
-            </p>
           </div>
         ))}
       </div>
 
-      {/* Bulk actions */}
+      {/* -- Bulk actions -- */}
       {selectedIds.size > 0 && (
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16, padding:'10px 16px', borderRadius:10, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)' }}>
           <span style={{ fontWeight:700, color:'var(--gold)', fontSize:13, fontFamily:'var(--font-serif)' }}>{selectedIds.size} selected</span>
@@ -385,7 +361,14 @@ export default function Transactions() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* -- Section divider for filters -- */}
+      <div className="section-div" style={{ marginBottom:10 }}>
+        <div className="section-div-dot" style={{ background:'var(--ocean)' }}/>
+        <span className="section-div-label" style={{ color:'var(--ocean)' }}>Filters</span>
+        <div className="section-div-line" style={{ background:'linear-gradient(90deg,rgba(42,92,122,0.25),rgba(42,92,122,0.06),transparent)' }}/>
+      </div>
+
+      {/* -- Filters -- */}
       <div style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:10, padding:'12px 14px', marginBottom:14 }}>
         <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
           <div style={{ flex:1, minWidth:180, position:'relative', display:'flex', alignItems:'center' }}>
@@ -397,18 +380,15 @@ export default function Transactions() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <select style={{ padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer' }}
-            value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <select style={INP} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="all">All statuses</option>
             {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
-          <select style={{ padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer' }}
-            value={vendorFilter} onChange={e => setVendorFilter(e.target.value)}>
+          <select style={INP} value={vendorFilter} onChange={e => setVendorFilter(e.target.value)}>
             <option value="all">All vendors</option>
             {vendors.map(v => <option key={v} value={v}>{v}</option>)}
           </select>
-          <select style={{ padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer' }}
-            value={paymentMethodFilter} onChange={e => setPaymentMethodFilter(e.target.value)}>
+          <select style={INP} value={paymentMethodFilter} onChange={e => setPaymentMethodFilter(e.target.value)}>
             <option value="all">All cards</option>
             {creditCards.map(c => <option key={c.id} value={c.id}>{c.card_name}{c.last_4_digits ? ` ....${c.last_4_digits}` : ''}</option>)}
           </select>
@@ -419,7 +399,7 @@ export default function Transactions() {
             {hasActiveFilters && <span style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)', display:'inline-block', marginLeft:2 }}/>}
           </button>
           {hasActiveFilters && (
-            <button style={{ fontSize:11, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontWeight:600 }} onClick={clearFilters}>
+            <button style={{ fontSize:11, color:'var(--crimson)', background:'none', border:'none', cursor:'pointer', fontWeight:600, fontFamily:'var(--font-serif)' }} onClick={clearFilters}>
               Clear all
             </button>
           )}
@@ -427,18 +407,17 @@ export default function Transactions() {
         {showMoreFilters && (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:8, marginTop:10, paddingTop:10, borderTop:'1px solid var(--parch-line)' }}>
             {[
-              { label:'From date', el: <input type="date" style={{ padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer', width:'100%' }} value={fromDate} onChange={e=>setFromDate(e.target.value)}/> },
-              { label:'To date',   el: <input type="date" style={{ padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer', width:'100%' }} value={toDate}   onChange={e=>setToDate(e.target.value)}/> },
+              { label:'From Date', el: <input type="date" style={{ ...INP, width:'100%' }} value={fromDate} onChange={e=>setFromDate(e.target.value)}/> },
+              { label:'To Date',   el: <input type="date" style={{ ...INP, width:'100%' }} value={toDate}   onChange={e=>setToDate(e.target.value)}/> },
               { label:'Category',  el: (
-                <select style={{ padding:'7px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--parch-line)', background:'var(--parch-warm)', color:'var(--ink-dim)', outline:'none', cursor:'pointer', width:'100%' }}
-                  value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
+                <select style={{ ...INP, width:'100%' }} value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
                   <option value="all">All categories</option>
                   {['Electronics','Home & Garden','Toys & Games','Health & Beauty','Sports','Clothing','Tools','Gift Cards','Other'].map(c=><option key={c} value={c}>{c}</option>)}
                 </select>
               )},
             ].map(f => (
               <div key={f.label}>
-                <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, color:'var(--ink-faded)', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>{f.label}</p>
+                <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, color:'var(--ink-faded)', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:4 }}>{f.label}</p>
                 {f.el}
               </div>
             ))}
@@ -446,15 +425,25 @@ export default function Transactions() {
         )}
       </div>
 
-      {/* Count */}
+      {/* -- Count -- */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-        <span style={{ fontSize:11, color:'var(--ink-dim)' }}>
-          Showing <strong style={{ color:'var(--ink)' }}>{Math.min((safePage-1)*PAGE_SIZE+1, sortedOrders.length)}&#8211;{Math.min(safePage*PAGE_SIZE, sortedOrders.length)}</strong> of <strong style={{ color:'var(--ink)' }}>{sortedOrders.length}</strong> orders
+        <span style={{ fontSize:11, color:'var(--ink-dim)', fontFamily:'var(--font-serif)' }}>
+          Showing{' '}
+          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{Math.min((safePage-1)*PAGE_SIZE+1, sortedOrders.length)}</strong>
+          {' to '}
+          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{Math.min(safePage*PAGE_SIZE, sortedOrders.length)}</strong>
+          {' of '}
+          <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{sortedOrders.length}</strong>
+          {' orders'}
         </span>
-        {totalPages > 1 && <span style={{ fontSize:11, color:'var(--ink-dim)' }}>Page {safePage} of {totalPages}</span>}
+        {totalPages > 1 && (
+          <span style={{ fontSize:11, color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>
+            Page {safePage} of {totalPages}
+          </span>
+        )}
       </div>
 
-      {/* Cards */}
+      {/* -- Order Cards -- */}
       <OrderGroupedCards
         data={pagedOrders}
         creditCards={creditCards}
@@ -470,11 +459,12 @@ export default function Transactions() {
         onClearFilters={clearFilters}
       />
 
-      {/* Pagination */}
+      {/* -- Pagination -- */}
       {totalPages > 1 && (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:24, paddingBottom:8 }}>
           <button onClick={() => setCurrentPage(p => Math.max(1,p-1))} disabled={safePage===1}
-            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', color: safePage===1 ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===1 ? 'not-allowed' : 'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', fontFamily:'var(--font-serif)',
+              color: safePage===1 ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===1 ? 'not-allowed' : 'pointer' }}>
             <ChevronLeft style={{ width:14, height:14 }}/> Prev
           </button>
           <div style={{ display:'flex', gap:4 }}>
@@ -482,10 +472,11 @@ export default function Transactions() {
               .filter(p => p===1 || p===totalPages || Math.abs(p-safePage)<=1)
               .reduce((acc,p,i,arr) => { if(i>0 && p-arr[i-1]>1) acc.push('...'); acc.push(p); return acc; }, [])
               .map((p,i) => p==='...'
-                ? <span key={`e${i}`} style={{ padding:'7px 6px', fontSize:12, color:'var(--ink-ghost)' }}>...</span>
+                ? <span key={`e${i}`} style={{ padding:'7px 6px', fontSize:12, color:'var(--ink-ghost)', fontFamily:'var(--font-mono)' }}>...</span>
                 : <button key={p} onClick={()=>setCurrentPage(p)}
-                    style={{ width:34, height:34, borderRadius:8, fontSize:12, fontWeight: p===safePage ? 700 : 500,
-                      border:'1px solid', cursor:'pointer', fontFamily:'var(--font-serif)',
+                    style={{ width:34, height:34, borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'var(--font-mono)',
+                      fontWeight: p===safePage ? 700 : 500,
+                      border: '1px solid',
                       borderColor: p===safePage ? 'var(--gold-bdr)' : 'var(--parch-line)',
                       background:  p===safePage ? 'var(--gold-bg)'  : 'var(--parch-card)',
                       color:       p===safePage ? 'var(--gold)'     : 'var(--ink-faded)' }}>
@@ -494,7 +485,8 @@ export default function Transactions() {
               )}
           </div>
           <button onClick={() => setCurrentPage(p => Math.min(totalPages,p+1))} disabled={safePage===totalPages}
-            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', color: safePage===totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===totalPages ? 'not-allowed' : 'pointer' }}>
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, border:'1px solid var(--parch-line)', background:'var(--parch-card)', fontFamily:'var(--font-serif)',
+              color: safePage===totalPages ? 'var(--ink-ghost)' : 'var(--ink-faded)', cursor: safePage===totalPages ? 'not-allowed' : 'pointer' }}>
             Next <ChevronRight style={{ width:14, height:14 }}/>
           </button>
         </div>
