@@ -326,20 +326,32 @@ export default function Transactions() {
       </div>
 
       {/* -- Section divider -- matches Dashboard SectionDivider -- */}
-      <div className="section-div" style={{ marginBottom:12 }}>
-        <div className="section-div-dot" style={{ background:'var(--gold)' }}/>
-        <span className="section-div-label" style={{ color:'var(--gold)' }}>Performance</span>
-        <div className="section-div-line" style={{ background:'linear-gradient(90deg,rgba(160,114,42,0.25),rgba(160,114,42,0.06),transparent)' }}/>
+      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:12 }}>
+        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)', flexShrink:0 }}/>
+        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--gold)', whiteSpace:'nowrap' }}>Performance</span>
+        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(160,114,42,0.25),rgba(160,114,42,0.06),transparent)' }}/>
       </div>
 
-      {/* -- KPI Stats -- matches Dashboard KpiCard exactly -- */}
+      {/* -- KPI Stats -- */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10, marginBottom:20 }}>
         {STAT_CARDS.map(s => (
-          <div key={s.label} className="kpi-card" style={{ borderTopColor: s.accent }}>
-            <div className="kpi-label">{s.label}</div>
-            <div className="kpi-value" style={{ color: s.valColor, margin:'6px 0 4px', fontFamily:'var(--font-mono)' }}>{s.val}</div>
-            <div className="kpi-sub">{s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost + CB' : 'USD rewards'}</div>
-            <div className="kpi-icon" style={{ marginTop:10, background: s.bg, borderColor: s.bdr }}>
+          <div key={s.label} style={{
+            background: 'var(--parch-card)',
+            border: '1px solid var(--parch-line)',
+            borderTop: `3px solid ${s.accent}`,
+            borderRadius: 12,
+            padding: '12px 14px',
+          }}>
+            <p style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:0 }}>
+              {s.label}
+            </p>
+            <p style={{ fontFamily:'var(--font-mono)', fontSize:20, fontWeight:900, color:s.valColor, margin:'6px 0 4px', lineHeight:1 }}>
+              {s.val}
+            </p>
+            <p style={{ fontSize:10, color:'var(--ink-ghost)', margin:0 }}>
+              {s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost + CB' : 'USD rewards'}
+            </p>
+            <div style={{ marginTop:10, width:26, height:26, borderRadius:7, background:s.bg, border:`1px solid ${s.bdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <s.Icon size={13} color={s.accent}/>
             </div>
           </div>
@@ -362,10 +374,10 @@ export default function Transactions() {
       )}
 
       {/* -- Section divider for filters -- */}
-      <div className="section-div" style={{ marginBottom:10 }}>
-        <div className="section-div-dot" style={{ background:'var(--ocean)' }}/>
-        <span className="section-div-label" style={{ color:'var(--ocean)' }}>Filters</span>
-        <div className="section-div-line" style={{ background:'linear-gradient(90deg,rgba(42,92,122,0.25),rgba(42,92,122,0.06),transparent)' }}/>
+      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
+        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--ocean)', flexShrink:0 }}/>
+        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--ocean)', whiteSpace:'nowrap' }}>Filters</span>
+        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(42,92,122,0.25),rgba(42,92,122,0.06),transparent)' }}/>
       </div>
 
       {/* -- Filters -- */}
