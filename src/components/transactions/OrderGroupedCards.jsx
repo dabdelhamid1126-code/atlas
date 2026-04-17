@@ -105,16 +105,35 @@ function StatusBadge({ status }) {
 /*  PRODUCT IMAGE                                                       */
 /* ------------------------------------------------------------------ */
 function ProductImg({ src, name, size = 48 }) {
-  const [err, setErr] = useState(false);
+  const [rawErr,   setRawErr]   = useState(false);
+  const [proxyErr, setProxyErr] = useState(false);
   const proxied = proxyImg(src);
-  if (!proxied || err) return (
+
+  if (!src) return (
     <div style={{ width:size, height:size, borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
       <ImageOff style={{ width:size*0.38, height:size*0.38, color:'var(--ink-ghost)' }}/>
     </div>
   );
-  return (
-    <img src={proxied} alt={name} onError={() => setErr(true)}
+
+  // Try raw URL first
+  if (!rawErr) return (
+    <img src={src} alt={name}
+      onError={() => setRawErr(true)}
       style={{ width:size, height:size, borderRadius:8, objectFit:'contain', background:'white', border:'1px solid var(--parch-line)', flexShrink:0 }}/>
+  );
+
+  // Fallback to proxy
+  if (proxied && !proxyErr) return (
+    <img src={proxied} alt={name}
+      onError={() => setProxyErr(true)}
+      style={{ width:size, height:size, borderRadius:8, objectFit:'contain', background:'white', border:'1px solid var(--parch-line)', flexShrink:0 }}/>
+  );
+
+  // Both failed
+  return (
+    <div style={{ width:size, height:size, borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+      <ImageOff style={{ width:size*0.38, height:size*0.38, color:'var(--ink-ghost)' }}/>
+    </div>
   );
 }
 
@@ -262,9 +281,13 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
               }, 0), 0);
 
             /* Per-item cashback split evenly across items */
-            const itemCB     = items.length > 0 ? totalCashback / items.length : 0;
+            const itemCB = items.length > 0 ? totalCashback / items.length : 0;
+
+            /* Full order cost per unit (includes tax/fees proportionally) */
+            const fullCostPerUnit = totalUnitsOrdered > 0 ? totalCost / totalUnitsOrdered : unitCost;
+
             const itemProfit = itemRevenue > 0
-              ? itemRevenue - (unitCost * itemUnitsSold)
+              ? itemRevenue - (fullCostPerUnit * itemUnitsSold)
               : null;
 
             return (
@@ -342,7 +365,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
                     const evQty      = parseInt(it.qty || it.quantity) || 1;
                     const evSaleUnit = parseFloat(it.sale_price) || 0;  // per-unit price
                     const evTotal    = evSaleUnit * evQty;               // total revenue for this sale
-                    const evCost     = unitCost * evQty;                 // total cost for units sold
+                    const evCost     = fullCostPerUnit * evQty;          // full order cost (tax/fees included)
                     const evCB       = itemCB / Math.max(saleEvents.length, 1);
                     const evProfit   = evSaleUnit > 0 ? evTotal - evCost : null;
                     return (
@@ -367,7 +390,16 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
                         <div style={{ textAlign:'right', color:'var(--ink-ghost)' }}>--</div>
                         <div/>
                         <div style={{ textAlign:'right', color:'var(--terrain)', fontWeight:700, fontFamily:'var(--font-mono)' }}>
-                          {evSaleUnit > 0 ? `${fmt$(evSaleUnit)} x${evQty}` : '--'}
+                          {evSaleUnit > 0 ? (
+                            <div>
+                              <div style={{ fontSize:12 }}>{fmt$(evSaleUnit)}</div>
+                              {evQty > 1 && (
+                                <div style={{ fontSize:10, color:'var(--terrain)', opacity:0.7 }}>
+                                  = {fmt$(evTotal)}
+                                </div>
+                              )}
+                            </div>
+                          ) : '--'}
                         </div>
                         <div style={{
                           textAlign:'right', fontWeight:700, fontFamily:'var(--font-mono)',
