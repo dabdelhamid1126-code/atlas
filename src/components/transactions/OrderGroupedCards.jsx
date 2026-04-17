@@ -225,6 +225,7 @@ function OrderCard({ order, creditCards, rewards, products, giftCards, onEdit, o
               const itemTotal = unitCost * qty;
               const itemImage = item.product_image || '';
               const itemName = item.product_name || 'Unknown Product';
+              const itemUpc = item.upc || 'N/A';
 
               // Units sold for THIS item
               const itemUnitsSold = saleEvents.reduce((s, ev) =>
@@ -260,7 +261,7 @@ function OrderCard({ order, creditCards, rewards, products, giftCards, onEdit, o
                           {itemName}
                         </p>
                         <p style={{ fontSize:10, color:'var(--ink-ghost)', margin:0, fontFamily:'var(--font-mono)', letterSpacing:'0.02em' }}>
-                          UPC: {item.upc || 'N/A'}
+                          UPC: {itemUpc}
                         </p>
                       </div>
                     </div>
