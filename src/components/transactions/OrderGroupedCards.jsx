@@ -16,8 +16,20 @@ const fmt$ = (v, fallback = '--') => {
 };
 
 const fmtDate = (d) => {
-  try { return d ? format(new Date(d), 'MMM d, yyyy') : '--'; } catch { return '--'; }
+  try {
+    if (!d) return '--';
+    // Parse date string without timezone shift (treat as local date)
+    const s = String(d);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      const [y, m, day] = s.split('-').map(Number);
+      return format(new Date(y, m - 1, day), 'MMM d, yyyy');
+    }
+    return format(new Date(d), 'MMM d, yyyy');
+  } catch { return '--'; }
 };
+
+const proxyImg = (url) =>
+  url ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=120&h=120&fit=contain&bg=white` : null;
 
 /* ------------------------------------------------------------------ */
 /*  STATUS CONFIG                                                       */
@@ -94,13 +106,14 @@ function StatusBadge({ status }) {
 /* ------------------------------------------------------------------ */
 function ProductImg({ src, name, size = 48 }) {
   const [err, setErr] = useState(false);
-  if (!src || err) return (
+  const proxied = proxyImg(src);
+  if (!proxied || err) return (
     <div style={{ width:size, height:size, borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
       <ImageOff style={{ width:size*0.38, height:size*0.38, color:'var(--ink-ghost)' }}/>
     </div>
   );
   return (
-    <img src={src} alt={name} onError={() => setErr(true)}
+    <img src={proxied} alt={name} onError={() => setErr(true)}
       style={{ width:size, height:size, borderRadius:8, objectFit:'contain', background:'white', border:'1px solid var(--parch-line)', flexShrink:0 }}/>
   );
 }
@@ -143,11 +156,11 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
   const totalUnitsSold = saleEvents.reduce((s, ev) =>
     s + (ev.items || []).reduce((ss, it) => ss + (parseInt(it.qty || it.quantity) || 1), 0), 0);
 
-  /* -- Profit: revenue - proportional cost of sold units + cashback -- */
+  /* -- Profit: revenue - proportional cost of sold units (NO cashback added) -- */
   const costPerUnit   = totalUnitsOrdered > 0 ? totalCost / totalUnitsOrdered : 0;
   const soldCost      = costPerUnit * totalUnitsSold;
   const hasSale       = totalRevenue > 0;
-  const orderProfit   = hasSale ? totalRevenue - soldCost + totalCashback : 0;
+  const orderProfit   = hasSale ? totalRevenue - soldCost : 0;
   const profitMargin  = hasSale && totalRevenue > 0 ? ((orderProfit / totalRevenue) * 100).toFixed(1) : '0';
   const profitColor   = orderProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)';
 
@@ -233,7 +246,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
             const unitCost  = parseFloat(item.unit_cost) || 0;
             const qtyOrd    = parseInt(item.quantity_ordered) || 1;
             const itemName  = item.product_name || 'Unknown Product';
-            const itemImage = item.product_image_url || item.product_image || '';
+            const itemImage = item.product_image_url || item.product_image || item.image_url || item.image || '';
 
             /* Units sold and revenue for THIS item specifically */
             const itemUnitsSold = saleEvents.reduce((s, ev) =>
@@ -251,7 +264,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
             /* Per-item cashback split evenly across items */
             const itemCB     = items.length > 0 ? totalCashback / items.length : 0;
             const itemProfit = itemRevenue > 0
-              ? itemRevenue - (unitCost * itemUnitsSold) + itemCB
+              ? itemRevenue - (unitCost * itemUnitsSold)
               : null;
 
             return (
@@ -326,11 +339,12 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
                   const evItems = (ev.items || []).filter(it =>
                     (it.product_name || '').toLowerCase() === itemName.toLowerCase());
                   return evItems.map((it, itIdx) => {
-                    const evQty    = parseInt(it.qty || it.quantity) || 1;
-                    const evSale   = parseFloat(it.sale_price) || 0;
-                    const evCost   = unitCost * evQty;
-                    const evCB     = itemCB / Math.max(saleEvents.length, 1);
-                    const evProfit = evSale > 0 ? evSale - evCost + evCB : null;
+                    const evQty      = parseInt(it.qty || it.quantity) || 1;
+                    const evSaleUnit = parseFloat(it.sale_price) || 0;  // per-unit price
+                    const evTotal    = evSaleUnit * evQty;               // total revenue for this sale
+                    const evCost     = unitCost * evQty;                 // total cost for units sold
+                    const evCB       = itemCB / Math.max(saleEvents.length, 1);
+                    const evProfit   = evSaleUnit > 0 ? evTotal - evCost : null;
                     return (
                       <div key={`${evIdx}-${itIdx}`} style={{
                         display:'grid', gridTemplateColumns:'1fr 70px 90px 70px 90px 90px',
@@ -353,7 +367,7 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
                         <div style={{ textAlign:'right', color:'var(--ink-ghost)' }}>--</div>
                         <div/>
                         <div style={{ textAlign:'right', color:'var(--terrain)', fontWeight:700, fontFamily:'var(--font-mono)' }}>
-                          {evSale > 0 ? fmt$(evSale) : '--'}
+                          {evSaleUnit > 0 ? `${fmt$(evSaleUnit)} x${evQty}` : '--'}
                         </div>
                         <div style={{
                           textAlign:'right', fontWeight:700, fontFamily:'var(--font-mono)',
