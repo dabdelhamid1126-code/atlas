@@ -205,7 +205,7 @@ export default function Transactions() {
       .filter(r => r.currency === 'USD' && filteredOrders.some(o => o.id === r.purchase_order_id))
       .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
 
-    const totalProfit = totalSale > 0 ? totalSale - totalCost + totalCashback : 0;
+    const totalProfit = totalSale > 0 ? totalSale - totalCost : 0;
 
     return { totalItems, totalCost, totalSale, totalCashback, totalProfit };
   }, [filteredOrders, rewards]);
