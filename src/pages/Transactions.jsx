@@ -315,57 +315,36 @@ export default function Transactions() {
         </button>
       </div>
 
-      {/* Mode tabs */}
-      <div style={{ display:'flex', gap:2, padding:3, borderRadius:10, width:'fit-content', background:'var(--parch-card)', border:'1px solid var(--parch-line)', marginBottom:18 }}>
-        {MODES.map(m => {
-          const active = mode === m.id;
-          return (
-            <button key={m.id} onClick={() => setMode(m.id)}
-              style={{
-                display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8,
-                fontSize:12, fontWeight: active ? 700 : 500, cursor:'pointer', border:'none',
-                fontFamily:'var(--font-serif)', transition:'all 0.15s',
-                background: active ? 'var(--ink)' : 'transparent',
-                color:      active ? 'var(--ne-cream)' : 'var(--ink-dim)',
-              }}>
-              <m.Icon style={{ width:13, height:13, opacity: active ? 1 : 0.6 }}/>
-              {m.label}
-              <span style={{ fontSize:10, opacity:0.65, fontFamily:'var(--font-mono)' }}>({modeCounts[m.id]})</span>
-            </button>
-          );
-        })}
+      {/* Mode tabs -- exact Dashboard tab-bar classes */}
+      <div className="tab-bar" style={{ width:'fit-content', marginBottom:18 }}>
+        {MODES.map(m => (
+          <button key={m.id} onClick={() => setMode(m.id)}
+            className={`tab-btn${mode === m.id ? ' active' : ''}`}
+            style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <m.Icon style={{ width:13, height:13, opacity: mode === m.id ? 1 : 0.6 }}/>
+            {m.label}
+            <span style={{ fontSize:10, opacity:0.65, fontFamily:'var(--font-mono)' }}>({modeCounts[m.id]})</span>
+          </button>
+        ))}
       </div>
 
-      {/* Performance section divider */}
-      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:12 }}>
-        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)', flexShrink:0 }}/>
-        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--gold)', whiteSpace:'nowrap' }}>Performance</span>
-        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(160,114,42,0.25),rgba(160,114,42,0.06),transparent)' }}/>
+      {/* Performance section divider -- matches Dashboard SectionDivider */}
+      <div className="section-div">
+        <div className="section-div-dot" style={{ background:'var(--gold)' }}/>
+        <span className="section-div-label" style={{ color:'var(--gold)' }}>Performance</span>
+        <div className="section-div-line" style={{ background:'linear-gradient(90deg,rgba(160,114,42,0.25),rgba(160,114,42,0.06),transparent)' }}/>
       </div>
 
-      {/* KPI Cards -- exact Dashboard style */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10, marginBottom:20 }}>
+      {/* KPI Cards -- uses exact same CSS classes as Dashboard */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:8, marginBottom:20 }}>
         {STAT_CARDS.map(s => (
-          <div key={s.label} style={{
-            background: 'var(--parch-card)',
-            border: 'none',
-            borderTop: `3px solid ${s.accent}`,
-            borderRadius: 12,
-            padding: '14px 16px 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 1px 4px rgba(61,43,26,0.06)',
-          }}>
-            <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-dim)', margin:'0 0 6px 0' }}>
-              {s.label}
-            </p>
-            <p style={{ fontFamily:'var(--font-mono)', fontSize:24, fontWeight:900, color:s.valColor, margin:'0 0 4px 0', lineHeight:1 }}>
-              {s.val}
-            </p>
-            <p style={{ fontSize:10, color:'var(--ink-ghost)', margin:'0 0 14px 0', flex:1 }}>
+          <div key={s.label} className="kpi-card fade-up" style={{ borderTopColor: s.accent }}>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value" style={{ color: s.valColor, margin:'6px 0 4px' }}>{s.val}</div>
+            <div className="kpi-sub">
               {s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost' : 'USD rewards'}
-            </p>
-            <div style={{ width:28, height:28, borderRadius:7, background:s.bg, border:`1px solid ${s.bdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            </div>
+            <div className="kpi-icon" style={{ marginTop:10, background:s.bg, borderColor:s.bdr }}>
               <s.Icon size={13} color={s.accent}/>
             </div>
           </div>
@@ -388,10 +367,10 @@ export default function Transactions() {
       )}
 
       {/* Filters section divider */}
-      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
-        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--ocean)', flexShrink:0 }}/>
-        <span style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--ocean)', whiteSpace:'nowrap' }}>Filters</span>
-        <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(42,92,122,0.25),rgba(42,92,122,0.06),transparent)' }}/>
+      <div className="section-div">
+        <div className="section-div-dot" style={{ background:'var(--ocean)' }}/>
+        <span className="section-div-label" style={{ color:'var(--ocean)' }}>Filters</span>
+        <div className="section-div-line" style={{ background:'linear-gradient(90deg,rgba(42,92,122,0.25),rgba(42,92,122,0.06),transparent)' }}/>
       </div>
 
       {/* Filters */}
