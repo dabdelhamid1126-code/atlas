@@ -363,7 +363,7 @@ export default function Transactions() {
               {s.val}
             </p>
             <p style={{ fontSize:10, color:'var(--ink-ghost)', margin:'0 0 14px 0', flex:1 }}>
-              {s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost + CB' : 'USD rewards'}
+              {s.label === 'Items' ? 'total items' : s.label === 'Total Cost' ? 'card spend' : s.label === 'Total Sale' ? 'from sales' : s.label === 'Profit' ? 'revenue - cost' : 'USD rewards'}
             </p>
             <div style={{ width:28, height:28, borderRadius:7, background:s.bg, border:`1px solid ${s.bdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <s.Icon size={13} color={s.accent}/>
