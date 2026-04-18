@@ -140,7 +140,7 @@ function ProductImg({ src, name, size = 48 }) {
 /* ------------------------------------------------------------------ */
 /*  ORDER CARD                                                          */
 /* ------------------------------------------------------------------ */
-function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatus, selected, onToggleSelect }) {
+function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, onQuickStatus, selected, onToggleSelect }) {
   const [expanded,       setExpanded]       = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -265,7 +265,10 @@ function OrderCard({ order, creditCards, rewards, onEdit, onDelete, onQuickStatu
             const unitCost  = parseFloat(item.unit_cost) || 0;
             const qtyOrd    = parseInt(item.quantity_ordered) || 1;
             const itemName  = item.product_name || 'Unknown Product';
-            const itemImage = item.product_image_url || item.product_image || item.image_url || item.image || '';
+            const itemImage = item.product_image_url || item.product_image || item.image_url || item.image
+              || products?.find(p => p.name?.toLowerCase() === itemName.toLowerCase())?.image
+              || products?.find(p => p.upc && p.upc === item.upc)?.image
+              || '';
 
             /* Units sold and revenue for THIS item specifically */
             const itemUnitsSold = saleEvents.reduce((s, ev) =>
