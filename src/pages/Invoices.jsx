@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
+// ── Design tokens ─────────────────────────────────────────────────────────
 const C = {
   ink:'#3D2B1A', inkDim:'#664930', inkFaded:'#8a6d56', inkGhost:'#b89e8a',
   gold:'#A0722A', gold2:'#C4922E', goldBg:'rgba(160,114,42,0.08)', goldBdr:'rgba(160,114,42,0.22)',
@@ -18,7 +19,7 @@ const C = {
   neCream:'#FFDBBB',
 };
 const FONT  = "ui-sans-serif, system-ui, -apple-system, sans-serif";
-const SERIF = "ui-sans-serif, system-ui, -apple-system, sans-serif";
+const SERIF = "'Playfair Display', serif";
 const MONO  = "ui-monospace, 'SF Mono', Consolas, monospace";
 const INP   = { background:C.parchWarm, border:`1px solid ${C.parchLine}`, borderRadius:8, color:C.ink, padding:'8px 10px', fontSize:13, outline:'none', width:'100%', fontFamily:FONT };
 
@@ -31,8 +32,9 @@ const STATUS_META = {
 };
 const STATUSES = ['draft','sent','paid','overdue','cancelled'];
 const fmt$    = (v) => `$${(parseFloat(v)||0).toFixed(2)}`;
-const fmtDate = (d) => { try { return d ? format(new Date(d),'MMM d, yyyy') : '--'; } catch { return '--'; } };
+const fmtDate = (d) => { try { return d ? format(new Date(d),'MMM d, yyyy') : '—'; } catch { return '—'; } };
 
+// ── Micro components ──────────────────────────────────────────────────────
 function LBL({ children }) {
   return <label style={{ fontFamily:FONT, fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:C.inkFaded, display:'block', marginBottom:4 }}>{children}</label>;
 }
@@ -59,6 +61,7 @@ function ProductThumb({ src, name, size=36 }) {
   return <img src={src} alt={name||''} onError={()=>setErr(true)} style={{ width:size, height:size, borderRadius:7, objectFit:'contain', background:'white', border:`1px solid ${C.parchLine}`, flexShrink:0 }}/>;
 }
 
+// ── Default form ──────────────────────────────────────────────────────────
 const blankItem = () => ({ product_id:'', product_image:'', description:'', quantity:1, unit_price:0, unit_cost:0, total:0 });
 const defaultForm = () => ({
   invoice_number:'', status:'draft',
@@ -76,6 +79,7 @@ const formFromInv = (inv) => ({
   tax: inv.tax||0, notes: inv.notes||'',
 });
 
+// ── Main ──────────────────────────────────────────────────────────────────
 export default function Invoices() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
@@ -114,6 +118,7 @@ export default function Invoices() {
     onSuccess: () => { queryClient.invalidateQueries({queryKey:['invoices']}); toast.success('Invoice deleted'); },
   });
 
+  // ── Helpers ────────────────────────────────────────────────────────────
   const getStock = (pid) => {
     if (!pid) return null;
     return inventory.filter(i=>i.product_id===pid&&i.status==='in_stock').reduce((s,i)=>s+(i.quantity||0),0);
@@ -152,6 +157,7 @@ export default function Invoices() {
     queryClient.invalidateQueries({queryKey:['inventory']});
   };
 
+  // ── File extraction ────────────────────────────────────────────────────
   const handleFileExtract = async (file) => {
     if (!file) return;
     if (!file.name.match(/\.(pdf|jpg|jpeg|png|webp|heic)$/i)&&!['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)) {
@@ -199,7 +205,7 @@ export default function Invoices() {
       setEditingInv(null);
       setWasExtracted(true);
       setFormOpen(true);
-      toast.success('Invoice scanned - review and save');
+      toast.success('Invoice scanned — review and save');
     } catch(e) {
       toast.error('Extraction failed');
     } finally {
@@ -213,6 +219,7 @@ export default function Invoices() {
     if (file) handleFileExtract(file);
   };
 
+  // ── Form helpers ───────────────────────────────────────────────────────
   const set = (f,v) => setFormData(p=>({...p,[f]:v}));
   const calcTotals = () => { const sub=formData.items.reduce((s,i)=>s+(i.total||0),0); return {subtotal:sub,total:sub+(formData.tax||0)}; };
 
@@ -264,6 +271,7 @@ export default function Invoices() {
     toast.success('PDF downloaded');
   };
 
+  // ── Filtering ──────────────────────────────────────────────────────────
   const filtered = useMemo(()=>{
     let list=[...invoices];
     if(tab==='unpaid') list=list.filter(i=>!['paid','cancelled'].includes(i.status));
@@ -290,6 +298,7 @@ export default function Invoices() {
   const tabCounts={all:invoices.length,unpaid:invoices.filter(i=>!['paid','cancelled'].includes(i.status)).length,paid:invoices.filter(i=>i.status==='paid').length,overdue:invoices.filter(i=>i.status==='overdue').length};
   const filteredProducts=productSearch?products.filter(p=>p.name?.toLowerCase().includes(productSearch.toLowerCase())):products;
 
+  // ── Seller select (inner component) ───────────────────────────────────
   function PartySelect({label,nameField,emailField,sellerIdField}){
     const [mode,setMode]=useState(formData[sellerIdField]?'select':'manual');
     return(
@@ -324,9 +333,22 @@ export default function Invoices() {
     );
   }
 
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div style={{paddingBottom:40}}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .inv-actions{display:flex;flex-wrap:wrap;gap:6px} @media(max-width:640px){ .kpi-grid{grid-template-columns:repeat(2,1fr)!important} .inv-header{flex-direction:column!important;align-items:flex-start!important} .inv-actions button{flex:1;min-width:70px;justify-content:center} .modal-panel{max-width:100%!important;border-left:none!important;border-radius:16px 16px 0 0!important} .modal-panel{position:fixed;bottom:0;top:auto!important;height:95vh!important} .form-3col{grid-template-columns:1fr 1fr!important} .party-2col{grid-template-columns:1fr!important} }`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .inv-actions{display:flex;flex-wrap:wrap;gap:6px}
+        @media(max-width:640px){
+          .kpi-grid{grid-template-columns:repeat(2,1fr)!important}
+          .inv-header{flex-direction:column!important;align-items:flex-start!important}
+          .inv-actions button{flex:1;min-width:70px;justify-content:center}
+          .modal-panel{max-width:100%!important;border-left:none!important;border-radius:16px 16px 0 0!important}
+          .modal-panel{position:fixed;bottom:0;top:auto!important;height:95vh!important}
+          .form-3col{grid-template-columns:1fr 1fr!important}
+          .party-2col{grid-template-columns:1fr!important}
+        }
+      `}</style>
 
       {/* Header */}
       <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:22,flexWrap:'wrap',gap:12}}>
@@ -356,7 +378,7 @@ export default function Invoices() {
         </div>
         <div>
           <p style={{fontSize:13,fontWeight:700,color:dragOver?C.ocean:C.ink,fontFamily:SERIF,margin:0}}>{extracting?'Scanning your invoice...':'Drop invoice here to auto-fill'}</p>
-          <p style={{fontSize:11,color:C.inkFaded,marginTop:2}}>PDF, JPG, PNG - fields extracted automatically</p>
+          <p style={{fontSize:11,color:C.inkFaded,marginTop:2}}>PDF, JPG, PNG — fields extracted automatically</p>
         </div>
       </div>
 
@@ -367,7 +389,7 @@ export default function Invoices() {
           {label:'Invoices',val:String(stats.total),color:C.ocean,bg:C.oceanBg,bdr:C.oceanBdr},
           {label:'Paid',val:fmt$(stats.paidAmt),color:C.terrain,bg:C.terrainBg,bdr:C.terrainBdr},
           {label:'Unpaid',val:fmt$(stats.unpaidAmt),color:C.gold,bg:C.goldBg,bdr:C.goldBdr},
-          {label:'Profit',val:stats.profit!==0?fmt$(Math.abs(stats.profit)):'--',color:stats.profit>=0?C.terrain:C.crimson,bg:stats.profit>=0?C.terrainBg:C.crimsonBg,bdr:stats.profit>=0?C.terrainBdr:C.crimsonBdr},
+          {label:'Profit',val:stats.profit!==0?fmt$(Math.abs(stats.profit)):'—',color:stats.profit>=0?C.terrain:C.crimson,bg:stats.profit>=0?C.terrainBg:C.crimsonBg,bdr:stats.profit>=0?C.terrainBdr:C.crimsonBdr},
           {label:'Overdue',val:String(stats.overdue),color:stats.overdue>0?C.crimson:C.inkGhost,bg:stats.overdue>0?C.crimsonBg:C.parchWarm,bdr:stats.overdue>0?C.crimsonBdr:C.parchLine},
         ].map(k=>(
           <div key={k.label} style={{background:C.parchCard,borderTop:`3px solid ${k.color}`,borderRadius:12,padding:'14px 16px 12px',display:'flex',flexDirection:'column',boxShadow:'0 1px 4px rgba(61,43,26,0.06)'}}>
@@ -430,6 +452,7 @@ export default function Invoices() {
         const isOverdue=inv.status==='overdue';
         return(
           <div key={inv.id} style={{background:C.parchCard,border:`1px solid ${isOverdue?C.crimsonBdr:C.parchLine}`,borderRadius:12,marginBottom:10,overflow:'hidden'}}>
+
             <div className="inv-header" style={{display:'flex',alignItems:'center',gap:10,padding:'13px 16px',borderBottom:expanded?`1px solid ${C.parchLine}`:'none',flexWrap:'wrap'}}>
               <div style={{flex:1,minWidth:200}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
@@ -439,15 +462,16 @@ export default function Invoices() {
                   <span style={{fontSize:10,padding:'2px 7px',borderRadius:99,background:C.parchWarm,color:C.inkGhost,border:`1px solid ${C.parchLine}`}}>{(inv.items||[]).length} item{(inv.items||[]).length!==1?'s':''}</span>
                 </div>
                 <div style={{fontSize:11,color:C.inkDim,display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
-                  {inv.from_name&&<><span style={{fontWeight:700,color:C.inkFaded}}>From:</span><span>{inv.from_name}</span><span style={{color:C.parchLine}}>{'>'}</span></>}
+                  {inv.from_name&&<><span style={{fontWeight:700,color:C.inkFaded}}>From:</span><span>{inv.from_name}</span><span style={{color:C.parchLine}}>→</span></>}
                   <span style={{fontWeight:700,color:C.inkFaded}}>To:</span>
-                  <span style={{fontWeight:600,color:C.ink}}>{inv.buyer||'--'}</span>
+                  <span style={{fontWeight:600,color:C.ink}}>{inv.buyer||'—'}</span>
                   {inv.buyer_email&&<span style={{color:C.inkGhost}}>· {inv.buyer_email}</span>}
                   <span style={{color:C.parchLine}}>·</span><span>{fmtDate(inv.invoice_date)}</span>
                   {inv.due_date&&<><span style={{color:C.parchLine}}>·</span><span style={{color:isOverdue?C.crimson:C.inkFaded}}>Due {fmtDate(inv.due_date)}</span></>}
                 </div>
                 {isPaid&&profit!==0&&<div style={{marginTop:3,fontSize:11,fontWeight:700,color:profit>=0?C.terrain:C.crimson}}>{profit>=0?'+':''}{fmt$(profit)} profit ({margin.toFixed(1)}%)</div>}
               </div>
+
               <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                 <span style={{fontFamily:MONO,fontSize:18,fontWeight:900,color:isPaid?C.terrain:isOverdue?C.crimson:C.ink,marginRight:4}}>{fmt$(inv.total)}</span>
                 <div className="inv-actions">
@@ -477,7 +501,7 @@ export default function Invoices() {
                       <div key={idx} style={{display:'grid',gridTemplateColumns:`48px 1fr 50px 80px 80px${isPaid?' 80px 80px':''}`,gap:6,padding:'10px 0',borderBottom:idx<profitItems.length-1?`1px solid ${C.parchLine}`:'none',alignItems:'center',fontSize:12}}>
                         <ProductThumb src={imgSrc} name={item.description} size={36}/>
                         <div>
-                          <div style={{fontWeight:600,color:C.ink}}>{item.description||'--'}</div>
+                          <div style={{fontWeight:600,color:C.ink}}>{item.description||'—'}</div>
                           {item.product_id&&getStock(item.product_id)!==null&&<div style={{fontSize:10,color:C.inkGhost,marginTop:1}}>Stock: {getStock(item.product_id)}</div>}
                         </div>
                         <div style={{textAlign:'right',color:C.inkDim}}>{item.quantity}</div>
@@ -508,11 +532,12 @@ export default function Invoices() {
         <div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',justifyContent:'flex-end'}}>
           <div onClick={()=>setFormOpen(false)} style={{position:'absolute',inset:0,background:'rgba(26,18,10,0.55)'}}/>
           <div className="modal-panel" style={{position:'relative',width:'100%',maxWidth:680,height:'100%',background:C.parchCard,borderLeft:`1px solid ${C.parchLine}`,boxShadow:'-24px 0 60px rgba(0,0,0,0.15)',display:'flex',flexDirection:'column',overflowY:'auto'}}>
+
             <div style={{padding:'18px 24px 14px',borderBottom:`1px solid ${C.parchLine}`,background:C.parchWarm,flexShrink:0,position:'sticky',top:0,zIndex:10}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div>
                   <h2 style={{fontFamily:SERIF,fontSize:18,fontWeight:800,color:C.ink,margin:0}}>{editingInv?'Edit Invoice':'New Invoice'}</h2>
-                  {wasExtracted&&<p style={{fontSize:11,color:C.ocean,marginTop:3}}>Fields extracted from file - review before saving</p>}
+                  {wasExtracted&&<p style={{fontSize:11,color:C.ocean,marginTop:3}}>✓ Fields extracted from file — review before saving</p>}
                 </div>
                 <button onClick={()=>setFormOpen(false)} style={{width:32,height:32,borderRadius:8,background:C.parchWarm,border:`1px solid ${C.parchLine}`,color:C.inkDim,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>
                   <X style={{width:16,height:16}}/>
@@ -521,6 +546,8 @@ export default function Invoices() {
             </div>
 
             <form id="inv-form" onSubmit={handleSubmit} style={{flex:1,padding:'20px 24px',display:'flex',flexDirection:'column',gap:16}}>
+
+              {/* Invoice details */}
               <div style={{background:C.parchCard,border:`1px solid ${C.parchLine}`,borderRadius:12,padding:16}}>
                 <div style={{fontFamily:SERIF,fontSize:9,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.inkFaded,marginBottom:12}}>Invoice details</div>
                 <div className="form-3col" style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:10}}>
@@ -557,6 +584,7 @@ export default function Invoices() {
                   </button>
                 </div>
 
+                {/* Product search */}
                 <div style={{position:'relative',marginBottom:10}}>
                   <Search style={{position:'absolute',left:9,top:'50%',transform:'translateY(-50%)',width:13,height:13,color:C.inkGhost,pointerEvents:'none'}}/>
                   <input style={{...INP,paddingLeft:30}} placeholder="Search products to add..." value={productSearch} onChange={e=>setProductSearch(e.target.value)}/>
@@ -588,6 +616,7 @@ export default function Invoices() {
                     const imgSrc=item.product_image||products.find(p=>p.id===item.product_id)?.image||null;
                     return(
                       <div key={idx} style={{borderRadius:9,padding:'12px',background:C.parchWarm,border:`1px solid ${C.parchLine}`}}>
+                        {/* Top: image + description + delete */}
                         <div style={{display:'flex',gap:10,alignItems:'flex-start',marginBottom:10}}>
                           <ProductThumb src={imgSrc} name={item.description} size={48}/>
                           <div style={{flex:1,minWidth:0}}>
@@ -598,6 +627,7 @@ export default function Invoices() {
                             <X style={{width:14,height:14}}/>
                           </button>
                         </div>
+                        {/* Bottom: qty, price, total */}
                         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
                           <div><LBL>Qty</LBL><input style={{...INP,textAlign:'center'}} type="number" min="1" value={item.quantity||1} onChange={e=>updateItem(idx,'quantity',parseInt(e.target.value)||1)}/></div>
                           <div><LBL>Unit price</LBL><div style={{position:'relative'}}><span style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',color:C.inkGhost,fontSize:12}}>$</span><input style={{...INP,paddingLeft:20}} type="number" step="0.01" min="0" value={item.unit_price||''} onChange={e=>updateItem(idx,'unit_price',parseFloat(e.target.value)||0)} placeholder="0.00"/></div></div>
@@ -605,7 +635,7 @@ export default function Invoices() {
                         </div>
                         {(stock!==null||item.unit_cost>0)&&(
                           <div style={{marginTop:6,display:'flex',gap:12,flexWrap:'wrap'}}>
-                            {stock!==null&&<span style={{fontSize:10,fontWeight:700,color:stock>=(item.quantity||1)?C.terrain:C.crimson}}>{stock} in stock{stock<(item.quantity||1)?' - insufficient!':''}</span>}
+                            {stock!==null&&<span style={{fontSize:10,fontWeight:700,color:stock>=(item.quantity||1)?C.terrain:C.crimson}}>{stock} in stock{stock<(item.quantity||1)?' — insufficient!':''}</span>}
                             {item.unit_cost>0&&<span style={{fontSize:10,color:C.inkGhost}}>Cost: {fmt$(item.unit_cost)} · Margin: {item.unit_price>0?((1-item.unit_cost/item.unit_price)*100).toFixed(1):0}%</span>}
                           </div>
                         )}
@@ -614,6 +644,7 @@ export default function Invoices() {
                   })}
                 </div>
 
+                {/* Totals */}
                 <div style={{marginTop:14,background:C.parchWarm,borderRadius:9,padding:'10px 14px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',fontSize:12,padding:'3px 0'}}><span style={{color:C.inkDim}}>Subtotal</span><span style={{fontFamily:MONO,fontWeight:600,color:C.ink}}>{fmt$(calcTotals().subtotal)}</span></div>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'3px 0'}}>
