@@ -49,6 +49,7 @@ const AuthenticatedApp = () => {
     return <SplashScreen onComplete={() => setSplashDone(true)} userName={userName} />;
   }
 
+
   return (
     <Routes>
       <Route path="/" element={
@@ -87,8 +88,8 @@ function App() {
           <Router>
             <NavigationTracker />
             <AuthenticatedApp />
+            <Toaster />
           </Router>
-          <Toaster />
         </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>
