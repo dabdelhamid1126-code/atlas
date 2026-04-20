@@ -29,8 +29,8 @@ export default function PaymentMethods() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>Payment Methods</h1>
-        <p style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Manage cards, cashback rates, and per-store rate overrides</p>
+        <h1 className="page-title">Payment Methods</h1>
+        <p className="page-subtitle">Manage cards, cashback rates, and per-store rate overrides</p>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 3, borderRadius: 10, marginBottom: 22, width: 'fit-content', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
@@ -139,21 +139,21 @@ function CreditCardsTab({ queryClient }) {
   return (
     <>
       {/* Stats Bar */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--ocean)' }}>
-          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ocean)', marginBottom: 4 }}>Active Cards</p>
-          <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--ocean)' }}>{activeCards.length}</p>
-          <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{cards.length} total</p>
+      <div className="grid-kpi" style={{ marginBottom: 16 }}>
+        <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--ocean2)' }}>
+          <div className="kpi-label">Active Cards</div>
+          <div className="kpi-value" style={{ color: 'var(--ocean2)' }}>{activeCards.length}</div>
+          <div className="kpi-sub">{cards.length} total</div>
         </div>
-        <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--gold)' }}>
-          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 4 }}>Spent This Month</p>
-          <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--gold)' }}>${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-          <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{monthOrders.length} orders</p>
+        <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--gold)' }}>
+          <div className="kpi-label">Spent This Month</div>
+          <div className="kpi-value" style={{ color: 'var(--gold)' }}>${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+          <div className="kpi-sub">{monthOrders.length} orders</div>
         </div>
-        <div style={{ borderRadius: 14, padding: 18, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderTop: '3px solid var(--terrain)' }}>
-          <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 4 }}>Avg Cashback</p>
-          <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--terrain)' }}>{avgCashback.toFixed(1)}%</p>
-          <p style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>across active cards</p>
+        <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--terrain2)' }}>
+          <div className="kpi-label">Avg Cashback</div>
+          <div className="kpi-value" style={{ color: 'var(--terrain2)' }}>{avgCashback.toFixed(1)}%</div>
+          <div className="kpi-sub">across active cards</div>
         </div>
       </div>
 

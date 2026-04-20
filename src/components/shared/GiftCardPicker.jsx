@@ -43,7 +43,7 @@ export default function GiftCardPicker({ giftCards=[], selectedIds=[], onChange,
 
   return (
     <div style={{ position:'relative', marginBottom:4 }}>
-      <label style={{ display:'block', fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:6, fontFamily:"'Playfair Display', serif" }}>
+      <label style={{ display:'block', fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:6, fontFamily:'var(--font-serif)' }}>
         Gift Cards
       </label>
 

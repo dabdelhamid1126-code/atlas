@@ -834,8 +834,8 @@ export default function ImportOrders() {
     <div style={{ maxWidth:860, margin:'0 auto', paddingBottom:40 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px' }}>Import Orders</h1>
-        <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:3 }}>Upload invoices or sync from Gmail to auto-import orders</p>
+        <h1 className="page-title">Import Orders</h1>
+        <p className="page-subtitle">Upload invoices or sync from Gmail to auto-import orders</p>
       </div>
       <div className="tab-bar" style={{ marginBottom:20, width:'fit-content' }}>
         {[

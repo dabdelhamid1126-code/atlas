@@ -382,11 +382,34 @@ select:focus {
   box-shadow: var(--shadow-sm);
 }
 
+/* ── Page title — shared across all pages ────────────────────────── */
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin-top: 4px;
+}
+
 /* ── KPI cards ───────────────────────────────────────────────────── */
 .kpi-card {
-  padding: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
   border-top-width: 3px;
   border-top-style: solid;
+  background: var(--parch-card);
+  border-left: 1px solid var(--parch-line);
+  border-right: 1px solid var(--parch-line);
+  border-bottom: 1px solid var(--parch-line);
   box-shadow: var(--shadow-sm);
 }
 
@@ -397,17 +420,20 @@ select:focus {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-faded);
+  margin-bottom: 0;
 }
 
 .kpi-value {
   font-family: var(--font-mono);
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   line-height: 1;
   color: var(--ink);
+  margin: 6px 0 4px;
 }
 
 .kpi-sub {
+  font-family: var(--font-serif);
   font-size: 10px;
   color: var(--ink-ghost);
 }
@@ -420,7 +446,9 @@ select:focus {
   justify-content: center;
   background: var(--parch-warm);
   border-radius: 8px;
+  border: 1px solid var(--parch-line);
   flex-shrink: 0;
+  margin-top: 10px;
 }
 
 /* ── KPI color modifiers ─────────────────────────────────────────── */

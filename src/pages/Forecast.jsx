@@ -1022,12 +1022,8 @@ export default function Forecast() {
   return (
     <div style={{ paddingBottom: 40 }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', lineHeight: 1.1 }}>
-          Forecast
-        </h1>
-        <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 4 }}>
-          Calculate profitability, plan your targets, and find your best cards
-        </p>
+        <h1 className="page-title">Forecast</h1>
+        <p className="page-subtitle">Calculate profitability, plan your targets, and find your best cards</p>
       </div>
 
       <SectionDivider title="Planning Tools" />

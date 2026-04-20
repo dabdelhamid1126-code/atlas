@@ -450,7 +450,7 @@ export default function Analytics() {
       {/* ── HEADER ── */}
       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:16 }}>
         <div>
-          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', lineHeight:1.1 }}>Analytics & Insights</h1>
+          <h1 className="page-title">Analytics & Insights</h1>
           <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:4 }}>
             {mode==='all'?'Combined overview':mode==='churning'?'Churning performance':'Marketplace performance'}
           </p>

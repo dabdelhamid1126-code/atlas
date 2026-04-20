@@ -23,7 +23,7 @@ export default function ThemeToggle() {
       {/* Section header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
         <div style={{ width:5, height:5, borderRadius:'50%', background:'var(--gold)', flexShrink:0 }}/>
-        <span style={{ fontFamily:"'Playfair Display', Georgia, serif", fontSize:10, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--gold)' }}>
+        <span style={{ fontFamily:'var(--font-serif)', fontSize:10, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'var(--gold)' }}>
           Theme
         </span>
         <div style={{ flex:1, height:1, background:'linear-gradient(90deg, rgba(184,134,11,0.25), transparent)' }}/>
@@ -101,7 +101,7 @@ export default function ThemeToggle() {
                 background:'var(--parch-warm)',
                 borderTop:`1px solid var(--parch-line)`,
               }}>
-                <p style={{ margin:0, fontSize:12, fontWeight:700, color:'var(--ink)', fontFamily:"'Playfair Display', serif" }}>{t.name}</p>
+                <p style={{ margin:0, fontSize:12, fontWeight:700, color:'var(--ink)', fontFamily:'var(--font-serif)' }}>{t.name}</p>
                 <p style={{ margin:'2px 0 0', fontSize:10, color:'var(--ink-ghost)' }}>{t.desc}</p>
               </div>
             </button>

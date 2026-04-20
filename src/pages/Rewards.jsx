@@ -515,8 +515,8 @@ export default function Rewards() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Rewards & Cashback</h1>
-        <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Track points, cashback, and loyalty rewards</p>
+        <h1 className="page-title">Rewards & Cashback</h1>
+        <p className="page-subtitle">Track points, cashback, and loyalty rewards</p>
       </div>
 
       <Tabs defaultValue="rewards" className="space-y-6">
@@ -533,14 +533,14 @@ export default function Rewards() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--terrain)' }}>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 8 }}>Cashback Earned</p>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 26, fontWeight: 600, color: 'var(--terrain)' }}>${totalEarned.toFixed(2)}</p>
+          <div className="grid-kpi" style={{ marginBottom: 8 }}>
+            <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--terrain2)' }}>
+              <div className="kpi-label">Cashback Earned</div>
+              <div className="kpi-value" style={{ color: 'var(--terrain2)' }}>${totalEarned.toFixed(2)}</div>
             </div>
-            <div style={{ background: 'var(--violet-bg)', border: '1px solid var(--violet-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--violet)' }}>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--violet)', marginBottom: 8 }}>Points Available</p>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 26, fontWeight: 600, color: 'var(--violet)' }}>{totalPoints.toLocaleString()}</p>
+            <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--violet2)' }}>
+              <div className="kpi-label">Points Available</div>
+              <div className="kpi-value" style={{ color: 'var(--violet2)' }}>{totalPoints.toLocaleString()}</div>
             </div>
           </div>
 
@@ -608,14 +608,14 @@ export default function Rewards() {
             Sales data is automatically imported from your paid invoices for tax tracking purposes.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--terrain)' }}>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 8 }}>Total Sales</p>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 26, fontWeight: 600, color: 'var(--terrain)' }}>${totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+          <div className="grid-kpi" style={{ marginBottom: 8 }}>
+            <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--terrain2)' }}>
+              <div className="kpi-label">Total Sales</div>
+              <div className="kpi-value" style={{ color: 'var(--terrain2)' }}>${totalSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
-            <div style={{ background: 'var(--terrain-bg)', border: '1px solid var(--terrain-bdr)', borderRadius: 14, padding: 16, borderTop: '3px solid var(--terrain)' }}>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--terrain)', marginBottom: 8 }}>Completed Sales</p>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 26, fontWeight: 600, color: 'var(--terrain)' }}>${completedSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--terrain2)' }}>
+              <div className="kpi-label">Completed Sales</div>
+              <div className="kpi-value" style={{ color: 'var(--terrain2)' }}>${completedSales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
           </div>
 
@@ -718,7 +718,7 @@ export default function Rewards() {
 
             <div style={{ padding: 14, borderRadius: 10, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
               <p className="text-sm font-medium mb-2">Calculated Reward:</p>
-              <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 22, fontWeight: 600, color: 'var(--ink)' }}>
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 600, color: 'var(--ink)' }}>
                 {formData.currency === 'USD' 
                   ? `$${parseFloat(formData.amount || 0).toFixed(2)}` 
                   : `${formData.amount || 0} points`}

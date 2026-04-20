@@ -98,7 +98,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
               padding: '18px 0',
               borderBottom: idx !== goalTypes.length - 1 ? '1px solid var(--parch-line)' : 'none',
             }}>
-              <div style={{ width: 96, fontSize: 13, fontWeight: 700, color: gc.color, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
+              <div style={{ width: 96, fontSize: 13, fontWeight: 700, color: gc.color, fontFamily: "var(--font-serif)" }}>
                 {label}
               </div>
 
@@ -168,7 +168,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
               background: 'var(--ink)', color: 'var(--gold)',
               border: 'none', cursor: 'pointer',
               opacity: saveMutation.isPending ? 0.6 : 1,
-              fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em',
+              fontFamily: 'var(--font-serif)', letterSpacing: '0.04em',
             }}>
             {saveMutation.isPending ? 'Saving...' : 'Save Goals'}
           </button>
@@ -184,9 +184,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <Target style={{ width: 22, height: 22, color: 'var(--gold)' }} />
-          <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px' }}>
-            Goal Tracking
-          </h1>
+          <h1 className="page-title">Goal Tracking</h1>
         </div>
         <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>
           Set profit, revenue, cashback, or transaction targets. Active goals appear on your Dashboard.
@@ -195,7 +193,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
 
       <div style={{ borderRadius: 14, background: 'var(--parch-card)', border: '1px solid var(--parch-line)', overflow: 'hidden' }}>
         <div style={{ padding: '13px 20px', borderBottom: '1px solid var(--parch-line)', background: 'var(--parch-warm)' }}>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>Configure Your Goals</p>
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>Configure Your Goals</p>
           <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 2 }}>Set weekly and monthly targets for each goal type</p>
         </div>
 
@@ -207,7 +205,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
                 padding: '20px 0',
                 borderBottom: idx !== goalTypes.length - 1 ? '1px solid var(--parch-line)' : 'none',
               }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: gc.color, marginBottom: 14, fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: gc.color, marginBottom: 14, fontFamily: "var(--font-serif)", letterSpacing: '0.04em' }}>
                   {label}
                 </div>
 
@@ -258,7 +256,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
             background: 'var(--ink)', color: 'var(--gold)',
             border: 'none', cursor: 'pointer',
             opacity: saveMutation.isPending ? 0.6 : 1,
-            letterSpacing: '0.04em', fontFamily: "'Playfair Display', serif",
+            letterSpacing: '0.04em', fontFamily: 'var(--font-serif)',
           }}>
           {saveMutation.isPending ? 'Saving...' : 'Save Goals'}
         </button>

@@ -517,8 +517,8 @@ export default function Products() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:16 }}>
         <div>
-          <h1 style={{ fontFamily:FONT, fontSize:24, fontWeight:900, color:C.ink, letterSpacing:'-0.3px', margin:0 }}>Products</h1>
-          <p style={{ fontSize:11, color:C.inkDim, marginTop:4 }}>Master product catalog  {products.length} total  shared with all users</p>
+          <h1 className="page-title">Products</h1>
+          <p className="page-subtitle">Master product catalog — {products.length} total — shared with all users</p>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <button onClick={handleRemoveDuplicates}

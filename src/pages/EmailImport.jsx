@@ -650,7 +650,7 @@ export default function EmailImport() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: 'var(--ink)' }}>Inbox</h1>
+            <h1 className="page-title">Inbox</h1>
             {counts.review > 0 && (
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                 {counts.review} need{counts.review === 1 ? "s" : ""} review

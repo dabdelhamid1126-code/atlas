@@ -844,8 +844,8 @@ export default function Settings() {
     <div style={{ maxWidth:900, margin:'0 auto' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ marginBottom:24 }}>
-        <h1 style={{ fontFamily:FONT, fontSize:24, fontWeight:900, color:C.ink, letterSpacing:'-0.3px', margin:0 }}>Settings</h1>
-        <p style={{ fontSize:12, color:C.inkDim, marginTop:4, fontFamily:FONT }}>Manage your account preferences</p>
+        <h1 className="page-title">Settings</h1>
+        <p className="page-subtitle">Manage your account preferences</p>
       </div>
       <div style={{ display:'flex', gap:20, alignItems:'flex-start', flexWrap:'wrap' }}>
         {/* Sidebar nav */}

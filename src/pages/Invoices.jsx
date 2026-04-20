@@ -357,8 +357,8 @@ export default function Invoices() {
       {/* Header */}
       <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:22,flexWrap:'wrap',gap:12}}>
         <div>
-          <h1 style={{fontFamily:'var(--font-serif)',fontSize:24,fontWeight:900,color:'var(--ink)',letterSpacing:'-0.3px',margin:0}}>Invoices</h1>
-          <p style={{fontSize:12,color:'var(--ink-dim)',marginTop:4}}>Manage and track your invoices</p>
+          <h1 className="page-title">Invoices</h1>
+          <p className="page-subtitle">Manage and track your invoices</p>
         </div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           <button onClick={()=>fileInputRef.current?.click()} disabled={extracting}

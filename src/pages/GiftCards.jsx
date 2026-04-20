@@ -381,8 +381,8 @@ export default function GiftCards() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 24, fontWeight: 900, color: 'var(--ink)', marginBottom: 4 }}>Gift Cards</h1>
-        <p style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Manage gift card inventory</p>
+        <h1 className="page-title">Gift Cards</h1>
+        <p className="page-subtitle">Manage gift card inventory</p>
       </div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 24, justifyContent: 'flex-end' }}>
         <Button onClick={() => setBulkDialogOpen(true)} variant="outline">Bulk Add</Button>
@@ -391,16 +391,16 @@ export default function GiftCards() {
         </Button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 24 }}>
+      <div className="grid-kpi" style={{ marginBottom: 16 }}>
         {[
-          { label: 'Total Cards',      value: filteredCards.length,                                                             color: 'var(--ink)'     },
-          { label: 'Available Cards',  value: filteredCards.filter(c => c.status === 'available').length,                        color: 'var(--terrain)' },
-          { label: 'Available Value',  value: `$${totalValue.toLocaleString()}`,                                                  color: 'var(--ocean)'   },
-          { label: 'Total Profit',     value: `$${totalProfit.toFixed(2)}`,                                                       color: 'var(--terrain)' },
+          { label: 'Total Cards',      value: filteredCards.length,                                             accent: 'var(--gold)',    valColor: 'var(--ink)'      },
+          { label: 'Available Cards',  value: filteredCards.filter(c => c.status === 'available').length,       accent: 'var(--terrain2)',valColor: 'var(--terrain2)' },
+          { label: 'Available Value',  value: `$${totalValue.toLocaleString()}`,                                accent: 'var(--ocean2)',  valColor: 'var(--ocean2)'   },
+          { label: 'Total Profit',     value: `$${totalProfit.toFixed(2)}`,                                     accent: 'var(--terrain2)',valColor: 'var(--terrain2)' },
         ].map(s => (
-          <div key={s.label} style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 16 }}>
-            <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', marginBottom: 8 }}>{s.label}</p>
-            <p style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif", fontSize: 26, fontWeight: 600, color: s.color }}>{s.value}</p>
+          <div key={s.label} className="kpi-card fade-up" style={{ borderTopColor: s.accent }}>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value" style={{ color: s.valColor }}>{s.value}</div>
           </div>
         ))}
       </div>

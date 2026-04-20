@@ -240,7 +240,7 @@ export default function PurchaseOrders() {
               CSV
             </button>
             <button onClick={() => { setEditingOrder(null); setFormOpen(true); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', fontFamily: "'Playfair Display', serif", letterSpacing: '0.04em' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', color: 'var(--gold)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-serif)', letterSpacing: '0.04em' }}>
               <Plus style={{ width: 14, height: 14 }} /> New Order
             </button>
           </div>

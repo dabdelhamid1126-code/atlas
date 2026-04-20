@@ -240,7 +240,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
         {/* Title — espresso #3D2B1A */}
         <div style={{ ...fadeUp(titleVisible), marginBottom:10, textAlign:'center' }}>
           <h1 style={{
-            fontFamily:"'Playfair Display', Georgia, serif",
+            fontFamily:'var(--font-serif)',
             fontSize:46, fontWeight:900,
             letterSpacing:'0.22em',
             color:'#3D2B1A',

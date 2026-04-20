@@ -404,7 +404,7 @@ export default function Dashboard() {
       {/* ── Header ── */}
       <div className="dash-header">
         <div>
-          <h1 style={{ fontFamily:"var(--font-serif)", fontSize:24, fontWeight:900, color:"var(--ink)", letterSpacing:"-0.3px", lineHeight:1.1 }}>
+          <h1 className="page-title">
             {greeting()}, Explorer
             {refreshing && <RefreshCw size={14} className="spin" style={{ display:"inline", marginLeft:8, color:"var(--ink-dim)", verticalAlign:"middle" }} />}
           </h1>

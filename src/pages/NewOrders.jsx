@@ -814,8 +814,8 @@ export default function NewOrders() {
       {previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={()=>setPreviewImg(null)}/>}
 
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontFamily:'var(--font-serif)', fontSize:22, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px' }}>Add Order</h1>
-        <p style={{ fontSize:11, color:'var(--ink-dim)', marginTop:3 }}>Record a new purchase</p>
+        <h1 className="page-title">Add Order</h1>
+        <p className="page-subtitle">Record a new purchase</p>
       </div>
 
       {/* Global validation banner — shows when there are errors */}

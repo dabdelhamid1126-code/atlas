@@ -75,7 +75,7 @@ export default function QuickAddModal({ open, onClose, existingCards=[], onCreat
 
         {/* Header */}
         <DialogHeader style={{ padding:'18px 20px 14px', borderBottom:'1px solid var(--parch-line)', background:'var(--parch-warm)', flexShrink:0 }}>
-          <DialogTitle style={{ fontFamily:"'Playfair Display', serif", fontSize:17, fontWeight:700, color:'var(--ink)' }}>Quick Add Cards</DialogTitle>
+          <DialogTitle style={{ fontFamily:"var(--font-serif)", fontSize:17, fontWeight:700, color:'var(--ink)' }}>Quick Add Cards</DialogTitle>
         </DialogHeader>
 
         {/* Filters */}

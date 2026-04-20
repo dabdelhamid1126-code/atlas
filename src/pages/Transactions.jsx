@@ -304,10 +304,8 @@ export default function Transactions() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:22, flexWrap:'wrap', gap:14 }}>
         <div>
-          <h1 style={{ fontFamily:'var(--font-serif)', fontSize:24, fontWeight:900, color:'var(--ink)', letterSpacing:'-0.3px', margin:0 }}>
-            Transactions
-          </h1>
-          <p style={{ fontSize:12, color:'var(--ink-dim)', marginTop:4 }}>Track and manage your purchases</p>
+          <h1 className="page-title">Transactions</h1>
+          <p className="page-subtitle">Track and manage your purchases</p>
         </div>
         <button onClick={handleCSVDownload}
           style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'var(--parch-card)', border:'1px solid var(--parch-line)', color:'var(--ink-faded)', cursor:'pointer', fontFamily:'var(--font-serif)' }}>

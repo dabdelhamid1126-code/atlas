@@ -73,17 +73,18 @@ export default function TransactionsStatsBar({ orders = [] }) {
         return (
           <div key={stat.label} style={{
             background:'var(--parch-card)', border:'1px solid var(--parch-line)',
-            borderRadius:12, padding:12, borderTop:`3px solid ${stat.color}`,
+            borderRadius:12, padding:'12px 14px', borderTop:`3px solid ${stat.color}`,
+            boxShadow:'var(--shadow-sm)',
           }}>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:28, height:28, borderRadius:7, flexShrink:0, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <Icon style={{ width:13, height:13, color:stat.color }}/>
               </div>
               <div style={{ minWidth:0 }}>
-                <p style={{ fontFamily:"'Playfair Display', serif", fontSize:8, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--ink-dim)', marginBottom:1 }}>
+                <p style={{ fontFamily:'var(--font-serif)', fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-faded)', marginBottom:2 }}>
                   {stat.label}
                 </p>
-                <p style={{ fontSize:14, fontWeight:800, color:stat.color, lineHeight:1.2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                <p style={{ fontFamily:'var(--font-mono)', fontSize:14, fontWeight:700, color:stat.color, lineHeight:1.2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                   {stat.value}
                 </p>
               </div>

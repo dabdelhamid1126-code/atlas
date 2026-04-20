@@ -634,12 +634,8 @@ export default function Inventory() {
 
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 900, color: 'var(--ink)', letterSpacing: '-0.3px', margin: 0 }}>
-          Inventory On Hand
-        </h1>
-        <p style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 3 }}>
-          Grouped by product   derived from your purchase orders
-        </p>
+        <h1 className="page-title">Inventory On Hand</h1>
+        <p className="page-subtitle">Grouped by product — derived from your purchase orders</p>
       </div>
 
       {/* Overview section divider */}

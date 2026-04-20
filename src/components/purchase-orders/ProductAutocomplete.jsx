@@ -56,7 +56,7 @@ function UPCPickerModal({ upc, results, onSelect, onManual, onClose }) {
       <div style={{ position:'relative', width:'100%', maxWidth:500, background:'var(--parch-card)', borderRadius:16, border:'1px solid var(--parch-line)', boxShadow:'0 24px 60px rgba(0,0,0,0.2)', overflow:'hidden' }}>
         <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--parch-line)', display:'flex', alignItems:'flex-start', justifyContent:'space-between', background:'var(--parch-warm)' }}>
           <div>
-            <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)', fontFamily:"'Playfair Display', serif" }}>Select the correct product</div>
+            <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)', fontFamily:'var(--font-serif)' }}>Select the correct product</div>
             <div style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:2 }}>
               UPC <span style={{ fontFamily:'monospace', background:'var(--parch-warm)', padding:'1px 6px', borderRadius:4, border:'1px solid var(--parch-line)' }}>{upc}</span>
             </div>
@@ -114,7 +114,7 @@ function AddToCatalogForm({ initialName, initialUpc, initialImage, onCreated, on
   };
 
   const inp = { background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:7, color:'var(--ink)', padding:'6px 10px', fontSize:12, outline:'none', width:'100%' };
-  const lbl = { fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-dim)', display:'block', marginBottom:3, fontFamily:"'Playfair Display', serif" };
+  const lbl = { fontSize:9, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-dim)', display:'block', marginBottom:3, fontFamily:'var(--font-serif)' };
 
   return (
     <div style={{ background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', borderRadius:10, padding:12, marginTop:6, display:'flex', flexDirection:'column', gap:10 }}>
