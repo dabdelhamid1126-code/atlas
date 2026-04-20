@@ -254,7 +254,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:30, height:1, background:'rgba(160,114,42,0.4)' }}/>
             <p style={{
-              fontFamily:"'DM Sans', -apple-system, sans-serif",
+              fontFamily:'var(--font-sans)',
               fontSize:10, fontWeight:600,
               letterSpacing:'0.3em', textTransform:'uppercase',
               color:'#664930', margin:0,
@@ -266,7 +266,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
         {/* Greeting */}
         <div style={{ ...fadeUp(greetVisible), marginBottom:38, textAlign:'center' }}>
           <p style={{
-            fontFamily:"'DM Sans', -apple-system, sans-serif",
+            fontFamily:'var(--font-sans)',
             fontSize:14, fontStyle:'italic',
             color:'#8a6d56', margin:0,
           }}>
@@ -293,7 +293,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
             }}/>
           </div>
           <p style={{
-            fontFamily:"'DM Mono', monospace",
+            fontFamily:'var(--font-mono)',
             fontSize:9, letterSpacing:'0.18em',
             textTransform:'uppercase',
             color:'rgba(102,73,48,0.5)', margin:0,
@@ -325,7 +325,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
       }}>
         <div style={{ width:18, height:1, background:'#997E67' }}/>
         <p style={{
-          fontFamily:"'DM Mono', monospace",
+          fontFamily:'var(--font-mono)',
           fontSize:8, letterSpacing:'0.2em',
           color:'#997E67', margin:0, textTransform:'uppercase',
         }}>
