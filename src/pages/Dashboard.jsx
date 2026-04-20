@@ -276,7 +276,7 @@ export default function Dashboard() {
   }, [allRewards, timeFilter]);
 
   const metrics = useMemo(() => {
-    const totalCost     = filteredOrders.reduce((s,o) => s + parseFloat(o.total_cost||0), 0);
+    const totalCost     = filteredOrders.reduce((s,o) => s + parseFloat(o.final_cost||o.total_cost||0), 0);
     const saleRevenue   = filteredOrders.reduce((s,o) => s + (o.sale_events||[]).reduce((ss,ev) =>
       ss + (ev.items||[]).reduce((is,item) =>
         is + (parseFloat(item.sale_price)||0) * (parseInt(item.qty||item.quantity)||1), 0), 0), 0);
@@ -289,7 +289,7 @@ export default function Dashboard() {
     const netProfit     = saleRevenue - totalCost + cashback;
     const avgRoi        = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
     const inStockUnits  = inventoryItems
-      .filter(i => i.status === "in_stock" || i.status === "received")
+      .filter(i => i.status === "in_stock")
       .reduce((s,i) => s + (i.quantity||1), 0);
     const giftCardValue = giftCards
       .filter(gc => gc.status === "available")
@@ -350,8 +350,11 @@ export default function Dashboard() {
         const revenue = (o.sale_events||[]).reduce((s,ev) =>
           s + (ev.items||[]).reduce((is,item) =>
             is + (parseFloat(item.sale_price)||0) * (parseInt(item.qty||item.quantity)||1), 0), 0);
+        const orderCashback = (allRewards||[])
+          .filter(r => r.purchase_order_id === o.id && r.currency === 'USD')
+          .reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
         const profit = o.sale_events?.length
-          ? revenue - parseFloat(o.total_cost||o.final_cost||0) + parseFloat(o.cashback_amount||0)
+          ? revenue - parseFloat(o.final_cost||o.total_cost||0) + orderCashback
           : null;
         return {
           id:              o.id,

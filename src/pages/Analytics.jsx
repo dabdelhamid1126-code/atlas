@@ -91,7 +91,7 @@ function splitCashback(rewards) {
 function calcRevenue(order) {
   return (order.sale_events||[]).reduce((sum,ev) =>
     sum + (ev.items||[]).reduce((s,item) =>
-      s + (parseFloat(item.sale_price)||0) * (parseInt(item.quantity)||1), 0), 0);
+      s + (parseFloat(item.sale_price)||0) * (parseInt(item.qty||item.quantity)||1), 0), 0);
 }
 
 /* ─────────────────────────────────────────────
