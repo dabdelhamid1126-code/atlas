@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Download, X, Check, FileText, Search, Trash2, Pencil, ChevronDown, ChevronUp, Upload, ImageOff, Loader, ScanLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-// html2canvas and jsPDF loaded lazily to avoid duplicate React bundling issues
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // ── Input styles (all using CSS vars) ──────────────────────────────────────
 const INP = { 
@@ -267,17 +268,13 @@ export default function Invoices() {
   };
 
   const downloadPDF = async (inv) => {
-    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-      import('html2canvas'),
-      import('jspdf'),
-    ]);
     const el=document.createElement('div');
     el.style.cssText='width:800px;padding:40px;background:white;font-family:Arial,sans-serif;position:fixed;top:-9999px;left:-9999px';
     el.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:32px;border-bottom:2px solid #eee;padding-bottom:24px"><div><h1 style="font-size:28px;font-weight:900;margin:0">INVOICE</h1><p style="color:#888">#${inv.invoice_number}</p></div><div style="text-align:right">${inv.from_name?`<p style="margin:2px 0;font-weight:700">${inv.from_name}</p>`:''}<p style="font-size:12px;color:#888">Date: ${fmtDate(inv.invoice_date)}</p><p style="font-size:12px;color:#888">Due: ${fmtDate(inv.due_date)}</p></div></div><div style="margin-bottom:24px"><p style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px">Bill To</p><p style="font-size:14px;font-weight:700;margin:0">${inv.buyer}</p>${inv.buyer_email?`<p style="color:#666">${inv.buyer_email}</p>`:''}</div><table style="width:100%;border-collapse:collapse;margin-bottom:24px"><thead><tr style="background:#f8f8f8"><th style="padding:10px;text-align:left;border-bottom:2px solid #eee">Item</th><th style="padding:10px;text-align:center;border-bottom:2px solid #eee">Qty</th><th style="padding:10px;text-align:right;border-bottom:2px solid #eee">Price</th><th style="padding:10px;text-align:right;border-bottom:2px solid #eee">Total</th></tr></thead><tbody>${(inv.items||[]).map(i=>`<tr><td style="padding:10px;border-bottom:1px solid #eee">${i.description}</td><td style="padding:10px;text-align:center">${i.quantity}</td><td style="padding:10px;text-align:right">$${(i.unit_price||0).toFixed(2)}</td><td style="padding:10px;text-align:right">$${(i.total||0).toFixed(2)}</td></tr>`).join('')}</tbody></table><div style="text-align:right"><p>Subtotal: <strong>$${(inv.subtotal||0).toFixed(2)}</strong></p><p>Tax: <strong>$${(inv.tax||0).toFixed(2)}</strong></p><p style="font-size:20px;font-weight:900">Total: $${(inv.total||0).toFixed(2)}</p></div>${inv.notes?`<div style="margin-top:24px;border-top:1px solid #eee;padding-top:16px"><p style="font-weight:700">Notes</p><p style="color:#666">${inv.notes}</p></div>`:''}`;
     document.body.appendChild(el);
     const canvas=await html2canvas(el);
     document.body.removeChild(el);
-    const pdf=new (jsPDF.jsPDF || jsPDF)('p','mm','a4');
+    const pdf=new jsPDF('p','mm','a4');
     pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,210,(canvas.height*210)/canvas.width);
     pdf.save(`invoice-${inv.invoice_number}.pdf`);
     toast.success('PDF downloaded');
