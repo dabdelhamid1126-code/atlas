@@ -7,21 +7,18 @@ import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-// ── Design tokens ─────────────────────────────────────────────────────────
-const C = {
-  ink:'#3D2B1A', inkDim:'#664930', inkFaded:'#8a6d56', inkGhost:'#b89e8a',
-  gold:'#A0722A', gold2:'#C4922E', goldBg:'rgba(160,114,42,0.08)', goldBdr:'rgba(160,114,42,0.22)',
-  parchCard:'#FFF8F0', parchWarm:'#F5EDE0', parchLine:'rgba(153,126,103,0.18)',
-  ocean:'#2a5c7a', ocean2:'#336e90', oceanBg:'rgba(42,92,122,0.08)', oceanBdr:'rgba(42,92,122,0.2)',
-  terrain:'#4a7a35', terrain2:'#5a8c42', terrainBg:'rgba(74,122,53,0.08)', terrainBdr:'rgba(74,122,53,0.2)',
-  crimson:'#8b3a2a', crimson2:'#a34535', crimsonBg:'rgba(139,58,42,0.08)', crimsonBdr:'rgba(139,58,42,0.2)',
-  violet:'#5a3a6e', violet2:'#6e4a85', violetBg:'rgba(90,58,110,0.08)', violetBdr:'rgba(90,58,110,0.2)',
-  neCream:'#FFDBBB',
+// ── Input styles (all using CSS vars) ──────────────────────────────────────
+const INP = { 
+  background:'var(--parch-warm)', 
+  border:'1px solid var(--parch-line)', 
+  borderRadius:8, 
+  color:'var(--ink)', 
+  padding:'8px 10px', 
+  fontSize:13, 
+  outline:'none', 
+  width:'100%', 
+  fontFamily:'var(--font-sans)' 
 };
-const 'var(--font-sans)'  = "ui-sans-serif, system-ui, -apple-system, sans-serif";
-const 'var(--font-serif)' = "'Playfair Display', serif";
-const 'var(--font-mono)'  = "ui-monospace, 'SF Mono', Consolas, monospace";
-const INP   = { background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:8, color:'var(--ink)', padding:'8px 10px', fontSize:13, outline:'none', width:'100%', fontFamily:'var(--font-sans)' };
 
 const STATUS_META = {
   draft:     { label:'Draft',     color:'var(--ink-faded)', bg:'var(--parch-warm)',  bdr:'var(--parch-line)'  },
@@ -116,6 +113,16 @@ export default function Invoices() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Invoice.delete(id),
     onSuccess: () => { queryClient.invalidateQueries({queryKey:['invoices']}); toast.success('Invoice deleted'); },
+  });
+  
+  // ── Mark paid/unpaid mutation (new) ────────────────────────────────────
+  const markPaidMutation = useMutation({
+    mutationFn: ({id, newStatus}) => base44.entities.Invoice.update(id, {status: newStatus}),
+    onSuccess: () => { 
+      queryClient.invalidateQueries({queryKey:['invoices']});
+      queryClient.invalidateQueries({queryKey:['inventory']});
+    },
+    onError: () => toast.error('Failed to update invoice status'),
   });
 
   // ── Helpers ────────────────────────────────────────────────────────────
@@ -250,13 +257,14 @@ export default function Invoices() {
     }
   };
 
+  // ── Mark paid/unpaid handler (fixed) ────────────────────────────────────
   const handleMarkPaid = async (inv) => {
-    const ns=inv.status==='paid'?'sent':'paid';
-    if (ns==='paid'&&!['sent','paid'].includes(inv.status)) await deductInventory(inv.items||[]);
-    await base44.entities.Invoice.update(inv.id,{status:ns});
-    queryClient.invalidateQueries({queryKey:['invoices']});
-    queryClient.invalidateQueries({queryKey:['inventory']});
-    toast.success(`Marked as ${ns}`);
+    const newStatus = inv.status === 'paid' ? 'sent' : 'paid';
+    if (newStatus === 'paid' && !['sent','paid'].includes(inv.status)) {
+      await deductInventory(inv.items || []);
+    }
+    markPaidMutation.mutate({id: inv.id, newStatus});
+    toast.success(`Marked as ${newStatus}`);
   };
 
   const downloadPDF = async (inv) => {
@@ -359,7 +367,7 @@ export default function Invoices() {
         </div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           <button onClick={()=>fileInputRef.current?.click()} disabled={extracting}
-            style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,fontSize:12,fontWeight:700,background:'var(--ocean-bg)',border:`1px solid ${'var(--ocean-bdr)'}`,color:'var(--ocean)',cursor:extracting?'not-allowed':'pointer',fontFamily:'var(--font-serif)',opacity:extracting?0.7:1}}>
+            style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,fontSize:12,fontWeight:700,background:'var(--ocean-bg)',border:'1px solid var(--ocean-bdr)',color:'var(--ocean)',cursor:extracting?'not-allowed':'pointer',fontFamily:'var(--font-serif)',opacity:extracting?0.7:1}}>
             {extracting?<Loader style={{width:14,height:14,animation:'spin 0.8s linear infinite'}}/>:<ScanLine style={{width:14,height:14}}/>}
             {extracting?'Scanning...':'Scan Invoice'}
           </button>
@@ -374,7 +382,7 @@ export default function Invoices() {
       <div onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}
         onClick={()=>fileInputRef.current?.click()}
         style={{background:dragOver?'var(--ocean-bg)':'var(--parch-card)',border:`2px dashed ${dragOver?'var(--ocean)':'var(--parch-line)'}`,borderRadius:12,padding:'16px 20px',marginBottom:20,display:'flex',alignItems:'center',gap:12,cursor:'pointer',transition:'all 0.2s'}}>
-        <div style={{width:38,height:38,borderRadius:9,background:'var(--ocean-bg)',border:`1px solid ${'var(--ocean-bdr)'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+        <div style={{width:38,height:38,borderRadius:9,background:'var(--ocean-bg)',border:'1px solid var(--ocean-bdr)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
           {extracting?<Loader style={{width:16,height:16,color:'var(--ocean)',animation:'spin 0.8s linear infinite'}}/>:<Upload style={{width:16,height:16,color:'var(--ocean)'}}/>}
         </div>
         <div>
@@ -393,7 +401,7 @@ export default function Invoices() {
           {label:'Profit',   val:stats.profit!==0?fmt$(Math.abs(stats.profit)):'—',          accent:stats.profit>=0?'var(--terrain)':'var(--crimson)', bg:stats.profit>=0?'var(--terrain-bg)':'var(--crimson-bg)', bdr:stats.profit>=0?'var(--terrain-bdr)':'var(--crimson-bdr)'},
           {label:'Overdue',  val:String(stats.overdue),                                      accent:stats.overdue>0?'var(--crimson)':'var(--ink-ghost)', bg:stats.overdue>0?'var(--crimson-bg)':'var(--parch-warm)', bdr:stats.overdue>0?'var(--crimson-bdr)':'var(--parch-line)'},
         ].map(k=>(
-          <div key={k.label} style={{background:'var(--parch-card)',borderTop:`3px solid ${k.accent}`,borderRadius:12,padding:'14px 16px 12px',display:'flex',flexDirection:'column',boxShadow:'0 1px 4px rgba(61,43,26,0.06)'}}>
+          <div key={k.label} style={{background:'var(--parch-card)',borderTop:`3px solid ${k.accent}`,borderRadius:12,padding:'14px 16px 12px',display:'flex',flexDirection:'column',boxShadow:'var(--shadow-sm)'}}>
             <p style={{fontFamily:'var(--font-serif)',fontSize:9,fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',color:'var(--ink-dim)',margin:'0 0 6px'}}>{k.label}</p>
             <p style={{fontFamily:'var(--font-mono)',fontSize:22,fontWeight:900,color:k.accent,margin:'0 0 4px',lineHeight:1}}>{k.val}</p>
             <p style={{fontSize:10,color:'var(--ink-ghost)',margin:'0 0 14px',flex:1}}>{k.label==='Invoices'?'all time':k.label==='Paid'?'collected':k.label==='Unpaid'?'outstanding':k.label==='Profit'?'revenue − cost':'past due'}</p>
@@ -454,7 +462,7 @@ export default function Invoices() {
         return(
           <div key={inv.id} style={{background:'var(--parch-card)',border:`1px solid ${isOverdue?'var(--crimson-bdr)':'var(--parch-line)'}`,borderRadius:12,marginBottom:10,overflow:'hidden'}}>
 
-            <div className="inv-header" style={{display:'flex',alignItems:'center',gap:10,padding:'13px 16px',borderBottom:expanded?`1px solid ${'var(--parch-line)'}`:'none',flexWrap:'wrap'}}>
+            <div className="inv-header" style={{display:'flex',alignItems:'center',gap:10,padding:'13px 16px',borderBottom:expanded?'1px solid var(--parch-line)':'none',flexWrap:'wrap'}}>
               <div style={{flex:1,minWidth:200}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
                   <span style={{fontSize:14,fontWeight:700,color:'var(--ocean)',fontFamily:'var(--font-serif)'}}>#{inv.invoice_number}</span>
@@ -476,11 +484,11 @@ export default function Invoices() {
               <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                 <span style={{fontFamily:'var(--font-mono)',fontSize:18,fontWeight:900,color:isPaid?'var(--terrain)':isOverdue?'var(--crimson)':'var(--ink)',marginRight:4}}>{fmt$(inv.total)}</span>
                 <div className="inv-actions">
-                  <button onClick={()=>downloadPDF(inv)} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:`1px solid ${'var(--ocean-bdr)'}`,background:'var(--ocean-bg)',color:'var(--ocean)',cursor:'pointer',fontFamily:'var(--font-serif)'}}><Download style={{width:11,height:11}}/> PDF</button>
+                  <button onClick={()=>downloadPDF(inv)} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:'1px solid var(--ocean-bdr)',background:'var(--ocean-bg)',color:'var(--ocean)',cursor:'pointer',fontFamily:'var(--font-serif)'}}><Download style={{width:11,height:11}}/> PDF</button>
                   <button onClick={()=>openEdit(inv)} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:'1px solid var(--parch-line)',background:'transparent',color:'var(--ink-faded)',cursor:'pointer',fontFamily:'var(--font-serif)'}}><Pencil style={{width:11,height:11}}/> Edit</button>
-                  {!['paid','cancelled'].includes(inv.status)&&<button onClick={()=>handleMarkPaid(inv)} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:`1px solid ${'var(--terrain-bdr)'}`,background:'var(--terrain-bg)',color:'var(--terrain)',cursor:'pointer',fontFamily:'var(--font-serif)'}}><Check style={{width:11,height:11}}/> Mark paid</button>}
-                  {inv.status==='paid'&&<button onClick={()=>handleMarkPaid(inv)} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:'1px solid var(--parch-line)',background:'transparent',color:'var(--ink-faded)',cursor:'pointer',fontFamily:'var(--font-serif)'}}>Mark unpaid</button>}
-                  <button onClick={()=>{if(confirm(`Delete #${inv.invoice_number}?`))deleteMutation.mutate(inv.id);}} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:`1px solid ${'var(--crimson-bdr)'}`,background:'var(--crimson-bg)',color:'var(--crimson)',cursor:'pointer',fontFamily:'var(--font-serif)'}}><Trash2 style={{width:11,height:11}}/> Delete</button>
+                  {!['paid','cancelled'].includes(inv.status)&&<button onClick={()=>handleMarkPaid(inv)} disabled={markPaidMutation.isPending} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:'1px solid var(--terrain-bdr)',background:'var(--terrain-bg)',color:'var(--terrain)',cursor:markPaidMutation.isPending?'not-allowed':'pointer',fontFamily:'var(--font-serif)',opacity:markPaidMutation.isPending?0.6:1}}><Check style={{width:11,height:11}}/> Mark paid</button>}
+                  {inv.status==='paid'&&<button onClick={()=>handleMarkPaid(inv)} disabled={markPaidMutation.isPending} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:'1px solid var(--parch-line)',background:'transparent',color:'var(--ink-faded)',cursor:markPaidMutation.isPending?'not-allowed':'pointer',fontFamily:'var(--font-serif)',opacity:markPaidMutation.isPending?0.6:1}}>Mark unpaid</button>}
+                  <button onClick={()=>{if(confirm(`Delete #${inv.invoice_number}?`))deleteMutation.mutate(inv.id);}} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,fontSize:11,fontWeight:700,border:'1px solid var(--crimson-bdr)',background:'var(--crimson-bg)',color:'var(--crimson)',cursor:'pointer',fontFamily:'var(--font-serif)'}}><Trash2 style={{width:11,height:11}}/> Delete</button>
                   <button onClick={()=>{const n=new Set(expandedIds);n.has(inv.id)?n.delete(inv.id):n.add(inv.id);setExpandedIds(n);}} style={{padding:4,borderRadius:6,border:'none',background:'transparent',color:'var(--ink-ghost)',cursor:'pointer'}}>
                     {expanded?<ChevronUp style={{width:15,height:15}}/>:<ChevronDown style={{width:15,height:15}}/>}
                   </button>
@@ -490,7 +498,7 @@ export default function Invoices() {
 
             {expanded&&(
               <>
-                <div style={{display:'grid',gridTemplateColumns:`48px 1fr 50px 80px 80px${isPaid?' 80px 80px':''}`,gap:6,padding:'6px 16px',borderBottom:`1px solid ${'var(--parch-line)'}`}}>
+                <div style={{display:'grid',gridTemplateColumns:`48px 1fr 50px 80px 80px${isPaid?' 80px 80px':''}`,gap:6,padding:'6px 16px',borderBottom:'1px solid var(--parch-line)'}}>
                   {['','Product','Qty','Price','Total',...(isPaid?['Cost','Profit']:[])].map((h,i)=>(
                     <div key={i} style={{fontSize:9,fontWeight:700,color:'var(--ink-ghost)',textAlign:i<=1?'left':'right',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'var(--font-serif)'}}>{h}</div>
                   ))}
@@ -499,7 +507,7 @@ export default function Invoices() {
                   {profitItems.map((item,idx)=>{
                     const imgSrc=item.product_image||products.find(p=>p.id===item.product_id)?.image||null;
                     return(
-                      <div key={idx} style={{display:'grid',gridTemplateColumns:`48px 1fr 50px 80px 80px${isPaid?' 80px 80px':''}`,gap:6,padding:'10px 0',borderBottom:idx<profitItems.length-1?`1px solid ${'var(--parch-line)'}`:'none',alignItems:'center',fontSize:12}}>
+                      <div key={idx} style={{display:'grid',gridTemplateColumns:`48px 1fr 50px 80px 80px${isPaid?' 80px 80px':''}`,gap:6,padding:'10px 0',borderBottom:idx<profitItems.length-1?'1px solid var(--parch-line)':'none',alignItems:'center',fontSize:12}}>
                         <ProductThumb src={imgSrc} name={item.description} size={36}/>
                         <div>
                           <div style={{fontWeight:600,color:'var(--ink)'}}>{item.description||'—'}</div>
@@ -514,7 +522,7 @@ export default function Invoices() {
                     );
                   })}
                 </div>
-                <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'var(--parch-warm)',borderTop:`1px solid ${'var(--parch-line)'}`,flexWrap:'wrap'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'var(--parch-warm)',borderTop:'1px solid var(--parch-line)',flexWrap:'wrap'}}>
                   <span style={{fontSize:12,color:'var(--ink-faded)'}}>Subtotal: <strong style={{color:'var(--ink)',fontFamily:'var(--font-serif)'}}>{fmt$(inv.subtotal)}</strong></span>
                   {(inv.tax||0)>0&&<><span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/><span style={{fontSize:11,color:'var(--ink-faded)'}}>Tax: {fmt$(inv.tax)}</span></>}
                   <span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/>
@@ -531,10 +539,10 @@ export default function Invoices() {
       {/* Side panel modal */}
       {formOpen&&(
         <div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',justifyContent:'flex-end'}}>
-          <div onClick={()=>setFormOpen(false)} style={{position:'absolute',inset:0,background:'rgba(26,18,10,0.55)'}}/>
-          <div className="modal-panel" style={{position:'relative',width:'100%',maxWidth:680,height:'100%',background:'var(--parch-card)',borderLeft:`1px solid ${'var(--parch-line)'}`,boxShadow:'-24px 0 60px rgba(0,0,0,0.15)',display:'flex',flexDirection:'column',overflowY:'auto'}}>
+          <div onClick={()=>setFormOpen(false)} style={{position:'absolute',inset:0,background:'var(--overlay-bg)'}}/>
+          <div className="modal-panel" style={{position:'relative',width:'100%',maxWidth:680,height:'100%',background:'var(--parch-card)',borderLeft:'1px solid var(--parch-line)',boxShadow:'var(--shadow-md)',display:'flex',flexDirection:'column',overflowY:'auto'}}>
 
-            <div style={{padding:'18px 24px 14px',borderBottom:`1px solid ${'var(--parch-line)'}`,background:'var(--parch-warm)',flexShrink:0,position:'sticky',top:0,zIndex:10}}>
+            <div style={{padding:'18px 24px 14px',borderBottom:'1px solid var(--parch-line)',background:'var(--parch-warm)',flexShrink:0,position:'sticky',top:0,zIndex:10}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div>
                   <h2 style={{fontFamily:'var(--font-serif)',fontSize:18,fontWeight:800,color:'var(--ink)',margin:0}}>{editingInv?'Edit Invoice':'New Invoice'}</h2>
@@ -577,10 +585,10 @@ export default function Invoices() {
 
               {/* Line items */}
               <div style={{background:'var(--parch-card)',border:'1px solid var(--parch-line)',borderRadius:12,padding:16}}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12,paddingBottom:8,borderBottom:`1px solid ${'var(--parch-line)'}`}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12,paddingBottom:8,borderBottom:'1px solid var(--parch-line)'}}>
                   <span style={{fontFamily:'var(--font-serif)',fontSize:9,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--ocean)'}}>Line items</span>
                   <button type="button" onClick={()=>setFormData(p=>({...p,items:[...p.items,blankItem()]}))}
-                    style={{fontSize:11,fontWeight:700,color:'var(--terrain)',padding:'4px 10px',borderRadius:7,background:'var(--terrain-bg)',border:`1px solid ${'var(--terrain-bdr)'}`,cursor:'pointer',fontFamily:'var(--font-serif)'}}>
+                    style={{fontSize:11,fontWeight:700,color:'var(--terrain)',padding:'4px 10px',borderRadius:7,background:'var(--terrain-bg)',border:'1px solid var(--terrain-bdr)',cursor:'pointer',fontFamily:'var(--font-serif)'}}>
                     <Plus style={{width:11,height:11,display:'inline',marginRight:3}}/> Add item
                   </button>
                 </div>
@@ -596,7 +604,7 @@ export default function Invoices() {
                       const stock=getStock(p.id);
                       return(
                         <div key={p.id} onClick={()=>{const idx=formData.items.length;setFormData(prev=>({...prev,items:[...prev.items,blankItem()]}));setTimeout(()=>selectProduct(idx,p.id),0);setProductSearch('');}}
-                          style={{display:'flex',alignItems:'center',gap:10,padding:'8px 12px',cursor:'pointer',borderBottom:`1px solid ${'var(--parch-line)'}`}}
+                          style={{display:'flex',alignItems:'center',gap:10,padding:'8px 12px',cursor:'pointer',borderBottom:'1px solid var(--parch-line)'}}
                           onMouseEnter={e=>e.currentTarget.style.background='var(--parch-warm)'}
                           onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                           <ProductThumb src={p.image} name={p.name} size={32}/>
@@ -652,7 +660,7 @@ export default function Invoices() {
                     <span style={{fontSize:12,color:'var(--ink-dim)'}}>Tax</span>
                     <div style={{position:'relative'}}><span style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',color:'var(--ink-ghost)',fontSize:11}}>$</span><input style={{...INP,width:100,paddingLeft:20,fontSize:12}} type="number" step="0.01" min="0" value={formData.tax||''} onChange={e=>set('tax',parseFloat(e.target.value)||0)} placeholder="0.00"/></div>
                   </div>
-                  <div style={{display:'flex',justifyContent:'space-between',paddingTop:8,marginTop:4,borderTop:`1px solid ${'var(--parch-line)'}`}}>
+                  <div style={{display:'flex',justifyContent:'space-between',paddingTop:8,marginTop:4,borderTop:'1px solid var(--parch-line)'}}>
                     <span style={{fontWeight:700,color:'var(--ink)',fontSize:14,fontFamily:'var(--font-serif)'}}>Total</span>
                     <span style={{fontFamily:'var(--font-mono)',fontWeight:900,color:'var(--gold)',fontSize:16}}>{fmt$(calcTotals().total)}</span>
                   </div>
@@ -662,7 +670,7 @@ export default function Invoices() {
               <div><LBL>Notes</LBL><textarea style={{...INP,resize:'vertical',fontSize:13}} rows={2} value={formData.notes} onChange={e=>set('notes',e.target.value)} placeholder="Payment terms, thank you note..."/></div>
             </form>
 
-            <div style={{padding:'14px 24px',borderTop:`1px solid ${'var(--parch-line)'}`,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--parch-warm)',position:'sticky',bottom:0}}>
+            <div style={{padding:'14px 24px',borderTop:'1px solid var(--parch-line)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--parch-warm)',position:'sticky',bottom:0}}>
               <span style={{fontFamily:'var(--font-mono)',fontSize:13,fontWeight:700,color:'var(--ink)'}}>{fmt$(calcTotals().total)}</span>
               <div style={{display:'flex',gap:10}}>
                 <button type="button" onClick={()=>setFormOpen(false)} style={{padding:'8px 16px',borderRadius:8,fontSize:13,fontWeight:500,color:'var(--ink-faded)',background:'var(--parch-warm)',border:'1px solid var(--parch-line)',cursor:'pointer',fontFamily:'var(--font-sans)'}}>Cancel</button>
