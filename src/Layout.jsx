@@ -14,9 +14,9 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-/* ------------------------------------------------------------------ */
+/* ────────────────────────────────────────────────────────────────── */
 /*  NAV STRUCTURE                                                       */
-/* ------------------------------------------------------------------ */
+/* ────────────────────────────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
     label: 'Home',
@@ -54,9 +54,9 @@ const NAV_GROUPS = [
   },
 ];
 
-/* ------------------------------------------------------------------ */
+/* ────────────────────────────────────────────────────────────────── */
 /*  ATLAS LOGO SVG                                                      */
-/* ------------------------------------------------------------------ */
+/* ────────────────────────────────────────────────────────────────── */
 function AtlasLogo({ size = 82 }) {
   const s = size;
   const scale = s / 512;
@@ -93,29 +93,9 @@ function AtlasLogo({ size = 82 }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  DESIGN TOKENS                                                       */
-/* ------------------------------------------------------------------ */
-const SB_BG      = '#2a2218';
-const SB_BORDER  = 'rgba(201,168,76,0.22)';
-const LABEL_CLR  = '#7a6a4e';
-const ITEM_CLR   = '#c4a96a';
-const HOVER_CLR  = '#e0c878';
-const ACTV_CLR   = '#f0d070';
-const ICON_OPC   = 0.65;
-
-/* ------------------------------------------------------------------ */
-/*  ACCENT COLOR for "New Order"                                        */
-/*  Uses gold with a subtle glow to stand out from regular nav items   */
-/* ------------------------------------------------------------------ */
-const ACCENT_CLR      = '#c9a84c';   // gold -- same family as logo
-const ACCENT_BG       = 'rgba(201,168,76,0.13)';
-const ACCENT_BORDER   = 'rgba(201,168,76,0.35)';
-const ACCENT_HOVER    = '#f5e09a';
-
-/* ------------------------------------------------------------------ */
+/* ────────────────────────────────────────────────────────────────── */
 /*  LAYOUT                                                              */
-/* ------------------------------------------------------------------ */
+/* ────────────────────────────────────────────────────────────────── */
 export default function Layout({ children, currentPageName }) {
   const [user,         setUser]         = useState(null);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
@@ -138,17 +118,17 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = () => base44.auth.logout();
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full" style={{ background: SB_BG, borderRight: `1px solid ${SB_BORDER}` }}>
+    <div className="flex flex-col h-full" style={{ background: 'var(--sidebar-bg)', borderRight: `1px solid var(--sidebar-border)` }}>
 
       {/*    Logo    */}
       <div
         className={cn('flex items-center gap-3 px-4 py-4', collapsed && 'justify-center px-2')}
-        style={{ borderBottom: `1px solid ${SB_BORDER}` }}
+        style={{ borderBottom: `1px solid var(--sidebar-border)` }}
       >
         {collapsed ? (
           <button
             className="hidden lg:flex p-1.5 rounded-lg"
-            style={{ color: ITEM_CLR }}
+            style={{ color: 'var(--sidebar-text)' }}
             onClick={() => setCollapsed(false)}
             title="Expand"
           >
@@ -158,21 +138,24 @@ export default function Layout({ children, currentPageName }) {
           <>
             <AtlasLogo size={36} />
             <div className="min-w-0 flex-1">
-              <p className="font-display text-[17px] font-black leading-tight" style={{
+              <p className="text-[17px] font-black leading-tight" style={{
+                fontFamily: 'var(--font-serif)',
                 background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}>Atlas</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: '#8a7a5e' }}>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: 'var(--sidebar-label)' }}>
                 Reselling, Quantified
               </p>
             </div>
-            <button onClick={openCmd} title="Search (Cmd+K)" className="p-1.5 rounded-lg" style={{ color: ITEM_CLR }}>
+            <button onClick={openCmd} title="Search (Cmd+K)" className="p-1.5 rounded-lg" style={{ color: 'var(--sidebar-text)' }}>
               <Search className="w-[15px] h-[15px]" />
             </button>
-            <button className="hidden lg:flex p-1.5 rounded-lg" style={{ color: ITEM_CLR }} onClick={() => setCollapsed(true)} title="Collapse">
+            <button className="hidden lg:flex p-1.5 rounded-lg" style={{ color: 'var(--sidebar-text)' }} onClick={() => setCollapsed(true)} title="Collapse">
               <PanelLeftClose className="w-[17px] h-[17px]" />
             </button>
-            <button className="lg:hidden" style={{ color: ITEM_CLR }} onClick={() => setSidebarOpen(false)}>
+            <button className="lg:hidden" style={{ color: 'var(--sidebar-text)' }} onClick={() => setSidebarOpen(false)}>
               <X className="w-5 h-5" />
             </button>
           </>
@@ -184,12 +167,18 @@ export default function Layout({ children, currentPageName }) {
         <button
           onClick={openCmd}
           className="mx-3 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-xl text-xs w-[calc(100%-24px)]"
-          style={{ border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.06)', color: ITEM_CLR }}
+          style={{ 
+            border: 'rgba(201,168,76,0.18) 1px solid',
+            background: 'rgba(201,168,76,0.06)',
+            color: 'var(--sidebar-text)' 
+          }}
         >
           <Search className="w-3.5 h-3.5 shrink-0" />
           <span className="flex-1 text-left">Search the map...</span>
           <kbd className="text-[10px] rounded px-1 py-0.5" style={{
-            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.15)', color: LABEL_CLR,
+            background: 'rgba(201,168,76,0.12)',
+            border: '1px solid rgba(201,168,76,0.15)',
+            color: 'var(--sidebar-label)',
           }}>Cmd+K</kbd>
         </button>
       )}
@@ -205,7 +194,7 @@ export default function Layout({ children, currentPageName }) {
               {!collapsed && (
                 <p
                   className="px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em]"
-                  style={{ color: LABEL_CLR }}
+                  style={{ color: 'var(--sidebar-label)' }}
                 >
                   {group.label}
                 </p>
@@ -214,12 +203,7 @@ export default function Layout({ children, currentPageName }) {
                 const active  = currentPageName === item.page;
                 const isAccent = item.accent && !active;
 
-                /*    Color logic   
-                   active     gold highlight (same for all items)
-                   accent     gold with background pill to make "New Order" pop
-                   normal     standard item color
-                */
-                const itemColor  = active ? ACTV_CLR : ITEM_CLR;
+                const itemColor  = active ? 'var(--sidebar-active)' : 'var(--sidebar-text)';
                 const itemBg     = active
                   ? 'linear-gradient(90deg,rgba(201,168,76,0.18),transparent)'
                   : 'transparent';
@@ -233,11 +217,16 @@ export default function Layout({ children, currentPageName }) {
                     to={createPageUrl(item.page)}
                     title={collapsed ? item.name : undefined}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 9,
-                      padding: '7px 10px', borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 9,
+                      padding: '7px 10px',
+                      borderRadius: 8,
                       fontSize: 13.5,
                       fontWeight: active ? 600 : 500,
-                      marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
+                      marginBottom: 1,
+                      cursor: 'pointer',
+                      textDecoration: 'none',
                       justifyContent: collapsed ? 'center' : undefined,
                       borderLeft: itemBorder,
                       background: itemBg,
@@ -246,7 +235,7 @@ export default function Layout({ children, currentPageName }) {
                     }}
                     onMouseEnter={e => {
                       if (!active) {
-                        e.currentTarget.style.color = isAccent ? ACCENT_HOVER : HOVER_CLR;
+                        e.currentTarget.style.color = isAccent ? 'var(--sidebar-accent-hover)' : 'var(--sidebar-hover)';
                         e.currentTarget.style.background = 'rgba(201,168,76,0.07)';
                       }
                     }}
@@ -257,7 +246,7 @@ export default function Layout({ children, currentPageName }) {
                       }
                     }}
                   >
-                    <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: active ? 1 : ICON_OPC }} />
+                    <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: active ? 1 : 'var(--sidebar-icon-opacity)' }} />
                     {!collapsed && (
                       <span className="truncate flex-1">{item.name}</span>
                     )}
@@ -276,7 +265,11 @@ export default function Layout({ children, currentPageName }) {
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className={cn('w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl', collapsed && 'justify-center px-1')}
-              style={{ border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.07)', cursor: 'pointer' }}
+              style={{ 
+                border: '1px solid rgba(201,168,76,0.18)',
+                background: 'rgba(201,168,76,0.07)',
+                cursor: 'pointer' 
+              }}
             >
               <div className="relative flex-shrink-0">
                 <Avatar className="h-8 w-8">
@@ -286,19 +279,19 @@ export default function Layout({ children, currentPageName }) {
                   </AvatarFallback>
                 </Avatar>
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2"
-                  style={{ background: '#4a7a35', borderColor: SB_BG }} />
+                  style={{ background: '#4a7a35', borderColor: 'var(--sidebar-bg)' }} />
               </div>
               {!collapsed && (
                 <>
                   <div className="flex-1 min-w-0 text-left">
-                    <p className="text-[13px] font-bold leading-tight truncate" style={{ color: '#c9a84c' }}>
+                    <p className="text-[13px] font-bold leading-tight truncate" style={{ color: 'var(--sidebar-accent)' }}>
                       {user.full_name || user.email?.split('@')[0] || 'User'}
                     </p>
-                    <p className="text-[10px]" style={{ color: '#8a7a5e', letterSpacing: '0.04em' }}>
+                    <p className="text-[10px]" style={{ color: 'var(--sidebar-label)', letterSpacing: '0.04em' }}>
                       Charting
                     </p>
                   </div>
-                  <ChevronDown style={{ width: 13, height: 13, color: ITEM_CLR, flexShrink: 0 }} />
+                  <ChevronDown style={{ width: 13, height: 13, color: 'var(--sidebar-text)', flexShrink: 0 }} />
                 </>
               )}
             </button>
@@ -311,16 +304,19 @@ export default function Layout({ children, currentPageName }) {
                   collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-0 right-0'
                 )}
                 style={{
-                  background: '#1a1712', border: '1px solid rgba(201,168,76,0.2)',
-                  borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                  minWidth: collapsed ? 160 : undefined, zIndex: 50,
+                  background: '#1a1712',
+                  border: '1px solid rgba(201,168,76,0.2)',
+                  borderRadius: 12,
+                  boxShadow: 'var(--shadow-lg)',
+                  minWidth: collapsed ? 160 : undefined,
+                  zIndex: 50,
                 }}
               >
                 <Link
                   to={createPageUrl('Settings')}
                   onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration: 'none' }}
+                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: 'var(--sidebar-text)', textDecoration: 'none' }}
                 >
                   <SettingsIcon style={{ width: 14, height: 14 }} /> Settings
                 </Link>
@@ -328,14 +324,14 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl('Profile')}
                   onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: ITEM_CLR, textDecoration: 'none' }}
+                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: 'var(--sidebar-text)', textDecoration: 'none' }}
                 >
                   <User style={{ width: 14, height: 14 }} /> Profile
                 </Link>
                 <button
                   onClick={() => { setUserMenuOpen(false); handleLogout(); }}
                   className="w-full flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ color: '#8b3a2a', background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   <LogOut style={{ width: 14, height: 14 }} /> Sign Out
                 </button>
@@ -372,16 +368,19 @@ export default function Layout({ children, currentPageName }) {
         {/* Mobile topbar */}
         <div
           className="lg:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
-          style={{ background: SB_BG, borderColor: SB_BORDER }}
+          style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-border)' }}
         >
-          <button onClick={() => setSidebarOpen(true)} style={{ color: ITEM_CLR }}>
+          <button onClick={() => setSidebarOpen(true)} style={{ color: 'var(--sidebar-text)' }}>
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
             <AtlasLogo size={26} />
-            <span className="font-display font-black text-sm" style={{
+            <span className="text-sm font-black" style={{
+              fontFamily: 'var(--font-serif)',
               background: 'linear-gradient(135deg,#c9a84c,#f5e09a)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}>Atlas</span>
           </div>
         </div>
