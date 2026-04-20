@@ -43,15 +43,6 @@ const NAV_GROUPS = [
       { name: 'Expenses',     page: 'PaymentMethods', icon: Receipt        },
     ],
   },
-  {
-    label: 'Account',
-    items: [
-      { name: 'Settings',        page: 'Settings',       icon: SettingsIcon },
-      { name: 'Payment Methods', page: 'PaymentMethods', icon: CreditCard   },
-      { name: 'Rewards',         page: 'Rewards',        icon: Star         },
-      { name: 'Profile',         page: 'Profile',        icon: User         },
-    ],
-  },
 ];
 
 /* ────────────────────────────────────────────────────────────────── */
