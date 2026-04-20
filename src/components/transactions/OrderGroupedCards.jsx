@@ -166,19 +166,22 @@ function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, on
   /* -- Revenue from sale_events (entity uses "qty" field) -- */
   const totalRevenue = saleEvents.reduce((s, ev) =>
     s + (ev.items || []).reduce((ss, it) =>
-      ss + (parseFloat(it.sale_price) || 0) * (parseInt(it.qty || it.quantity) || 1), 0), 0);
+      ss + (parseFloat(it.sale_price) || 0) * (parseInt(it.qty) || parseInt(it.quantity) || 1), 0), 0);
 
   /* -- Total cost = final_cost (after gift cards) or total_cost -- */
   const totalCost = parseFloat(order.final_cost || order.total_cost || 0);
 
   /* -- Total units sold across all sale events -- */
   const totalUnitsSold = saleEvents.reduce((s, ev) =>
-    s + (ev.items || []).reduce((ss, it) => ss + (parseInt(it.qty || it.quantity) || 1), 0), 0);
+    s + (ev.items || []).reduce((ss, it) => ss + (parseInt(it.qty) || parseInt(it.quantity) || 0), 0), 0);
 
-  /* -- Profit: revenue - proportional cost of sold units (NO cashback added) -- */
-  const costPerUnit   = totalUnitsOrdered > 0 ? totalCost / totalUnitsOrdered : 0;
-  const soldCost      = costPerUnit * totalUnitsSold;
+  /* -- Profit: revenue - full order cost (proportional to units sold) -- */
   const hasSale       = totalRevenue > 0;
+  const allSold       = totalUnitsOrdered > 0 && totalUnitsSold >= totalUnitsOrdered;
+  // If all units sold, use full order cost. Otherwise prorate.
+  const soldCost      = allSold
+    ? totalCost
+    : (totalUnitsOrdered > 0 ? (totalCost / totalUnitsOrdered) * totalUnitsSold : 0);
   const orderProfit   = hasSale ? totalRevenue - soldCost : 0;
   const profitMargin  = hasSale && totalRevenue > 0 ? ((orderProfit / totalRevenue) * 100).toFixed(1) : '0';
   const profitColor   = orderProfit >= 0 ? 'var(--terrain)' : 'var(--crimson)';
@@ -365,7 +368,7 @@ function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, on
                   const evItems = (ev.items || []).filter(it =>
                     (it.product_name || '').toLowerCase() === itemName.toLowerCase());
                   return evItems.map((it, itIdx) => {
-                    const evQty      = parseInt(it.qty || it.quantity) || 1;
+                    const evQty      = parseInt(it.qty) || parseInt(it.quantity) || 1;
                     const evSaleUnit = parseFloat(it.sale_price) || 0;  // per-unit price
                     const evTotal    = evSaleUnit * evQty;               // total revenue for this sale
                     const evCost     = fullCostPerUnit * evQty;          // full order cost (tax/fees included)
