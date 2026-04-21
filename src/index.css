@@ -861,6 +861,139 @@ select:focus {
   }
 }
 
+/* ── Responsive tables ─────────────────────────────────────────── */
+.dash-table {
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  /* Make tables scrollable horizontally on mobile */
+  .dash-table {
+    font-size: 11px !important;
+  }
+  .dash-table th,
+  .dash-table td {
+    padding: 6px 8px !important;
+  }
+  .dash-table th {
+    font-size: 9px !important;
+  }
+  /* Reduce column widths on mobile */
+  .dash-table {
+    min-width: 100%;
+  }
+}
+
+/* ── Responsive form grids ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .form-3col {
+    grid-template-columns: 1fr !important;
+  }
+  .party-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .grid-3col {
+    grid-template-columns: 1fr !important;
+  }
+  .grid-5col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-5col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Responsive cards ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .card {
+    border-radius: 12px !important;
+  }
+  .pipeline-card {
+    min-height: 70px;
+  }
+}
+
+/* ── Modal/sidebar responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Ensure modals work on mobile */
+  [role="dialog"],
+  .modal-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+  
+  /* Dialogs should slide up from bottom on mobile */
+  [role="dialog"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* ── Responsive button groups ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .inv-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .inv-actions button {
+    width: 100%;
+    justify-content: center;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* ── Responsive section dividers ───────────────────────────────── */
+@media (max-width: 480px) {
+  .section-div-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+}
+
+/* ── Responsive lists/grids ────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Product grid fallback */
+  [style*="grid-template-columns: repeat(auto-fill"] {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+  }
+  
+  /* Inventory/order lists */
+  .order-list,
+  .transaction-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+}
+
+/* ── Typography scaling ────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .page-title {
+    font-size: 18px !important;
+  }
+  .page-subtitle {
+    font-size: 11px !important;
+  }
+  h1, h2, h3 {
+    line-height: 1.2;
+  }
+}
+
 /* ── Tailwind base ───────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;

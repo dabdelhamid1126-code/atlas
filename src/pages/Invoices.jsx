@@ -525,7 +525,7 @@ export default function Invoices() {
       {formOpen&&(
         <div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',justifyContent:'flex-end'}}>
           <div onClick={()=>setFormOpen(false)} style={{position:'absolute',inset:0,background:'var(--overlay-bg)'}}/>
-          <div className="modal-panel" style={{position:'relative',width:'100%',maxWidth:680,height:'100%',background:'var(--parch-card)',borderLeft:'1px solid var(--parch-line)',boxShadow:'var(--shadow-md)',display:'flex',flexDirection:'column',overflowY:'auto'}}>
+          <div className="modal-panel" style={{position:'relative',width:'100%',maxWidth:680,height:'100%',background:'var(--parch-card)',borderLeft:'1px solid var(--parch-line)',boxShadow:'var(--shadow-md)',display:'flex',flexDirection:'column',overflowY:'auto',minWidth:'100%'}}>
 
             <div style={{padding:'18px 24px 14px',borderBottom:'1px solid var(--parch-line)',background:'var(--parch-warm)',flexShrink:0,position:'sticky',top:0,zIndex:10}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
