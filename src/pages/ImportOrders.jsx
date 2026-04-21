@@ -837,7 +837,9 @@ export default function ImportOrders() {
     const newDrafts = [];
     for (const file of files) {
       try {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        // Read file as blob to ensure proper upload
+        const fileBlob = new Blob([file], { type: file.type });
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: fileBlob });
         const res = await base44.functions.invoke('extractInvoice', { file_url, file_type: file.type });
         const extracted = res.data.extracted;
         extracted.items = (extracted.items||[]).map(it=>({...it,id:crypto.randomUUID()}));
