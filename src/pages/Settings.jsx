@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import {
-  User, Database, Target, Key, Palette, Shield,
+  User, Database, Target, Palette, Shield,
   ExternalLink, Check, Sparkles, DollarSign, Eye, EyeOff,
   Download, Upload, Trash2, Loader, X, Inbox, Plus,
-  Store, Users, Pencil,
+  Store, Users, Pencil, CreditCard, Package, Gift,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -645,25 +645,39 @@ function ProfileTab({ user }) {
 
 function DataSetupTab() {
   const pages = [
-    { label:'Payment Methods', page:'PaymentMethods' },
-    { label:'Products',        page:'Products'        },
-    { label:'Import Orders',   page:'ImportOrders'    },
-    { label:'Gift Cards',      page:'GiftCards'       },
+    { label:'Payment Methods', page:'PaymentMethods', icon:CreditCard,  desc:'Add credit cards and cashback rates',   color:C.ocean2   },
+    { label:'Products',        page:'Products',       icon:Package,     desc:'Manage your master product catalog',    color:C.terrain2 },
+    { label:'Import Orders',   page:'ImportOrders',   icon:Upload,      desc:'Import via PDF invoice or Gmail sync',  color:C.violet2  },
+    { label:'Gift Cards',      page:'GiftCards',      icon:Gift,        desc:'Track available gift card balances',    color:C.gold     },
   ];
   return (
     <div style={card}>
-      <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, marginBottom:8 }}>Data Setup</h2>
-      <p style={{ fontSize:12, color:C.inkDim, marginBottom:16, fontFamily:FONT }}>Quick links to setup pages.</p>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8 }}>
-        {pages.map(p=>(
-          <Link key={p.page} to={`/${p.page}`}
-            style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, padding:'12px 14px', borderRadius:10, fontSize:13, fontWeight:500, color:C.ink, background:C.parchWarm, border:`1px solid ${C.parchLine}`, textDecoration:'none', fontFamily:FONT }}
-            onMouseEnter={e=>{ e.currentTarget.style.background=C.goldBg; e.currentTarget.style.borderColor=C.goldBdr; e.currentTarget.style.color=C.gold2; }}
-            onMouseLeave={e=>{ e.currentTarget.style.background=C.parchWarm; e.currentTarget.style.borderColor=C.parchLine; e.currentTarget.style.color=C.ink; }}>
-            <span>{p.label}</span>
-            <ExternalLink style={{ width:13, height:13, color:C.inkDim, flexShrink:0 }}/>
-          </Link>
-        ))}
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+        <Database style={{ width:16, height:16, color:C.ocean2 }}/>
+        <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, margin:0 }}>Data Setup</h2>
+      </div>
+      <p style={{ fontSize:12, color:C.inkDim, marginBottom:20, fontFamily:FONT }}>Quick links to set up the key parts of your account.</p>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:10 }}>
+        {pages.map(p => {
+          const Icon = p.icon;
+          return (
+            <Link key={p.page} to={`/${p.page}`}
+              style={{ display:'flex', flexDirection:'column', gap:10, padding:'14px 16px', borderRadius:12, fontSize:13, color:C.ink, background:C.parchWarm, border:`1px solid ${C.parchLine}`, textDecoration:'none', fontFamily:FONT, transition:'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background=C.goldBg; e.currentTarget.style.borderColor=C.goldBdr; }}
+              onMouseLeave={e => { e.currentTarget.style.background=C.parchWarm; e.currentTarget.style.borderColor=C.parchLine; }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ width:32, height:32, borderRadius:8, background:C.parchCard, border:`1px solid ${C.parchLine}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <Icon style={{ width:15, height:15, color:p.color }}/>
+                </div>
+                <ExternalLink style={{ width:12, height:12, color:C.inkGhost }}/>
+              </div>
+              <div>
+                <p style={{ fontSize:13, fontWeight:700, color:C.ink, fontFamily:FONT, margin:0 }}>{p.label}</p>
+                <p style={{ fontSize:11, color:C.inkDim, fontFamily:FONT, margin:0, marginTop:3 }}>{p.desc}</p>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
@@ -904,97 +918,135 @@ function DataTab() {
   );
 }
 
-function ApiKeysTab() {
-  const [apiKey, setApiKey]     = useState('');
-  const [masked, setMasked]     = useState(null);
-  const [connected, setConn]    = useState(false);
-  const [showKey, setShowKey]   = useState(false);
-  const [message, setMessage]   = useState(null);
+function SecurityTab({ user }) {
+  const [signedOut, setSignedOut] = useState(false);
+  const loginTime = useState(() => {
+    const stored = localStorage.getItem('atlas_login_time');
+    if (!stored) {
+      const now = new Date().toISOString();
+      localStorage.setItem('atlas_login_time', now);
+      return now;
+    }
+    return stored;
+  })[0];
 
-  useEffect(()=>{
-    const stored=localStorage.getItem('dalia_track17_key');
-    if(stored){setConn(true);setMasked(stored.slice(0,4)+'...'+stored.slice(-4));}
-  },[]);
-
-  const save=()=>{
-    if(apiKey.trim()){localStorage.setItem('dalia_track17_key',apiKey.trim());setConn(true);setMasked(apiKey.slice(0,4)+'...'+apiKey.slice(-4));setMessage({type:'success',text:'API key saved'});}
-    else{localStorage.removeItem('dalia_track17_key');setConn(false);setMasked(null);setMessage({type:'success',text:'API key removed'});}
-    setApiKey('');
+  const fmtTime = (iso) => {
+    try {
+      return new Date(iso).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' });
+    } catch { return 'Unknown'; }
   };
-  const remove=()=>{localStorage.removeItem('dalia_track17_key');setConn(false);setMasked(null);setApiKey('');};
+
+  const handleSignOut = async () => {
+    try { await base44.auth.logout(); } catch {}
+    localStorage.removeItem('atlas_login_time');
+    setSignedOut(true);
+    setTimeout(() => window.location.href = '/', 1200);
+  };
 
   return (
     <div style={card}>
       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
-        <Key style={{ width:16, height:16, color:C.violet2 }}/>
-        <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, margin:0 }}>API Keys</h2>
+        <Shield style={{ width:16, height:16, color:C.ocean2 }}/>
+        <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, margin:0 }}>Security</h2>
       </div>
-      <div style={{ padding:16, borderRadius:10, background:C.parchWarm, border:`1px solid ${C.parchLine}` }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-          <p style={{ fontSize:13, fontWeight:700, color:C.ink, fontFamily:FONT }}>17TRACK</p>
-          {connected&&<span style={{ fontSize:10, fontWeight:700, padding:'2px 10px', borderRadius:99, background:C.terrainBg, color:C.terrain2, border:`1px solid ${C.terrainBdr}`, fontFamily:FONT }}>Connected</span>}
-        </div>
-        {connected&&masked&&(
-          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:8, background:C.parchCard, border:`1px solid ${C.parchLine}`, marginBottom:12 }}>
-            <code style={{ fontSize:12, color:C.inkFaded, flex:1, fontFamily:MONO }}>{masked}</code>
-            <button onClick={remove} style={{ fontSize:11, fontWeight:600, color:C.crimson, background:C.crimsonBg, border:`1px solid ${C.crimsonBdr}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:FONT }}>Remove</button>
-          </div>
-        )}
-        <div style={{ position:'relative', marginBottom:10 }}>
-          <input type={showKey?'text':'password'} value={apiKey} onChange={e=>setApiKey(e.target.value)}
-            placeholder={connected?'Enter new key to replace...':'Enter your 17TRACK API key'}
-            style={{ ...INP, paddingRight:40 }} autoComplete="off"/>
-          <button type="button" onClick={()=>setShowKey(!showKey)}
-            style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', color:C.inkDim, cursor:'pointer', padding:0 }}>
-            {showKey?<EyeOff style={{ width:14, height:14 }}/>:<Eye style={{ width:14, height:14 }}/>}
-          </button>
-        </div>
-        <button onClick={save} disabled={!apiKey.trim()}
-          style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:apiKey.trim()?C.ink:C.parchWarm, border:apiKey.trim()?'none':`1px solid ${C.parchLine}`, color:apiKey.trim()?C.neCream:C.inkGhost, cursor:'pointer', fontFamily:FONT }}>
-          {connected?'Update Key':'Save Key'}
-        </button>
-        {message&&<p style={{ marginTop:10, fontSize:12, color:C.terrain2, display:'flex', alignItems:'center', gap:4, fontFamily:FONT }}><Check style={{ width:12, height:12 }}/> {message.text}</p>}
-      </div>
-    </div>
-  );
-}
 
-function SecurityTab({ user }) {
-  return (
-    <div style={card}>
-      <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, marginBottom:16 }}>Security</h2>
-      <SectionRow title="Authentication" description="Signed in via Base44">
+      <SectionDivider title="Session Info" color={C.ocean2}/>
+      <SectionRow title="Authentication" description="Signed in via Base44 OAuth">
         <span style={{ fontSize:10, fontWeight:700, padding:'2px 10px', borderRadius:99, background:C.terrainBg, color:C.terrain2, border:`1px solid ${C.terrainBdr}`, fontFamily:FONT }}>Active</span>
       </SectionRow>
-      <SectionRow title="Session" description="Your current browser session">
+      <SectionRow title="Signed In" description={`Session started ${fmtTime(loginTime)}`}>
         <span style={{ fontSize:11, color:C.inkDim, fontFamily:FONT }}>Current</span>
       </SectionRow>
-      <SectionRow title="Account" description={user?.email||'--'} noBorder>
-        <span style={{ fontSize:11, color:C.inkDim, fontFamily:FONT }}>{user?.role||'user'}</span>
+      <SectionRow title="Account" description={user?.email || '--'}>
+        <span style={{ fontSize:10, fontWeight:700, padding:'2px 10px', borderRadius:99, background:C.goldBg, color:C.gold2, border:`1px solid ${C.goldBdr}`, fontFamily:FONT, textTransform:'capitalize' }}>{user?.role || 'user'}</span>
       </SectionRow>
+      <SectionRow title="Role Permissions" description="Admin accounts can manage all data" noBorder>
+        <span style={{ fontSize:11, color:C.inkDim, fontFamily:FONT }}>{user?.role === 'admin' ? 'Full access' : 'Standard'}</span>
+      </SectionRow>
+
+      <SectionDivider title="Actions" color={C.crimson}/>
+      <div style={{ padding:'14px 0' }}>
+        <p style={{ fontSize:13, fontWeight:500, color:C.ink, fontFamily:FONT, marginBottom:4 }}>Sign Out</p>
+        <p style={{ fontSize:11, color:C.inkDim, fontFamily:FONT, marginBottom:14 }}>You will be signed out of Atlas and redirected to the login page.</p>
+        <button onClick={handleSignOut} disabled={signedOut} style={{
+          display:'flex', alignItems:'center', gap:6, padding:'8px 20px', borderRadius:8,
+          fontSize:12, fontWeight:700, background:signedOut ? C.parchWarm : C.crimsonBg,
+          border:`1px solid ${C.crimsonBdr}`, color:signedOut ? C.inkGhost : C.crimson2,
+          cursor: signedOut ? 'not-allowed' : 'pointer', fontFamily:FONT, transition:'all 0.2s',
+        }}>
+          {signedOut ? '✓ Signing out...' : '→ Sign Out'}
+        </button>
+      </div>
     </div>
   );
 }
 
 function AppearanceTab() {
-  const [settings, setSettings] = useState(()=>{ try{return JSON.parse(localStorage.getItem('dalia_appearance')||'{}');}catch{return {};} });
-  const upd=(key,val)=>{ const next={...settings,[key]:val}; setSettings(next); localStorage.setItem('dalia_appearance',JSON.stringify(next)); };
+  const [settings, setSettings] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('dalia_appearance') || '{}'); } catch { return {}; }
+  });
+  const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'light');
 
-  const dashToggles=[
-    { key:'splitYACashback',         label:'Split YA Cashback',   description:'Show CC and YA cashback as separate KPIs',  icon:Sparkles,   color:C.gold     },
-    { key:'costIncludesTaxShipping',  label:'Include Tax in Cost', description:'Total Cost will include taxes and shipping', icon:DollarSign, color:C.ocean2   },
-    { key:'showPipeline',             label:'Status Pipeline',     description:'Show the status pipeline on the Dashboard',  icon:Inbox,      color:C.violet2  },
-    { key:'showProductImages',        label:'Show Product Images', description:'Display product thumbnails in Transactions', icon:Eye,        color:C.ocean2   },
-    { key:'showGoals',                label:'Goal Tracker',        description:'Show the goal tracker on the Dashboard',     icon:Target,     color:C.terrain2 },
+  const upd = (key, val) => {
+    const next = { ...settings, [key]: val };
+    setSettings(next);
+    localStorage.setItem('dalia_appearance', JSON.stringify(next));
+  };
+
+  const switchTheme = (t) => {
+    document.documentElement.setAttribute('data-theme', t === 'midnight' ? 'midnight' : '');
+    localStorage.setItem('atlas_theme', t);
+    setTheme(t);
+  };
+
+  const themes = [
+    { key:'light',    label:'Neutral Elegance', desc:'Warm parchment, gold accents',    dot:'#A0722A' },
+    { key:'midnight', label:'Midnight',          desc:'Deep navy, cyan accents',          dot:'rgb(6,182,212)' },
+  ];
+
+  const dashToggles = [
+    { key:'splitYACashback',        label:'Split YA Cashback',   description:'Show CC and YA cashback as separate KPIs',  icon:Sparkles,   color:C.gold     },
+    { key:'costIncludesTaxShipping', label:'Include Tax in Cost', description:'Total Cost will include taxes and shipping', icon:DollarSign, color:C.ocean2   },
+    { key:'showPipeline',            label:'Status Pipeline',     description:'Show the status pipeline on the Dashboard',  icon:Inbox,      color:C.violet2  },
+    { key:'showProductImages',       label:'Show Product Images', description:'Display product thumbnails in Transactions', icon:Eye,        color:C.ocean2   },
+    { key:'showGoals',               label:'Goal Tracker',        description:'Show the goal tracker on the Dashboard',     icon:Target,     color:C.terrain2 },
   ];
 
   return (
     <div style={card}>
-      <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, marginBottom:20 }}>Appearance</h2>
-      <SectionDivider title="Dashboard & Analytics"/>
-      {dashToggles.map((t,i)=>(
-        <SectionRow key={t.key} icon={t.icon} title={t.label} description={t.description} noBorder={i===dashToggles.length-1}>
-          <Toggle on={settings[t.key]!==false} onToggle={()=>upd(t.key,!settings[t.key])}/>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
+        <Palette style={{ width:16, height:16, color:C.violet2 }}/>
+        <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, margin:0 }}>Appearance</h2>
+      </div>
+
+      {/* ── Theme picker ── */}
+      <SectionDivider title="Theme" color={C.violet2}/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px,1fr))', gap:10, marginBottom:20 }}>
+        {themes.map(t => (
+          <button key={t.key} onClick={() => switchTheme(t.key)} style={{
+            display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:10,
+            cursor:'pointer', textAlign:'left', fontFamily:FONT,
+            background: theme === t.key ? C.goldBg : C.parchWarm,
+            border: theme === t.key ? `2px solid ${C.gold}` : `1px solid ${C.parchLine}`,
+            transition:'all 0.2s',
+          }}>
+            <div style={{ width:32, height:32, borderRadius:'50%', background:t.dot, flexShrink:0, border:'2px solid rgba(0,0,0,0.1)' }}/>
+            <div>
+              <p style={{ fontSize:12, fontWeight:700, color: theme === t.key ? C.gold2 : C.ink, fontFamily:FONT, margin:0 }}>{t.label}</p>
+              <p style={{ fontSize:10, color:C.inkDim, fontFamily:FONT, margin:0, marginTop:2 }}>{t.desc}</p>
+            </div>
+            {theme === t.key && (
+              <Check style={{ width:14, height:14, color:C.gold, marginLeft:'auto', flexShrink:0 }}/>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Dashboard toggles ── */}
+      <SectionDivider title="Dashboard & Display"/>
+      {dashToggles.map((t, i) => (
+        <SectionRow key={t.key} icon={t.icon} title={t.label} description={t.description} noBorder={i === dashToggles.length - 1}>
+          <Toggle on={settings[t.key] !== false} onToggle={() => upd(t.key, !settings[t.key])}/>
         </SectionRow>
       ))}
     </div>
@@ -1011,7 +1063,6 @@ const TABS = [
   { key:'sellers',    label:'Sellers',    icon:Users    },
   { key:'goals',      label:'Goals',      icon:Target   },
   { key:'data',       label:'Data',       icon:Download },
-  { key:'api-keys',   label:'API Keys',   icon:Key      },
   { key:'appearance', label:'Appearance', icon:Palette  },
   { key:'security',   label:'Security',   icon:Shield   },
 ];
@@ -1062,7 +1113,6 @@ export default function Settings() {
           {activeTab==='sellers'    && <SellersTab />}
           {activeTab==='goals'      && <GoalsTab />}
           {activeTab==='data'       && <DataTab />}
-          {activeTab==='api-keys'   && <ApiKeysTab />}
           {activeTab==='appearance' && <AppearanceTab />}
           {activeTab==='security'   && <SecurityTab user={user}/>}
         </div>
