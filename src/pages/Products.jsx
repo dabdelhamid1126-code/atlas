@@ -355,10 +355,7 @@ export default function Products() {
 
   const { data:allProducts=[], isLoading } = useQuery({ queryKey:['products'], queryFn:()=>base44.entities.Product.list() });
 
-  const products = useMemo(()=>
-    userEmail ? allProducts.filter(p=>!(p.hidden_by||[]).includes(userEmail)) : allProducts,
-    [allProducts, userEmail]
-  );
+  const products = allProducts;
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Product.create(data),
@@ -369,11 +366,8 @@ export default function Products() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey:['products'] }); toast.success('Product updated'); closeDialog(); }
   });
   const deleteMutation = useMutation({
-    mutationFn: (product) => {
-      const hidden = [...new Set([...(product.hidden_by||[]), userEmail])];
-      return base44.entities.Product.update(product.id, { hidden_by:hidden });
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey:['products'] }); }
+    mutationFn: (product) => base44.entities.Product.delete(product.id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey:['products'] }); toast.success('Product deleted'); }
   });
 
   const openDialog = (product=null) => {
@@ -460,33 +454,7 @@ export default function Products() {
     setImporting(false); setImportOpen(false); setUpcInput(''); setImportRows([]);
   };
 
-  const handleRemoveDuplicates = async () => {
-    // Find duplicates by name (keep first occurrence, hide the rest)
-    const seen = new Map(); // normalized name -> first product id
-    const toHide = [];
-    const sorted = [...allProducts].sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
-    for (const p of sorted) {
-      const key = (p.name||'').trim().toLowerCase();
-      if (!key) continue;
-      if (seen.has(key)) { toHide.push(p); }
-      else seen.set(key, p.id);
-    }
-    // Also check UPC duplicates
-    const seenUpc = new Map();
-    for (const p of sorted) {
-      const upc = (p.upc||'').trim();
-      if (!upc) continue;
-      if (seenUpc.has(upc)) { if (!toHide.find(x=>x.id===p.id)) toHide.push(p); }
-      else seenUpc.set(upc, p.id);
-    }
-    if (toHide.length===0) { toast.success('No duplicates found!'); return; }
-    for (const p of toHide) {
-      const hidden = [...new Set([...(p.hidden_by||[]), ...(userEmail?[userEmail]:[])])];
-      await base44.entities.Product.update(p.id, { hidden_by: hidden });
-    }
-    queryClient.invalidateQueries({ queryKey:['products'] });
-    toast.success(`Removed ${toHide.length} duplicate${toHide.length!==1?'s':''}`);
-  };
+
 
   const toggleRow       = (upc) => setImportRows(prev=>prev.map(r=>r.upc===upc?{ ...r, selected:!r.selected }:r));
   const toggleAll       = () => { const allSel=importRows.filter(r=>r.status==='new').every(r=>r.selected); setImportRows(prev=>prev.map(r=>r.status==='new'?{ ...r, selected:!allSel }:r)); };
