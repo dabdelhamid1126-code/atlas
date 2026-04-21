@@ -293,7 +293,7 @@ function UPCPickerModal({ upc, results, onSelect, onManual, onClose }) {
 /* ------------------------------------------------------------------ */
 /*  PAGINATION                                                          */
 /* ------------------------------------------------------------------ */
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 25;
 
 function Pagination({ page, totalPages, total, onPage }) {
   if (totalPages<=1) return null;
