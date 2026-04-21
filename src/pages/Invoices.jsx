@@ -288,7 +288,7 @@ export default function Invoices() {
     if(tab==='paid')   list=list.filter(i=>i.status==='paid');
     if(tab==='overdue')list=list.filter(i=>i.status==='overdue');
     if(statusFilter!=='all') list=list.filter(i=>i.status===statusFilter);
-    if(search){const s=search.toLowerCase();list=list.filter(i=>i.invoice_number?.toLowerCase().includes(s)||i.buyer?.toLowerCase().includes(s)||i.from_name?.toLowerCase().includes(s));}
+    if(search){const s=search.toLowerCase();list=list.filter(i=>i.invoice_number?.toLowerCase().includes(s)||i.buyer?.toLowerCase().includes(s)||i.from_name?.toLowerCase().includes(s)||(i.items||[]).some(it=>it.description?.toLowerCase().includes(s)));}
     list.sort((a,b)=>{
       if(sortBy==='date_desc') return new Date(b.invoice_date||b.created_date)-new Date(a.invoice_date||a.created_date);
       if(sortBy==='date_asc')  return new Date(a.invoice_date||a.created_date)-new Date(b.invoice_date||b.created_date);
