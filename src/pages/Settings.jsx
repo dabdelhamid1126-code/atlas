@@ -428,30 +428,217 @@ function SellersTab() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  EXISTING TABS (kept exactly, just restyled to match)               */
+/*  PROFILE TAB                                                         */
 /* ------------------------------------------------------------------ */
 function ProfileTab({ user }) {
+  const STORAGE_KEY = 'atlas_profile_extra';
+
+  const [photo,    setPhoto]    = useState(null);
+  const [phone,    setPhone]    = useState('');
+  const [company,  setCompany]  = useState('');
+  const [location, setLocation] = useState('');
+  const [bio,      setBio]      = useState('');
+  const [saved,    setSaved]    = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef(null);
+
+  // Load saved extras from localStorage
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if (stored.photo)    setPhoto(stored.photo);
+      if (stored.phone)    setPhone(stored.phone);
+      if (stored.company)  setCompany(stored.company);
+      if (stored.location) setLocation(stored.location);
+      if (stored.bio)      setBio(stored.bio);
+    } catch {}
+  }, []);
+
+  const handleImageFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => setPhoto(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInput = (e) => handleImageFile(e.target.files?.[0]);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    handleImageFile(e.dataTransfer.files?.[0]);
+  };
+
+  const removePhoto = () => { setPhoto(null); if (fileRef.current) fileRef.current.value = ''; };
+
+  const handleSave = () => {
+    setSaving(true);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ photo, phone, company, location, bio }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {}
+    setSaving(false);
+  };
+
+  const initials = (user?.full_name || user?.email || 'U')
+    .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
   return (
     <div style={card}>
-      <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, marginBottom:20 }}>Profile</h2>
-      <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:24 }}>
-        <div style={{ width:52, height:52, borderRadius:'50%', background:C.gold, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, fontWeight:800, color:'white', flexShrink:0, fontFamily:FONT }}>
-          {user?.full_name?.charAt(0)||user?.email?.charAt(0)||'U'}
-        </div>
-        <div>
-          <p style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink }}>{user?.full_name||'User'}</p>
-          <p style={{ fontSize:12, color:C.inkDim, marginTop:2, fontFamily:FONT }}>Connected via Base44</p>
-        </div>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
+        <User style={{ width:16, height:16, color:C.gold }}/>
+        <h2 style={{ fontFamily:FONT, fontSize:15, fontWeight:700, color:C.ink, margin:0 }}>Profile</h2>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:16 }}>
-        {[['Full Name',user?.full_name],['Email',user?.email],['Role',user?.role||'user']].map(([label,val])=>(
+
+      {/* ── Avatar upload ── */}
+      <SectionDivider title="Profile Photo"/>
+      <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:24 }}>
+        {/* Avatar circle */}
+        <div style={{ position:'relative', flexShrink:0 }}>
+          <div
+            onClick={() => fileRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            style={{
+              width:80, height:80, borderRadius:'50%', cursor:'pointer',
+              border:`2px ${dragOver ? 'solid' : 'dashed'} ${dragOver ? C.gold : C.parchLine}`,
+              background: dragOver ? C.goldBg : C.parchWarm,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              overflow:'hidden', transition:'all 0.2s', position:'relative',
+            }}>
+            {photo
+              ? <img src={photo} alt="Profile" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+              : <span style={{ fontSize:26, fontWeight:800, color:C.gold, fontFamily:FONT }}>{initials}</span>
+            }
+            {/* Hover overlay */}
+            <div style={{
+              position:'absolute', inset:0, borderRadius:'50%',
+              background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center',
+              justifyContent:'center', opacity:0, transition:'opacity 0.2s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0'}>
+              <span style={{ fontSize:10, color:'white', fontWeight:700, fontFamily:FONT, textAlign:'center', padding:'0 6px' }}>CHANGE</span>
+            </div>
+          </div>
+          {/* Remove button */}
+          {photo && (
+            <button onClick={removePhoto} style={{
+              position:'absolute', top:-2, right:-2, width:20, height:20, borderRadius:'50%',
+              background:C.crimson2, border:'2px solid white', color:'white', cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900,
+            }}>×</button>
+          )}
+        </div>
+
+        <div>
+          <p style={{ fontSize:13, fontWeight:700, color:C.ink, fontFamily:FONT, marginBottom:4 }}>
+            {user?.full_name || 'User'}
+          </p>
+          <p style={{ fontSize:11, color:C.inkDim, fontFamily:FONT, marginBottom:10 }}>
+            Connected via Base44
+          </p>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={() => fileRef.current?.click()} style={{
+              padding:'6px 14px', borderRadius:8, fontSize:11, fontWeight:700,
+              background:C.ink, border:'none', color:C.neCream, cursor:'pointer', fontFamily:FONT,
+            }}>Upload Photo</button>
+            {photo && (
+              <button onClick={removePhoto} style={{
+                padding:'6px 12px', borderRadius:8, fontSize:11, fontWeight:600,
+                background:C.crimsonBg, border:`1px solid ${C.crimsonBdr}`, color:C.crimson2,
+                cursor:'pointer', fontFamily:FONT,
+              }}>Remove</button>
+            )}
+          </div>
+          <p style={{ fontSize:10, color:C.inkGhost, marginTop:6, fontFamily:FONT }}>
+            JPG, PNG or GIF · Max 5MB · Click or drag to upload
+          </p>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" onChange={handleFileInput} style={{ display:'none' }}/>
+      </div>
+
+      {/* ── Read-only Base44 fields ── */}
+      <SectionDivider title="Account Info" color={C.ocean2}/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:12, marginBottom:20 }}>
+        {[['Full Name', user?.full_name], ['Email', user?.email], ['Role', user?.role || 'user']].map(([label, val]) => (
           <div key={label}>
             <LBL>{label}</LBL>
-            <div style={{ ...INP, color:C.inkFaded, cursor:'not-allowed' }}>{val||'--'}</div>
+            <div style={{ ...INP, color:C.inkFaded, cursor:'not-allowed', display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{val || '--'}</span>
+              <span style={{ fontSize:9, color:C.inkGhost, fontFamily:FONT, flexShrink:0 }}>Base44</span>
+            </div>
           </div>
         ))}
       </div>
-      <p style={{ fontSize:11, color:C.inkDim, fontFamily:FONT }}>Profile information is managed through your Base44 account.</p>
+      <p style={{ fontSize:10, color:C.inkGhost, fontFamily:FONT, marginBottom:20, display:'flex', alignItems:'center', gap:4 }}>
+        <Shield style={{ width:11, height:11 }}/> Name and email are managed by your Base44 account and cannot be changed here.
+      </p>
+
+      {/* ── Editable fields ── */}
+      <SectionDivider title="Additional Info" color={C.terrain2}/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:12, marginBottom:16 }}>
+        <div>
+          <LBL>Phone Number</LBL>
+          <input
+            type="tel"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            placeholder="+1 (555) 000-0000"
+            style={INP}
+          />
+        </div>
+        <div>
+          <LBL>Company / Business</LBL>
+          <input
+            type="text"
+            value={company}
+            onChange={e => setCompany(e.target.value)}
+            placeholder="Your business name"
+            style={INP}
+          />
+        </div>
+        <div>
+          <LBL>Location</LBL>
+          <input
+            type="text"
+            value={location}
+            onChange={e => setLocation(e.target.value)}
+            placeholder="City, State"
+            style={INP}
+          />
+        </div>
+      </div>
+      <div style={{ marginBottom:20 }}>
+        <LBL>Bio / Notes</LBL>
+        <textarea
+          value={bio}
+          onChange={e => setBio(e.target.value)}
+          placeholder="A short note about yourself or your business..."
+          rows={3}
+          style={{ ...INP, resize:'vertical', lineHeight:1.5 }}
+        />
+      </div>
+
+      {/* ── Save button ── */}
+      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+        <button onClick={handleSave} disabled={saving} style={{
+          display:'flex', alignItems:'center', gap:6, padding:'9px 22px',
+          borderRadius:8, fontSize:12, fontWeight:700,
+          background:C.ink, border:'none', color:C.neCream,
+          cursor:'pointer', fontFamily:FONT, opacity: saving ? 0.6 : 1,
+        }}>
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+        {saved && (
+          <span style={{ fontSize:12, color:C.terrain2, display:'flex', alignItems:'center', gap:4, fontFamily:FONT }}>
+            <Check style={{ width:13, height:13 }}/> Saved successfully
+          </span>
+        )}
+      </div>
     </div>
   );
 }
