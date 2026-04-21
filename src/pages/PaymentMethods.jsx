@@ -550,12 +550,7 @@ function CardDetailPanel({ card, orders, onEdit, onDelete, onUpdate, isDuplicate
 }
 
 /* ═══════════════════════════════════════════════════════════
-   GIFT CARDS TAB (unchanged, just cleaner styling)
-═══════════════════════════════════════════════════════════ */
-function GiftCardsTab({ queryClient }) {
-
-/* ═══════════════════════════════════════════════════════════
-   GIFT CARDS — SPLIT PANEL (matches Credit Cards style)
+   GIFT CARDS — SPLIT PANEL
 ═══════════════════════════════════════════════════════════ */
 function GiftCardsTab({ queryClient }) {
   const [selectedId, setSelectedId]           = useState(null);
