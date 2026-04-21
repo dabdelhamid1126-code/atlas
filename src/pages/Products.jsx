@@ -521,10 +521,7 @@ export default function Products() {
           <p className="page-subtitle">Master product catalog — {products.length} total — shared with all users</p>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <button onClick={handleRemoveDuplicates}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:600, background:C.crimsonBg, border:`1px solid ${C.crimsonBdr}`, color:C.crimson, cursor:'pointer', fontFamily:FONT }}>
-            <Trash2 style={{ width:13, height:13 }}/> Remove Duplicates
-          </button>
+
           {/* Import UPCs -- matches ghost button style in Analytics */}
           <button onClick={()=>setImportOpen(true)}
             style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:8, fontSize:11, fontWeight:600, background:C.parchCard, border:`1px solid ${C.parchLine}`, color:C.inkFaded, cursor:'pointer', fontFamily:FONT }}>
