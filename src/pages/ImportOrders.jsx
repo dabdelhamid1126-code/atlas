@@ -593,51 +593,88 @@ function ItemRow({ item, onUpdate, onRemove, products = [] }) {
 // ── Review card ───────────────────────────────────────────────────────────
 
 function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, onConfirm, onDiscard, confirming }) {
-  const [expanded, setExpanded] = useState(true);
-  const [form, setForm] = useState(draft.extracted);
-  const set = (k,v) => { const f={...form,[k]:v}; setForm(f); onUpdate(idx,f); };
-  const setItem = (iid,k,v) => set('items',form.items.map(it=>it.id===iid?{...it,[k]:v}:it));
-  const removeItem = (iid) => set('items',form.items.filter(it=>it.id!==iid));
-  const addItem = () => set('items',[...(form.items||[]),{ id:crypto.randomUUID(), product_name:'', sku:'', upc:'', model:'', quantity:1, unit_cost:'', sale_price:'', image_url:null, catalog_match:false, image_source:null }]);
-  const itemsTotal   = (form.items||[]).reduce((s,it)=>s+(parseFloat(it.unit_cost)||0)*(parseInt(it.quantity)||1),0);
-  const gcTotal      = (form.gift_cards||[]).reduce((s,gc)=>s+(parseFloat(gc.amount)||0),0);
-  const finalCost    = itemsTotal+(parseFloat(form.tax)||0)+(parseFloat(form.shipping_cost)||0)+(parseFloat(form.fees)||0)-gcTotal;
-  const catalogCount = (form.items||[]).filter(it=>it.catalog_match).length;
-  const fuzzyCount   = (form.items||[]).filter(it=>it.image_source==='catalog_fuzzy').length;
-  const upcCount     = (form.items||[]).filter(it=>it.image_source==='upcitemdb').length;
-  const statusStyles = { ready:'bg-emerald-50 text-emerald-700 border border-emerald-200', error:'bg-red-50 text-red-600 border border-red-200', confirmed:'bg-violet-50 text-violet-700 border border-violet-200', duplicate:'bg-amber-50 text-amber-700 border border-amber-200', pending:'bg-slate-100 text-slate-600' };
-  return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${draft.status==='confirmed'?'border-emerald-200 opacity-75':draft.status==='error'?'border-red-200':'border-slate-100'}`}>
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-        <div className="flex items-center gap-3 min-w-0">
-          <RetailerLogo retailer={form.retailer} size={36}/>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-800 truncate">
-              {form.retailer||'Unknown Retailer'}
-              {form.order_number&&<span className="text-slate-400 font-normal ml-2">#{form.order_number}</span>}
-              {draft.source==='gmail'&&<span className="ml-2 text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full">Gmail</span>}
-            </p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {form.items?.length||0} item(s) · {fmt$(itemsTotal)}
-              {catalogCount>0&&<span className="text-emerald-600 ml-1.5">· {catalogCount} catalog</span>}
-              {fuzzyCount>0&&<span className="text-amber-600 ml-1">· {fuzzyCount} suggested</span>}
-              {upcCount>0&&<span className="text-blue-600 ml-1">· {upcCount} UPC</span>}
-              {draft.filename&&<span className="ml-1.5">· {draft.filename}</span>}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusStyles[draft.status]||statusStyles.pending}`}>
-            {draft.status==='confirmed'?'Saved':draft.status==='error'?'Error':draft.status==='duplicate'?'Duplicate':draft.status==='ready'?'Ready':'Review'}
-          </span>
-          <button onClick={()=>setExpanded(!expanded)} className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-400">
-            {expanded?<ChevronUp className="h-4 w-4"/>:<ChevronDown className="h-4 w-4"/>}
-          </button>
-          {draft.status!=='confirmed'&&<button onClick={()=>onDiscard(idx)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-400 transition"><X className="h-4 w-4"/></button>}
-        </div>
-      </div>
-      {expanded&&draft.status!=='confirmed'&&(
-        <div className="px-5 py-4 space-y-5">
+   const [expanded, setExpanded] = useState(true);
+   const [showExtracted, setShowExtracted] = useState(false);
+   const [form, setForm] = useState(draft.extracted);
+   const set = (k,v) => { const f={...form,[k]:v}; setForm(f); onUpdate(idx,f); };
+   const setItem = (iid,k,v) => set('items',form.items.map(it=>it.id===iid?{...it,[k]:v}:it));
+   const removeItem = (iid) => set('items',form.items.filter(it=>it.id!==iid));
+   const addItem = () => set('items',[...(form.items||[]),{ id:crypto.randomUUID(), product_name:'', sku:'', upc:'', model:'', quantity:1, unit_cost:'', sale_price:'', image_url:null, catalog_match:false, image_source:null }]);
+   const itemsTotal   = (form.items||[]).reduce((s,it)=>s+(parseFloat(it.unit_cost)||0)*(parseInt(it.quantity)||1),0);
+   const gcTotal      = (form.gift_cards||[]).reduce((s,gc)=>s+(parseFloat(gc.amount)||0),0);
+   const finalCost    = itemsTotal+(parseFloat(form.tax)||0)+(parseFloat(form.shipping_cost)||0)+(parseFloat(form.fees)||0)-gcTotal;
+   const catalogCount = (form.items||[]).filter(it=>it.catalog_match).length;
+   const fuzzyCount   = (form.items||[]).filter(it=>it.image_source==='catalog_fuzzy').length;
+   const upcCount     = (form.items||[]).filter(it=>it.image_source==='upcitemdb').length;
+   const statusStyles = { ready:'bg-emerald-50 text-emerald-700 border border-emerald-200', error:'bg-red-50 text-red-600 border border-red-200', confirmed:'bg-violet-50 text-violet-700 border border-violet-200', duplicate:'bg-amber-50 text-amber-700 border border-amber-200', pending:'bg-slate-100 text-slate-600' };
+   return (
+     <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${draft.status==='confirmed'?'border-emerald-200 opacity-75':draft.status==='error'?'border-red-200':'border-slate-100'}`}>
+       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+         <div className="flex items-center gap-3 min-w-0">
+           <RetailerLogo retailer={form.retailer} size={36}/>
+           <div className="min-w-0">
+             <p className="text-sm font-semibold text-slate-800 truncate">
+               {form.retailer||'Unknown Retailer'}
+               {form.order_number&&<span className="text-slate-400 font-normal ml-2">#{form.order_number}</span>}
+               {draft.source==='gmail'&&<span className="ml-2 text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full">Gmail</span>}
+             </p>
+             <p className="text-xs text-slate-400 mt-0.5">
+               {form.items?.length||0} item(s) · {fmt$(itemsTotal)}
+               {catalogCount>0&&<span className="text-emerald-600 ml-1.5">· {catalogCount} catalog</span>}
+               {fuzzyCount>0&&<span className="text-amber-600 ml-1">· {fuzzyCount} suggested</span>}
+               {upcCount>0&&<span className="text-blue-600 ml-1">· {upcCount} UPC</span>}
+               {draft.filename&&<span className="ml-1.5">· {draft.filename}</span>}
+             </p>
+           </div>
+         </div>
+         <div className="flex items-center gap-2 flex-shrink-0">
+           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusStyles[draft.status]||statusStyles.pending}`}>
+             {draft.status==='confirmed'?'Saved':draft.status==='error'?'Error':draft.status==='duplicate'?'Duplicate':draft.status==='ready'?'Ready':'Review'}
+           </span>
+           <button onClick={()=>setExpanded(!expanded)} className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-400">
+             {expanded?<ChevronUp className="h-4 w-4"/>:<ChevronDown className="h-4 w-4"/>}
+           </button>
+           {draft.status!=='confirmed'&&<button onClick={()=>onDiscard(idx)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-400 transition"><X className="h-4 w-4"/></button>}
+         </div>
+       </div>
+       {expanded&&draft.status!=='confirmed'&&(
+         <div className="px-5 py-4 space-y-5">
+           {showExtracted&&(
+             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 mb-4">
+               <div className="flex items-center justify-between mb-2">
+                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Extracted Data Preview</p>
+                 <button onClick={()=>setShowExtracted(false)} className="text-xs text-slate-400 hover:text-slate-600">Hide</button>
+               </div>
+               <div className="space-y-2 text-xs">
+                 <div><span className="text-slate-500">Retailer:</span> <span className="font-medium text-slate-800">{draft.extracted.retailer}</span></div>
+                 <div><span className="text-slate-500">Order #:</span> <span className="font-medium text-slate-800">{draft.extracted.order_number||'—'}</span></div>
+                 <div><span className="text-slate-500">Date:</span> <span className="font-medium text-slate-800">{draft.extracted.order_date||'—'}</span></div>
+                 {draft.extracted.tracking_numbers?.length > 0 && <div><span className="text-slate-500">Tracking:</span> <span className="font-medium text-slate-800">{draft.extracted.tracking_numbers.join(', ')}</span></div>}
+                 <div><span className="text-slate-500">Items:</span> <span className="font-medium text-slate-800">{draft.extracted.items?.length||0}</span></div>
+                 {draft.extracted.items?.length > 0 && (
+                   <div className="mt-2 pl-3 border-l-2 border-slate-300 space-y-1">
+                     {draft.extracted.items.slice(0, 3).map((it, i) => (
+                       <div key={i} className="text-slate-700">
+                         {it.product_name} <span className="text-slate-500">x{it.quantity}</span> <span className="font-medium">${parseFloat(it.total_cost||0).toFixed(2)}</span>
+                       </div>
+                     ))}
+                     {draft.extracted.items.length > 3 && <div className="text-slate-500 italic">+ {draft.extracted.items.length - 3} more item(s)</div>}
+                   </div>
+                 )}
+                 <div className="pt-2 border-t border-slate-200">
+                   <div><span className="text-slate-500">Subtotal:</span> <span className="font-medium text-slate-800">${((draft.extracted.items||[]).reduce((s, it) => s + (parseFloat(it.unit_cost||0) * (parseInt(it.quantity)||1)), 0)).toFixed(2)}</span></div>
+                   <div><span className="text-slate-500">Tax:</span> <span className="font-medium text-slate-800">${parseFloat(draft.extracted.tax||0).toFixed(2)}</span></div>
+                   <div><span className="text-slate-500">Shipping:</span> <span className="font-medium text-slate-800">${parseFloat(draft.extracted.shipping_cost||0).toFixed(2)}</span></div>
+                   <div><span className="text-slate-500">Total:</span> <span className="font-medium text-slate-800">${parseFloat(draft.extracted.order_total||0).toFixed(2)}</span></div>
+                 </div>
+               </div>
+             </div>
+           )}
+           {!showExtracted&&(
+             <button onClick={()=>setShowExtracted(true)} className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 w-full justify-center mb-3 transition">
+               <Sparkles className="h-3.5 w-3.5"/> Show what was extracted
+             </button>
+           )}
           {draft.isDuplicate&&<div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700"><AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0"/><span>Order <strong>#{form.order_number}</strong> already exists. Edit the order number if different, or discard.</span></div>}
           {draft.error&&<div className="flex items-start gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0"/>{draft.error}</div>}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -701,7 +738,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
             <Select value={form.credit_card_id||''} onValueChange={v=>set('credit_card_id',v)}>
               <SelectTrigger className="bg-slate-50 h-9"><SelectValue placeholder={form.payment_method_last_four?`Card ending ••••${form.payment_method_last_four} — select to match`:'Select payment method...'}/></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No card</SelectItem>
+                <SelectItem value={null}>No card</SelectItem>
                 {creditCards.map(c=><SelectItem key={c.id} value={c.id}>{c.card_name}{c.last_4_digits?` ••••${c.last_4_digits}`:''}</SelectItem>)}
               </SelectContent>
             </Select>
