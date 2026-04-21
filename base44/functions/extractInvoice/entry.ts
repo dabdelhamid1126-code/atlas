@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const EXTRACTION_PROMPT = `You are extracting order data from a retail invoice or order confirmation.
 
@@ -120,6 +120,7 @@ ${email_body.substring(0, 8000)}`; // limit to 8k chars to stay within context
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: EXTRACTION_PROMPT,
       file_urls: [file_url],
+      model: 'gpt_5_mini',
       response_json_schema: {
         type: 'object',
         properties: {
