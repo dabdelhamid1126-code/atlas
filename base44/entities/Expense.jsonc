@@ -1,0 +1,69 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Expense title or description"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Expense amount in dollars"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "inventory",
+        "shipping",
+        "software",
+        "marketing",
+        "office",
+        "fees",
+        "taxes",
+        "other"
+      ],
+      "default": "other",
+      "description": "Expense category"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of expense"
+    },
+    "payment_method": {
+      "type": "string",
+      "description": "How it was paid (card name, cash, etc.)"
+    },
+    "credit_card_id": {
+      "type": "string",
+      "description": "Reference to credit card used"
+    },
+    "vendor": {
+      "type": "string",
+      "description": "Vendor or merchant name"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Receipt image URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "reimbursed"
+      ],
+      "default": "paid",
+      "description": "Payment status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "title",
+    "amount",
+    "date"
+  ]
+}

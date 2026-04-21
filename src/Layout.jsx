@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, BarChart3, TrendingUp,
   Boxes, PlusCircle, Package, Download,
-  ArrowLeftRight, FileText, Receipt,
-  Settings as SettingsIcon, CreditCard, Star, User,
+  ArrowLeftRight, FileText, Receipt, CreditCard,
+  Settings as SettingsIcon, Star, User,
   Menu, X, LogOut, ChevronDown,
   PanelLeftClose, PanelLeftOpen, Search,
 } from 'lucide-react';
@@ -38,9 +38,10 @@ const NAV_GROUPS = [
   {
     label: 'Finance',
     items: [
-      { name: 'Transactions', page: 'Transactions',   icon: ArrowLeftRight },
-      { name: 'Invoices',     page: 'Invoices',       icon: FileText       },
-      { name: 'Expenses',     page: 'PaymentMethods', icon: Receipt        },
+      { name: 'Transactions',    page: 'Transactions',   icon: ArrowLeftRight },
+      { name: 'Invoices',        page: 'Invoices',       icon: FileText       },
+      { name: 'Payment Methods', page: 'PaymentMethods', icon: CreditCard     },
+      { name: 'Expenses',        page: 'Expenses',        icon: Receipt        },
     ],
   },
 ];
