@@ -994,6 +994,175 @@ select:focus {
   }
 }
 
+/* ── KPI 5-col grids (Transactions, Invoices) ──────────────────── */
+@media (max-width: 768px) {
+  /* Any inline 5-col KPI grid */
+  .kpi-card {
+    min-width: 0;
+  }
+}
+
+/* ── Scrollable toolbar rows ───────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Filter rows wrap nicely */
+  .filter-row {
+    flex-wrap: wrap !important;
+  }
+  /* Selects take full row on mobile */
+  .filter-row select,
+  .filter-row input[type="date"] {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}
+
+/* ── Transactions page filters ─────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Make order cards readable */
+  .order-card-header {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .order-card-actions {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+}
+
+/* ── Invoices page ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* Expanded invoice rows */
+  .inv-expanded-row {
+    grid-template-columns: 40px 1fr 40px 70px 70px !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* ── PaymentMethods analytics ──────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Card detail panel: stack visual + stats */
+  .card-detail-inner {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  /* Card mini visual: full width on mobile */
+  .card-visual-mini {
+    width: 100% !important;
+    height: 110px !important;
+  }
+}
+
+/* ── Forecast page ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Calculator inputs */
+  .calc-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Products page grid ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Product grid smaller items */
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+    gap: 6px !important;
+  }
+}
+
+/* ── General: buttons don't overflow on mobile ─────────────────── */
+@media (max-width: 480px) {
+  button {
+    max-width: 100%;
+  }
+  /* Header action rows stack */
+  .page-header-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .page-header-actions button,
+  .page-header-actions a {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Section rows in Settings wrap on mobile ───────────────────── */
+@media (max-width: 480px) {
+  /* SectionRow in settings: stack content and control */
+  .section-row-inner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+}
+
+/* ── Pagination ────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Slim pagination on mobile */
+  .pagination-btn-text {
+    display: none;
+  }
+}
+
+/* ── NewOrders form ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .new-order-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Inventory page ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .inventory-card-inner {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ── Ensure all horizontal scrolls work ───────────────────────── */
+.overflow-x-auto,
+[style*="overflowX: auto"],
+[style*="overflow-x: auto"] {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Modal overlays: always full-width on small screens ────────── */
+@media (max-width: 640px) {
+  .modal-panel {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-left: none !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 92vh !important;
+  }
+}
+
+/* ── Dialog (shadcn) responsive ────────────────────────────────── */
+@media (max-width: 600px) {
+  [data-radix-popper-content-wrapper] {
+    width: 100% !important;
+  }
+  /* Radix Dialog full-screen on mobile */
+  [role="dialog"].fixed {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+  }
+}
+
 /* ── Tailwind base ───────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;

@@ -334,7 +334,7 @@ export default function Transactions() {
       </div>
 
       {/* KPI Cards -- uses exact same CSS classes as Dashboard */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:8, marginBottom:20 }}>
+      <div className="grid-kpi" style={{ marginBottom:20 }}>
         {STAT_CARDS.map(s => (
           <div key={s.label} className="kpi-card fade-up" style={{ borderTopColor: s.accent }}>
             <div className="kpi-label">{s.label}</div>

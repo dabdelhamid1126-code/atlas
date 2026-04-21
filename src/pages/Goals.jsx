@@ -227,7 +227,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
           const gc = GOAL_CONFIGS[key];
           return (
             <div key={key} style={{
-              display: 'flex', alignItems: 'center', gap: 16, padding: '18px 0',
+              display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', flexWrap: 'wrap',
               borderBottom: idx !== goalTypes.length - 1 ? '1px solid var(--parch-line)' : 'none',
             }}>
               <div style={{ width: 96, fontSize: 13, fontWeight: 700, color: gc.color, fontFamily: 'var(--font-serif)' }}>

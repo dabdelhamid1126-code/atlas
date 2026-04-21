@@ -494,7 +494,7 @@ function ProfileTab({ user }) {
 
       {/* ── Avatar upload ── */}
       <SectionDivider title="Profile Photo"/>
-      <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:24 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:24, flexWrap:'wrap' }}>
         {/* Avatar circle */}
         <div style={{ position:'relative', flexShrink:0 }}>
           <div
@@ -1080,14 +1080,35 @@ export default function Settings() {
 
   return (
     <div style={{ maxWidth:900, margin:'0 auto' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .settings-layout { display:flex; gap:20px; align-items:flex-start; }
+        .settings-sidenav { width:180px; flex-shrink:0; }
+        .settings-content { flex:1; min-width:0; }
+        .settings-mobilenav { display:none; }
+        @media(max-width:640px){
+          .settings-layout { flex-direction:column; gap:0; }
+          .settings-sidenav { display:none; }
+          .settings-mobilenav { display:block; margin-bottom:16px; }
+          .settings-content { width:100%; }
+        }
+      `}</style>
       <div style={{ marginBottom:24 }}>
         <h1 className="page-title">Settings</h1>
         <p className="page-subtitle">Manage your account preferences</p>
       </div>
-      <div style={{ display:'flex', gap:20, alignItems:'flex-start', flexWrap:'wrap' }}>
+
+      {/* Mobile tab selector */}
+      <div className="settings-mobilenav">
+        <select value={activeTab} onChange={e=>switchTab(e.target.value)}
+          style={{ width:'100%', padding:'10px 14px', borderRadius:10, fontSize:13, fontWeight:600, background:C.parchCard, border:`1px solid ${C.parchLine}`, color:C.ink, outline:'none', fontFamily:FONT }}>
+          {TABS.map(tab=><option key={tab.key} value={tab.key}>{tab.label}</option>)}
+        </select>
+      </div>
+
+      <div className="settings-layout">
         {/* Sidebar nav */}
-        <div style={{ width:180, flexShrink:0 }}>
+        <div className="settings-sidenav">
           <nav style={{ display:'flex', flexDirection:'column', gap:2 }}>
             {TABS.map(tab=>(
               <button key={tab.key} onClick={()=>switchTab(tab.key)}
@@ -1106,7 +1127,7 @@ export default function Settings() {
           </nav>
         </div>
         {/* Content */}
-        <div style={{ flex:1, minWidth:0 }}>
+        <div className="settings-content">
           {activeTab==='profile'    && <ProfileTab    user={user}/>}
           {activeTab==='navigation' && <DataSetupTab />}
           {activeTab==='vendors'    && <VendorsTab />}
