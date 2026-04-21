@@ -98,7 +98,7 @@ export default function Invoices() {
   const [wasExtracted,  setWasExtracted] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery({ queryKey:['invoices'], queryFn:()=>base44.entities.Invoice.list('-created_date') });
-  const { data: products = [] }            = useQuery({ queryKey:['products'],  queryFn:()=>base44.entities.Product.list() });
+  const { data: products = [] }            = useQuery({ queryKey:['products'],  queryFn:()=>base44.entities.Product.list('-created_date', 200) });
   const { data: inventory = [] }           = useQuery({ queryKey:['inventory'], queryFn:()=>base44.entities.InventoryItem.list() });
   const { data: purchaseOrders = [] }      = useQuery({ queryKey:['purchaseOrders'], queryFn:()=>base44.entities.PurchaseOrder.list() });
   const { data: sellers = [] }             = useQuery({ queryKey:['sellers'],   queryFn:()=>base44.entities.Seller.list() });
@@ -306,7 +306,12 @@ export default function Invoices() {
   },[invoices,calcProfit]);
 
   const tabCounts={all:invoices.length,unpaid:invoices.filter(i=>!['paid','cancelled'].includes(i.status)).length,paid:invoices.filter(i=>i.status==='paid').length,overdue:invoices.filter(i=>i.status==='overdue').length};
-  const filteredProducts=productSearch.trim() ? products.filter(p=>p.name?.toLowerCase().includes(productSearch.toLowerCase())) : [];
+  const filteredProducts = productSearch.trim()
+    ? products.filter(p => {
+        const q = productSearch.toLowerCase();
+        return p.name?.toLowerCase().includes(q) || p.upc?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q);
+      })
+    : [];
 
   function PartySelect({label,nameField,emailField,sellerIdField}){
     const [mode,setMode]=useState(formData[sellerIdField]?'select':'manual');
