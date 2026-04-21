@@ -7,6 +7,7 @@ import {
   Gift, Boxes, FileWarning, Clock, ArrowRight, RefreshCw,
   Star, BarChart2
 } from "lucide-react";
+import RetailerLogo, { CardLogo } from "@/components/shared/BrandLogo";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
@@ -356,9 +357,18 @@ export default function Dashboard() {
         const profit = o.sale_events?.length
           ? revenue - parseFloat(o.final_cost||o.total_cost||0) + orderCashback
           : null;
+        const firstItem = o.items?.[0];
+        const productImageUrl =
+          o.product_image_url ||
+          o.image_url ||
+          firstItem?.product_image_url ||
+          firstItem?.image_url ||
+          firstItem?.image ||
+          firstItem?.product_image ||
+          null;
         return {
           id:              o.id,
-          productName:     o.product_name || o.items?.[0]?.product_name || "—",
+          productName:     o.product_name || firstItem?.product_name || "—",
           platform:        o.retailer || "—",
           salePlatform:    o.marketplace_platform || o.sale_events?.[0]?.platform || "—",
           totalPrice:      parseFloat(o.final_cost || o.total_cost || 0),
@@ -367,10 +377,10 @@ export default function Dashboard() {
           profit,
           status:          o.status,
           transactionDate: o.order_date || o.created_date,
-          productImageUrl: o.product_image_url || o.image_url || o.items?.[0]?.image_url || null,
+          productImageUrl,
         };
       });
-  }, [filteredOrders]);
+  }, [filteredOrders, allRewards]);
 
   const today = new Date().toISOString().slice(0,10);
   const alerts = useMemo(() => ({
@@ -553,9 +563,7 @@ export default function Dashboard() {
               {topCards.map((card,i) => (
                 <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <div style={{ width:24, height:24, borderRadius:6, background:"var(--gold-bg)", border:"1px solid var(--gold-bdr)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:700, color:"var(--gold)", fontFamily:"var(--font-serif)" }}>
-                      {card.name.slice(0,2).toUpperCase()}
-                    </div>
+                    <CardLogo cardName={card.name} size={24} />
                     <div>
                       <p style={{ fontSize:11, fontWeight:600, color:"var(--ink)" }}>{card.name}</p>
                       <p style={{ fontSize:9, color:"var(--ink-dim)" }}>{card.orders} txns</p>
@@ -609,7 +617,12 @@ export default function Dashboard() {
                     <td style={{ maxWidth:180 }}>
                       <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontWeight:600, color:"var(--ink)", fontSize:12 }}>{t.productName}</span>
                     </td>
-                    <td style={{ color:"var(--ink-faded)", fontSize:12, whiteSpace:"nowrap" }}>{t.platform}</td>
+                    <td style={{ padding:"10px 8px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <RetailerLogo retailer={t.platform} size={20} />
+                        <span style={{ color:"var(--ink-faded)", fontSize:11, whiteSpace:"nowrap" }}>{t.platform}</span>
+                      </div>
+                    </td>
                     <td style={{ color:"var(--ink-faded)", fontSize:11, whiteSpace:"nowrap" }}>{t.salePlatform || "—"}</td>
                     <td style={{ fontWeight:600, color:"var(--ocean)", fontSize:12, whiteSpace:"nowrap", fontFamily:"var(--font-mono)" }}>{fmt(t.totalPrice)}</td>
                     <td style={{ fontWeight:600, color:"var(--terrain)", fontSize:12, whiteSpace:"nowrap", fontFamily:"var(--font-mono)" }}>{t.salePrice ? fmt(t.salePrice) : "—"}</td>
