@@ -54,7 +54,11 @@ function ProductThumb({ src, name, size=36 }) {
       <ImageOff style={{ width:size*0.4, height:size*0.4, color:'var(--ink-ghost)' }}/>
     </div>
   );
-  return <img src={src} alt={name||''} onError={()=>setErr(true)} style={{ width:size, height:size, borderRadius:7, objectFit:'contain', background:'white', border:'1px solid var(--parch-line)', flexShrink:0 }}/>;
+  return (
+    <div style={{ width:size, height:size, borderRadius:7, flexShrink:0, background:'white', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+      <img src={src} alt={name||''} onError={()=>setErr(true)} style={{ width:'100%', height:'100%', objectFit:'contain', padding: Math.round(size*0.08) }}/>
+    </div>
+  );
 }
 
 // ── Default form ──────────────────────────────────────────────────────────

@@ -180,7 +180,7 @@ function ProductSearch({ userEmail, onSelect }) {
         };
 
         const [products, inventory] = await Promise.all([
-          base44.entities.Product.filter({ created_by: userEmail }).catch(() => []),
+          base44.entities.Product.list().catch(() => []),
           base44.entities.InventoryItem.filter({ created_by: userEmail }).catch(() => []),
         ]);
 
