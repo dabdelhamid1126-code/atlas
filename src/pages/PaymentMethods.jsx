@@ -7,20 +7,49 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List,
-SlidersHorizontal, Star } from 'lucide-react';
-import StatusBadge from '@/components/shared/StatusBadge';
-import DataTable from '@/components/shared/DataTable';
+import {
+  Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Star,
+  Zap, Check, X, BarChart2, ChevronRight, AlertTriangle, TrendingUp, DollarSign,
+  Settings, Wifi
+} from 'lucide-react';
 import CardVisual from '@/components/payment-methods/CardVisual';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
 import QuickAddModal from '@/components/payment-methods/QuickAddModal';
 import CustomCardModal from '@/components/payment-methods/CustomCardModal';
 import CardAnalyticsView from '@/components/payment-methods/CardAnalyticsView';
+import StatusBadge from '@/components/shared/StatusBadge';
+import DataTable from '@/components/shared/DataTable';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import ReactBarcode from 'react-barcode';
 
-const GC_BRANDS = ['Amazon', 'Apple', 'Google Play', 'Target', 'Walmart', 'Best Buy', 'eBay', 'Visa', 'Mastercard', 'Other'];
+const GC_BRANDS = ['Amazon','Apple','Google Play','Target','Walmart','Best Buy','eBay','Visa','Mastercard','Other'];
+
+const ISSUER_COLOR = {
+  'Chase':            '#003087',
+  'American Express': '#016FD0',
+  'Amex':             '#016FD0',
+  'Discover':         '#FF6600',
+  'Capital One':      '#D03027',
+  'Citi':             '#003B8E',
+  'Bank of America':  '#E31837',
+  'Barclays':         '#00AEEF',
+  'Wells Fargo':      '#D71E28',
+  'Goldman Sachs':    '#1a1a1a',
+  'Apple':            '#555555',
+  'Robinhood':        '#00C805',
+};
+
+function getCardColor(card) {
+  if (!card?.issuer) return 'var(--ocean2)';
+  const match = Object.keys(ISSUER_COLOR).find(k =>
+    k.toLowerCase() === (card.issuer||'').toLowerCase() ||
+    (card.issuer||'').toLowerCase().includes(k.toLowerCase())
+  );
+  return match ? ISSUER_COLOR[match] : 'var(--ocean2)';
+}
+
+const fmt$ = v => `$${(v||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`;
 
 export default function PaymentMethods() {
   const [tab, setTab] = useState('credit-cards');
@@ -28,48 +57,51 @@ export default function PaymentMethods() {
 
   return (
     <div>
-      <div style={{ marginBottom: 22 }}>
+      <div style={{ marginBottom: 20 }}>
         <h1 className="page-title">Payment Methods</h1>
         <p className="page-subtitle">Manage cards, cashback rates, and per-store rate overrides</p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 3, borderRadius: 10, marginBottom: 22, width: 'fit-content', background: 'var(--parch-card)', border: '1px solid var(--parch-line)' }}>
+      {/* Tab bar */}
+      <div style={{ display:'flex', alignItems:'center', gap:2, padding:3, borderRadius:10, marginBottom:20, width:'fit-content', background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
         {[
-          { key: 'credit-cards', label: 'Credit Cards', icon: CreditCard },
-          { key: 'gift-cards',   label: 'Gift Cards',   icon: Gift       },
-          { key: 'ya-cashback',  label: 'YA Cashback',  icon: Star       },
-        ].map(({ key, label, icon: Icon }) => (
-          <button key={key} onClick={() => setTab(key)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              ...(tab === key
-                ? { background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }
-                : { background: 'transparent', color: 'var(--ink-dim)', border: '1px solid transparent' }) }}>
-            <Icon className="h-3.5 w-3.5" /> {label}
+          { key:'credit-cards', label:'Credit Cards', icon:CreditCard },
+          { key:'gift-cards',   label:'Gift Cards',   icon:Gift       },
+          { key:'ya-cashback',  label:'YA Cashback',  icon:Star       },
+        ].map(({ key, label, icon:Icon }) => (
+          <button key={key} onClick={() => setTab(key)} style={{
+            display:'flex', alignItems:'center', gap:6, padding:'7px 14px',
+            borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer',
+            background: tab===key ? 'var(--ink)' : 'transparent',
+            color:       tab===key ? 'var(--ne-cream)' : 'var(--ink-dim)',
+            border:      tab===key ? 'none' : '1px solid transparent',
+            transition:  'all 0.15s',
+          }}>
+            <Icon style={{ width:13, height:13 }}/> {label}
           </button>
         ))}
       </div>
 
-      {tab === 'credit-cards' && <CreditCardsTab queryClient={queryClient} />}
-      {tab === 'gift-cards' && <GiftCardsTab queryClient={queryClient} />}
-      {tab === 'ya-cashback' && <YACashbackTab />}
+      {tab === 'credit-cards' && <CreditCardsTab queryClient={queryClient}/>}
+      {tab === 'gift-cards'   && <GiftCardsTab   queryClient={queryClient}/>}
+      {tab === 'ya-cashback'  && <YACashbackTab/>}
     </div>
   );
 }
 
-// ─── CREDIT CARDS TAB ──────────────────────────────────────────────────────────
-
+/* ═══════════════════════════════════════════════════════════
+   CREDIT CARDS — SPLIT PANEL
+═══════════════════════════════════════════════════════════ */
 function CreditCardsTab({ queryClient }) {
+  const [selectedId, setSelectedId]   = useState(null);
+  const [search, setSearch]           = useState('');
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [customCardOpen, setCustomCardOpen] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
-  const [search, setSearch] = useState('');
-  const [issuerFilter, setIssuerFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
-  const [activeView, setActiveView] = useState('cards');
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const [userEmail, setUserEmail] = useState(null);
-  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(()=>{}); }, []);
 
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ['creditCards', userEmail],
@@ -84,512 +116,655 @@ function CreditCardsTab({ queryClient }) {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.CreditCard.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card added!'); },
+    mutationFn: d => base44.entities.CreditCard.create(d),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey:['creditCards'] }); toast.success('Card added!'); },
   });
-
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.CreditCard.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card updated!'); setCustomCardOpen(false); setEditingCard(null); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey:['creditCards'] }); toast.success('Card updated!'); setCustomCardOpen(false); setEditingCard(null); },
   });
-
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.CreditCard.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['creditCards'] }); toast.success('Card deleted'); },
+    mutationFn: id => base44.entities.CreditCard.delete(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey:['creditCards'] });
+      if (selectedId === id) setSelectedId(null);
+      toast.success('Card deleted');
+    },
   });
 
-  const handleCreate = async (data) => { await createMutation.mutateAsync(data); };
-  const handleEdit = (card) => { setEditingCard(card); setCustomCardOpen(true); };
-  const handleSaveCustom = (data) => {
-    if (editingCard) { updateMutation.mutate({ id: editingCard.id, data }); }
-    else { createMutation.mutate(data); setCustomCardOpen(false); }
+  const handleCreate    = async d => { const c = await createMutation.mutateAsync(d); setSelectedId(c.id); };
+  const handleEdit      = card => { setEditingCard(card); setCustomCardOpen(true); };
+  const handleSaveCustom = d => {
+    if (editingCard) updateMutation.mutate({ id: editingCard.id, data: d });
+    else createMutation.mutate(d);
+    setCustomCardOpen(false);
   };
-  const handleInlineUpdate = (id, data) => { updateMutation.mutate({ id, data }); };
-  const handleDelete = (card) => { if (confirm(`Delete "${card.card_name}"?`)) deleteMutation.mutate(card.id); };
+  const handleInlineUpdate = (id, d) => updateMutation.mutate({ id, data: d });
+  const handleDelete    = card => { if (confirm(`Delete "${card.card_name}"?`)) deleteMutation.mutate(card.id); };
 
   const now = new Date();
   const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
+  const monthEnd   = endOfMonth(now);
   const activeCards = cards.filter(c => c.active !== false);
-  const monthOrders = orders.filter(o => {
-    const d = o.order_date ? parseISO(o.order_date) : null;
-    return d && d >= monthStart && d <= monthEnd;
-  });
-  const monthSpent = monthOrders.reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
+  const monthOrders = orders.filter(o => { const d = o.order_date ? parseISO(o.order_date) : null; return d && d >= monthStart && d <= monthEnd; });
+  const monthSpent  = monthOrders.reduce((s,o) => s + (o.final_cost||o.total_cost||0), 0);
   const cardsWithRate = activeCards.filter(c => c.cashback_rate);
-  const avgCashback = cardsWithRate.length ? cardsWithRate.reduce((s, c) => s + (c.cashback_rate || 0), 0) / cardsWithRate.length : 0;
+  const avgCashback = cardsWithRate.length ? cardsWithRate.reduce((s,c) => s+(c.cashback_rate||0),0)/cardsWithRate.length : 0;
+  const estEarned   = monthSpent * (avgCashback/100);
 
-  const nameCounts = cards.reduce((acc, c) => {
-    const key = (c.card_name || '').toLowerCase().trim();
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const duplicateNames = new Set(Object.keys(nameCounts).filter(k => nameCounts[k] > 1));
+  const filteredCards = useMemo(() => cards.filter(c =>
+    !search || c.card_name?.toLowerCase().includes(search.toLowerCase()) || c.issuer?.toLowerCase().includes(search.toLowerCase())
+  ), [cards, search]);
 
-  const issuers = [...new Set(cards.map(c => c.issuer).filter(Boolean))];
-  const filtered = useMemo(() => cards.filter(c => {
-    const matchSearch = !search || c.card_name?.toLowerCase().includes(search.toLowerCase()) || c.issuer?.toLowerCase().includes(search.toLowerCase());
-    const matchIssuer = issuerFilter === 'all' || c.issuer === issuerFilter;
-    const matchType = typeFilter === 'all' || c.reward_type === typeFilter;
-    return matchSearch && matchIssuer && matchType;
-  }), [cards, search, issuerFilter, typeFilter]);
+  // Auto-select first card
+  useEffect(() => {
+    if (!selectedId && filteredCards.length > 0) setSelectedId(filteredCards[0].id);
+  }, [filteredCards]);
 
-  const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', fontSize: 13 };
+  const selectedCard = cards.find(c => c.id === selectedId) || null;
+
+  const nameCounts = cards.reduce((acc,c) => { const k=(c.card_name||'').toLowerCase().trim(); acc[k]=(acc[k]||0)+1; return acc; },{});
+  const duplicateNames = new Set(Object.keys(nameCounts).filter(k=>nameCounts[k]>1));
 
   return (
     <>
-      {/* Stats Bar */}
-      <div className="grid-kpi" style={{ marginBottom: 16 }}>
-        <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--ocean2)' }}>
+      <style>{`
+        .pm-sidebar { width:220px; flex-shrink:0; border-right:1px solid var(--parch-line); display:flex; flex-direction:column; overflow:hidden; }
+        .pm-card-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--parch-line); transition:background 0.15s; }
+        .pm-card-item:hover { background:var(--parch-warm); }
+        .pm-card-item.active { background:var(--gold-bg); border-left:3px solid var(--gold); }
+        .pm-card-item.active .pm-card-name { color:var(--gold2); }
+        .pm-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+        .pm-card-name { font-size:12px; font-weight:600; color:var(--ink); font-family:var(--font-serif); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .pm-card-rate { font-size:10px; color:var(--ink-ghost); font-family:var(--font-mono); margin-top:1px; }
+        .pm-detail { flex:1; overflow:auto; padding:20px; }
+        .pm-stat-box { flex:1; padding:10px 14px; borderRadius:10px; background:var(--parch-warm); border:1px solid var(--parch-line); }
+        .pm-stat-val { font-size:18px; font-weight:700; color:var(--ink); font-family:var(--font-mono); }
+        .pm-stat-lbl { font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faded); margin-top:2px; font-family:var(--font-serif); }
+        .pm-rate-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--parch-line); }
+        .pm-rate-row:last-child { border-bottom:none; }
+        .pm-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; min-height:300px; gap:10px; text-align:center; padding:24px; }
+      `}</style>
+
+      {/* ── KPI row ── */}
+      <div className="grid-kpi" style={{ marginBottom:16 }}>
+        <div className="kpi-card fade-up" style={{ borderTopColor:'var(--ocean2)' }}>
           <div className="kpi-label">Active Cards</div>
-          <div className="kpi-value" style={{ color: 'var(--ocean2)' }}>{activeCards.length}</div>
+          <div className="kpi-value" style={{ color:'var(--ocean2)' }}>{activeCards.length}</div>
           <div className="kpi-sub">{cards.length} total</div>
         </div>
-        <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--gold)' }}>
+        <div className="kpi-card fade-up" style={{ borderTopColor:'var(--gold)' }}>
           <div className="kpi-label">Spent This Month</div>
-          <div className="kpi-value" style={{ color: 'var(--gold)' }}>${monthSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+          <div className="kpi-value" style={{ color:'var(--gold)' }}>{fmt$(monthSpent)}</div>
           <div className="kpi-sub">{monthOrders.length} orders</div>
         </div>
-        <div className="kpi-card fade-up" style={{ borderTopColor: 'var(--terrain2)' }}>
+        <div className="kpi-card fade-up" style={{ borderTopColor:'var(--terrain2)' }}>
           <div className="kpi-label">Avg Cashback</div>
-          <div className="kpi-value" style={{ color: 'var(--terrain2)' }}>{avgCashback.toFixed(1)}%</div>
+          <div className="kpi-value" style={{ color:'var(--terrain2)' }}>{avgCashback.toFixed(1)}%</div>
           <div className="kpi-sub">across active cards</div>
         </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--ink-faded)' }} />
-          <input
-            placeholder="Search cards..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-9 w-full rounded-lg text-sm"
-            style={inp}
-          />
-        </div>
-
-        <select value={issuerFilter} onChange={e => setIssuerFilter(e.target.value)} className="h-9 px-3 rounded-lg text-sm" style={inp}>
-          <option value="all">All Issuers</option>
-          {issuers.map(i => <option key={i} value={i}>{i}</option>)}
-        </select>
-
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="h-9 px-3 rounded-lg text-sm" style={inp}>
-          <option value="all">All Types</option>
-          <option value="cashback">Cashback</option>
-          <option value="points">Points</option>
-        </select>
-
-        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
-          <button onClick={() => setViewMode('grid')} className="p-1.5 rounded transition"
-            style={{ background: viewMode === 'grid' ? 'var(--ink)' : 'transparent', color: viewMode === 'grid' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
-            <LayoutGrid className="h-4 w-4" />
-          </button>
-          <button onClick={() => setViewMode('list')} className="p-1.5 rounded transition"
-            style={{ background: viewMode === 'list' ? 'var(--ink)' : 'transparent', color: viewMode === 'list' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
-            <List className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Cards / Analytics toggle */}
-        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
-          <button onClick={() => setActiveView('cards')} className="px-3 py-1.5 rounded text-xs font-semibold transition"
-            style={{ background: activeView === 'cards' ? 'var(--ink)' : 'transparent', color: activeView === 'cards' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
-            Cards View
-          </button>
-          <button onClick={() => setActiveView('analytics')} className="px-3 py-1.5 rounded text-xs font-semibold transition"
-            style={{ background: activeView === 'analytics' ? 'var(--ink)' : 'transparent', color: activeView === 'analytics' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
-            Analytics
-          </button>
-        </div>
-
-        <div className="flex gap-2 ml-auto">
-          <button onClick={() => setQuickAddOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
-            style={{ background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', color: 'var(--gold2)' }}>
-            <Zap className="h-4 w-4" /> Quick Add
-          </button>
-          <button onClick={() => { setEditingCard(null); setCustomCardOpen(true); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
-            style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>
-            <Plus className="h-4 w-4" /> Custom Card
-          </button>
+        <div className="kpi-card fade-up" style={{ borderTopColor:'var(--violet2)' }}>
+          <div className="kpi-label">Est. Earned</div>
+          <div className="kpi-value" style={{ color:'var(--violet2)' }}>{fmt$(estEarned)}</div>
+          <div className="kpi-sub">this month</div>
         </div>
       </div>
 
-      {/* Analytics View */}
-      {activeView === 'analytics' && <CardAnalyticsView cards={cards} orders={orders} />}
+      {/* ── Toolbar ── */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' }}>
+        <div style={{ position:'relative', flex:1, minWidth:160 }}>
+          <Search style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', width:13, height:13, color:'var(--ink-faded)' }}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search cards..."
+            style={{ width:'100%', height:34, paddingLeft:30, paddingRight:10, borderRadius:8, fontSize:12, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink)', outline:'none', fontFamily:'var(--font-serif)' }}/>
+        </div>
+        <button onClick={()=>setShowAnalytics(v=>!v)}
+          style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', transition:'all 0.15s',
+            background: showAnalytics ? 'var(--ocean-bg)' : 'var(--parch-warm)',
+            border: `1px solid ${showAnalytics ? 'var(--ocean-bdr)' : 'var(--parch-line)'}`,
+            color: showAnalytics ? 'var(--ocean2)' : 'var(--ink-dim)',
+          }}>
+          <BarChart2 style={{ width:13, height:13 }}/> Analytics
+        </button>
+        <button onClick={()=>setQuickAddOpen(true)}
+          style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--gold-bg)', border:'1px solid var(--gold-border)', color:'var(--gold2)' }}>
+          <Zap style={{ width:13, height:13 }}/> Quick Add
+        </button>
+        <button onClick={()=>{ setEditingCard(null); setCustomCardOpen(true); }}
+          style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', background:'var(--ink)', border:'none', color:'var(--ne-cream)' }}>
+          <Plus style={{ width:13, height:13 }}/> Add Card
+        </button>
+      </div>
 
-      {/* Cards */}
-      {activeView === 'cards' && (isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-64 rounded-2xl animate-pulse" style={{ background: 'var(--parch-warm)' }} />)}
+      {/* ── Analytics View ── */}
+      {showAnalytics && (
+        <div style={{ marginBottom:16 }}>
+          <CardAnalyticsView cards={cards} orders={orders}/>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border p-12 text-center" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
-          <CreditCard className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--ink-faded)' }} />
-          <p className="font-medium" style={{ color: 'var(--ink-ghost)' }}>No cards found</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--ink-ghost)' }}>Try adjusting filters or add a new card</p>
-        </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map(card => (
-            <CardVisual
-              key={card.id}
-              card={card}
-              orders={orders}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onUpdate={handleInlineUpdate}
-              isDuplicate={duplicateNames.has((card.card_name || '').toLowerCase().trim())}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
-          <table className="w-full text-sm">
-            <thead className="border-b" style={{ borderColor: 'var(--parch-line)', background: 'var(--parch-warm)' }}>
-              <tr>
-                {['Card', 'Issuer', 'Type', 'Base Rate', 'Store Rates', 'Monthly Spend', 'Status', ''].map(h => (
-                  <th key={h} className="text-left text-xs font-semibold uppercase tracking-wider px-4 py-3" style={{ color: 'var(--ink-dim)' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(card => {
-                const spent = orders.filter(o => o.credit_card_id === card.id && (() => { const d = o.order_date ? parseISO(o.order_date) : null; return d && d >= monthStart && d <= monthEnd; })()).reduce((s, o) => s + (o.final_cost || o.total_cost || 0), 0);
+      )}
+
+      {/* ── Split Panel ── */}
+      {!showAnalytics && (
+        <div style={{ display:'flex', background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, overflow:'hidden', minHeight:480 }}>
+
+          {/* Left sidebar — card list */}
+          <div className="pm-sidebar">
+            {/* Sidebar header */}
+            <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--parch-line)', background:'var(--parch-warm)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-faded)', fontFamily:'var(--font-serif)' }}>
+                Cards ({filteredCards.length})
+              </span>
+              <button onClick={()=>{ setEditingCard(null); setCustomCardOpen(true); }}
+                style={{ width:22, height:22, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--ink)', border:'none', cursor:'pointer', color:'var(--ne-cream)' }}>
+                <Plus style={{ width:11, height:11 }}/>
+              </button>
+            </div>
+
+            {/* Card list */}
+            <div style={{ flex:1, overflowY:'auto' }}>
+              {isLoading ? (
+                [...Array(4)].map((_,i) => (
+                  <div key={i} style={{ padding:'10px 14px', borderBottom:'1px solid var(--parch-line)', display:'flex', alignItems:'center', gap:8 }}>
+                    <div style={{ width:10, height:10, borderRadius:3, background:'var(--parch-deep)' }}/>
+                    <div style={{ flex:1, height:10, borderRadius:4, background:'var(--parch-deep)' }}/>
+                  </div>
+                ))
+              ) : filteredCards.length === 0 ? (
+                <div style={{ padding:'24px 14px', textAlign:'center' }}>
+                  <p style={{ fontSize:11, color:'var(--ink-ghost)', fontFamily:'var(--font-serif)' }}>No cards found</p>
+                </div>
+              ) : filteredCards.map(card => {
+                const color = getCardColor(card);
+                const rate  = card.reward_type==='points' ? `${card.points_rate||0}x pts` : `${card.cashback_rate||0}%`;
+                const isActive = card.active !== false;
                 return (
-                  <tr key={card.id} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.04)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--ink)' }}>{card.card_name}</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--ink-ghost)' }}>{card.issuer || '—'}</td>
-                    <td className="px-4 py-3"><span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }}>{card.reward_type}</span></td>
-                    <td className="px-4 py-3 font-bold" style={{ color: 'var(--terrain)' }}>{card.cashback_rate || 0}%</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--ink-ghost)' }}>{(card.store_rates || []).length} rates</td>
-                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--ink)' }}>${spent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full" style={card.active !== false
-                        ? { background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }
-                        : { background: 'var(--parch-warm)', color: 'var(--ink-ghost)', border: '1px solid var(--parch-line)' }}>
-                        {card.active !== false ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => handleEdit(card)} className="p-1.5 rounded-lg transition"
-                          style={{ color: 'var(--ink-faded)' }}
-                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--ink)'; e.currentTarget.style.background = 'rgba(184,134,11,0.06)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-faded)'; e.currentTarget.style.background = 'transparent'; }}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(card)} className="p-1.5 rounded-lg transition"
-                          style={{ color: 'var(--ink-faded)' }}
-                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--crimson)'; e.currentTarget.style.background = 'var(--crimson-bg)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-faded)'; e.currentTarget.style.background = 'transparent'; }}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                  <div key={card.id} className={`pm-card-item ${selectedId===card.id?'active':''}`}
+                    onClick={() => setSelectedId(card.id)}
+                    style={{ borderLeft: selectedId===card.id ? `3px solid ${color}` : '3px solid transparent' }}>
+                    <div className="pm-dot" style={{ background: isActive ? color : 'var(--parch-deep)' }}/>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div className="pm-card-name">{card.card_name}</div>
+                      <div className="pm-card-rate">{card.issuer || '—'} · {rate}</div>
+                    </div>
+                    {!isActive && <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--parch-deep)', flexShrink:0 }}/>}
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      ))}
+            </div>
+          </div>
 
-      <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} existingCards={cards} onCreate={handleCreate} />
-      <CustomCardModal open={customCardOpen} onClose={() => { setCustomCardOpen(false); setEditingCard(null); }} editCard={editingCard} onSave={handleSaveCustom} />
+          {/* Right detail panel */}
+          <div className="pm-detail">
+            {!selectedCard ? (
+              <div className="pm-empty">
+                <div style={{ width:48, height:48, borderRadius:12, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <CreditCard style={{ width:22, height:22, color:'var(--ink-faded)' }}/>
+                </div>
+                <p style={{ fontSize:14, fontWeight:700, color:'var(--ink)', fontFamily:'var(--font-serif)', margin:0 }}>Select a card</p>
+                <p style={{ fontSize:12, color:'var(--ink-dim)', fontFamily:'var(--font-serif)', margin:0 }}>Choose a card from the left to view its details</p>
+                <button onClick={()=>setQuickAddOpen(true)}
+                  style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 18px', borderRadius:8, fontSize:12, fontWeight:700, background:'var(--ink)', border:'none', color:'var(--ne-cream)', cursor:'pointer', marginTop:8 }}>
+                  <Plus style={{ width:13, height:13 }}/> Add your first card
+                </button>
+              </div>
+            ) : (
+              <CardDetailPanel
+                card={selectedCard}
+                orders={orders}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onUpdate={handleInlineUpdate}
+                isDuplicate={duplicateNames.has((selectedCard.card_name||'').toLowerCase().trim())}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      <QuickAddModal open={quickAddOpen} onClose={()=>setQuickAddOpen(false)} existingCards={cards} onCreate={handleCreate}/>
+      <CustomCardModal open={customCardOpen} onClose={()=>{ setCustomCardOpen(false); setEditingCard(null); }} editCard={editingCard} onSave={handleSaveCustom}/>
     </>
   );
 }
 
-// ─── GIFT CARDS TAB ──────────────────────────────────────────────────────────────
+/* ── Card Detail Panel ── */
+function CardDetailPanel({ card, orders, onEdit, onDelete, onUpdate, isDuplicate }) {
+  const [addingRate, setAddingRate] = useState(false);
+  const [newStore, setNewStore]     = useState('');
+  const [newRate, setNewRate]       = useState('');
+  const [addingPerk, setAddingPerk] = useState(false);
+  const [newPerk, setNewPerk]       = useState('');
 
-function GiftCardsTab({ queryClient }) {
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCard, setEditingCard] = useState(null);
-  const [showCode, setShowCode] = useState({});
-  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  const [bulkInput, setBulkInput] = useState('');
-  const [barcodeDialogOpen, setBarcodeDialogOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState(null);
+  const color      = getCardColor(card);
+  const isActive   = card.active !== false;
+  const storeRates = card.store_rates || [];
+  const perks      = card.benefits ? card.benefits.split(',').map(p=>p.trim()).filter(Boolean) : [];
+  const baseRate   = card.reward_type==='points' ? `${card.points_rate||0}x pts` : `${card.cashback_rate||0}%`;
 
-  const emptyForm = {
-    brand: '', retailer: '', category: 'other', value: '', code: '', pin: '',
-    purchase_cost: '', purchase_date: format(new Date(), 'yyyy-MM-dd'),
-    credit_card_id: '', status: 'available', used_order_number: '', notes: ''
+  const allOrders   = orders.filter(o => o.credit_card_id === card.id);
+  const totalSpent  = allOrders.reduce((s,o) => s+(o.final_cost||o.total_cost||0), 0);
+  const txnCount    = allOrders.length;
+  const now         = new Date();
+  const monthOrders = allOrders.filter(o => { const d = o.order_date ? parseISO(o.order_date) : null; return d && d >= startOfMonth(now) && d <= endOfMonth(now); });
+  const monthSpent  = monthOrders.reduce((s,o) => s+(o.final_cost||o.total_cost||0), 0);
+  const estCashback = totalSpent * ((card.cashback_rate||0)/100);
+
+  const STORE_OPTIONS = ['Amazon','Walmart','Target','Best Buy','eBay','Costco','PayPal','Grocery','Gas','Dining','Travel','Pharmacy','Office Supply','Electronics','Streaming','Other'];
+
+  const handleAddRate = () => {
+    if (!newStore || !newRate) return;
+    onUpdate(card.id, { store_rates:[...storeRates, { store:newStore, rate:parseFloat(newRate) }] });
+    setNewStore(''); setNewRate(''); setAddingRate(false);
   };
+  const handleDeleteRate = idx => onUpdate(card.id, { store_rates:storeRates.filter((_,i)=>i!==idx) });
+
+  const handleAddPerk = () => {
+    if (!newPerk.trim()) return;
+    onUpdate(card.id, { benefits:[...perks, newPerk.trim()].join(', ') });
+    setNewPerk(''); setAddingPerk(false);
+  };
+  const handleDeletePerk = idx => onUpdate(card.id, { benefits:perks.filter((_,i)=>i!==idx).join(', ') });
+
+  return (
+    <div>
+      {isDuplicate && (
+        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', marginBottom:16, borderRadius:8, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)' }}>
+          <AlertTriangle style={{ width:13, height:13, color:'var(--gold)' }}/>
+          <span style={{ fontSize:11, color:'var(--gold2)', fontFamily:'var(--font-serif)' }}>Possible duplicate card name</span>
+        </div>
+      )}
+
+      {/* ── Card visual ── */}
+      <div style={{ display:'flex', alignItems:'flex-start', gap:20, marginBottom:20, flexWrap:'wrap' }}>
+        {/* Mini card */}
+        <div style={{ width:220, height:130, borderRadius:14, background:`linear-gradient(135deg, ${color} 0%, ${color}99 100%)`, padding:'14px 16px', flexShrink:0, position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)' }}/>
+          <div style={{ position:'absolute', bottom:-30, left:-10, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }}/>
+          <div style={{ position:'relative' }}>
+            <p style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)', margin:0, marginBottom:4 }}>{card.card_name}</p>
+            <p style={{ fontSize:10, color:'rgba(255,255,255,0.5)', margin:0 }}>{card.issuer || '—'}</p>
+          </div>
+          <div style={{ position:'absolute', bottom:14, left:16, right:16, display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+            <div>
+              <p style={{ fontSize:9, color:'rgba(255,255,255,0.4)', margin:0, textTransform:'uppercase', letterSpacing:'0.1em' }}>Base Rate</p>
+              <p style={{ fontSize:20, fontWeight:800, color:'#fff', margin:0, fontFamily:'var(--font-mono)' }}>{baseRate}</p>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99,
+                background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+              }}>{isActive ? 'Active' : 'Inactive'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div style={{ flex:1, minWidth:200 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))', gap:8, marginBottom:12 }}>
+            {[
+              { label:'Total Spent',    value:fmt$(totalSpent),              color:color },
+              { label:'This Month',     value:fmt$(monthSpent),              color:'var(--gold)' },
+              { label:'Est. Cashback',  value:fmt$(estCashback),             color:'var(--terrain2)' },
+              { label:'Orders',         value:txnCount.toString(),           color:'var(--ocean2)' },
+            ].map(s => (
+              <div key={s.label} style={{ padding:'10px 12px', borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)' }}>
+                <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--ink-faded)', fontFamily:'var(--font-serif)', margin:'0 0 4px' }}>{s.label}</p>
+                <p style={{ fontSize:17, fontWeight:700, color:s.color, fontFamily:'var(--font-mono)', margin:0 }}>{s.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={()=>onEdit(card)}
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 14px', borderRadius:8, fontSize:11, fontWeight:700, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink-dim)', cursor:'pointer' }}>
+              <Pencil style={{ width:11, height:11 }}/> Edit Card
+            </button>
+            <button onClick={()=>onUpdate(card.id, { active:!isActive })}
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 14px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer',
+                background: isActive ? 'var(--crimson-bg)' : 'var(--terrain-bg)',
+                border: `1px solid ${isActive ? 'var(--crimson-bdr)' : 'var(--terrain-bdr)'}`,
+                color: isActive ? 'var(--crimson2)' : 'var(--terrain2)',
+              }}>
+              {isActive ? 'Deactivate' : 'Activate'}
+            </button>
+            <button onClick={()=>onDelete(card)}
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 10px', borderRadius:8, fontSize:11, fontWeight:700, background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', color:'var(--crimson2)', cursor:'pointer' }}>
+              <Trash2 style={{ width:11, height:11 }}/>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Store Rate Overrides ── */}
+      <div style={{ marginBottom:16 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:6, height:6, borderRadius:'50%', background:color }}/>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-faded)', fontFamily:'var(--font-serif)' }}>
+              Store Rate Overrides ({storeRates.length})
+            </span>
+          </div>
+          <button onClick={()=>setAddingRate(true)}
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 10px', borderRadius:6, fontSize:11, fontWeight:600, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink-dim)', cursor:'pointer' }}>
+            <Plus style={{ width:10, height:10 }}/> Add Rate
+          </button>
+        </div>
+
+        <div style={{ borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', overflow:'hidden' }}>
+          {/* Base rate row */}
+          <div className="pm-rate-row" style={{ padding:'8px 14px' }}>
+            <span style={{ fontSize:12, color:'var(--ink-faded)', fontStyle:'italic', fontFamily:'var(--font-serif)' }}>All other stores</span>
+            <span style={{ fontSize:12, fontWeight:700, padding:'2px 10px', borderRadius:99, background:color+'22', color:color, fontFamily:'var(--font-mono)' }}>
+              {card.cashback_rate||0}%
+            </span>
+          </div>
+
+          {storeRates.length === 0 && !addingRate ? (
+            <div style={{ padding:'12px 14px', textAlign:'center' }}>
+              <p style={{ fontSize:11, color:'var(--ink-ghost)', fontFamily:'var(--font-serif)' }}>No store overrides yet — click Add Rate to set category-specific rates</p>
+            </div>
+          ) : storeRates.map((r, idx) => (
+            <div key={idx} className="pm-rate-row" style={{ padding:'8px 14px' }}>
+              <span style={{ fontSize:12, fontWeight:500, color:'var(--ink)', fontFamily:'var(--font-serif)' }}>{r.store}</span>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ fontSize:12, fontWeight:700, padding:'2px 10px', borderRadius:99, background:color+'22', color:color, fontFamily:'var(--font-mono)' }}>{r.rate}%</span>
+                <button onClick={()=>handleDeleteRate(idx)}
+                  style={{ width:20, height:20, borderRadius:5, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', cursor:'pointer', color:'var(--crimson)' }}>
+                  <X style={{ width:9, height:9 }}/>
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {addingRate && (
+            <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:8, borderTop:'1px solid var(--parch-line)' }}>
+              <select value={newStore} onChange={e=>setNewStore(e.target.value)}
+                style={{ flex:1, height:30, borderRadius:6, fontSize:11, background:'var(--parch-card)', border:'1px solid var(--parch-line)', color:'var(--ink)', paddingLeft:8 }}>
+                <option value="">Store...</option>
+                {STORE_OPTIONS.map(s=><option key={s} value={s}>{s}</option>)}
+              </select>
+              <input type="number" value={newRate} onChange={e=>setNewRate(e.target.value)} placeholder="%"
+                style={{ width:52, height:30, borderRadius:6, fontSize:12, background:'var(--parch-card)', border:'1px solid var(--parch-line)', color:'var(--ink)', textAlign:'center', outline:'none', fontFamily:'var(--font-mono)' }}/>
+              <button onClick={handleAddRate}
+                style={{ width:28, height:28, borderRadius:7, background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', color:'var(--terrain2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <Check style={{ width:12, height:12 }}/>
+              </button>
+              <button onClick={()=>setAddingRate(false)}
+                style={{ width:28, height:28, borderRadius:7, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink-dim)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <X style={{ width:12, height:12 }}/>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Card Benefits ── */}
+      <div>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold)' }}/>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--ink-faded)', fontFamily:'var(--font-serif)' }}>
+              Card Benefits ({perks.length})
+            </span>
+          </div>
+          <button onClick={()=>setAddingPerk(true)}
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 10px', borderRadius:6, fontSize:11, fontWeight:600, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink-dim)', cursor:'pointer' }}>
+            <Plus style={{ width:10, height:10 }}/> Add Benefit
+          </button>
+        </div>
+
+        <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom: addingPerk ? 10 : 0 }}>
+          {perks.length === 0 && !addingPerk && (
+            <p style={{ fontSize:11, color:'var(--ink-ghost)', fontFamily:'var(--font-serif)' }}>No benefits saved — add perks like lounge access, travel credits, sign-up bonus</p>
+          )}
+          {perks.map((perk, idx) => (
+            <span key={idx} style={{ display:'inline-flex', alignItems:'center', gap:5, fontSize:11, fontWeight:600, padding:'4px 10px', borderRadius:99, background:'var(--gold-bg)', border:'1px solid var(--gold-bdr)', color:'var(--gold2)', fontFamily:'var(--font-serif)' }}>
+              {perk}
+              <button onClick={()=>handleDeletePerk(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--gold)', lineHeight:1, padding:0 }}>
+                <X style={{ width:9, height:9 }}/>
+              </button>
+            </span>
+          ))}
+        </div>
+
+        {addingPerk && (
+          <div style={{ display:'flex', gap:8 }}>
+            <input value={newPerk} onChange={e=>setNewPerk(e.target.value)}
+              onKeyDown={e=>e.key==='Enter'&&handleAddPerk()}
+              placeholder="e.g. $300 travel credit"
+              autoFocus
+              style={{ flex:1, height:32, borderRadius:8, fontSize:12, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink)', outline:'none', paddingLeft:10, fontFamily:'var(--font-serif)' }}/>
+            <button onClick={handleAddPerk}
+              style={{ width:32, height:32, borderRadius:8, background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', color:'var(--terrain2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Check style={{ width:13, height:13 }}/>
+            </button>
+            <button onClick={()=>setAddingPerk(false)}
+              style={{ width:32, height:32, borderRadius:8, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink-dim)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <X style={{ width:13, height:13 }}/>
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GIFT CARDS TAB (unchanged, just cleaner styling)
+═══════════════════════════════════════════════════════════ */
+function GiftCardsTab({ queryClient }) {
+  const [search, setSearch]               = useState('');
+  const [statusFilter, setStatusFilter]   = useState('all');
+  const [dialogOpen, setDialogOpen]       = useState(false);
+  const [editingCard, setEditingCard]     = useState(null);
+  const [showCode, setShowCode]           = useState({});
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkInput, setBulkInput]         = useState('');
+  const [barcodeDialogOpen, setBarcodeDialogOpen] = useState(false);
+  const [selectedCard, setSelectedCard]   = useState(null);
+
+  const emptyForm = { brand:'', retailer:'', category:'other', value:'', code:'', pin:'', purchase_cost:'', purchase_date:format(new Date(),'yyyy-MM-dd'), credit_card_id:'', status:'available', used_order_number:'', notes:'' };
   const [formData, setFormData] = useState(emptyForm);
 
   const [userEmail, setUserEmail] = useState(null);
-  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+  useEffect(()=>{ base44.auth.me().then(u=>setUserEmail(u?.email)).catch(()=>{}); },[]);
 
-  const { data: cards = [], isLoading } = useQuery({
-    queryKey: ['giftCards', userEmail],
+  const { data:cards=[], isLoading } = useQuery({
+    queryKey:['giftCards', userEmail],
     queryFn: async () => {
       if (!userEmail) return [];
-      const data = await base44.entities.GiftCard.filter({ created_by: userEmail }, '-created_date');
-      return data.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+      const data = await base44.entities.GiftCard.filter({ created_by:userEmail },'-created_date');
+      return data.sort((a,b)=>(a.brand||'').localeCompare(b.brand||''));
     },
     enabled: userEmail !== null,
   });
 
-  const { data: creditCards = [] } = useQuery({
-    queryKey: ['creditCards', userEmail],
-    queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [],
+  const { data:creditCards=[] } = useQuery({
+    queryKey:['creditCards', userEmail],
+    queryFn:()=> userEmail ? base44.entities.CreditCard.filter({ created_by:userEmail }) : [],
     enabled: userEmail !== null,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const newCard = await base44.entities.GiftCard.create(data);
-      if (data.credit_card_id && data.purchase_cost) {
-        await createRewardForGiftCard(newCard, data.credit_card_id, data.purchase_cost, creditCards);
-      }
+    mutationFn: async d => {
+      const newCard = await base44.entities.GiftCard.create(d);
+      if (d.credit_card_id && d.purchase_cost) await createRewardForGiftCard(newCard, d.credit_card_id, d.purchase_cost, creditCards);
       return newCard;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['giftCards'] }); queryClient.invalidateQueries({ queryKey: ['rewards'] }); toast.success('Gift card added'); setDialogOpen(false); }
+    onSuccess:()=>{ queryClient.invalidateQueries({queryKey:['giftCards']}); queryClient.invalidateQueries({queryKey:['rewards']}); toast.success('Gift card added'); setDialogOpen(false); }
   });
-
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.GiftCard.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['giftCards'] }); toast.success('Gift card updated'); setDialogOpen(false); }
+    mutationFn:({id,data})=>base44.entities.GiftCard.update(id,data),
+    onSuccess:()=>{ queryClient.invalidateQueries({queryKey:['giftCards']}); toast.success('Gift card updated'); setDialogOpen(false); }
   });
-
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.GiftCard.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['giftCards'] }); toast.success('Deleted'); }
+    mutationFn:id=>base44.entities.GiftCard.delete(id),
+    onSuccess:()=>{ queryClient.invalidateQueries({queryKey:['giftCards']}); toast.success('Deleted'); }
   });
 
   const createRewardForGiftCard = async (giftCard, creditCardId, purchaseAmount, allCards) => {
-    const card = allCards.find(c => c.id === creditCardId);
-    if (!card) return;
-    let rewardAmount = 0, rewardType = 'cashback', currency = 'USD';
-    if (card.reward_type === 'cashback' && card.cashback_rate) {
-      rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
-    } else if (card.reward_type === 'points' && card.points_rate) {
-      rewardAmount = Math.round(purchaseAmount * card.points_rate); rewardType = 'points'; currency = 'points';
-    }
-    if (rewardAmount > 0) {
-      await base44.entities.Reward.create({
-        credit_card_id: creditCardId, card_name: card.card_name, source: `${card.card_name} (Gift Card)`,
-        type: rewardType, purchase_amount: purchaseAmount, amount: parseFloat(rewardAmount), currency,
-        date_earned: format(new Date(), 'yyyy-MM-dd'), status: 'earned',
-        notes: `Gift card purchase: ${giftCard.brand} $${giftCard.value}`
-      });
-      toast.success(`Reward tracked: ${currency === 'USD' ? `$${rewardAmount}` : `${rewardAmount} pts`}`);
+    const card = allCards.find(c=>c.id===creditCardId); if (!card) return;
+    let rewardAmount=0, rewardType='cashback', currency='USD';
+    if (card.reward_type==='cashback'&&card.cashback_rate) { rewardAmount=(purchaseAmount*card.cashback_rate/100).toFixed(2); }
+    else if (card.reward_type==='points'&&card.points_rate) { rewardAmount=Math.round(purchaseAmount*card.points_rate); rewardType='points'; currency='points'; }
+    if (rewardAmount>0) {
+      await base44.entities.Reward.create({ credit_card_id:creditCardId, card_name:card.card_name, source:`${card.card_name} (Gift Card)`, type:rewardType, purchase_amount:purchaseAmount, amount:parseFloat(rewardAmount), currency, date_earned:format(new Date(),'yyyy-MM-dd'), status:'earned', notes:`Gift card purchase: ${giftCard.brand} $${giftCard.value}` });
+      toast.success(`Reward tracked: ${currency==='USD'?`$${rewardAmount}`:`${rewardAmount} pts`}`);
     }
   };
 
-  const openDialog = (card = null) => {
-    if (card) {
-      setEditingCard(card);
-      setFormData({ brand: card.brand || '', retailer: card.retailer || '', category: card.category || 'other', value: card.value || '', code: card.code || '', pin: card.pin || '', purchase_cost: card.purchase_cost || '', purchase_date: card.purchase_date || '', credit_card_id: card.credit_card_id || '', status: card.status || 'available', used_order_number: card.used_order_number || '', notes: card.notes || '' });
-    } else {
-      setEditingCard(null);
-      setFormData(emptyForm);
-    }
+  const openDialog = (card=null) => {
+    if (card) { setEditingCard(card); setFormData({ brand:card.brand||'', retailer:card.retailer||'', category:card.category||'other', value:card.value||'', code:card.code||'', pin:card.pin||'', purchase_cost:card.purchase_cost||'', purchase_date:card.purchase_date||'', credit_card_id:card.credit_card_id||'', status:card.status||'available', used_order_number:card.used_order_number||'', notes:card.notes||'' }); }
+    else { setEditingCard(null); setFormData(emptyForm); }
     setDialogOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
-    const ccCard = creditCards.find(c => c.id === formData.credit_card_id);
-    const data = { ...formData, value: parseFloat(formData.value), purchase_cost: formData.purchase_cost ? parseFloat(formData.purchase_cost) : null, card_name: ccCard?.card_name || null };
-    if (editingCard) updateMutation.mutate({ id: editingCard.id, data });
-    else createMutation.mutate(data);
+    const ccCard = creditCards.find(c=>c.id===formData.credit_card_id);
+    const data = { ...formData, value:parseFloat(formData.value), purchase_cost:formData.purchase_cost?parseFloat(formData.purchase_cost):null, card_name:ccCard?.card_name||null };
+    if (editingCard) updateMutation.mutate({id:editingCard.id, data}); else createMutation.mutate(data);
   };
 
-  const markAsUsed = async (card) => {
+  const markAsUsed = async card => {
     const orderNumber = prompt('Enter order number where this card was used:');
-    if (orderNumber) {
-      await base44.entities.GiftCard.delete(card.id);
-      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      toast.success('Gift card removed from inventory');
-    }
+    if (orderNumber) { await base44.entities.GiftCard.delete(card.id); queryClient.invalidateQueries({queryKey:['giftCards']}); toast.success('Gift card removed from inventory'); }
   };
 
   const handleBulkAdd = async () => {
-    const lines = bulkInput.trim().split('\n').filter(l => l.trim());
-    const newCards = lines.map(line => {
-      const parts = line.split(',').map(p => p.trim());
-      if (parts.length < 3) throw new Error('Invalid format');
-      return { brand: parts[0], retailer: parts[1], value: parseFloat(parts[2]), code: parts[3] || '', pin: parts[4] || '', purchase_cost: parts[5] ? parseFloat(parts[5]) : null, status: 'available' };
-    });
+    const lines = bulkInput.trim().split('\n').filter(l=>l.trim());
+    const newCards = lines.map(line => { const parts=line.split(',').map(p=>p.trim()); if(parts.length<3) throw new Error('Invalid format'); return { brand:parts[0], retailer:parts[1], value:parseFloat(parts[2]), code:parts[3]||'', pin:parts[4]||'', purchase_cost:parts[5]?parseFloat(parts[5]):null, status:'available' }; });
     await base44.entities.GiftCard.bulkCreate(newCards);
-    queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+    queryClient.invalidateQueries({queryKey:['giftCards']});
     toast.success(`Added ${newCards.length} gift cards`);
-    setBulkDialogOpen(false);
-    setBulkInput('');
+    setBulkDialogOpen(false); setBulkInput('');
   };
 
-  const filteredCards = cards.filter(card => {
-    const matchesSearch = !search || card.brand?.toLowerCase().includes(search.toLowerCase()) || card.retailer?.toLowerCase().includes(search.toLowerCase()) || card.code?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || card.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const filteredCards = cards.filter(c => {
+    const matchSearch = !search || c.brand?.toLowerCase().includes(search.toLowerCase()) || c.retailer?.toLowerCase().includes(search.toLowerCase()) || c.code?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter==='all' || c.status===statusFilter;
+    return matchSearch && matchStatus;
   });
 
-  const maskCode = (code) => !code ? '-' : code.slice(0, 4) + '****' + code.slice(-4);
-  const toggleShowCode = (id) => setShowCode(p => ({ ...p, [id]: !p[id] }));
-
-  const totalValue = filteredCards.filter(c => c.status === 'available').reduce((s, c) => s + (c.value || 0), 0);
-  const totalProfit = filteredCards.filter(c => c.purchase_cost).reduce((s, c) => s + (c.value - c.purchase_cost), 0);
-
-  const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', fontSize: 13 };
+  const maskCode    = code => !code ? '-' : code.slice(0,4)+'****'+code.slice(-4);
+  const toggleShow  = id => setShowCode(p=>({...p,[id]:!p[id]}));
+  const totalValue  = filteredCards.filter(c=>c.status==='available').reduce((s,c)=>s+(c.value||0),0);
+  const totalProfit = filteredCards.filter(c=>c.purchase_cost).reduce((s,c)=>s+(c.value-c.purchase_cost),0);
+  const inp = { background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:8, color:'var(--ink)', fontSize:13 };
 
   const columns = [
-    { header: 'Brand', accessor: 'brand', cell: r => <span className="font-medium" style={{ color: 'var(--ink)' }}>{r.brand}</span> },
-    { header: 'Retailer', accessor: 'retailer', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.retailer || '—'}</span> },
-    { header: 'Value', accessor: 'value', cell: r => <span className="font-semibold" style={{ color: 'var(--ink)' }}>${r.value?.toFixed(2)}</span> },
-    { header: 'Cost', accessor: 'purchase_cost', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.purchase_cost ? `$${r.purchase_cost.toFixed(2)}` : '—'}</span> },
-    { header: 'Profit', cell: r => {
-      if (!r.purchase_cost) return <span style={{ color: 'var(--ink-ghost)' }}>—</span>;
-      const p = r.value - r.purchase_cost;
-      return <span className="font-semibold" style={{ color: p > 0 ? 'var(--terrain)' : 'var(--crimson)' }}>${p.toFixed(2)}</span>;
-    }},
-    { header: 'Code', accessor: 'code', cell: r => (
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-sm" style={{ color: 'var(--ink-dim)' }}>{showCode[r.id] ? r.code : maskCode(r.code)}</span>
-        <button className="h-6 w-6 flex items-center justify-center transition" style={{ color: 'var(--ink-ghost)' }} onClick={() => toggleShowCode(r.id)}>
-          {showCode[r.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+    { header:'Brand',    accessor:'brand',         cell:r=><span style={{fontWeight:600,color:'var(--ink)'}}>{r.brand}</span> },
+    { header:'Retailer', accessor:'retailer',      cell:r=><span style={{fontSize:12,color:'var(--ink-ghost)'}}>{r.retailer||'—'}</span> },
+    { header:'Value',    accessor:'value',         cell:r=><span style={{fontWeight:700,color:'var(--ink)'}}>${r.value?.toFixed(2)}</span> },
+    { header:'Cost',     accessor:'purchase_cost', cell:r=><span style={{fontSize:12,color:'var(--ink-ghost)'}}>{r.purchase_cost?`$${r.purchase_cost.toFixed(2)}`:'—'}</span> },
+    { header:'Profit',   cell:r=>{ if(!r.purchase_cost) return <span style={{color:'var(--ink-ghost)'}}>—</span>; const p=r.value-r.purchase_cost; return <span style={{fontWeight:700,color:p>0?'var(--terrain)':'var(--crimson)'}}>${p.toFixed(2)}</span>; }},
+    { header:'Code', accessor:'code', cell:r=>(
+      <div style={{display:'flex',alignItems:'center',gap:6}}>
+        <span style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--ink-dim)'}}>{showCode[r.id]?r.code:maskCode(r.code)}</span>
+        <button style={{color:'var(--ink-ghost)',background:'none',border:'none',cursor:'pointer',padding:0}} onClick={()=>toggleShow(r.id)}>
+          {showCode[r.id]?<EyeOff style={{width:12,height:12}}/>:<Eye style={{width:12,height:12}}/>}
         </button>
       </div>
     )},
-    { header: 'Status', cell: r => <StatusBadge status={r.status} /> },
-    { header: 'Added', cell: r => <span style={{ color: 'var(--ink-ghost)' }}>{format(new Date(r.created_date), 'MMM d, yyyy')}</span> },
-    { header: '', cell: r => (
-      <div className="flex items-center gap-1">
-        <button className="p-1.5 rounded-lg transition" style={{ color: 'var(--ink-faded)' }} onClick={() => { setSelectedCard(r); setBarcodeDialogOpen(true); }}><Barcode className="h-4 w-4" /></button>
-        {r.status === 'available' && <button className="px-2 py-1 rounded-lg text-xs font-semibold transition" style={{ color: 'var(--terrain)' }} onClick={() => markAsUsed(r)}>Mark Used</button>}
-        <button className="p-1.5 rounded-lg transition" style={{ color: 'var(--ink-faded)' }} onClick={() => openDialog(r)}><Pencil className="h-4 w-4" /></button>
-        <button className="p-1.5 rounded-lg transition" style={{ color: 'var(--ink-faded)' }} onClick={() => { if (confirm('Delete?')) deleteMutation.mutate(r.id); }}><Trash2 className="h-4 w-4" /></button>
+    { header:'Status', cell:r=><StatusBadge status={r.status}/> },
+    { header:'Added', cell:r=><span style={{color:'var(--ink-ghost)',fontSize:11}}>{format(new Date(r.created_date),'MMM d, yyyy')}</span> },
+    { header:'', cell:r=>(
+      <div style={{display:'flex',alignItems:'center',gap:4}}>
+        <button style={{padding:'3px 6px',borderRadius:6,color:'var(--ink-faded)',background:'none',border:'none',cursor:'pointer'}} onClick={()=>{setSelectedCard(r);setBarcodeDialogOpen(true);}}><Barcode style={{width:13,height:13}}/></button>
+        {r.status==='available'&&<button style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:6,color:'var(--terrain2)',background:'var(--terrain-bg)',border:'1px solid var(--terrain-bdr)',cursor:'pointer'}} onClick={()=>markAsUsed(r)}>Used</button>}
+        <button style={{padding:'3px 6px',borderRadius:6,color:'var(--ink-faded)',background:'none',border:'none',cursor:'pointer'}} onClick={()=>openDialog(r)}><Pencil style={{width:13,height:13}}/></button>
+        <button style={{padding:'3px 6px',borderRadius:6,color:'var(--crimson)',background:'var(--crimson-bg)',border:'1px solid var(--crimson-bdr)',cursor:'pointer'}} onClick={()=>{if(confirm('Delete?'))deleteMutation.mutate(r.id);}}><Trash2 style={{width:13,height:13}}/></button>
       </div>
     )},
   ];
 
   return (
     <>
-      <div className="grid-kpi" style={{ marginBottom: 16 }}>
+      {/* KPI cards */}
+      <div className="grid-kpi" style={{marginBottom:16}}>
         {[
-          { label: 'Total Cards',     value: filteredCards.length,                                              accent: 'var(--gold)',     valColor: 'var(--ink)',      sub: 'in inventory'      },
-          { label: 'Available',       value: filteredCards.filter(c => c.status === 'available').length,        accent: 'var(--terrain2)', valColor: 'var(--terrain2)', sub: 'ready to use'      },
-          { label: 'Available Value', value: `$${totalValue.toLocaleString()}`,                                 accent: 'var(--ocean2)',   valColor: 'var(--ocean2)',   sub: 'total balance'     },
-          { label: 'Total Profit',    value: `$${totalProfit.toFixed(2)}`,                                      accent: 'var(--terrain2)', valColor: 'var(--terrain2)', sub: 'value minus cost'  },
-        ].map(s => (
-          <div key={s.label} className="kpi-card fade-up" style={{ borderTopColor: s.accent }}>
+          {label:'Total Cards',     value:filteredCards.length,                                       accent:'var(--gold)',     valColor:'var(--ink)',       sub:'in inventory'},
+          {label:'Available',       value:filteredCards.filter(c=>c.status==='available').length,     accent:'var(--terrain2)',valColor:'var(--terrain2)',   sub:'ready to use'},
+          {label:'Available Value', value:`$${totalValue.toLocaleString()}`,                          accent:'var(--ocean2)',  valColor:'var(--ocean2)',     sub:'total balance'},
+          {label:'Total Profit',    value:`$${totalProfit.toFixed(2)}`,                               accent:'var(--terrain2)',valColor:'var(--terrain2)',   sub:'value minus cost'},
+        ].map(s=>(
+          <div key={s.label} className="kpi-card fade-up" style={{borderTopColor:s.accent}}>
             <div className="kpi-label">{s.label}</div>
-            <div className="kpi-value" style={{ color: s.valColor }}>{s.value}</div>
+            <div className="kpi-value" style={{color:s.valColor}}>{s.value}</div>
             <div className="kpi-sub">{s.sub}</div>
           </div>
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div className="flex gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--ink-faded)' }} />
-            <input placeholder="Search gift cards..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9 rounded-lg text-sm" style={{ ...inp, width: 240 }} />
-          </div>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 px-3 rounded-lg text-sm w-36" style={inp}>
-            {['all','available','reserved','exported','used','invalid'].map(s => (
-              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-            ))}
-          </select>
+      {/* Toolbar */}
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,flexWrap:'wrap'}}>
+        <div style={{position:'relative',flex:1,minWidth:160}}>
+          <Search style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',width:13,height:13,color:'var(--ink-faded)'}}/>
+          <input placeholder="Search gift cards..." value={search} onChange={e=>setSearch(e.target.value)}
+            style={{width:'100%',height:34,paddingLeft:30,paddingRight:10,borderRadius:8,fontSize:12,background:'var(--parch-warm)',border:'1px solid var(--parch-line)',color:'var(--ink)',outline:'none'}}/>
         </div>
-        <div className="flex gap-2 shrink-0">
-          <button onClick={() => setBulkDialogOpen(true)}
-            style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-dim)', cursor: 'pointer' }}>
-            Bulk Add
-          </button>
-          <button onClick={() => openDialog()}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', border: 'none', color: 'var(--ne-cream)', cursor: 'pointer' }}>
-            <Plus className="h-4 w-4" /> Add Card
-          </button>
-        </div>
+        <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{height:34,paddingLeft:10,paddingRight:10,borderRadius:8,fontSize:12,...inp}}>
+          {['all','available','reserved','exported','used','invalid'].map(s=>(
+            <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>
+          ))}
+        </select>
+        <button onClick={()=>setBulkDialogOpen(true)}
+          style={{padding:'7px 14px',borderRadius:8,fontSize:12,fontWeight:600,background:'var(--parch-warm)',border:'1px solid var(--parch-line)',color:'var(--ink-dim)',cursor:'pointer'}}>
+          Bulk Add
+        </button>
+        <button onClick={()=>openDialog()}
+          style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:8,fontSize:12,fontWeight:700,background:'var(--ink)',border:'none',color:'var(--ne-cream)',cursor:'pointer'}}>
+          <Plus style={{width:13,height:13}}/> Add Card
+        </button>
       </div>
 
-      <DataTable columns={columns} data={filteredCards} loading={isLoading} emptyMessage="No gift cards found" />
+      <DataTable columns={columns} data={filteredCards} loading={isLoading} emptyMessage="No gift cards found"/>
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editingCard ? 'Edit Gift Card' : 'Add Gift Card'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingCard?'Edit Gift Card':'Add Gift Card'}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Brand *</Label>
-                <Select value={formData.brand} onValueChange={v => setFormData(p => ({ ...p, brand: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
-                  <SelectContent>{GC_BRANDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                <Select value={formData.brand} onValueChange={v=>setFormData(p=>({...p,brand:v}))}>
+                  <SelectTrigger><SelectValue placeholder="Select brand"/></SelectTrigger>
+                  <SelectContent>{GC_BRANDS.map(b=><SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Retailer</Label>
-                <Input value={formData.retailer} onChange={e => setFormData(p => ({ ...p, retailer: e.target.value }))} placeholder="Where purchased" />
-              </div>
+              <div className="space-y-2"><Label>Retailer</Label><Input value={formData.retailer} onChange={e=>setFormData(p=>({...p,retailer:e.target.value}))} placeholder="Where purchased"/></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Value ($) *</Label>
-                <Input type="number" step="0.01" value={formData.value} onChange={e => setFormData(p => ({ ...p, value: e.target.value }))} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Purchase Cost ($)</Label>
-                <Input type="number" step="0.01" value={formData.purchase_cost} onChange={e => setFormData(p => ({ ...p, purchase_cost: e.target.value }))} />
-              </div>
+              <div className="space-y-2"><Label>Value ($) *</Label><Input type="number" step="0.01" value={formData.value} onChange={e=>setFormData(p=>({...p,value:e.target.value}))} required/></div>
+              <div className="space-y-2"><Label>Purchase Cost ($)</Label><Input type="number" step="0.01" value={formData.purchase_cost} onChange={e=>setFormData(p=>({...p,purchase_cost:e.target.value}))}/></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Purchase Date</Label>
-                <Input type="date" value={formData.purchase_date} onChange={e => setFormData(p => ({ ...p, purchase_date: e.target.value }))} />
-              </div>
+              <div className="space-y-2"><Label>Purchase Date</Label><Input type="date" value={formData.purchase_date} onChange={e=>setFormData(p=>({...p,purchase_date:e.target.value}))}/></div>
               <div className="space-y-2">
                 <Label>Credit Card Used</Label>
-                <Select value={formData.credit_card_id || ''} onValueChange={v => setFormData(p => ({ ...p, credit_card_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select card" /></SelectTrigger>
-                  <SelectContent>
-                    {creditCards.filter(c => c.active !== false).map(c => <SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}
-                  </SelectContent>
+                <Select value={formData.credit_card_id||''} onValueChange={v=>setFormData(p=>({...p,credit_card_id:v}))}>
+                  <SelectTrigger><SelectValue placeholder="Select card"/></SelectTrigger>
+                  <SelectContent>{creditCards.filter(c=>c.active!==false).map(c=><SelectItem key={c.id} value={c.id}>{c.card_name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Card Code *</Label>
-                <Input value={formData.code} onChange={e => setFormData(p => ({ ...p, code: e.target.value }))} required />
-              </div>
-              <div className="space-y-2">
-                <Label>PIN</Label>
-                <Input value={formData.pin} onChange={e => setFormData(p => ({ ...p, pin: e.target.value }))} placeholder="Optional" />
-              </div>
+              <div className="space-y-2"><Label>Card Code *</Label><Input value={formData.code} onChange={e=>setFormData(p=>({...p,code:e.target.value}))} required/></div>
+              <div className="space-y-2"><Label>PIN</Label><Input value={formData.pin} onChange={e=>setFormData(p=>({...p,pin:e.target.value}))} placeholder="Optional"/></div>
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={formData.status} onValueChange={v => setFormData(p => ({ ...p, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {['available','reserved','exported','used','invalid'].map(s => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}
-                </SelectContent>
+              <Select value={formData.status} onValueChange={v=>setFormData(p=>({...p,status:v}))}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent>{['available','reserved','exported','used','invalid'].map(s=><SelectItem key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            {formData.status === 'used' && (
-              <div className="space-y-2">
-                <Label>Order Number Used</Label>
-                <Input value={formData.used_order_number} onChange={e => setFormData(p => ({ ...p, used_order_number: e.target.value }))} />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Input value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} />
-            </div>
+            {formData.status==='used'&&<div className="space-y-2"><Label>Order Number Used</Label><Input value={formData.used_order_number} onChange={e=>setFormData(p=>({...p,used_order_number:e.target.value}))}/></div>}
+            <div className="space-y-2"><Label>Notes</Label><Input value={formData.notes} onChange={e=>setFormData(p=>({...p,notes:e.target.value}))}/></div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" style={{ background: 'var(--terrain)', color: '#fff' }}>{editingCard ? 'Update' : 'Add'}</Button>
+              <Button type="button" variant="outline" onClick={()=>setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" style={{background:'var(--terrain)',color:'#fff'}}>{editingCard?'Update':'Add'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -599,27 +774,22 @@ function GiftCardsTab({ queryClient }) {
       <Dialog open={barcodeDialogOpen} onOpenChange={setBarcodeDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Gift Card Barcode</DialogTitle></DialogHeader>
-          {selectedCard && (
+          {selectedCard&&(
             <div className="space-y-4 text-center">
               <p className="font-bold text-lg">{selectedCard.brand} — ${selectedCard.value}</p>
-              <div className="flex justify-center bg-white p-8 rounded-lg" style={{ border: '2px solid var(--parch-line)' }}>
-                <ReactBarcode value={selectedCard.code} format="CODE128" displayValue height={120} width={3} fontSize={18} margin={10} />
+              <div className="flex justify-center bg-white p-8 rounded-lg" style={{border:'2px solid var(--parch-line)'}}>
+                <ReactBarcode value={selectedCard.code} format="CODE128" displayValue height={120} width={3} fontSize={18} margin={10}/>
               </div>
-              <div className="p-4 rounded" style={{ background: 'var(--parch-warm)' }}>
-                <p className="text-xs uppercase" style={{ color: 'var(--ink-faded)' }}>Card Code</p>
-                <p className="font-mono font-bold text-lg mt-1" style={{ color: 'var(--ink)' }}>{selectedCard.code}</p>
+              <div className="p-4 rounded" style={{background:'var(--parch-warm)'}}>
+                <p className="text-xs uppercase" style={{color:'var(--ink-faded)'}}>Card Code</p>
+                <p className="font-mono font-bold text-lg mt-1" style={{color:'var(--ink)'}}>{selectedCard.code}</p>
               </div>
-              {selectedCard.pin && (
-                <div className="p-4 rounded" style={{ background: 'var(--parch-warm)' }}>
-                  <p className="text-xs uppercase" style={{ color: 'var(--ink-faded)' }}>PIN</p>
-                  <p className="font-mono font-bold text-lg mt-1" style={{ color: 'var(--ink)' }}>{selectedCard.pin}</p>
-                </div>
-              )}
+              {selectedCard.pin&&(<div className="p-4 rounded" style={{background:'var(--parch-warm)'}}><p className="text-xs uppercase" style={{color:'var(--ink-faded)'}}>PIN</p><p className="font-mono font-bold text-lg mt-1" style={{color:'var(--ink)'}}>{selectedCard.pin}</p></div>)}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => window.print()}>Print</Button>
-            <Button onClick={() => setBarcodeDialogOpen(false)}>Close</Button>
+            <Button variant="outline" onClick={()=>window.print()}>Print</Button>
+            <Button onClick={()=>setBarcodeDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -629,15 +799,15 @@ function GiftCardsTab({ queryClient }) {
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Bulk Add Gift Cards</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="p-4 rounded-lg text-sm" style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
-              <p className="font-medium mb-1" style={{ color: 'var(--ink-dim)' }}>Format (one per line):</p>
-              <code className="text-xs" style={{ color: 'var(--ink-ghost)' }}>Brand, Retailer, Value, Code, PIN, PurchaseCost</code>
+            <div className="p-4 rounded-lg text-sm" style={{background:'var(--parch-warm)',border:'1px solid var(--parch-line)'}}>
+              <p className="font-medium mb-1" style={{color:'var(--ink-dim)'}}>Format (one per line):</p>
+              <code className="text-xs" style={{color:'var(--ink-ghost)'}}>Brand, Retailer, Value, Code, PIN, PurchaseCost</code>
             </div>
-            <Textarea value={bulkInput} onChange={e => setBulkInput(e.target.value)} rows={8} placeholder="Amazon, Target, 100, AMZN1234, 5678, 92" className="font-mono text-xs" />
+            <Textarea value={bulkInput} onChange={e=>setBulkInput(e.target.value)} rows={8} placeholder="Amazon, Target, 100, AMZN1234, 5678, 92" className="font-mono text-xs"/>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleBulkAdd} style={{ background: 'var(--terrain)', color: '#fff' }}>Add Cards</Button>
+            <Button variant="outline" onClick={()=>setBulkDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleBulkAdd} style={{background:'var(--terrain)',color:'#fff'}}>Add Cards</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
