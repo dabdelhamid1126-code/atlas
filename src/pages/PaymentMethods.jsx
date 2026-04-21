@@ -40,6 +40,61 @@ const ISSUER_COLOR = {
   'Robinhood':        '#00C805',
 };
 
+const BRANDFETCH_ID = '1idzVIG0BYPKsFIDJDI';
+const CARD_DOMAINS = {
+  'Chase':'chase.com','American Express':'americanexpress.com','Amex':'americanexpress.com',
+  'Discover':'discover.com','Capital One':'capitalone.com','Citi':'citi.com',
+  'Bank of America':'bankofamerica.com','Barclays':'barclays.com','Wells Fargo':'wellsfargo.com',
+  'Goldman Sachs':'goldman.com','Apple':'apple.com','Robinhood':'robinhood.com',
+  'US Bank':'usbank.com','Bilt':'biltrewards.com','PayPal':'paypal.com',
+  'Costco':'costco.com','Target':'target.com','Amazon':'amazon.com',
+};
+function getCardDomain(issuer) {
+  if (!issuer) return null;
+  const exact = CARD_DOMAINS[issuer];
+  if (exact) return exact;
+  const lower = issuer.toLowerCase();
+  for (const [k,v] of Object.entries(CARD_DOMAINS)) {
+    if (lower.includes(k.toLowerCase())) return v;
+  }
+  return null;
+}
+function IssuerLogo({ issuer, size=28 }) {
+  const [err, setErr] = React.useState(false);
+  const domain = getCardDomain(issuer);
+  if (!domain || err) {
+    const initials = (issuer||'?').replace(/[^A-Za-z\s]/g,'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return (
+      <div style={{ width:size, height:size, borderRadius:Math.round(size*0.25), background:'rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        <span style={{ fontSize:size*0.38, fontWeight:700, color:'#fff' }}>{initials}</span>
+      </div>
+    );
+  }
+  return (
+    <img src={`https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_ID}`} alt={issuer}
+      onError={()=>setErr(true)}
+      style={{ width:size, height:size, borderRadius:Math.round(size*0.25), objectFit:'cover', flexShrink:0, display:'block' }}/>
+  );
+}
+
+function IssuerLogoSmall({ issuer, size=20 }) {
+  const [err, setErr] = React.useState(false);
+  const domain = getCardDomain(issuer);
+  if (!domain || err) {
+    const initials = (issuer||'?').replace(/[^A-Za-z\s]/g,'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return (
+      <div style={{ width:size, height:size, borderRadius:4, background:'var(--parch-deep)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        <span style={{ fontSize:size*0.4, fontWeight:700, color:'var(--ink-faded)' }}>{initials}</span>
+      </div>
+    );
+  }
+  return (
+    <img src={`https://cdn.brandfetch.io/domain/${domain}?c=${BRANDFETCH_ID}`} alt={issuer}
+      onError={()=>setErr(true)}
+      style={{ width:size, height:size, borderRadius:4, objectFit:'cover', flexShrink:0, display:'block', border:'1px solid var(--parch-line)' }}/>
+  );
+}
+
 function getCardColor(card) {
   if (!card?.issuer) return 'var(--ocean2)';
   const match = Object.keys(ISSUER_COLOR).find(k =>
@@ -280,7 +335,7 @@ function CreditCardsTab({ queryClient }) {
                   <div key={card.id} className={`pm-card-item ${selectedId===card.id?'active':''}`}
                     onClick={() => setSelectedId(card.id)}
                     style={{ borderLeft: selectedId===card.id ? `3px solid ${color}` : '3px solid transparent' }}>
-                    <div className="pm-dot" style={{ background: isActive ? color : 'var(--parch-deep)' }}/>
+                    <IssuerLogoSmall issuer={card.issuer} size={22}/>
                     <div style={{ flex:1, minWidth:0 }}>
                       <div className="pm-card-name">{card.card_name}</div>
                       <div className="pm-card-rate">{card.issuer || '—'} · {rate}</div>
@@ -379,9 +434,12 @@ function CardDetailPanel({ card, orders, onEdit, onDelete, onUpdate, isDuplicate
         <div style={{ width:220, height:130, borderRadius:14, background:`linear-gradient(135deg, ${color} 0%, ${color}99 100%)`, padding:'14px 16px', flexShrink:0, position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)' }}/>
           <div style={{ position:'absolute', bottom:-30, left:-10, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }}/>
-          <div style={{ position:'relative' }}>
-            <p style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)', margin:0, marginBottom:4 }}>{card.card_name}</p>
-            <p style={{ fontSize:10, color:'rgba(255,255,255,0.5)', margin:0 }}>{card.issuer || '—'}</p>
+          <div style={{ position:'relative', display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+            <div>
+              <p style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)', margin:0, marginBottom:4 }}>{card.card_name}</p>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,0.5)', margin:0 }}>{card.issuer || '—'}</p>
+            </div>
+            <IssuerLogo issuer={card.issuer} size={32}/>
           </div>
           <div style={{ position:'absolute', bottom:14, left:16, right:16, display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
             <div>
