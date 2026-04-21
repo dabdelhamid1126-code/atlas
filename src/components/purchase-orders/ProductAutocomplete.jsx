@@ -172,7 +172,7 @@ export default function ProductAutocomplete({ products=[], nameValue, upcValue, 
 
   const filtered = (inputValue?.length>=1
     ? products.filter(p => { const q=inputValue.toLowerCase(); return p.name?.toLowerCase().includes(q)||p.upc?.toLowerCase().includes(q); })
-    : products
+    : []
   ).slice(0,8);
 
   const updatePos = useCallback(() => {
@@ -217,7 +217,7 @@ export default function ProductAutocomplete({ products=[], nameValue, upcValue, 
   const handleProductCreated = (p) => { setShowAddForm(false); handleSelect(p); };
 
   const handleKeyDown = (e) => {
-    if (!open) { if (e.key==='ArrowDown') { openDropdown(); return; } return; }
+    if (!open) { if (e.key==='ArrowDown'&&inputValue?.length>=1) { openDropdown(); return; } return; }
     if (e.key==='ArrowDown')           { e.preventDefault(); setActiveIdx(i=>Math.min(i+1,filtered.length-1)); }
     else if (e.key==='ArrowUp')        { e.preventDefault(); setActiveIdx(i=>Math.max(i-1,-1)); }
     else if (e.key==='Enter')          { e.preventDefault(); if (activeIdx>=0&&filtered[activeIdx]) handleSelect(filtered[activeIdx]); }
@@ -284,7 +284,7 @@ export default function ProductAutocomplete({ products=[], nameValue, upcValue, 
             style={{ background:'var(--parch-warm)', color:'var(--ink)', borderColor:'var(--parch-line)' }}
             value={inputValue}
             onChange={(e) => { handleChange(e.target.value); setShowAddForm(false); if (e.target.value.length>=1) openDropdown(); else closeDropdown(); }}
-            onFocus={() => { openDropdown(); }}
+            onFocus={() => { if (inputValue?.length>=1) openDropdown(); }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder||'Search or enter UPC...'} />
         </div>

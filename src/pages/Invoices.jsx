@@ -302,7 +302,7 @@ export default function Invoices() {
   },[invoices,calcProfit]);
 
   const tabCounts={all:invoices.length,unpaid:invoices.filter(i=>!['paid','cancelled'].includes(i.status)).length,paid:invoices.filter(i=>i.status==='paid').length,overdue:invoices.filter(i=>i.status==='overdue').length};
-  const filteredProducts=products.filter(p=>!productSearch||p.name?.toLowerCase().includes(productSearch.toLowerCase()));
+  const filteredProducts=productSearch.trim() ? products.filter(p=>p.name?.toLowerCase().includes(productSearch.toLowerCase())) : [];
 
   function PartySelect({label,nameField,emailField,sellerIdField}){
     const [mode,setMode]=useState(formData[sellerIdField]?'select':'manual');
