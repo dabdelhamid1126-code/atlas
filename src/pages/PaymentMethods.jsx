@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List,
 SlidersHorizontal, Star } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
-import RetailerLogo, { CardLogo } from '@/components/shared/BrandLogo';
 import DataTable from '@/components/shared/DataTable';
 import CardVisual from '@/components/payment-methods/CardVisual';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
@@ -43,8 +42,8 @@ export default function PaymentMethods() {
           <button key={key} onClick={() => setTab(key)}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
               ...(tab === key
-                ? { background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }
-                : { background: 'var(--parch-warm)', color: 'var(--ink-dim)', border: '1px solid var(--parch-line)' }) }}>
+                ? { background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }
+                : { background: 'transparent', color: 'var(--ink-dim)', border: '1px solid transparent' }) }}>
             <Icon className="h-3.5 w-3.5" /> {label}
           </button>
         ))}
@@ -182,26 +181,25 @@ function CreditCardsTab({ queryClient }) {
           <option value="points">Points</option>
         </select>
 
-        {/* View toggle */}
-        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'rgba(184,134,11,0.04)', border: '1px solid var(--parch-line)' }}>
+        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
           <button onClick={() => setViewMode('grid')} className="p-1.5 rounded transition"
-            style={{ background: viewMode === 'grid' ? 'var(--terrain)' : 'transparent', color: viewMode === 'grid' ? 'white' : 'var(--ink-faded)' }}>
+            style={{ background: viewMode === 'grid' ? 'var(--ink)' : 'transparent', color: viewMode === 'grid' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
             <LayoutGrid className="h-4 w-4" />
           </button>
           <button onClick={() => setViewMode('list')} className="p-1.5 rounded transition"
-            style={{ background: viewMode === 'list' ? 'var(--terrain)' : 'transparent', color: viewMode === 'list' ? 'white' : 'var(--ink-faded)' }}>
+            style={{ background: viewMode === 'list' ? 'var(--ink)' : 'transparent', color: viewMode === 'list' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
             <List className="h-4 w-4" />
           </button>
         </div>
 
         {/* Cards / Analytics toggle */}
-        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'rgba(184,134,11,0.04)', border: '1px solid var(--parch-line)' }}>
+        <div className="flex items-center rounded-lg p-0.5" style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)' }}>
           <button onClick={() => setActiveView('cards')} className="px-3 py-1.5 rounded text-xs font-semibold transition"
-            style={{ background: activeView === 'cards' ? 'var(--terrain)' : 'transparent', color: activeView === 'cards' ? 'white' : 'var(--ink-faded)' }}>
+            style={{ background: activeView === 'cards' ? 'var(--ink)' : 'transparent', color: activeView === 'cards' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
             Cards View
           </button>
           <button onClick={() => setActiveView('analytics')} className="px-3 py-1.5 rounded text-xs font-semibold transition"
-            style={{ background: activeView === 'analytics' ? 'var(--terrain)' : 'transparent', color: activeView === 'analytics' ? 'white' : 'var(--ink-faded)' }}>
+            style={{ background: activeView === 'analytics' ? 'var(--ink)' : 'transparent', color: activeView === 'analytics' ? 'var(--ne-cream)' : 'var(--ink-faded)' }}>
             Analytics
           </button>
         </div>
@@ -209,12 +207,12 @@ function CreditCardsTab({ queryClient }) {
         <div className="flex gap-2 ml-auto">
           <button onClick={() => setQuickAddOpen(true)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
-            style={{ background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', color: 'var(--gold)' }}>
+            style={{ background: 'var(--gold-bg)', border: '1px solid var(--gold-border)', color: 'var(--gold2)' }}>
             <Zap className="h-4 w-4" /> Quick Add
           </button>
           <button onClick={() => { setEditingCard(null); setCustomCardOpen(true); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-white transition"
-            style={{ background: 'linear-gradient(135deg, var(--terrain), var(--ocean))', border: 'none' }}>
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
+            style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>
             <Plus className="h-4 w-4" /> Custom Card
           </button>
         </div>
@@ -265,12 +263,7 @@ function CreditCardsTab({ queryClient }) {
                   <tr key={card.id} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.04)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <td className="px-4 py-3">
-                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                        <CardLogo cardName={card.card_name} size={24}/>
-                        <span className="font-semibold" style={{ color: 'var(--ink)' }}>{card.card_name}</span>
-                      </div>
-                    </td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--ink)' }}>{card.card_name}</td>
                     <td className="px-4 py-3" style={{ color: 'var(--ink-ghost)' }}>{card.issuer || '—'}</td>
                     <td className="px-4 py-3"><span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }}>{card.reward_type}</span></td>
                     <td className="px-4 py-3 font-bold" style={{ color: 'var(--terrain)' }}>{card.cashback_rate || 0}%</td>
@@ -450,12 +443,7 @@ function GiftCardsTab({ queryClient }) {
   const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', fontSize: 13 };
 
   const columns = [
-    { header: 'Brand', accessor: 'brand', cell: r => (
-      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-        <RetailerLogo retailer={r.brand} size={22}/>
-        <span className="font-medium" style={{ color: 'var(--ink)' }}>{r.brand}</span>
-      </div>
-    )},
+    { header: 'Brand', accessor: 'brand', cell: r => <span className="font-medium" style={{ color: 'var(--ink)' }}>{r.brand}</span> },
     { header: 'Retailer', accessor: 'retailer', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.retailer || '—'}</span> },
     { header: 'Value', accessor: 'value', cell: r => <span className="font-semibold" style={{ color: 'var(--ink)' }}>${r.value?.toFixed(2)}</span> },
     { header: 'Cost', accessor: 'purchase_cost', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.purchase_cost ? `$${r.purchase_cost.toFixed(2)}` : '—'}</span> },
@@ -486,44 +474,43 @@ function GiftCardsTab({ queryClient }) {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div className="grid grid-cols-4 gap-3">
-          {[
-            { label: 'Total Cards', value: filteredCards.length, cssColor: 'var(--ink)' },
-            { label: 'Available', value: filteredCards.filter(c => c.status === 'available').length, cssColor: 'var(--terrain)' },
-            { label: 'Available Value', value: `$${totalValue.toLocaleString()}`, cssColor: 'var(--ocean2)' },
-            { label: 'Total Profit', value: `$${totalProfit.toFixed(2)}`, cssColor: 'var(--terrain)' },
-          ].map(s => (
-            <div key={s.label} className="rounded-xl border p-4" style={{ background: 'var(--parch-card)', borderColor: 'var(--parch-line)' }}>
-              <p className="text-xs" style={{ color: 'var(--ink-faded)' }}>{s.label}</p>
-              <p className="text-xl font-bold" style={{ color: s.cssColor }}>{s.value}</p>
-            </div>
-          ))}
+      <div className="grid-kpi" style={{ marginBottom: 16 }}>
+        {[
+          { label: 'Total Cards',     value: filteredCards.length,                                              accent: 'var(--gold)',     valColor: 'var(--ink)',      sub: 'in inventory'      },
+          { label: 'Available',       value: filteredCards.filter(c => c.status === 'available').length,        accent: 'var(--terrain2)', valColor: 'var(--terrain2)', sub: 'ready to use'      },
+          { label: 'Available Value', value: `$${totalValue.toLocaleString()}`,                                 accent: 'var(--ocean2)',   valColor: 'var(--ocean2)',   sub: 'total balance'     },
+          { label: 'Total Profit',    value: `$${totalProfit.toFixed(2)}`,                                      accent: 'var(--terrain2)', valColor: 'var(--terrain2)', sub: 'value minus cost'  },
+        ].map(s => (
+          <div key={s.label} className="kpi-card fade-up" style={{ borderTopColor: s.accent }}>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value" style={{ color: s.valColor }}>{s.value}</div>
+            <div className="kpi-sub">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--ink-faded)' }} />
+            <input placeholder="Search gift cards..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9 rounded-lg text-sm" style={{ ...inp, width: 240 }} />
+          </div>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 px-3 rounded-lg text-sm w-36" style={inp}>
+            {['all','available','reserved','exported','used','invalid'].map(s => (
+              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-2 shrink-0">
           <button onClick={() => setBulkDialogOpen(true)}
-            className="px-3 py-2 rounded-lg text-sm font-semibold transition"
-            style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-dim)' }}>
+            style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-dim)', cursor: 'pointer' }}>
             Bulk Add
           </button>
           <button onClick={() => openDialog()}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-white transition"
-            style={{ background: 'linear-gradient(135deg, var(--terrain), var(--ocean))' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: 'var(--ink)', border: 'none', color: 'var(--ne-cream)', cursor: 'pointer' }}>
             <Plus className="h-4 w-4" /> Add Card
           </button>
         </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--ink-faded)' }} />
-          <input placeholder="Search gift cards..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9 w-full rounded-lg text-sm" style={inp} />
-        </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 px-3 rounded-lg text-sm w-40" style={inp}>
-          {['all','available','reserved','exported','used','invalid'].map(s => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
       </div>
 
       <DataTable columns={columns} data={filteredCards} loading={isLoading} emptyMessage="No gift cards found" />
