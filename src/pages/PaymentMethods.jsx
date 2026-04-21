@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Zap, LayoutGrid, List,
 SlidersHorizontal, Star } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
+import RetailerLogo, { CardLogo } from '@/components/shared/BrandLogo';
 import DataTable from '@/components/shared/DataTable';
 import CardVisual from '@/components/payment-methods/CardVisual';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
@@ -264,7 +265,12 @@ function CreditCardsTab({ queryClient }) {
                   <tr key={card.id} className="border-b transition-colors" style={{ borderColor: 'var(--parch-line)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,134,11,0.04)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--ink)' }}>{card.card_name}</td>
+                    <td className="px-4 py-3">
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <CardLogo cardName={card.card_name} size={24}/>
+                        <span className="font-semibold" style={{ color: 'var(--ink)' }}>{card.card_name}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3" style={{ color: 'var(--ink-ghost)' }}>{card.issuer || '—'}</td>
                     <td className="px-4 py-3"><span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: 'var(--terrain-bg)', color: 'var(--terrain)', border: '1px solid var(--terrain-bdr)' }}>{card.reward_type}</span></td>
                     <td className="px-4 py-3 font-bold" style={{ color: 'var(--terrain)' }}>{card.cashback_rate || 0}%</td>
@@ -444,7 +450,12 @@ function GiftCardsTab({ queryClient }) {
   const inp = { background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 8, color: 'var(--ink)', fontSize: 13 };
 
   const columns = [
-    { header: 'Brand', accessor: 'brand', cell: r => <span className="font-medium" style={{ color: 'var(--ink)' }}>{r.brand}</span> },
+    { header: 'Brand', accessor: 'brand', cell: r => (
+      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <RetailerLogo retailer={r.brand} size={22}/>
+        <span className="font-medium" style={{ color: 'var(--ink)' }}>{r.brand}</span>
+      </div>
+    )},
     { header: 'Retailer', accessor: 'retailer', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.retailer || '—'}</span> },
     { header: 'Value', accessor: 'value', cell: r => <span className="font-semibold" style={{ color: 'var(--ink)' }}>${r.value?.toFixed(2)}</span> },
     { header: 'Cost', accessor: 'purchase_cost', cell: r => <span className="text-sm" style={{ color: 'var(--ink-ghost)' }}>{r.purchase_cost ? `$${r.purchase_cost.toFixed(2)}` : '—'}</span> },

@@ -205,7 +205,17 @@ function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, on
           onChange={() => onToggleSelect(order.id)}
           style={{ width:16, height:16, cursor:'pointer', flexShrink:0 }}/>
 
-        <RetailerLogo retailer={order.retailer} size={30}/>
+        {(() => {
+          const firstItem = items[0];
+          const imgSrc = firstItem?.product_image || firstItem?.image || firstItem?.product_image_url ||
+            products?.find(p => p.id === firstItem?.product_id)?.image ||
+            products?.find(p => p.name?.toLowerCase() === firstItem?.product_name?.toLowerCase())?.image || null;
+          return imgSrc ? (
+            <div style={{ width:30, height:30, borderRadius:7, overflow:'hidden', flexShrink:0, border:'1px solid var(--parch-line)', background:'white' }}>
+              <img src={imgSrc} alt={firstItem?.product_name} style={{ width:'100%', height:'100%', objectFit:'contain' }}/>
+            </div>
+          ) : <RetailerLogo retailer={order.retailer} size={30}/>;
+        })()}
 
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
