@@ -244,7 +244,7 @@ function CreditCardsTab({ queryClient }) {
 
       {/* ── Split Panel ── */}
       {!showAnalytics && (
-        <div style={{ display:'flex', background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, overflow:'hidden', minHeight:480 }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, overflow:'hidden', minHeight:480 }} className="pm-split-panel">
 
           {/* Left sidebar — card list */}
           <div className="pm-sidebar">
@@ -701,7 +701,7 @@ function GiftCardsTab({ queryClient }) {
       </div>
 
       {/* Split panel */}
-      <div style={{ display:'flex', background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, overflow:'hidden', minHeight:480 }}>
+      <div style={{ display:'flex', flexDirection:'column', background:'var(--parch-card)', border:'1px solid var(--parch-line)', borderRadius:14, overflow:'hidden', minHeight:480 }} className="pm-split-panel">
 
         {/* Left sidebar */}
         <div className="pm-sidebar">

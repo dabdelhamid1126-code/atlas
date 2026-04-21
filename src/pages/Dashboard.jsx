@@ -432,15 +432,25 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="dash-filter-row">
-          <div className="tab-bar">
-            {MODE_FILTERS.map(m => (
-              <button key={m} className={`tab-btn${modeFilter===m?" active":""}`} onClick={() => setModeFilter(m)}>{m}</button>
-            ))}
-          </div>
-          <div className="tab-bar">
-            {TIME_FILTERS.map(t => (
-              <button key={t} className={`tab-btn${timeFilter===t?" active":""}`} onClick={() => setTimeFilter(t)}>{t}</button>
-            ))}
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+            <div className="tab-bar">
+              {MODE_FILTERS.map(m => (
+                <button key={m} className={`tab-btn${modeFilter===m?" active":""}`} onClick={() => setModeFilter(m)}>{m}</button>
+              ))}
+            </div>
+            <select
+              value={timeFilter}
+              onChange={e => setTimeFilter(e.target.value)}
+              style={{ display:"none" }}
+              className="mobile-time-select"
+            >
+              {TIME_FILTERS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <div className="tab-bar dash-time-bar">
+              {TIME_FILTERS.map(t => (
+                <button key={t} className={`tab-btn${timeFilter===t?" active":""}`} onClick={() => setTimeFilter(t)}>{t}</button>
+              ))}
+            </div>
           </div>
           <button className="refresh-btn" onClick={handleRefresh} disabled={refreshing}>
             ↻ Refresh

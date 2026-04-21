@@ -731,6 +731,136 @@ select:focus {
   flex-wrap: wrap;
 }
 
+/* ── Mobile responsive overrides ─────────────────────────────────── */
+@media (max-width: 640px) {
+  /* KPI grid: 2 col on mobile */
+  .grid-kpi {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Pipeline: 4 col on mobile */
+  .grid-pipeline {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  /* Charts stack on mobile */
+  .grid-charts {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Smaller KPI values on mobile */
+  .kpi-value {
+    font-size: 17px !important;
+  }
+
+  /* Header stacks on mobile */
+  .dash-header {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .dash-filter-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Hide time filter tab bar, show select on mobile */
+  .dash-time-bar {
+    display: none !important;
+  }
+  .mobile-time-select {
+    display: block !important;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    background: var(--parch-warm);
+    border: 1px solid var(--parch-line);
+    color: var(--ink);
+    outline: none;
+  }
+
+  /* Tab bar wraps and scrolls on mobile */
+  .tab-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Page titles smaller on mobile */
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  /* PM sidebar full width on mobile */
+  .pm-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--parch-line) !important;
+    max-height: 220px !important;
+  }
+
+  /* Split panels stack on mobile */
+  [style*="display:flex"] .pm-sidebar ~ .pm-detail,
+  [style*="display: flex"] .pm-sidebar ~ .pm-detail {
+    border-top: 1px solid var(--parch-line);
+  }
+
+  /* Modal panels full width on mobile */
+  .modal-panel {
+    max-width: 100% !important;
+    border-left: none !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    height: 90vh !important;
+  }
+
+  /* Alert banners stack */
+  .grid-alerts {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Smaller pipeline cards */
+  .pipeline-card {
+    padding: 8px 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-kpi {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .kpi-value {
+    font-size: 15px !important;
+  }
+  .kpi-label {
+    font-size: 9px !important;
+  }
+}
+
+/* Split panel (credit cards / gift cards): row on desktop, column on mobile */
+.pm-split-panel {
+  display: flex !important;
+  flex-direction: row !important;
+}
+@media (max-width: 768px) {
+  .pm-split-panel {
+    flex-direction: column !important;
+  }
+  .pm-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--parch-line) !important;
+    max-height: 200px !important;
+  }
+  .pm-detail {
+    padding: 16px !important;
+  }
+}
+
 /* ── Tailwind base ───────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;
