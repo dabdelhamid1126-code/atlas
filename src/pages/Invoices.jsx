@@ -626,13 +626,32 @@ export default function Invoices() {
                   {formData.items.map((item,idx)=>{
                     const stock=item.product_id?getStock(item.product_id):null;
                     const imgSrc=item.product_image||products.find(p=>p.id===item.product_id)?.image||null;
+                    const descSuggestions = item.description?.trim().length>=1
+                      ? products.filter(p=>{const q=item.description.toLowerCase();return p.name?.toLowerCase().includes(q)||p.upc?.toLowerCase().includes(q);}).slice(0,5)
+                      : [];
                     return(
                       <div key={idx} style={{borderRadius:9,padding:'12px',background:'var(--parch-warm)',border:'1px solid var(--parch-line)'}}>
                         <div style={{display:'flex',gap:10,alignItems:'flex-start',marginBottom:10}}>
                           <ProductThumb src={imgSrc} name={item.description} size={48}/>
-                          <div style={{flex:1,minWidth:0}}>
+                          <div style={{flex:1,minWidth:0,position:'relative'}}>
                             <LBL>Description</LBL>
                             <input style={INP} value={item.description||''} onChange={e=>updateItem(idx,'description',e.target.value)} placeholder="Product or service"/>
+                            {descSuggestions.length>0&&!item.product_id&&(
+                              <div style={{position:'absolute',top:'100%',left:0,right:0,zIndex:50,background:'var(--parch-card)',border:'1px solid var(--parch-line)',borderRadius:9,boxShadow:'var(--shadow-md)',marginTop:2,overflow:'hidden'}}>
+                                {descSuggestions.map(p=>(
+                                  <div key={p.id} onMouseDown={e=>{e.preventDefault();selectProduct(idx,p.id);}}
+                                    style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',cursor:'pointer',borderBottom:'1px solid var(--parch-line)'}}
+                                    onMouseEnter={e=>e.currentTarget.style.background='var(--parch-warm)'}
+                                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                                    <ProductThumb src={p.image} name={p.name} size={28}/>
+                                    <div style={{flex:1,minWidth:0}}>
+                                      <div style={{fontSize:12,fontWeight:600,color:'var(--ink)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+                                    </div>
+                                    <span style={{fontSize:10,color:'var(--ink-ghost)',flexShrink:0}}>select →</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <button type="button" onClick={()=>setFormData(p=>({...p,items:p.items.filter((_,i)=>i!==idx)}))} style={{color:'var(--crimson)',background:'none',border:'none',cursor:'pointer',padding:2,marginTop:18,flexShrink:0}}>
                             <X style={{width:14,height:14}}/>
