@@ -94,7 +94,7 @@ export default function Invoices() {
   const [productSearch, setProductSearch]= useState('');
   const [expandedIds,   setExpandedIds]  = useState(new Set());
   const [extracting,    setExtracting]   = useState(false);
-  const [dragOver,      setDragOver]     = useState(false);
+
   const [wasExtracted,  setWasExtracted] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery({ queryKey:['invoices'], queryFn:()=>base44.entities.Invoice.list('-created_date') });
@@ -218,12 +218,6 @@ export default function Invoices() {
     } finally {
       setExtracting(false);
     }
-  };
-
-  const onDrop = (e) => {
-    e.preventDefault(); setDragOver(false);
-    const file=e.dataTransfer.files?.[0];
-    if (file) handleFileExtract(file);
   };
 
   const set = (f,v) => setFormData(p=>({...p,[f]:v}));
@@ -379,19 +373,6 @@ export default function Invoices() {
           <button onClick={openCreate} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:8,fontSize:12,fontWeight:700,background:'var(--ink)',color:'var(--ne-cream)',border:'none',cursor:'pointer',fontFamily:'var(--font-serif)'}}>
             <Plus style={{width:14,height:14}}/> New Invoice
           </button>
-        </div>
-      </div>
-
-      {/* Drag & drop zone */}
-      <div onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)} onDrop={onDrop}
-        onClick={()=>fileInputRef.current?.click()}
-        style={{background:dragOver?'var(--ocean-bg)':'var(--parch-card)',border:`2px dashed ${dragOver?'var(--ocean)':'var(--parch-line)'}`,borderRadius:12,padding:'16px 20px',marginBottom:20,display:'flex',alignItems:'center',gap:12,cursor:'pointer',transition:'all 0.2s'}}>
-        <div style={{width:38,height:38,borderRadius:9,background:'var(--ocean-bg)',border:'1px solid var(--ocean-bdr)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-          {extracting?<Loader style={{width:16,height:16,color:'var(--ocean)',animation:'spin 0.8s linear infinite'}}/>:<Upload style={{width:16,height:16,color:'var(--ocean)'}}/>}
-        </div>
-        <div>
-          <p style={{fontSize:13,fontWeight:700,color:dragOver?'var(--ocean)':'var(--ink)',fontFamily:'var(--font-serif)',margin:0}}>{extracting?'Scanning your invoice...':'Drop invoice here to auto-fill'}</p>
-          <p style={{fontSize:11,color:'var(--ink-faded)',marginTop:2}}>PDF, JPG, PNG — fields extracted automatically</p>
         </div>
       </div>
 
