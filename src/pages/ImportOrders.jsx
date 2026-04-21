@@ -466,22 +466,46 @@ function detectType(subject) {
 }
 
 function EmailRow({ email, onImport, importing }) {
-  const [expanded, setExpanded] = useState(false);
-  const retailer  = detectRetailer(email.from, email.subject);
-  const emailType = detectType(email.subject);
+   const [expanded, setExpanded] = useState(false);
+   const [quickExtract, setQuickExtract] = useState(null);
+   const retailer  = detectRetailer(email.from, email.subject);
+   const emailType = detectType(email.subject);
 
-  let dateStr = '—';
-  try { dateStr = email.date ? format(new Date(email.date), 'MMM d, yyyy') : '—'; } catch {}
+   let dateStr = '—';
+   try { dateStr = email.date ? format(new Date(email.date), 'MMM d, yyyy') : '—'; } catch {}
 
-  const typeColor = { order:'var(--gold)', pickup:'var(--terrain)', shipped:'var(--ocean)' };
-  const typeBg    = { order:'var(--gold-bg)', pickup:'var(--terrain-bg)', shipped:'var(--ocean-bg)' };
-  const typeBdr   = { order:'var(--gold-bdr)', pickup:'var(--terrain-bdr)', shipped:'var(--ocean-bdr)' };
-  const typeLabel = { order:'Order', pickup:'Pickup', shipped:'Shipped' };
+   const typeColor = { order:'var(--gold)', pickup:'var(--terrain)', shipped:'var(--ocean)' };
+   const typeBg    = { order:'var(--gold-bg)', pickup:'var(--terrain-bg)', shipped:'var(--ocean-bg)' };
+   const typeBdr   = { order:'var(--gold-bdr)', pickup:'var(--terrain-bdr)', shipped:'var(--ocean-bdr)' };
+   const typeLabel = { order:'Order', pickup:'Pickup', shipped:'Shipped' };
+
+   const handleExpand = async () => {
+     if (!expanded && !quickExtract) {
+       try {
+         const bodyRes = await fetch(`${VERCEL_API}/api/gmail/sync`, {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ user_email: '', message_ids: [email.id], fetch_bodies: true }),
+         });
+         const bodyData = await bodyRes.json();
+         const emailBody = bodyData.body || email.snippet || '';
+         const extractRes = await base44.functions.invoke('extractInvoice', {
+           email_body: emailBody,
+           email_subject: email.subject,
+           email_from: email.from,
+         });
+         setQuickExtract(extractRes.data.extracted);
+       } catch (err) {
+         setQuickExtract({ error: true });
+       }
+     }
+     setExpanded(!expanded);
+   };
 
   return (
     <div style={{ borderRadius:12, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden' }}>
       {/* Always visible header */}
-      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', cursor:'pointer' }} onClick={()=>setExpanded(!expanded)}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', cursor:'pointer' }} onClick={handleExpand}>
         <div style={{ width:40, height:40, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
           <RetailerLogo retailer={retailer} size={40} />
         </div>
@@ -512,6 +536,25 @@ function EmailRow({ email, onImport, importing }) {
       {/* Expanded content */}
       {expanded && (
         <div style={{ padding:'0 14px 14px', borderTop:'1px solid var(--parch-line)', paddingTop:12 }}>
+          {quickExtract && !quickExtract.error && (
+            <div style={{ background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:10, padding:12, marginBottom:12 }}>
+              <p style={{ fontSize:10, fontWeight:700, color:'var(--ink-faded)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:8 }}>Order Summary</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, fontSize:11 }}>
+                <div><span style={{ color:'var(--ink-ghost)' }}>Retailer:</span> <span style={{ fontWeight:600, color:'var(--ink)' }}>{quickExtract.retailer}</span></div>
+                <div><span style={{ color:'var(--ink-ghost)' }}>Order #:</span> <span style={{ fontWeight:600, color:'var(--ink)' }}>{quickExtract.order_number||'—'}</span></div>
+                <div><span style={{ color:'var(--ink-ghost)' }}>Items:</span> <span style={{ fontWeight:600, color:'var(--ink)' }}>{quickExtract.items?.length||0}</span></div>
+                <div><span style={{ color:'var(--ink-ghost)' }}>Total:</span> <span style={{ fontWeight:600, color:'var(--ink)' }}>${parseFloat(quickExtract.order_total||0).toFixed(2)}</span></div>
+              </div>
+              {quickExtract.items?.length > 0 && (
+                <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid var(--parch-line)', fontSize:10 }}>
+                  {quickExtract.items.slice(0,2).map((it, i) => (
+                    <div key={i} style={{ color:'var(--ink-dim)', marginBottom:4 }}>• {it.product_name} <span style={{ color:'var(--ink-ghost)' }}>x{it.quantity}</span></div>
+                  ))}
+                  {quickExtract.items.length > 2 && <div style={{ color:'var(--ink-ghost)', fontSize:9, marginTop:4 }}>+ {quickExtract.items.length - 2} more item(s)</div>}
+                </div>
+              )}
+            </div>
+          )}
           {email.snippet && (
             <p style={{ fontSize:11, color:'var(--ink-dim)', lineHeight:1.6, marginBottom:10 }}>
               {email.snippet.length > 160 ? email.snippet.slice(0, 160) + '...' : email.snippet}
