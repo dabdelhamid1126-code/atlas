@@ -302,7 +302,7 @@ export default function Invoices() {
   },[invoices,calcProfit]);
 
   const tabCounts={all:invoices.length,unpaid:invoices.filter(i=>!['paid','cancelled'].includes(i.status)).length,paid:invoices.filter(i=>i.status==='paid').length,overdue:invoices.filter(i=>i.status==='overdue').length};
-  const filteredProducts=productSearch?products.filter(p=>p.name?.toLowerCase().includes(productSearch.toLowerCase())):products;
+  const filteredProducts=products.filter(p=>!productSearch||p.name?.toLowerCase().includes(productSearch.toLowerCase()));
 
   function PartySelect({label,nameField,emailField,sellerIdField}){
     const [mode,setMode]=useState(formData[sellerIdField]?'select':'manual');
@@ -592,7 +592,7 @@ export default function Invoices() {
                   <Search style={{position:'absolute',left:9,top:'50%',transform:'translateY(-50%)',width:13,height:13,color:'var(--ink-ghost)',pointerEvents:'none'}}/>
                   <input style={{...INP,paddingLeft:30}} placeholder="Search products to add..." value={productSearch} onChange={e=>setProductSearch(e.target.value)}/>
                 </div>
-                {productSearch&&filteredProducts.length>0&&(
+                {filteredProducts.length>0&&(
                   <div style={{background:'var(--parch-card)',border:'1px solid var(--parch-line)',borderRadius:9,marginBottom:10,maxHeight:160,overflowY:'auto'}}>
                     {filteredProducts.slice(0,6).map(p=>{
                       const stock=getStock(p.id);
