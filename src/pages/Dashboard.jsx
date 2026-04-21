@@ -230,12 +230,13 @@ export default function Dashboard() {
   const [invoices,       setInvoices]       = useState([]);
   const [damagedItems,   setDamagedItems]   = useState([]);
   const [shipments,      setShipments]      = useState([]);
+  const [products,       setProducts]       = useState([]);
 
   const loadData = useCallback(async () => {
     const u = await base44.auth.me().catch(() => null);
     if (!u?.email) { setLoading(false); return; }
     const byUser = { created_by: u.email };
-    const [orders, rewards, cards, inv, gc, invs, dmg, ships] = await Promise.all([
+    const [orders, rewards, cards, inv, gc, invs, dmg, ships, prods] = await Promise.all([
       base44.entities.PurchaseOrder.filter(byUser),
       base44.entities.Reward.filter(byUser),
       base44.entities.CreditCard.filter(byUser),
@@ -244,10 +245,11 @@ export default function Dashboard() {
       base44.entities.Invoice.filter(byUser).catch(() => []),
       base44.entities.DamagedItem.filter(byUser).catch(() => []),
       base44.entities.Shipment.filter(byUser).catch(() => []),
+      base44.entities.Product.list().catch(() => []),
     ]);
     setAllOrders(orders);   setAllRewards(rewards); setCreditCards(cards);
     setInventoryItems(inv); setGiftCards(gc);        setInvoices(invs);
-    setDamagedItems(dmg);   setShipments(ships);
+    setDamagedItems(dmg);   setShipments(ships);     setProducts(prods);
     setLoading(false);
     setLastRefreshed(new Date());
   }, []);
@@ -358,13 +360,15 @@ export default function Dashboard() {
           ? revenue - parseFloat(o.final_cost||o.total_cost||0) + orderCashback
           : null;
         const firstItem = o.items?.[0];
+        // Look up product image from catalog if not on the order item directly
+        const catalogProduct = firstItem?.product_id
+          ? products.find(p => p.id === firstItem.product_id)
+          : products.find(p => p.name && firstItem?.product_name &&
+              p.name.toLowerCase() === firstItem.product_name.toLowerCase());
         const productImageUrl =
-          o.product_image_url ||
-          o.image_url ||
-          firstItem?.product_image_url ||
-          firstItem?.image_url ||
-          firstItem?.image ||
           firstItem?.product_image ||
+          firstItem?.image ||
+          catalogProduct?.image ||
           null;
         return {
           id:              o.id,
@@ -380,7 +384,7 @@ export default function Dashboard() {
           productImageUrl,
         };
       });
-  }, [filteredOrders, allRewards]);
+  }, [filteredOrders, allRewards, products]);
 
   const today = new Date().toISOString().slice(0,10);
   const alerts = useMemo(() => ({
@@ -590,7 +594,7 @@ export default function Dashboard() {
           </button>
         </div>
         <div style={{ overflowX:"auto" }}>
-          <table className="dash-table">
+          <table className="dash-table" style={{ minWidth:800 }}>
             <thead>
               <tr>
                 {["","Product","Platform","Buyer","Cost","Sale","Cashback","Profit","Status","Date"].map((h,i) => (
