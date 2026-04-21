@@ -201,7 +201,7 @@ function ProductThumb({ src, name, size=38 }) {
 /* ------------------------------------------------------------------ */
 /*  PRODUCT CARD  (matches .card from globals.css)                      */
 /* ------------------------------------------------------------------ */
-function ProductCard({ product, onEdit, onDelete }) {
+function ProductCard({ product, onEdit, onDelete, isAdmin }) {
   const [hovered, setHovered] = useState(false);
   const display = cleanDisplayName(product.name);
   return (
@@ -224,9 +224,9 @@ function ProductCard({ product, onEdit, onDelete }) {
           <button onClick={()=>onEdit(product)} style={{ width:24, height:24, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:C.parchWarm, border:`1px solid ${C.parchLine}`, color:C.inkDim, cursor:'pointer' }}>
             <Pencil style={{ width:11, height:11 }}/>
           </button>
-          <button onClick={()=>onDelete(product)} style={{ width:24, height:24, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:C.crimsonBg, border:`1px solid ${C.crimsonBdr}`, color:C.crimson, cursor:'pointer' }}>
+          {isAdmin && <button onClick={()=>onDelete(product)} style={{ width:24, height:24, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:C.crimsonBg, border:`1px solid ${C.crimsonBdr}`, color:C.crimson, cursor:'pointer' }}>
             <Trash2 style={{ width:11, height:11 }}/>
-          </button>
+          </button>}
         </div>
       )}
       <ProductImage src={product.image} name={product.name} size={60}/>
@@ -349,7 +349,9 @@ export default function Products() {
   const [lookingUp,      setLookingUp]      = useState(false);
   const [userEmail,      setUserEmail]      = useState(null);
 
-  useEffect(()=>{ base44.auth.me().then(u=>setUserEmail(u?.email)).catch(()=>{}); },[]);
+  useEffect(()=>{ base44.auth.me().then(u=>{ setUserEmail(u?.email); setIsAdmin(u?.role==='admin'); }).catch(()=>{}); },[]);
+
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const { data:allProducts=[], isLoading } = useQuery({ queryKey:['products'], queryFn:()=>base44.entities.Product.list() });
 
@@ -574,7 +576,7 @@ export default function Products() {
       ) : (
         <>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(140px, 1fr))', gap:10 }}>
-            {paginated.map(product=><ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete}/>)}
+            {paginated.map(product=><ProductCard key={product.id} product={product} onEdit={openDialog} onDelete={handleDelete} isAdmin={isAdmin}/>)}
           </div>
           <Pagination page={page} totalPages={totalPages} total={filtered.length} onPage={(p)=>{ setPage(p); window.scrollTo({ top:0, behavior:'smooth' }); }}/>
         </>
