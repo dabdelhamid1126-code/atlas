@@ -720,7 +720,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
            )}
           {draft.isDuplicate&&<div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700"><AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0"/><span>Order <strong>#{form.order_number}</strong> already exists. Edit the order number if different, or discard.</span></div>}
           {draft.error&&<div className="flex items-start gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0"/>{draft.error}</div>}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="space-y-1">
               <Label className="text-xs text-slate-500 flex items-center gap-1"><Tag className="h-3 w-3"/>Retailer</Label>
               <Select value={form.retailer||''} onValueChange={v=>set('retailer',v)}>
@@ -758,7 +758,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
             <button onClick={()=>set('tracking_numbers',[...(form.tracking_numbers||['']), ''])} className="flex items-center gap-1 text-xs text-violet-500 hover:text-violet-700 font-medium"><Plus className="h-3 w-3"/>Add tracking number</button>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2">
               <Label className="text-xs text-slate-500 flex items-center gap-1"><Package className="h-3 w-3"/>Items</Label>
               <button onClick={addItem} className="flex items-center gap-1 text-xs text-violet-500 hover:text-violet-700 font-medium"><Plus className="h-3 w-3"/>Add item</button>
             </div>
@@ -767,7 +767,7 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
             ))}
             <p className="text-xs text-right text-slate-400 font-medium pr-1">{fmt$(itemsTotal)} subtotal</p>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[['tax','Tax'],['shipping_cost','Shipping'],['fees','Fees']].map(([k,label])=>(
               <div key={k} className="space-y-1">
                 <Label className="text-xs text-slate-500">{label}</Label>
@@ -800,9 +800,9 @@ function ReviewCard({ draft, idx, creditCards, giftCards, products, onUpdate, on
               <p className="text-base font-bold text-violet-700">{fmt$(finalCost)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <button onClick={()=>onConfirm(idx,form)} disabled={confirming||!form.retailer||!(form.items?.length)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
               {confirming?<Loader className="h-4 w-4 animate-spin"/>:<Check className="h-4 w-4"/>}
               {confirming?'Saving...':'Confirm & Save Order'}
             </button>
