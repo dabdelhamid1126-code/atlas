@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Download, X, Check, FileText, Search, Trash2, Pencil, ChevronDown, ChevronUp, Upload, ImageOff, Loader, ScanLine } from 'lucide-react';
+import { Plus, Download, X, Check, FileText, Search, Trash2, Pencil, ChevronDown, ChevronUp, ImageOff, Loader, ScanLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 // html2canvas and jsPDF loaded lazily to avoid duplicate React bundling issues
