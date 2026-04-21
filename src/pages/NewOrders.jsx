@@ -112,7 +112,7 @@ function ItemThumb({ src, name, onClick }) {
       {name?.charAt(0)?.toUpperCase()||<ImageOff style={{ width:14, height:14 }}/>}
     </div>
   );
-  return <img src={src} alt={name} onClick={onClick} onError={()=>setErr(true)} style={{ width:40, height:40, borderRadius:8, objectFit:'cover', flexShrink:0, cursor:'pointer', border:'1px solid var(--parch-line)' }}/>;
+  return <img src={src} alt={name} onClick={onClick} onError={()=>setErr(true)} style={{ width:40, height:40, borderRadius:8, objectFit:'contain', background:'white', padding:2, flexShrink:0, cursor:'pointer', border:'1px solid var(--parch-line)' }}/>;
 }
 function ImagePreviewModal({ src, alt, onClose }) {
   if (!src) return null;
