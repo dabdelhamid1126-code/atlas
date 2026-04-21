@@ -30,7 +30,7 @@ export default function PaymentMethods() {
   return (
     <div>
       <div style={{ marginBottom: 22 }}>
-        <h1 className="page-title">Payment Methods</h1>
+        <h1 className="page-title">Expenses</h1>
         <p className="page-subtitle">Manage cards, cashback rates, and per-store rate overrides</p>
       </div>
 
