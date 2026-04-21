@@ -11,7 +11,7 @@ export default function TransactionsStatsBar({ orders = [] }) {
 
   const soldCount = orders.filter(o => o.status === 'received').length;
 
-  const totalCost = orders.reduce((sum, o) => sum + (parseFloat(o.total_cost) || 0), 0);
+  const totalCost = orders.reduce((sum, o) => sum + (parseFloat(o.final_cost || o.total_cost) || 0), 0);
 
   // ✅ FIX: Profit calculated ONLY on sold units, not total order cost
   const totalProfit = orders.reduce((sum, order) => {
@@ -25,9 +25,10 @@ export default function TransactionsStatsBar({ orders = [] }) {
     const totalSold = saleEvents.reduce((s, ev) =>
       s + (ev.items || []).reduce((ss, it) => ss + (parseInt(it.qty) || 1), 0), 0);
 
-    // Total cost for ALL items (per-item cost × qty)
-    const totalItemsCost = items.reduce((s, i) =>
-      s + (parseFloat(i.unit_cost) || 0) * (parseInt(i.qty || i.quantity_ordered) || 1), 0);
+    // Total cost for ALL items — prefer final_cost at order level, fallback to per-item unit_cost
+    const totalItemsCost = parseFloat(order.final_cost || order.total_cost) ||
+      items.reduce((s, i) =>
+        s + (parseFloat(i.unit_cost) || 0) * (parseInt(i.qty || i.quantity_ordered) || 1), 0);
 
     // Only calculate cost for SOLD units
     const costPerUnit = totalOrdered > 0 ? totalItemsCost / totalOrdered : 0;
