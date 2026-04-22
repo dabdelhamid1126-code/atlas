@@ -238,6 +238,10 @@ export default function Layout({ children, currentPageName }) {
           .layout-sidebar { transform: translateX(0) !important; position: fixed !important; }
           .layout-topbar-mobile { display: none !important; }
         }
+        /* Override inline styles on mobile */
+        @media (max-width: 1023px) {
+          .layout-main[data-collapsed] { margin-left: 0 !important; width: 100% !important; }
+        }
       `}</style>
 
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
@@ -255,7 +259,8 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main content — offset by sidebar width */}
       <main className="layout-main"
-        style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', width: `calc(100% - ${collapsed ? 56 : 200}px)`, marginLeft: collapsed ? 56 : 200, transition: 'width 0.3s ease, margin-left 0.3s ease' }}>
+        style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', width: `calc(100% - ${collapsed ? 56 : 200}px)`, marginLeft: collapsed ? 56 : 200, transition: 'width 0.3s ease, margin-left 0.3s ease' }}
+        data-collapsed={collapsed ? 'true' : 'false'}>
 
         {/* Mobile topbar */}
         <div className="layout-topbar-mobile"

@@ -262,6 +262,28 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [], u
     } catch { toast.error('Failed to disconnect'); }
   };
 
+  // Domains/keywords that are NOT retail orders (food delivery, restaurants, etc.)
+  const NON_RETAIL_BLOCKLIST = [
+    'ubereats','doordash','grubhub','postmates','instacart','caviar','seamless',
+    'gopuff','drizly','shipt','favor','hungryroot','freshly','factor75',
+    'fennel','robinhood','fidelity','schwab','coinbase','acorns','stash',
+    'venmo','paypal','zelle','cashapp','cash.app',
+    'bakery','restaurant','cafe','diner','pizza','sushi','burgers',
+    'martha','country kitchen','jack','hungry again','your faves',
+    'spotify','netflix','hulu','disney+','apple tv','hbo','peacock',
+    'insurance','progressive','geico','allstate','statefarm',
+    'utility','electric','water bill','gas bill','phone bill','at&t','verizon','t-mobile',
+  ];
+
+  const isRetailOrderEmail = (email) => {
+    const combined = `${email.from} ${email.subject} ${email.snippet || ''}`.toLowerCase();
+    // Must contain order-related keywords
+    const hasOrderKeyword = /order|confirmation|shipped|tracking|receipt|invoice|purchase|delivery|pickup/.test(combined);
+    if (!hasOrderKeyword) return false;
+    // Must not match blocklist
+    return !NON_RETAIL_BLOCKLIST.some(word => combined.includes(word));
+  };
+
   const handleSync = async () => {
     setSyncing(true); setSyncError(''); setEmails([]);
     try {
@@ -273,11 +295,10 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [], u
       const data = await res.json();
       if (data.error) { setSyncError(data.error); return; }
 
-      // Now group the raw emails using the same logic as fetchGmailOrderEmails
-      const rawEmails = data.emails || [];
+      const rawEmails = (data.emails || []).filter(isRetailOrderEmail);
       const grouped = groupEmails(rawEmails);
       setEmails(grouped);
-      if (grouped.length === 0) setSyncError(`No order emails found in the last ${daysBack} days.`);
+      if (grouped.length === 0) setSyncError(`No retail order emails found in the last ${daysBack} days.`);
       else toast.success(`Found ${grouped.length} order${grouped.length!==1?'s':''}`);
     } catch (err) {
       setSyncError('Sync failed — try again');

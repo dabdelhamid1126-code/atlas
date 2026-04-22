@@ -288,7 +288,7 @@ function ProductSearch({ userEmail, onSelect }) {
 
       {showDropdown && (
         <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
           background: 'var(--parch-card)', border: '1px solid var(--parch-line)',
           borderRadius: 10, boxShadow: 'var(--shadow-md)', marginTop: 4,
           overflow: 'hidden', maxHeight: 320, overflowY: 'auto',
