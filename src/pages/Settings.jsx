@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import RetailerLogo from '@/components/shared/BrandLogo';
 import {
   User, Database, Target, Key, Palette, Shield, Lock,
   ExternalLink, Check, Sparkles, DollarSign, Eye, EyeOff,
@@ -240,6 +241,7 @@ function VendorsSection() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {vendors.map((v, i) => (
           <div key={v + i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: C.parchWarm, border: `1px solid ${C.parchLine}`, borderRadius: 8 }}>
+            <RetailerLogo retailer={v} size={28} />
             {editing?.index === i ? (
               <input autoFocus value={editing.value} onChange={e => setEditing({ ...editing, value: e.target.value })}
                 onKeyDown={e => {
@@ -500,11 +502,10 @@ function SecuritySection({ user }) {
 
 /* ── Main Settings Page ───────────────────────────────────────────── */
 const TABS = [
-  { id: 'profile',    label: 'Profile',    icon: User    },
-  { id: 'vendors',    label: 'Vendors',    icon: Store   },
-  { id: 'sellers',    label: 'Sellers',    icon: Users   },
-  { id: 'appearance', label: 'Appearance', icon: Palette },
-  { id: 'security',   label: 'Security',   icon: Shield  },
+  { id: 'profile',  label: 'Profile',  icon: User   },
+  { id: 'vendors',  label: 'Vendors',  icon: Store  },
+  { id: 'sellers',  label: 'Sellers',  icon: Users  },
+  { id: 'security', label: 'Security', icon: Shield },
 ];
 
 export default function Settings() {
@@ -573,11 +574,10 @@ export default function Settings() {
 
         {/* Content */}
         <div className="settings-content">
-          {activeTab === 'profile'    && <ProfileSection />}
-          {activeTab === 'vendors'    && <VendorsSection />}
-          {activeTab === 'sellers'    && <SellersSection />}
-          {activeTab === 'appearance' && <AppearanceSection />}
-          {activeTab === 'security'   && <SecuritySection user={user} />}
+          {activeTab === 'profile'  && <ProfileSection />}
+          {activeTab === 'vendors'  && <VendorsSection />}
+          {activeTab === 'sellers'  && <SellersSection />}
+          {activeTab === 'security' && <SecuritySection user={user} />}
         </div>
       </div>
     </div>

@@ -490,6 +490,7 @@ function detectType(subject) {
 function EmailRow({ email, onImport, importing }) {
    const [expanded, setExpanded] = useState(false);
    const [quickExtract, setQuickExtract] = useState(null);
+   const [loadingExtract, setLoadingExtract] = useState(false);
    const retailer  = detectRetailer(email.from, email.subject);
    const emailType = detectType(email.subject);
 
@@ -503,6 +504,7 @@ function EmailRow({ email, onImport, importing }) {
 
    const handleExpand = async () => {
      if (!expanded && !quickExtract) {
+       setLoadingExtract(true);
        try {
          const bodyRes = await fetch(`${VERCEL_API}/api/gmail/sync`, {
            method: 'POST',
@@ -519,7 +521,7 @@ function EmailRow({ email, onImport, importing }) {
          setQuickExtract(extractRes.data.extracted);
        } catch (err) {
          setQuickExtract({ error: true });
-       }
+       } finally { setLoadingExtract(false); }
      }
      setExpanded(!expanded);
    };
@@ -528,9 +530,7 @@ function EmailRow({ email, onImport, importing }) {
     <div style={{ borderRadius:12, border:'1px solid var(--parch-line)', background:'var(--parch-card)', overflow:'hidden' }}>
       {/* Always visible header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', cursor:'pointer' }} onClick={handleExpand}>
-        <div style={{ width:40, height:40, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
-          <RetailerLogo retailer={retailer} size={40} />
-        </div>
+        <RetailerLogo retailer={retailer} size={40} />
         <div style={{ flex:1, minWidth:0 }}>
           <p style={{ fontSize:13, fontWeight:600, color:'var(--ink)', lineHeight:1.3, marginBottom:3 }}>
             {email.subject}
@@ -548,10 +548,19 @@ function EmailRow({ email, onImport, importing }) {
               </span>
             )}
           </div>
+          {/* Inline snippet preview when collapsed */}
+          {!expanded && email.snippet && (
+            <p style={{ fontSize:11, color:'var(--ink-ghost)', marginTop:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+              {email.snippet}
+            </p>
+          )}
         </div>
-        {/* Expand chevron */}
+        {/* Expand chevron / loader */}
         <div style={{ flexShrink:0, color:'var(--ink-ghost)' }}>
-          {expanded ? <ChevronUp style={{ width:16, height:16 }}/> : <ChevronDown style={{ width:16, height:16 }}/>}
+          {loadingExtract
+            ? <Loader style={{ width:16, height:16, animation:'spin 0.8s linear infinite' }}/>
+            : expanded ? <ChevronUp style={{ width:16, height:16 }}/> : <ChevronDown style={{ width:16, height:16 }}/>
+          }
         </div>
       </div>
 
