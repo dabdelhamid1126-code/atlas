@@ -5,11 +5,11 @@ export default async function handler(req, res) {
   const { code, state: userEmail, error } = req.query;
 
   if (error) {
-    return res.redirect(`https://daliadistrollcflip.com/ImportOrders?gmail_error=${error}`);
+    return res.redirect(`https://atlas-five-ashy.vercel.app/ImportOrders?gmail_error=${error}`);
   }
 
   if (!code) {
-    return res.redirect(`https://daliadistrollcflip.com/ImportOrders?gmail_error=no_code`);
+    return res.redirect(`https://atlas-five-ashy.vercel.app/ImportOrders?gmail_error=no_code`);
   }
 
   try {
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     if (tokens.error) {
       console.error('Token exchange error:', tokens);
-      return res.redirect(`https://daliadistrollcflip.com/ImportOrders?gmail_error=token_exchange`);
+      return res.redirect(`https://atlas-five-ashy.vercel.app/ImportOrders?gmail_error=token_exchange`);
     }
 
     // Get the Gmail address from Google
@@ -64,14 +64,14 @@ export default async function handler(req, res) {
     if (!supabaseRes.ok) {
       const err = await supabaseRes.text();
       console.error('Supabase store error:', err);
-      return res.redirect(`https://daliadistrollcflip.com/ImportOrders?gmail_error=store_failed`);
+      return res.redirect(`https://atlas-five-ashy.vercel.app/ImportOrders?gmail_error=store_failed`);
     }
 
     // Success — redirect back to base44 app Import page
-    res.redirect(`https://daliadistrollcflip.com/ImportOrders?gmail_connected=${encodeURIComponent(gmailAddress)}`);
+    res.redirect(`https://atlas-five-ashy.vercel.app/ImportOrders?gmail_connected=${encodeURIComponent(gmailAddress)}`);
 
   } catch (err) {
     console.error('OAuth callback error:', err);
-    res.redirect(`https://daliadistrollcflip.com/ImportOrders?gmail_error=unknown`);
+    res.redirect(`https://atlas-five-ashy.vercel.app/ImportOrders?gmail_error=unknown`);
   }
 }
