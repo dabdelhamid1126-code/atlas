@@ -185,7 +185,7 @@ export default function ReceiveItems() {
                 )}
               </div>
               <Button
-                style={{ width: '100%', background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}
+                style={{ width: '100%', background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}
                 onClick={() => openReceiveDialog(order)}
               >
                 <PackageCheck className="h-4 w-4 mr-2" /> Receive Items
@@ -257,7 +257,7 @@ export default function ReceiveItems() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setReceiveDialogOpen(false)}>Cancel</Button>
-            <Button style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }} onClick={handleReceive}>
+            <Button style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }} onClick={handleReceive}>
               <Check className="h-4 w-4 mr-2" /> Confirm Receipt
             </Button>
           </DialogFooter>
