@@ -37,6 +37,12 @@ const AuthenticatedApp = () => {
     if (authError.type === 'auth_required') { navigateToLogin(); return null; }
   }
 
+  // Force login if no token / not authenticated
+  if (!isLoadingAuth && !isLoadingPublicSettings && !user) {
+    navigateToLogin();
+    return null;
+  }
+
   if (!splashDone) {
     return <SplashScreen onComplete={() => setSplashDone(true)} userName={userName} />;
   }
