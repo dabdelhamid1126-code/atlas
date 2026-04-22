@@ -57,6 +57,23 @@ export default function PaymentMethods() {
 
   return (
     <div>
+      <style>{`
+        .pm-sidebar { width:220px; flex-shrink:0; border-right:1px solid var(--parch-line); display:flex; flex-direction:column; overflow:hidden; }
+        .pm-card-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--parch-line); transition:background 0.15s; }
+        .pm-card-item:hover { background:var(--parch-warm); }
+        .pm-card-item.active { background:var(--gold-bg); border-left:3px solid var(--gold); }
+        .pm-card-item.active .pm-card-name { color:var(--gold2); }
+        .pm-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+        .pm-card-name { font-size:12px; font-weight:600; color:var(--ink); font-family:var(--font-serif); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .pm-card-rate { font-size:10px; color:var(--ink-ghost); font-family:var(--font-mono); margin-top:1px; }
+        .pm-detail { flex:1; overflow:auto; padding:20px; }
+        .pm-stat-box { flex:1; padding:10px 14px; borderRadius:10px; background:var(--parch-warm); border:1px solid var(--parch-line); }
+        .pm-stat-val { font-size:18px; font-weight:700; color:var(--ink); font-family:var(--font-mono); }
+        .pm-stat-lbl { font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faded); margin-top:2px; font-family:var(--font-serif); }
+        .pm-rate-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--parch-line); }
+        .pm-rate-row:last-child { border-bottom:none; }
+        .pm-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; min-height:300px; gap:10px; text-align:center; padding:24px; }
+      `}</style>
       <div style={{ marginBottom: 20 }}>
         <h1 className="page-title">Payment Methods</h1>
         <p className="page-subtitle">Manage cards, cashback rates, and per-store rate overrides</p>
@@ -168,23 +185,6 @@ function CreditCardsTab({ queryClient }) {
 
   return (
     <>
-      <style>{`
-        .pm-sidebar { width:220px; flex-shrink:0; border-right:1px solid var(--parch-line); display:flex; flex-direction:column; overflow:hidden; }
-        .pm-card-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--parch-line); transition:background 0.15s; }
-        .pm-card-item:hover { background:var(--parch-warm); }
-        .pm-card-item.active { background:var(--gold-bg); border-left:3px solid var(--gold); }
-        .pm-card-item.active .pm-card-name { color:var(--gold2); }
-        .pm-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
-        .pm-card-name { font-size:12px; font-weight:600; color:var(--ink); font-family:var(--font-serif); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .pm-card-rate { font-size:10px; color:var(--ink-ghost); font-family:var(--font-mono); margin-top:1px; }
-        .pm-detail { flex:1; overflow:auto; padding:20px; }
-        .pm-stat-box { flex:1; padding:10px 14px; borderRadius:10px; background:var(--parch-warm); border:1px solid var(--parch-line); }
-        .pm-stat-val { font-size:18px; font-weight:700; color:var(--ink); font-family:var(--font-mono); }
-        .pm-stat-lbl { font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faded); margin-top:2px; font-family:var(--font-serif); }
-        .pm-rate-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--parch-line); }
-        .pm-rate-row:last-child { border-bottom:none; }
-        .pm-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; min-height:300px; gap:10px; text-align:center; padding:24px; }
-      `}</style>
 
       {/* ── KPI row ── */}
       <div className="grid-kpi" style={{ marginBottom:16 }}>
