@@ -271,7 +271,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Page content — centered with max width */}
         <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)', width: '100%' }}>
-          <div className="page-content-wrap" style={{ padding: '20px 24px 32px', width: '100%', boxSizing: 'border-box' }}>
+          <div className="page-content-wrap" style={{ padding: '20px 24px 32px', width: '100%', maxWidth: 1440, boxSizing: 'border-box' }}>
             {children}
           </div>
         </div>
