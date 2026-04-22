@@ -7,7 +7,7 @@ import {
   LayoutDashboard, BarChart3, TrendingUp,
   Boxes, PlusCircle, Package, Download,
   ArrowLeftRight, FileText, Receipt,
-  Settings as SettingsIcon, CreditCard, Star,
+  Settings as SettingsIcon, CreditCard,
   Menu, LogOut, ChevronDown,
   PanelLeftClose, PanelLeftOpen, Search,
 } from 'lucide-react';
@@ -207,7 +207,6 @@ export default function Layout({ children, currentPageName }) {
               {[
                 { to: '/Settings',       icon: SettingsIcon, label: 'Settings'        },
                 { to: '/PaymentMethods', icon: CreditCard,   label: 'Payment Methods' },
-                { to: '/Rewards',        icon: Star,         label: 'Rewards'         },
               ].map(({ to, icon: Icon, label }) => (
                 <Link key={to} to={to} onClick={() => setUserMenuOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: 13, color: 'var(--sidebar-text)', textDecoration: 'none', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
