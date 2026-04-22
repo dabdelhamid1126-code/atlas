@@ -642,7 +642,7 @@ export default function Inventory() {
       <SectionDivider title="Overview" dotColor="var(--gold)" lineColor="rgba(201,168,76,0.25)" />
 
       {/* Stat cards -- 2x2 grid matching Dashboard KpiCard style */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 16 }}>
+      <div style={{ className="grid-kpi" style={{ marginBottom: 16 }}>
         <StatCard label="Available"   value={String(stats.unitsAvailable)} sub="units in hand"          color="var(--ocean)"   icon={Package}      />
         <StatCard label="Inbound"     value={String(stats.unitsInbound)}   sub="ordered & shipped"      color="var(--violet)"  icon={ShoppingCart} />
         <StatCard label="Cost Basis"  value={fmt(stats.costBasis)}         sub="total inventory spend"   color="var(--gold)"    icon={DollarSign}   />
