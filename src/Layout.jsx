@@ -296,6 +296,19 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--parch-bg)' }}>
+      <style>{`
+        @media (max-width: 1023px) {
+          .layout-sidebar { transform: translateX(-100%) !important; }
+          .layout-sidebar.open { transform: translateX(0) !important; }
+          .layout-main { margin-left: 0 !important; }
+          .layout-topbar-mobile { display: flex !important; }
+        }
+        @media (min-width: 1024px) {
+          .layout-sidebar { transform: translateX(0) !important; position: relative !important; }
+          .layout-topbar-mobile { display: none !important; }
+        }
+      `}</style>
+
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
       {/* Mobile overlay */}
@@ -307,31 +320,37 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Sidebar */}
-      <aside style={{
-        position: 'fixed', inset: '0 auto 0 0', zIndex: 50,
-        width: collapsed ? 72 : 248,
-        transition: 'width 0.3s ease',
-        transform: sidebarOpen ? 'translateX(0)' : undefined,
-        flexShrink: 0,
-      }}
-        className={cn('lg:relative lg:translate-x-0', sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')}
+      <aside
+        className={`layout-sidebar${sidebarOpen ? ' open' : ''}`}
+        style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50,
+          width: collapsed ? 72 : 248,
+          transition: 'width 0.3s ease, transform 0.3s ease',
+          flexShrink: 0,
+        }}
       >
         <SidebarContent />
       </aside>
 
       {/* Main */}
-      <main style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        minWidth: 0, height: '100vh', overflow: 'hidden',
-        marginLeft: collapsed ? 72 : 248,
-        transition: 'margin-left 0.3s ease',
-      }}>
+      <main
+        className="layout-main"
+        style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          minWidth: 0, height: '100vh', overflow: 'hidden',
+          marginLeft: collapsed ? 72 : 248,
+          transition: 'margin-left 0.3s ease',
+        }}
+      >
         {/* Mobile topbar */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-          background: 'var(--sidebar-bg)', borderBottom: '1px solid var(--sidebar-border)',
-          flexShrink: 0,
-        }} className="lg:hidden">
+        <div
+          className="layout-topbar-mobile"
+          style={{
+            alignItems: 'center', gap: 12, padding: '12px 16px',
+            background: 'var(--sidebar-bg)', borderBottom: '1px solid var(--sidebar-border)',
+            flexShrink: 0,
+          }}
+        >
           <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer' }}>
             <Menu style={{ width: 20, height: 20 }} />
           </button>
