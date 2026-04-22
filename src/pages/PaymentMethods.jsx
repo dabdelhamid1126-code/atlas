@@ -13,6 +13,7 @@ import {
   Settings, Wifi
 } from 'lucide-react';
 import CardVisual from '@/components/payment-methods/CardVisual';
+import { CardLogo } from '@/components/shared/BrandLogo';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
 import QuickAddModal from '@/components/payment-methods/QuickAddModal';
 import CustomCardModal from '@/components/payment-methods/CustomCardModal';
@@ -280,7 +281,7 @@ function CreditCardsTab({ queryClient }) {
                   <div key={card.id} className={`pm-card-item ${selectedId===card.id?'active':''}`}
                     onClick={() => setSelectedId(card.id)}
                     style={{ borderLeft: selectedId===card.id ? `3px solid ${color}` : '3px solid transparent' }}>
-                    <div className="pm-dot" style={{ background: isActive ? color : 'var(--parch-deep)' }}/>
+                    <CardLogo cardName={card.issuer || card.card_name} size={26} />
                     <div style={{ flex:1, minWidth:0 }}>
                       <div className="pm-card-name">{card.card_name}</div>
                       <div className="pm-card-rate">{card.issuer || '—'} · {rate}</div>
@@ -379,9 +380,12 @@ function CardDetailPanel({ card, orders, onEdit, onDelete, onUpdate, isDuplicate
         <div style={{ width:220, height:130, borderRadius:14, background:`linear-gradient(135deg, ${color} 0%, ${color}99 100%)`, padding:'14px 16px', flexShrink:0, position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)' }}/>
           <div style={{ position:'absolute', bottom:-30, left:-10, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }}/>
-          <div style={{ position:'relative' }}>
-            <p style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)', margin:0, marginBottom:4 }}>{card.card_name}</p>
-            <p style={{ fontSize:10, color:'rgba(255,255,255,0.5)', margin:0 }}>{card.issuer || '—'}</p>
+          <div style={{ position:'relative', display:'flex', alignItems:'center', gap:8 }}>
+            <CardLogo cardName={card.issuer || card.card_name} size={28} />
+            <div>
+              <p style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.9)', margin:0, marginBottom:2 }}>{card.card_name}</p>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,0.5)', margin:0 }}>{card.issuer || '—'}</p>
+            </div>
           </div>
           <div style={{ position:'absolute', bottom:14, left:16, right:16, display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
             <div>
