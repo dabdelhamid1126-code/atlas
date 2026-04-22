@@ -228,14 +228,14 @@ export default function Layout({ children, currentPageName }) {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--parch-bg)' }}>
       <style>{`
         @media (max-width: 1023px) {
-          .layout-sidebar { transform: translateX(-100%) !important; position: fixed !important; }
+          .layout-sidebar { transform: translateX(-100%) !important; position: fixed !important; z-index: 50; }
           .layout-sidebar.open { transform: translateX(0) !important; }
           .layout-main { margin-left: 0 !important; width: 100% !important; }
           .layout-topbar-mobile { display: flex !important; }
-          .page-content-wrap { padding: 16px !important; }
+          .page-content-wrap { padding: 14px !important; }
         }
         @media (min-width: 1024px) {
-          .layout-sidebar { transform: translateX(0) !important; position: relative !important; }
+          .layout-sidebar { transform: translateX(0) !important; position: fixed !important; }
           .layout-topbar-mobile { display: none !important; }
         }
       `}</style>
@@ -255,7 +255,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main content — offset by sidebar width */}
       <main className="layout-main"
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden', marginLeft: collapsed ? 56 : 200, transition: 'margin-left 0.3s ease' }}>
+        style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', width: `calc(100% - ${collapsed ? 56 : 200}px)`, marginLeft: collapsed ? 56 : 200, transition: 'width 0.3s ease, margin-left 0.3s ease' }}>
 
         {/* Mobile topbar */}
         <div className="layout-topbar-mobile"
@@ -270,8 +270,8 @@ export default function Layout({ children, currentPageName }) {
         </div>
 
         {/* Page content — centered with max width */}
-        <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)' }}>
-          <div className="page-content-wrap" style={{ padding: '20px 24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)', width: '100%' }}>
+          <div className="page-content-wrap" style={{ padding: '20px 24px 32px', width: '100%', boxSizing: 'border-box' }}>
             {children}
           </div>
         </div>
