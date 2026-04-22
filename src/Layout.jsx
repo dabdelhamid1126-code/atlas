@@ -95,7 +95,7 @@ export default function Layout({ children, currentPageName }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)' }}>
 
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: collapsed ? '16px 8px' : '16px', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid var(--sidebar-border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: collapsed ? '12px 6px' : '12px 14px', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid var(--sidebar-border)' }}>
         {collapsed ? (
           <button onClick={() => setCollapsed(false)} title="Expand" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
             <PanelLeftOpen style={{ width: 18, height: 18 }} />
@@ -103,10 +103,10 @@ export default function Layout({ children, currentPageName }) {
         ) : (
           <>
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <AtlasLogo size={36} />
+              <AtlasLogo size={30} />
               <div>
-                <p style={{ fontSize: 17, fontWeight: 900, margin: 0, lineHeight: 1, fontFamily: 'var(--font-serif)', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Atlas</p>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0' }}>Reselling, Quantified</p>
+                <p style={{ fontSize: 14, fontWeight: 900, margin: 0, lineHeight: 1, fontFamily: 'var(--font-serif)', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Atlas</p>
+                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0' }}>Reselling, Quantified</p>
               </div>
             </Link>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -123,7 +123,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Search shortcut bar */}
       {!collapsed && (
-        <button onClick={openCmd} style={{ margin: '10px 12px 4px', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 10, border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.06)', color: 'var(--sidebar-text)', cursor: 'pointer', fontSize: 12 }}>
+        <button onClick={openCmd} style={{ margin: '8px 8px 2px', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 10, border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.06)', color: 'var(--sidebar-text)', cursor: 'pointer', fontSize: 12 }}>
           <Search style={{ width: 13, height: 13, flexShrink: 0 }} />
           <span style={{ flex: 1, textAlign: 'left' }}>Search the map...</span>
           <kbd style={{ fontSize: 10, borderRadius: 4, padding: '1px 5px', background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.15)', color: 'var(--sidebar-label)' }}>Cmd+K</kbd>
@@ -137,7 +137,7 @@ export default function Layout({ children, currentPageName }) {
             {gi > 0 && !collapsed && <div style={{ height: 1, background: 'rgba(201,168,76,0.1)', margin: '4px 8px 2px' }} />}
             <div style={{ paddingBottom: 2 }}>
               {!collapsed && (
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sidebar-label)', padding: '8px 10px 4px', margin: 0 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sidebar-label)', padding: '6px 8px 3px', margin: 0 }}>
                   {group.label}
                 </p>
               )}
@@ -151,8 +151,8 @@ export default function Layout({ children, currentPageName }) {
                     title={collapsed ? item.name : undefined}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 9,
-                      padding: '7px 10px', borderRadius: 8,
-                      fontSize: 13.5, fontWeight: active ? 600 : 500,
+                      padding: '6px 8px', borderRadius: 7,
+                      fontSize: 12.5, fontWeight: active ? 600 : 500,
                       marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
                       justifyContent: collapsed ? 'center' : undefined,
                       borderLeft: active ? '2px solid #c9a84c' : '2px solid transparent',
@@ -178,7 +178,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* User strip */}
       {user && (
-        <div style={{ padding: '10px', borderTop: '1px solid rgba(201,168,76,0.18)', position: 'relative' }}>
+        <div style={{ padding: '8px', borderTop: '1px solid rgba(201,168,76,0.18)', position: 'relative' }}>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
             style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: collapsed ? '8px 4px' : '8px 10px', borderRadius: 10, border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.07)', cursor: 'pointer', justifyContent: collapsed ? 'center' : undefined }}
@@ -249,13 +249,13 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={`layout-sidebar${sidebarOpen ? ' open' : ''}`}
-        style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, width: collapsed ? 72 : 248, transition: 'width 0.3s ease, transform 0.3s ease', flexShrink: 0 }}>
+        style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, width: collapsed ? 56 : 200, transition: 'width 0.3s ease, transform 0.3s ease', flexShrink: 0 }}>
         <SidebarContent />
       </aside>
 
       {/* Main content — offset by sidebar width */}
       <main className="layout-main"
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden', marginLeft: collapsed ? 72 : 248, transition: 'margin-left 0.3s ease' }}>
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden', marginLeft: collapsed ? 56 : 200, transition: 'margin-left 0.3s ease' }}>
 
         {/* Mobile topbar */}
         <div className="layout-topbar-mobile"
@@ -271,7 +271,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Page content — centered with max width */}
         <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)' }}>
-          <div className="page-content-wrap" style={{ padding: '24px 32px' }}>
+          <div className="page-content-wrap" style={{ padding: '20px 24px' }}>
             {children}
           </div>
         </div>
