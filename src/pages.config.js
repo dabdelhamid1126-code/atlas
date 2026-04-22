@@ -14,7 +14,6 @@ import PaymentMethods from './pages/PaymentMethods';
 import Products from './pages/Products';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ReceiveItems from './pages/ReceiveItems';
-import Rewards from './pages/Rewards';
 import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
 import __Layout from './Layout.jsx';
@@ -34,7 +33,6 @@ export const PAGES = {
     "Products": Products,
     "PurchaseOrders": PurchaseOrders,
     "ReceiveItems": ReceiveItems,
-    "Rewards": Rewards,
     "Settings": Settings,
     "Transactions": Transactions,
 }
