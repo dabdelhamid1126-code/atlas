@@ -232,6 +232,7 @@ export default function Layout({ children, currentPageName }) {
           .layout-sidebar.open { transform: translateX(0) !important; }
           .layout-main { margin-left: 0 !important; width: 100% !important; }
           .layout-topbar-mobile { display: flex !important; }
+          .page-content-wrap { padding: 16px !important; }
         }
         @media (min-width: 1024px) {
           .layout-sidebar { transform: translateX(0) !important; position: relative !important; }
@@ -252,7 +253,7 @@ export default function Layout({ children, currentPageName }) {
         <SidebarContent />
       </aside>
 
-      {/* Main content */}
+      {/* Main content — offset by sidebar width */}
       <main className="layout-main"
         style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden', marginLeft: collapsed ? 72 : 248, transition: 'margin-left 0.3s ease' }}>
 
@@ -268,9 +269,9 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </div>
 
-        {/* Page content */}
+        {/* Page content — centered with max width */}
         <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)' }}>
-          <div className="page-content-wrap" style={{ padding: '20px 28px', width: '100%' }}>
+          <div className="page-content-wrap" style={{ padding: '24px 32px', maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto' }}>
             {children}
           </div>
         </div>
