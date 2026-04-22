@@ -13,7 +13,7 @@ import {
   Settings, Wifi
 } from 'lucide-react';
 import CardVisual from '@/components/payment-methods/CardVisual';
-import { CardLogo } from '@/components/shared/BrandLogo';
+import RetailerLogo, { CardLogo } from '@/components/shared/BrandLogo';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
 import QuickAddModal from '@/components/payment-methods/QuickAddModal';
 import CustomCardModal from '@/components/payment-methods/CustomCardModal';
@@ -566,6 +566,8 @@ function GiftCardsTab({ queryClient }) {
   const [bulkDialogOpen, setBulkDialogOpen]   = useState(false);
   const [bulkInput, setBulkInput]             = useState('');
   const [barcodeOpen, setBarcodeOpen]         = useState(false);
+  const [page, setPage]                       = useState(0);
+  const PAGE_SIZE = 8;
 
   const emptyForm = { brand:'', retailer:'', category:'other', value:'', code:'', pin:'', purchase_cost:'', purchase_date:format(new Date(),'yyyy-MM-dd'), credit_card_id:'', status:'available', used_order_number:'', notes:'' };
   const [formData, setFormData] = useState(emptyForm);
@@ -639,11 +641,14 @@ function GiftCardsTab({ queryClient }) {
     setBulkDialogOpen(false); setBulkInput('');
   };
 
-  const filteredCards = useMemo(() => cards.filter(c => {
-    const matchSearch = !search || c.brand?.toLowerCase().includes(search.toLowerCase()) || c.retailer?.toLowerCase().includes(search.toLowerCase()) || c.code?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || c.status === statusFilter;
-    return matchSearch && matchStatus;
-  }), [cards, search, statusFilter]);
+  const filteredCards = useMemo(() => {
+    setPage(0);
+    return cards.filter(c => {
+      const matchSearch = !search || c.brand?.toLowerCase().includes(search.toLowerCase()) || c.retailer?.toLowerCase().includes(search.toLowerCase()) || c.code?.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === 'all' || c.status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [cards, search, statusFilter]);
 
   const totalValue  = cards.filter(c => c.status === 'available').reduce((s, c) => s + (c.value || 0), 0);
   const totalProfit = cards.filter(c => c.purchase_cost).reduce((s, c) => s + (c.value - c.purchase_cost), 0);
@@ -718,37 +723,55 @@ function GiftCardsTab({ queryClient }) {
               <Plus style={{ width:11, height:11 }}/>
             </button>
           </div>
-          <div style={{ flex:1, overflowY:'auto' }}>
-            {isLoading ? [...Array(4)].map((_,i) => (
-              <div key={i} style={{ padding:'10px 14px', borderBottom:'1px solid var(--parch-line)', display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ width:10, height:10, borderRadius:3, background:'var(--parch-deep)' }}/>
-                <div style={{ flex:1, height:10, borderRadius:4, background:'var(--parch-deep)' }}/>
-              </div>
-            )) : filteredCards.length === 0 ? (
-              <div style={{ padding:'24px 14px', textAlign:'center' }}>
-                <p style={{ fontSize:11, color:'var(--ink-ghost)', fontFamily:'var(--font-serif)' }}>No cards found</p>
-              </div>
-            ) : filteredCards.map(card => {
-              const sc = STATUS_COLORS[card.status] || STATUS_COLORS.available;
-              const profit = card.purchase_cost ? card.value - card.purchase_cost : null;
-              return (
-                <div key={card.id}
-                  className={`pm-card-item ${selectedId === card.id ? 'active' : ''}`}
-                  onClick={() => setSelectedId(card.id)}
-                  style={{ borderLeft: selectedId === card.id ? `3px solid var(--gold)` : '3px solid transparent' }}>
-                  <div style={{ width:10, height:10, borderRadius:3, background:sc.color, flexShrink:0 }}/>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div className="pm-card-name">{card.brand}</div>
-                    <div className="pm-card-rate">
-                      ${(card.value || 0).toFixed(0)} · {profit != null ? `+$${profit.toFixed(0)} profit` : card.retailer || '—'}
-                    </div>
-                  </div>
-                  <span style={{ fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:99, background:sc.bg, color:sc.color, border:`1px solid ${sc.border}`, flexShrink:0, fontFamily:'var(--font-serif)' }}>
-                    {card.status}
-                  </span>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+            <div style={{ flex:1, overflowY:'auto' }}>
+              {isLoading ? [...Array(4)].map((_,i) => (
+                <div key={i} style={{ padding:'10px 14px', borderBottom:'1px solid var(--parch-line)', display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:26, height:26, borderRadius:6, background:'var(--parch-deep)' }}/>
+                  <div style={{ flex:1, height:10, borderRadius:4, background:'var(--parch-deep)' }}/>
                 </div>
-              );
-            })}
+              )) : filteredCards.length === 0 ? (
+                <div style={{ padding:'24px 14px', textAlign:'center' }}>
+                  <p style={{ fontSize:11, color:'var(--ink-ghost)', fontFamily:'var(--font-serif)' }}>No cards found</p>
+                </div>
+              ) : filteredCards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(card => {
+                const sc = STATUS_COLORS[card.status] || STATUS_COLORS.available;
+                const profit = card.purchase_cost ? card.value - card.purchase_cost : null;
+                return (
+                  <div key={card.id}
+                    className={`pm-card-item ${selectedId === card.id ? 'active' : ''}`}
+                    onClick={() => setSelectedId(card.id)}
+                    style={{ borderLeft: selectedId === card.id ? `3px solid var(--gold)` : '3px solid transparent' }}>
+                    <RetailerLogo retailer={card.brand} size={26} />
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div className="pm-card-name">{card.brand}</div>
+                      <div className="pm-card-rate">
+                        ${(card.value || 0).toFixed(0)} · {profit != null ? `+$${profit.toFixed(0)} profit` : card.retailer || '—'}
+                      </div>
+                    </div>
+                    <span style={{ fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:99, background:sc.bg, color:sc.color, border:`1px solid ${sc.border}`, flexShrink:0, fontFamily:'var(--font-serif)' }}>
+                      {card.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Pagination */}
+            {filteredCards.length > PAGE_SIZE && (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px', borderTop:'1px solid var(--parch-line)', background:'var(--parch-warm)', flexShrink:0 }}>
+                <button onClick={() => setPage(p => Math.max(0, p-1))} disabled={page === 0}
+                  style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:6, border:'1px solid var(--parch-line)', background:'none', color: page===0 ? 'var(--ink-ghost)' : 'var(--ink-dim)', cursor: page===0 ? 'not-allowed' : 'pointer' }}>
+                  ← Prev
+                </button>
+                <span style={{ fontSize:10, color:'var(--ink-ghost)', fontFamily:'var(--font-mono)' }}>
+                  {page+1} / {Math.ceil(filteredCards.length / PAGE_SIZE)}
+                </span>
+                <button onClick={() => setPage(p => Math.min(Math.ceil(filteredCards.length/PAGE_SIZE)-1, p+1))} disabled={(page+1)*PAGE_SIZE >= filteredCards.length}
+                  style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:6, border:'1px solid var(--parch-line)', background:'none', color: (page+1)*PAGE_SIZE>=filteredCards.length ? 'var(--ink-ghost)' : 'var(--ink-dim)', cursor: (page+1)*PAGE_SIZE>=filteredCards.length ? 'not-allowed' : 'pointer' }}>
+                  Next →
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
