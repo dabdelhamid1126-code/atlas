@@ -5,6 +5,7 @@ import Analytics from './pages/Analytics';
 import Forecast from './pages/Forecast';
 import Dashboard from './pages/Dashboard';
 import EmailImport from './pages/EmailImport';
+import ImportOrders from './pages/ImportOrders';
 import Expenses from './pages/Expenses';
 import GiftCards from './pages/GiftCards';
 import Goals from './pages/Goals';
@@ -25,6 +26,7 @@ export const PAGES = {
     "Forecast": Forecast,
     "Dashboard": Dashboard,
     "EmailImport": EmailImport,
+    "ImportOrders": ImportOrders,
     "Expenses": Expenses,
     "GiftCards": GiftCards,
     "Goals": Goals,
