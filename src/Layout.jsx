@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, BarChart3, TrendingUp,
   Boxes, PlusCircle, Package, Download,
-  ArrowLeftRight, FileText, Receipt, CreditCard,
-  Settings as SettingsIcon, Star, User,
+  ArrowLeftRight, FileText, Receipt,
+  Settings as SettingsIcon, CreditCard, Star, User,
   Menu, X, LogOut, ChevronDown,
   PanelLeftClose, PanelLeftOpen, Search,
 } from 'lucide-react';
@@ -29,19 +29,18 @@ const NAV_GROUPS = [
   {
     label: 'Manage',
     items: [
-      { name: 'Inventory',   page: 'Inventory',    icon: Boxes                        },
-      { name: 'New Order',   page: 'NewOrders',    icon: PlusCircle, accent: true      },
-      { name: 'Products',    page: 'Products',     icon: Package                      },
-      { name: 'Import',      page: 'ImportOrders', icon: Download                     },
+      { name: 'Inventory',   page: 'Inventory',    icon: Boxes                   },
+      { name: 'New Order',   page: 'NewOrders',    icon: PlusCircle, accent: true },
+      { name: 'Products',    page: 'Products',     icon: Package                 },
+      { name: 'Import',      page: 'ImportOrders', icon: Download                },
     ],
   },
   {
     label: 'Finance',
     items: [
-      { name: 'Transactions',    page: 'Transactions',   icon: ArrowLeftRight },
-      { name: 'Invoices',        page: 'Invoices',       icon: FileText       },
-      { name: 'Payment Methods', page: 'PaymentMethods', icon: CreditCard     },
-      { name: 'Expenses',        page: 'Expenses',        icon: Receipt        },
+      { name: 'Transactions', page: 'Transactions', icon: ArrowLeftRight },
+      { name: 'Invoices',     page: 'Invoices',     icon: FileText       },
+      { name: 'Expenses',     page: 'Expenses',     icon: Receipt        },
     ],
   },
 ];
@@ -104,79 +103,84 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const handleLogout = () => base44.auth.logout();
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full" style={{ background: 'var(--sidebar-bg)', borderRight: `1px solid var(--sidebar-border)` }}>
+  // Active check: compare currentPageName to item.page
+  const isActive = (itemPage) => currentPageName === itemPage;
 
-      {/*    Logo    */}
-      <div
-        className={cn('flex items-center gap-3 px-4 py-4', collapsed && 'justify-center px-2')}
-        style={{ borderBottom: `1px solid var(--sidebar-border)` }}
-      >
+  const SidebarContent = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)' }}>
+
+      {/* Logo */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: collapsed ? '16px 8px' : '16px',
+        justifyContent: collapsed ? 'center' : 'space-between',
+        borderBottom: '1px solid var(--sidebar-border)',
+      }}>
         {collapsed ? (
           <button
-            className="hidden lg:flex p-1.5 rounded-lg"
-            style={{ color: 'var(--sidebar-text)' }}
             onClick={() => setCollapsed(false)}
+            style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}
             title="Expand"
           >
-            <PanelLeftOpen className="w-[18px] h-[18px]" />
+            <PanelLeftOpen style={{ width: 18, height: 18 }} />
           </button>
         ) : (
           <>
-            <AtlasLogo size={36} />
-            <div className="min-w-0 flex-1">
-              <p className="text-[17px] font-black leading-tight" style={{
-                fontFamily: 'var(--font-serif)',
-                background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>Atlas</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] mt-0.5" style={{ color: 'var(--sidebar-label)' }}>
-                Reselling, Quantified
-              </p>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+              <AtlasLogo size={36} />
+              <div>
+                <p style={{
+                  fontSize: 17, fontWeight: 900, margin: 0, lineHeight: 1,
+                  fontFamily: 'var(--font-serif)',
+                  background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>Atlas</p>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0' }}>
+                  Reselling, Quantified
+                </p>
+              </div>
+            </Link>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button onClick={openCmd} title="Search (Cmd+K)" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                <Search style={{ width: 15, height: 15 }} />
+              </button>
+              <button onClick={() => setCollapsed(true)} title="Collapse" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                <PanelLeftClose style={{ width: 17, height: 17 }} />
+              </button>
             </div>
-            <button onClick={openCmd} title="Search (Cmd+K)" className="p-1.5 rounded-lg" style={{ color: 'var(--sidebar-text)' }}>
-              <Search className="w-[15px] h-[15px]" />
-            </button>
-            <button className="hidden lg:flex p-1.5 rounded-lg" style={{ color: 'var(--sidebar-text)' }} onClick={() => setCollapsed(true)} title="Collapse">
-              <PanelLeftClose className="w-[17px] h-[17px]" />
-            </button>
-            <button className="lg:hidden" style={{ color: 'var(--sidebar-text)' }} onClick={() => setSidebarOpen(false)}>
-              <X className="w-5 h-5" />
-            </button>
           </>
         )}
       </div>
 
-      {/*    Search bar    */}
+      {/* Search bar (expanded only) */}
       {!collapsed && (
         <button
           onClick={openCmd}
-          className="mx-3 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-xl text-xs w-[calc(100%-24px)]"
-          style={{ 
-            border: 'rgba(201,168,76,0.18) 1px solid',
+          style={{
+            margin: '10px 12px 4px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '7px 12px', borderRadius: 10,
+            border: '1px solid rgba(201,168,76,0.18)',
             background: 'rgba(201,168,76,0.06)',
-            color: 'var(--sidebar-text)' 
+            color: 'var(--sidebar-text)', cursor: 'pointer', fontSize: 12,
           }}
         >
-          <Search className="w-3.5 h-3.5 shrink-0" />
-          <span className="flex-1 text-left">Search the map...</span>
-          <kbd className="text-[10px] rounded px-1 py-0.5" style={{
-            background: 'rgba(201,168,76,0.12)',
-            border: '1px solid rgba(201,168,76,0.15)',
-            color: 'var(--sidebar-label)',
-          }}>Cmd+K</kbd>
+          <Search style={{ width: 13, height: 13, flexShrink: 0 }} />
+          <span style={{ flex: 1, textAlign: 'left' }}>Search the map...</span>
+          <kbd style={{ fontSize: 10, borderRadius: 4, padding: '1px 5px', background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.15)', color: 'var(--sidebar-label)' }}>Cmd+K</kbd>
         </button>
       )}
 
-      {/*    Nav    */}
-      <nav className="flex-1 py-2 px-2.5 overflow-y-auto overflow-x-hidden">
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto', overflowX: 'hidden' }}>
         {NAV_GROUPS.map((group, gi) => (
           <div key={group.label}>
             {gi > 0 && !collapsed && (
@@ -184,63 +188,36 @@ export default function Layout({ children, currentPageName }) {
             )}
             <div style={{ paddingBottom: 2 }}>
               {!collapsed && (
-                <p
-                  className="px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em]"
-                  style={{ color: 'var(--sidebar-label)' }}
-                >
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sidebar-label)', padding: '8px 10px 4px', margin: 0 }}>
                   {group.label}
                 </p>
               )}
               {group.items.map(item => {
-                const active  = currentPageName === item.page;
-                const isAccent = item.accent && !active;
-
-                const itemColor  = active ? 'var(--sidebar-active)' : 'var(--sidebar-text)';
-                const itemBg     = active
-                  ? 'linear-gradient(90deg,rgba(201,168,76,0.18),transparent)'
-                  : 'transparent';
-                const itemBorder = active
-                  ? '2px solid #c9a84c'
-                  : '2px solid transparent';
-
+                const active = isActive(item.page);
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.page}
                     to={createPageUrl(item.page)}
                     title={collapsed ? item.name : undefined}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 9,
-                      padding: '7px 10px',
-                      borderRadius: 8,
-                      fontSize: 13.5,
-                      fontWeight: active ? 600 : 500,
-                      marginBottom: 1,
-                      cursor: 'pointer',
-                      textDecoration: 'none',
+                      display: 'flex', alignItems: 'center', gap: 9,
+                      padding: '7px 10px', borderRadius: 8,
+                      fontSize: 13.5, fontWeight: active ? 600 : 500,
+                      marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
                       justifyContent: collapsed ? 'center' : undefined,
-                      borderLeft: itemBorder,
-                      background: itemBg,
-                      color: itemColor,
+                      borderLeft: active ? '2px solid #c9a84c' : '2px solid transparent',
+                      background: active ? 'linear-gradient(90deg,rgba(201,168,76,0.18),transparent)' : 'transparent',
+                      color: active ? 'var(--sidebar-active)' : 'var(--sidebar-text)',
                       transition: 'color 0.15s, background 0.15s',
                     }}
-                    onMouseEnter={e => {
-                      if (!active) {
-                        e.currentTarget.style.color = isAccent ? 'var(--sidebar-accent-hover)' : 'var(--sidebar-hover)';
-                        e.currentTarget.style.background = 'rgba(201,168,76,0.07)';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!active) {
-                        e.currentTarget.style.color = itemColor;
-                        e.currentTarget.style.background = 'transparent';
-                      }
-                    }}
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'var(--sidebar-hover)'; e.currentTarget.style.background = 'rgba(201,168,76,0.07)'; } }}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.color = 'var(--sidebar-text)'; e.currentTarget.style.background = 'transparent'; } }}
                   >
-                    <item.icon style={{ width: 14, height: 14, flexShrink: 0, opacity: active ? 1 : 'var(--sidebar-icon-opacity)' }} />
-                    {!collapsed && (
-                      <span className="truncate flex-1">{item.name}</span>
+                    <Icon style={{ width: 14, height: 14, flexShrink: 0, opacity: active ? 1 : 0.65 }} />
+                    {!collapsed && <span style={{ flex: 1 }}>{item.name}</span>}
+                    {item.accent && !collapsed && (
+                      <span style={{ fontSize: 9, background: 'var(--gold)', color: 'var(--ne-cream)', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>NEW</span>
                     )}
                   </Link>
                 );
@@ -250,143 +227,127 @@ export default function Layout({ children, currentPageName }) {
         ))}
       </nav>
 
-      {/*    User strip    */}
+      {/* User strip */}
       {user && (
-        <div className="p-2.5" style={{ borderTop: '1px solid rgba(201,168,76,0.18)' }}>
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className={cn('w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl', collapsed && 'justify-center px-1')}
-              style={{ 
-                border: '1px solid rgba(201,168,76,0.18)',
-                background: 'rgba(201,168,76,0.07)',
-                cursor: 'pointer' 
-              }}
-            >
-              <div className="relative flex-shrink-0">
-                <Avatar className="h-8 w-8">
-                  {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
-                  <AvatarFallback className="text-xs font-black" style={{ background: 'linear-gradient(135deg,#8b6914,#c9a84c)', color: '#0a0800' }}>
-                    {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2"
-                  style={{ background: '#4a7a35', borderColor: 'var(--sidebar-bg)' }} />
-              </div>
-              {!collapsed && (
-                <>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-[13px] font-bold leading-tight truncate" style={{ color: 'var(--sidebar-accent)' }}>
-                      {user.full_name || user.email?.split('@')[0] || 'User'}
-                    </p>
-                    <p className="text-[10px]" style={{ color: 'var(--sidebar-label)', letterSpacing: '0.04em' }}>
-                      Charting
-                    </p>
-                  </div>
-                  <ChevronDown style={{ width: 13, height: 13, color: 'var(--sidebar-text)', flexShrink: 0 }} />
-                </>
-              )}
-            </button>
-
-            {/* Dropdown */}
-            {userMenuOpen && (
-              <div
-                className={cn(
-                  'absolute overflow-hidden mb-1',
-                  collapsed ? 'left-full ml-2 bottom-0' : 'bottom-full left-0 right-0'
-                )}
-                style={{
-                  background: '#1a1712',
-                  border: '1px solid rgba(201,168,76,0.2)',
-                  borderRadius: 12,
-                  boxShadow: 'var(--shadow-lg)',
-                  minWidth: collapsed ? 160 : undefined,
-                  zIndex: 50,
-                }}
-              >
-                <Link
-                  to={createPageUrl('Settings')}
-                  onClick={() => setUserMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: 'var(--sidebar-text)', textDecoration: 'none' }}
-                >
-                  <SettingsIcon style={{ width: 14, height: 14 }} /> Settings
-                </Link>
-                <Link
-                  to={createPageUrl('Profile')}
-                  onClick={() => setUserMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ borderBottom: '1px solid rgba(201,168,76,0.12)', color: 'var(--sidebar-text)', textDecoration: 'none' }}
-                >
-                  <User style={{ width: 14, height: 14 }} /> Profile
-                </Link>
-                <button
-                  onClick={() => { setUserMenuOpen(false); handleLogout(); }}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{ color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  <LogOut style={{ width: 14, height: 14 }} /> Sign Out
-                </button>
-              </div>
+        <div style={{ padding: '10px', borderTop: '1px solid rgba(201,168,76,0.18)', position: 'relative' }}>
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+              padding: collapsed ? '8px 4px' : '8px 10px', borderRadius: 10,
+              border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.07)',
+              cursor: 'pointer', justifyContent: collapsed ? 'center' : undefined,
+            }}
+          >
+            <Avatar style={{ width: 32, height: 32, flexShrink: 0 }}>
+              {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
+              <AvatarFallback style={{ fontSize: 12, fontWeight: 800, background: 'linear-gradient(135deg,#8b6914,#c9a84c)', color: '#0a0800' }}>
+                {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <>
+                <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--sidebar-accent)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.full_name || user.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p style={{ fontSize: 10, color: 'var(--sidebar-label)', margin: 0 }}>Charting</p>
+                </div>
+                <ChevronDown style={{ width: 13, height: 13, color: 'var(--sidebar-text)', flexShrink: 0 }} />
+              </>
             )}
-          </div>
+          </button>
+
+          {/* Dropdown */}
+          {userMenuOpen && (
+            <div style={{
+              position: 'absolute',
+              bottom: '100%', left: 8, right: 8, marginBottom: 4,
+              background: '#1a1712', border: '1px solid rgba(201,168,76,0.2)',
+              borderRadius: 12, boxShadow: 'var(--shadow-lg)',
+              overflow: 'hidden', zIndex: 50,
+            }}>
+              {[
+                { to: '/Settings',       icon: SettingsIcon, label: 'Settings'         },
+                { to: '/PaymentMethods', icon: CreditCard,   label: 'Payment Methods'  },
+                { to: '/Rewards',        icon: Star,         label: 'Rewards'          },
+              ].map(({ to, icon: Icon, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setUserMenuOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: 13, color: 'var(--sidebar-text)', textDecoration: 'none', borderBottom: '1px solid rgba(201,168,76,0.12)' }}
+                >
+                  <Icon style={{ width: 13, height: 13 }} /> {label}
+                </Link>
+              ))}
+              <button
+                onClick={() => { setUserMenuOpen(false); handleLogout(); }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: 13, color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                <LogOut style={{ width: 13, height: 13 }} /> Sign Out
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background: 'var(--parch-bg)' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--parch-bg)' }}>
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
+      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.35)' }}
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Sidebar */}
-      <aside className={cn(
-        'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out',
-        'lg:relative lg:translate-x-0',
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-        collapsed ? 'lg:w-[72px]' : 'lg:w-[248px]',
-        'w-[248px] h-screen flex-shrink-0',
-      )}>
+      <aside style={{
+        position: 'fixed', inset: '0 auto 0 0', zIndex: 50,
+        width: collapsed ? 72 : 248,
+        transition: 'width 0.3s ease',
+        transform: sidebarOpen ? 'translateX(0)' : undefined,
+        flexShrink: 0,
+      }}
+        className={cn('lg:relative lg:translate-x-0', sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')}
+      >
         <SidebarContent />
       </aside>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-
+      <main style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        minWidth: 0, height: '100vh', overflow: 'hidden',
+        marginLeft: collapsed ? 72 : 248,
+        transition: 'margin-left 0.3s ease',
+      }}>
         {/* Mobile topbar */}
-        <div
-          className="lg:hidden flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
-          style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-border)' }}
-        >
-          <button onClick={() => setSidebarOpen(true)} style={{ color: 'var(--sidebar-text)' }}>
-            <Menu className="w-5 h-5" />
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+          background: 'var(--sidebar-bg)', borderBottom: '1px solid var(--sidebar-border)',
+          flexShrink: 0,
+        }} className="lg:hidden">
+          <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer' }}>
+            <Menu style={{ width: 20, height: 20 }} />
           </button>
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <AtlasLogo size={26} />
-            <span className="text-sm font-black" style={{
-              fontFamily: 'var(--font-serif)',
+            <span style={{
+              fontSize: 14, fontWeight: 900, fontFamily: 'var(--font-serif)',
               background: 'linear-gradient(135deg,#c9a84c,#f5e09a)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>Atlas</span>
           </div>
         </div>
 
         {/* Page content */}
-        <div className="flex-1 overflow-y-auto" style={{
-          background: 'var(--parch-bg)',
-          backgroundImage: `
-            radial-gradient(ellipse at 15% 40%, rgba(160,114,42,0.04) 0%, transparent 50%),
-            radial-gradient(ellipse at 85% 70%, rgba(74,122,53,0.03) 0%, transparent 40%),
-            radial-gradient(ellipse at 50% 10%, rgba(42,92,122,0.03) 0%, transparent 40%)
-          `,
-        }}>
-          <div className="p-5 lg:p-7" style={{ maxWidth: 1320, margin: '0 auto', width: '100%' }}>
+        <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)' }}>
+          <div style={{ padding: '20px 28px', maxWidth: 1320, margin: '0 auto', width: '100%' }}>
             {children}
           </div>
         </div>
