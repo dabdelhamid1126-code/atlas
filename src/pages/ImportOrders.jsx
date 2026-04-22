@@ -444,7 +444,7 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [], u
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:600, overflowY:'auto' }}>
                     {visibleEmails.map(email => (
-                      <EmailRow key={email.id} email={email} onImport={handleImport} importing={importing===email.id}/>
+                      <EmailRow key={email.id} email={email} onImport={handleImport} importing={importing===email.id} userEmail={userEmail}/>
                     ))}
                     {visibleEmails.length === 0 && (
                       <div style={{ textAlign:'center', padding:'24px', color:'var(--terrain)', fontSize:13, fontWeight:600 }}>
@@ -487,7 +487,7 @@ function detectType(subject) {
   return 'order';
 }
 
-function EmailRow({ email, onImport, importing }) {
+function EmailRow({ email, onImport, importing, userEmail }) {
    const [expanded, setExpanded] = useState(false);
    const [quickExtract, setQuickExtract] = useState(null);
    const [loadingExtract, setLoadingExtract] = useState(false);
@@ -509,7 +509,7 @@ function EmailRow({ email, onImport, importing }) {
          const bodyRes = await fetch(`${VERCEL_API}/api/gmail/sync`, {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ user_email: '', message_ids: [email.id], fetch_bodies: true }),
+           body: JSON.stringify({ user_email: userEmail, message_ids: [email.id], fetch_bodies: true }),
          });
          const bodyData = await bodyRes.json();
          const emailBody = bodyData.body || email.snippet || '';
