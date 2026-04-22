@@ -46,11 +46,11 @@ export default function Transactions() {
     queryFn: () => userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }, '-created_date') : [],
     enabled: userEmail !== null,
   });
-  const { data: products    = [] } = useQuery({ queryKey: ['products'],    queryFn: () => base44.entities.Product.list() });
-  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards'], queryFn: () => base44.entities.CreditCard.list() });
-  const { data: giftCards   = [] } = useQuery({ queryKey: ['giftCards'],   queryFn: () => base44.entities.GiftCard.list() });
-  const { data: rewards     = [] } = useQuery({ queryKey: ['rewards'],     queryFn: () => base44.entities.Reward.list() });
-  const { data: sellers     = [] } = useQuery({ queryKey: ['sellers'],     queryFn: () => base44.entities.Seller.list() });
+  const { data: products    = [] } = useQuery({ queryKey: ['products'],                queryFn: () => base44.entities.Product.list() });
+  const { data: creditCards = [] } = useQuery({ queryKey: ['creditCards', userEmail], queryFn: () => userEmail ? base44.entities.CreditCard.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
+  const { data: giftCards   = [] } = useQuery({ queryKey: ['giftCards', userEmail],   queryFn: () => userEmail ? base44.entities.GiftCard.filter({ created_by: userEmail }) : [],   enabled: userEmail !== null });
+  const { data: rewards     = [] } = useQuery({ queryKey: ['rewards', userEmail],     queryFn: () => userEmail ? base44.entities.Reward.filter({ created_by: userEmail }) : [],     enabled: userEmail !== null });
+  const { data: sellers     = [] } = useQuery({ queryKey: ['sellers'],                queryFn: () => base44.entities.Seller.list() });
 
   const createRewardForOrder = async (order) => {
     const card = creditCards.find(c => c.id === order.credit_card_id);

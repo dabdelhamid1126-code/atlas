@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Download, X, Check, FileText, Search, Trash2, Pencil, ChevronDown, ChevronUp, ImageOff, Loader, ScanLine } from 'lucide-react';
@@ -97,10 +97,13 @@ export default function Invoices() {
 
   const [wasExtracted,  setWasExtracted] = useState(false);
 
-  const { data: invoices = [], isLoading } = useQuery({ queryKey:['invoices'], queryFn:()=>base44.entities.Invoice.list('-created_date') });
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
+
+  const { data: invoices = [], isLoading } = useQuery({ queryKey:['invoices', userEmail], queryFn:()=>userEmail ? base44.entities.Invoice.filter({ created_by: userEmail }, '-created_date') : [], enabled: userEmail !== null });
   const { data: products = [] }            = useQuery({ queryKey:['products'],  queryFn:()=>base44.entities.Product.list('-created_date', 200) });
-  const { data: inventory = [] }           = useQuery({ queryKey:['inventory'], queryFn:()=>base44.entities.InventoryItem.list() });
-  const { data: purchaseOrders = [] }      = useQuery({ queryKey:['purchaseOrders'], queryFn:()=>base44.entities.PurchaseOrder.list() });
+  const { data: inventory = [] }           = useQuery({ queryKey:['inventory', userEmail], queryFn:()=>userEmail ? base44.entities.InventoryItem.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
+  const { data: purchaseOrders = [] }      = useQuery({ queryKey:['purchaseOrders', userEmail], queryFn:()=>userEmail ? base44.entities.PurchaseOrder.filter({ created_by: userEmail }) : [], enabled: userEmail !== null });
   const { data: sellers = [] }             = useQuery({ queryKey:['sellers'],   queryFn:()=>base44.entities.Seller.list() });
 
   const createMutation = useMutation({
