@@ -27,7 +27,7 @@ const NAV_GROUPS = [
     label: 'Manage',
     items: [
       { name: 'Inventory', page: 'Inventory',    icon: Boxes },
-      { name: 'New Order', page: 'NewOrders',    icon: PlusCircle, accent: true },
+      { name: 'New Order', page: 'NewOrders',    icon: PlusCircle },
       { name: 'Products',  page: 'Products',     icon: Package },
       { name: 'Import',    page: 'ImportOrders', icon: Download },
     ],
@@ -270,7 +270,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Page content */}
         <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)' }}>
-          <div className="page-content-wrap" style={{ padding: '20px 28px', maxWidth: 1320, margin: '0 auto', width: '100%' }}>
+          <div className="page-content-wrap" style={{ padding: '20px 28px', width: '100%' }}>
             {children}
           </div>
         </div>
