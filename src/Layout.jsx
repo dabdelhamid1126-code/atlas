@@ -229,9 +229,9 @@ export default function Layout({ children, currentPageName }) {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--parch-bg)' }}>
       <style>{`
         @media (max-width: 1023px) {
-          .layout-sidebar { transform: translateX(-100%) !important; }
+          .layout-sidebar { transform: translateX(-100%) !important; position: fixed !important; }
           .layout-sidebar.open { transform: translateX(0) !important; }
-          .layout-main { margin-left: 0 !important; }
+          .layout-main { margin-left: 0 !important; width: 100% !important; }
           .layout-topbar-mobile { display: flex !important; }
         }
         @media (min-width: 1024px) {
@@ -271,7 +271,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Page content */}
         <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)' }}>
-          <div style={{ padding: '20px 28px', maxWidth: 1320, margin: '0 auto', width: '100%' }}>
+          <div className="page-content-wrap" style={{ padding: '20px 28px', maxWidth: 1320, margin: '0 auto', width: '100%' }}>
             {children}
           </div>
         </div>
