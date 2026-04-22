@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '@/components/shared/PageHeader';
@@ -29,12 +29,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Rewards() {
   const queryClient = useQueryClient();
+  const [userEmail, setUserEmail] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [salesSearch, setSalesSearch] = useState('');
   const [monthFilter, setMonthFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {}); }, []);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [editingReward, setEditingReward] = useState(null);
   const [editingCard, setEditingCard] = useState(null);
@@ -68,19 +71,21 @@ export default function Rewards() {
   });
 
   const { data: rewards = [], isLoading } = useQuery({
-    queryKey: ['rewards'],
-    queryFn: () => base44.entities.Reward.list('-date_earned')
+    queryKey: ['rewards', userEmail],
+    queryFn: () => base44.entities.Reward.filter({ created_by: userEmail }, '-date_earned'),
+    enabled: !!userEmail,
   });
 
   const { data: creditCards = [], isLoading: cardsLoading } = useQuery({
-    queryKey: ['creditCards'],
+    queryKey: ['creditCards', userEmail],
     queryFn: async () => {
-      const cards = await base44.entities.CreditCard.list();
+      const cards = await base44.entities.CreditCard.filter({ created_by: userEmail });
       return cards.sort((a, b) => {
         if (a.issuer !== b.issuer) return (a.issuer || '').localeCompare(b.issuer || '');
         return (a.card_name || '').localeCompare(b.card_name || '');
       });
-    }
+    },
+    enabled: !!userEmail,
   });
 
 
@@ -457,8 +462,9 @@ export default function Rewards() {
     .reduce((sum, r) => sum + (r.amount || 0), 0);
 
   const { data: invoices = [] } = useQuery({
-    queryKey: ['invoices'],
-    queryFn: () => base44.entities.Invoice.list('-invoice_date')
+    queryKey: ['invoices', userEmail],
+    queryFn: () => base44.entities.Invoice.filter({ created_by: userEmail }, '-invoice_date'),
+    enabled: !!userEmail,
   });
 
   // Filter paid invoices for sales data
