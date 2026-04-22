@@ -386,7 +386,7 @@ export default function GiftCards() {
       </div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 24, justifyContent: 'flex-end' }}>
         <Button onClick={() => setBulkDialogOpen(true)} variant="outline">Bulk Add</Button>
-        <Button onClick={() => openDialog()} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
+        <Button onClick={() => openDialog()} style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>
           <Plus className="h-4 w-4 mr-2" /> Add Card
         </Button>
       </div>
@@ -585,7 +585,7 @@ export default function GiftCards() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
+              <Button type="submit" style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>
                 {editingCard ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
@@ -663,7 +663,7 @@ export default function GiftCards() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleBulkAdd} style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', color: 'white', border: 'none' }}>
+            <Button onClick={handleBulkAdd} style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>
               Add Cards
             </Button>
           </DialogFooter>
