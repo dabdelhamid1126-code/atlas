@@ -84,7 +84,7 @@ function UPCPickerModal({ upc, results, onSelect, onManual, onClose }) {
         <div style={{ padding:'12px 20px', borderTop:'1px solid var(--parch-line)', background:'var(--parch-warm)', display:'flex', justifyContent:'flex-end', gap:8 }}>
           <button onClick={onClose} style={{ padding:'6px 14px', borderRadius:8, fontSize:12, fontWeight:500, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink-faded)', cursor:'pointer' }}>Cancel</button>
           <button onClick={() => onSelect(results[selected])}
-            style={{ padding:'6px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'linear-gradient(135deg,#10b981,#06b6d4)', border:'none', color:'white', cursor:'pointer' }}>
+            style={{ padding:'6px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'var(--ink)', border:'none', color:'var(--ne-cream)', cursor:'pointer' }}>
             Use selected →
           </button>
         </div>
@@ -144,7 +144,7 @@ function AddToCatalogForm({ initialName, initialUpc, initialImage, onCreated, on
       </div>
       <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
         <button onClick={onCancel} style={{ padding:'5px 12px', borderRadius:7, fontSize:11, fontWeight:500, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', color:'var(--ink-faded)', cursor:'pointer' }}>Cancel</button>
-        <button onClick={handleSave} disabled={saving} style={{ padding:'5px 12px', borderRadius:7, fontSize:11, fontWeight:700, background:'linear-gradient(135deg,#10b981,#06b6d4)', border:'none', color:'white', cursor:'pointer', opacity:saving?0.6:1, display:'flex', alignItems:'center', gap:5 }}>
+        <button onClick={handleSave} disabled={saving} style={{ padding:'5px 12px', borderRadius:7, fontSize:11, fontWeight:700, background:'var(--ink)', border:'none', color:'var(--ne-cream)', cursor:'pointer', opacity:saving?0.6:1, display:'flex', alignItems:'center', gap:5 }}>
           {saving ? <><Loader style={{ width:11, height:11, animation:'spin 0.8s linear infinite' }} /> Saving...</> : '+ Add to catalog'}
         </button>
       </div>
