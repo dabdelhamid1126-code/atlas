@@ -157,7 +157,7 @@ export default function QuickAddModal({ open, onClose, existingCards=[], onCreat
               Cancel
             </button>
             <button onClick={handleAdd} disabled={selected.length===0||loading}
-              style={{ padding:'8px 20px', borderRadius:8, fontSize:12, fontWeight:700, cursor:selected.length===0?'not-allowed':'pointer', background:'linear-gradient(135deg,#10b981,#06b6d4)', border:'none', color:'white', opacity:selected.length===0?0.5:1, transition:'opacity 0.15s' }}>
+              style={{ padding:'8px 20px', borderRadius:8, fontSize:12, fontWeight:700, cursor:selected.length===0?'not-allowed':'pointer', background:'var(--ink)', border:'none', color:'var(--ne-cream)', opacity:selected.length===0?0.5:1, transition:'opacity 0.15s' }}>
               {loading ? 'Adding...' : `Add ${selected.length||''} Card${selected.length!==1?'s':''}`}
             </button>
           </div>
