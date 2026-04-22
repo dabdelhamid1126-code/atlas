@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -485,7 +485,7 @@ export default function Analytics() {
       </div>
 
       {/* ── KPI GRID ── */}
-      <SectionDivider title="Survey Markers" />
+      <SectionDivider title="Performance" />
       <div className="grid-kpi" style={{ marginBottom:8 }}>
         {KPI_CARDS.slice(0,4).map(k => <KpiCard key={k.label} {...k}/>)}
       </div>
@@ -642,18 +642,27 @@ export default function Analytics() {
       {/* ════════ PAYMENTS ════════ */}
       {activeTab==='payments' && (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          <div className="grid-3col">
-            {[
-              { label:'Card Cashback', value:fmt$(kpis.cardCashback), sub:'From credit cards',   color:'var(--violet2)', bg:'var(--violet-bg)',  bdr:'var(--violet-bdr)'  },
-              { label:'YA Cashback',   value:fmt$(kpis.yaCashback),   sub:'Young Adult rewards', color:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'    },
-              { label:'Points Earned', value:fmtPts(kpis.points),     sub:'Reward points',       color:'var(--rose)',    bg:'var(--rose-bg)',    bdr:'var(--rose-bdr)'    },
-            ].map(c=>(
-              <div key={c.label} style={{ ...CARD_STYLE, padding:14, borderTop:`3px solid ${c.color}` }}>
-                <p style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:c.color, marginBottom:6 }}>{c.label}</p>
-                <p style={{ fontSize:22, fontWeight:800, color:c.color, lineHeight:1 }}>{c.value}</p>
-                <p style={{ fontSize:10, color:'var(--ink-ghost)', marginTop:5 }}>{c.sub}</p>
-              </div>
-            ))}
+          <div className="grid-kpi" style={{ marginBottom:4 }}>
+            <div className="kpi-card fade-up" style={{ borderTopColor:'var(--violet2)' }}>
+              <div className="kpi-label">Card Cashback</div>
+              <div className="kpi-value" style={{ color:'var(--violet2)' }}>{fmt$(kpis.cardCashback)}</div>
+              <div className="kpi-sub">From credit cards</div>
+            </div>
+            <div className="kpi-card fade-up" style={{ borderTopColor:'var(--gold)' }}>
+              <div className="kpi-label">YA Cashback</div>
+              <div className="kpi-value" style={{ color:'var(--gold)' }}>{fmt$(kpis.yaCashback)}</div>
+              <div className="kpi-sub">Young Adult rewards</div>
+            </div>
+            <div className="kpi-card fade-up" style={{ borderTopColor:'var(--rose)' }}>
+              <div className="kpi-label">Points Earned</div>
+              <div className="kpi-value" style={{ color:'var(--rose)' }}>{fmtPts(kpis.points)}</div>
+              <div className="kpi-sub">Reward points</div>
+            </div>
+            <div className="kpi-card fade-up" style={{ borderTopColor:'var(--terrain2)' }}>
+              <div className="kpi-label">Total Cashback</div>
+              <div className="kpi-value" style={{ color:'var(--terrain2)' }}>{fmt$(kpis.totalUSD)}</div>
+              <div className="kpi-sub">Card CB + YA combined</div>
+            </div>
           </div>
 
           <div className="grid-2col">
