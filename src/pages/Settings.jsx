@@ -1079,21 +1079,22 @@ export default function Settings() {
   const switchTab = key => { setActiveTab(key); setSearchParams({tab:key}); };
 
   return (
-    <div style={{ maxWidth:900, margin:'0 auto' }}>
+    <div>
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
-        .settings-layout { display:flex; gap:20px; align-items:flex-start; }
-        .settings-sidenav { width:180px; flex-shrink:0; }
-        .settings-content { flex:1; min-width:0; }
+        .settings-wrap { display:flex; gap:0; align-items:flex-start; min-height:80vh; background:var(--parch-card); border:1px solid var(--parch-line); border-radius:16px; overflow:hidden; }
+        .settings-sidenav { width:200px; flex-shrink:0; border-right:1px solid var(--parch-line); background:var(--parch-warm); display:flex; flex-direction:column; }
+        .settings-content { flex:1; min-width:0; padding:28px; overflow-y:auto; }
         .settings-mobilenav { display:none; }
         @media(max-width:640px){
-          .settings-layout { flex-direction:column; gap:0; }
+          .settings-wrap { flex-direction:column; }
           .settings-sidenav { display:none; }
           .settings-mobilenav { display:block; margin-bottom:16px; }
-          .settings-content { width:100%; }
+          .settings-content { padding:16px; }
         }
       `}</style>
-      <div style={{ marginBottom:24 }}>
+
+      <div style={{ marginBottom:20 }}>
         <h1 className="page-title">Settings</h1>
         <p className="page-subtitle">Manage your account preferences</p>
       </div>
@@ -1106,26 +1107,35 @@ export default function Settings() {
         </select>
       </div>
 
-      <div className="settings-layout">
+      <div className="settings-wrap">
         {/* Sidebar nav */}
         <div className="settings-sidenav">
-          <nav style={{ display:'flex', flexDirection:'column', gap:2 }}>
-            {TABS.map(tab=>(
-              <button key={tab.key} onClick={()=>switchTab(tab.key)}
-                style={{
-                  display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:10,
-                  fontSize:12, fontWeight:500, cursor:'pointer', textAlign:'left', fontFamily:FONT,
-                  border:activeTab===tab.key?`1px solid ${C.goldBdr}`:`1px solid transparent`,
-                  borderLeft:activeTab===tab.key?`2px solid ${C.gold}`:`2px solid transparent`,
-                  background:activeTab===tab.key?C.goldBg:'transparent',
-                  color:activeTab===tab.key?C.gold2:C.inkDim,
-                }}>
-                <tab.icon style={{ width:14, height:14, flexShrink:0 }}/>
-                {tab.label}
-              </button>
-            ))}
+          <div style={{ padding:'14px 12px 8px', borderBottom:`1px solid ${C.parchLine}` }}>
+            <p style={{ fontFamily:FONT, fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:C.inkFaded, margin:0 }}>Settings</p>
+          </div>
+          <nav style={{ display:'flex', flexDirection:'column', gap:2, padding:'10px 8px', flex:1 }}>
+            {TABS.map(tab=>{
+              const Icon = tab.icon;
+              const active = activeTab === tab.key;
+              return (
+                <button key={tab.key} onClick={()=>switchTab(tab.key)}
+                  style={{
+                    display:'flex', alignItems:'center', gap:9, padding:'9px 10px', borderRadius:8,
+                    fontSize:12.5, fontWeight: active ? 600 : 500, cursor:'pointer', textAlign:'left',
+                    fontFamily:FONT, border:'none', width:'100%',
+                    borderLeft: active ? `3px solid ${C.gold}` : '3px solid transparent',
+                    background: active ? C.goldBg : 'transparent',
+                    color: active ? C.gold2 : C.inkDim,
+                    transition:'all 0.15s',
+                  }}>
+                  <Icon style={{ width:14, height:14, flexShrink:0, opacity: active ? 1 : 0.65 }}/>
+                  {tab.label}
+                </button>
+              );
+            })}
           </nav>
         </div>
+
         {/* Content */}
         <div className="settings-content">
           {activeTab==='profile'    && <ProfileTab    user={user}/>}
