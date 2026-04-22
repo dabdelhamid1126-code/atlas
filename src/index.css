@@ -344,14 +344,14 @@ input:focus, textarea:focus, select:focus {
 .card {
   background: var(--parch-card);
   border: 1px solid var(--parch-line);
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow: var(--shadow-sm);
 }
 
 /* ── Page title ──────────────────────────────────────────────────── */
 .page-title {
   font-family: var(--font-serif);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
   color: var(--ink);
   letter-spacing: -0.3px;
@@ -391,7 +391,7 @@ input:focus, textarea:focus, select:focus {
 
 .kpi-value {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1;
   color: var(--ink);
@@ -617,7 +617,7 @@ input:focus, textarea:focus, select:focus {
 /* 2-column grid */
 .grid-2col {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   grid-template-columns: 1fr;
 }
 @media (min-width: 768px) {
