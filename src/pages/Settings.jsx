@@ -83,10 +83,23 @@ function Toggle({ on, onToggle }) {
 function ProfileSection() {
   const [user, setUser] = useState({ full_name: '', email: '', role: '', phone: '', businessName: '', businessLocation: '' });
   const [saved, setSaved] = useState(false);
+  const [photo, setPhoto] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = React.useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(u => { if (u) setUser(u); }).catch(() => {});
+    try { const p = localStorage.getItem('atlas_profile_photo'); if (p) setPhoto(p); } catch {}
   }, []);
+
+  const handleImageFile = file => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => { setPhoto(e.target.result); localStorage.setItem('atlas_profile_photo', e.target.result); };
+    reader.readAsDataURL(file);
+  };
+
+  const removePhoto = () => { setPhoto(null); localStorage.removeItem('atlas_profile_photo'); if (fileRef.current) fileRef.current.value = ''; };
 
   const handleSave = async () => {
     try {
@@ -96,11 +109,44 @@ function ProfileSection() {
     } catch (e) { console.error(e); }
   };
 
+  const initials = (user.full_name || user.email || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
   return (
     <div style={{ background: C.parchCard, border: `1px solid ${C.parchLine}`, borderRadius: 14, padding: 24, marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <User style={{ width: 18, height: 18, color: C.gold }} />
         <h2 style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: C.ink, margin: 0 }}>Profile</h2>
+      </div>
+
+      {/* Photo upload */}
+      <SectionDivider title="Profile Photo" color={C.gold} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div
+            onClick={() => fileRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => { e.preventDefault(); setDragOver(false); handleImageFile(e.dataTransfer.files?.[0]); }}
+            style={{ width: 72, height: 72, borderRadius: '50%', cursor: 'pointer', border: `2px ${dragOver ? 'solid' : 'dashed'} ${dragOver ? C.gold : C.parchLine}`, background: dragOver ? C.goldBg : C.parchWarm, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', transition: 'all 0.2s' }}>
+            {photo
+              ? <img src={photo} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span style={{ fontSize: 22, fontWeight: 800, color: C.gold, fontFamily: FONT }}>{initials}</span>
+            }
+          </div>
+          {photo && (
+            <button onClick={removePhoto} style={{ position: 'absolute', top: -2, right: -2, width: 20, height: 20, borderRadius: '50%', background: C.crimson2, border: '2px solid white', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, lineHeight: 1 }}>×</button>
+          )}
+        </div>
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: C.ink, fontFamily: FONT, marginBottom: 4 }}>{user.full_name || 'User'}</p>
+          <p style={{ fontSize: 11, color: C.inkDim, fontFamily: FONT, marginBottom: 10 }}>Connected via Base44</p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => fileRef.current?.click()} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: C.ink, border: 'none', color: C.neCream, cursor: 'pointer', fontFamily: FONT }}>Upload Photo</button>
+            {photo && <button onClick={removePhoto} style={{ padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: C.crimsonBg, border: `1px solid ${C.crimsonBdr}`, color: C.crimson2, cursor: 'pointer', fontFamily: FONT }}>Remove</button>}
+          </div>
+          <p style={{ fontSize: 10, color: C.inkGhost, marginTop: 6, fontFamily: FONT }}>JPG, PNG · Max 5MB · Click or drag to upload</p>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" onChange={e => handleImageFile(e.target.files?.[0])} style={{ display: 'none' }} />
       </div>
 
       <SectionDivider title="Account Information" color={C.ocean2} />
