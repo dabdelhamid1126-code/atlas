@@ -244,7 +244,8 @@ function GmailPanel({ onAddDrafts, products, creditCards, existingOrders = [], u
 
   const handleConnect = () => {
     if (!userEmail) { toast.error('Please wait — loading user info'); return; }
-    window.location.href = `${VERCEL_API}/api/auth/google?user_email=${encodeURIComponent(userEmail)}`;
+    const redirectBack = encodeURIComponent(window.location.origin + '/ImportOrders');
+    window.location.href = `${VERCEL_API}/api/auth/google?user_email=${encodeURIComponent(userEmail)}&redirect_uri=${redirectBack}`;
   };
 
   const handleDisconnect = async () => {
