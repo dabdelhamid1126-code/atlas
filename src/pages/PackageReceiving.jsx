@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
-  Package, ScanBarcode, Plus, Check, AlertTriangle,
-  ChevronDown, ChevronUp, Trash2, X, BoxSelect, History,
+  Package, ScanBarcode, Plus, Check, X, BoxSelect, History,
+  Camera, CameraOff, Search, Loader, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,44 +42,266 @@ function ConditionPicker({ value, onChange }) {
   );
 }
 
-// ── Item editor row ──────────────────────────────────────────────────────
+// ── Camera Barcode Scanner ────────────────────────────────────────────────
 
-function ItemRow({ item, onChange, onRemove }) {
+function CameraScanner({ onScan, onClose }) {
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const rafRef = useRef(null);
+  const [error, setError] = useState('');
+  const [scanning, setScanning] = useState(false);
+
+  useEffect(() => {
+    let detector;
+    const start = async () => {
+      setScanning(true);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+
+        if ('BarcodeDetector' in window) {
+          detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'] });
+          const detect = async () => {
+            if (!videoRef.current) return;
+            try {
+              const barcodes = await detector.detect(videoRef.current);
+              if (barcodes.length > 0) {
+                onScan(barcodes[0].rawValue);
+                return; // stop scanning on first hit
+              }
+            } catch {}
+            rafRef.current = requestAnimationFrame(detect);
+          };
+          rafRef.current = requestAnimationFrame(detect);
+        } else {
+          setError('Auto-detect not supported on this browser. Use the capture button below.');
+        }
+      } catch (e) {
+        setError('Camera access denied or unavailable.');
+        setScanning(false);
+      }
+    };
+    start();
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    };
+  }, [onScan]);
+
+  return (
+    <div style={{ background: '#000', borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
+      <video ref={videoRef} muted playsInline style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block' }} />
+      {/* Aiming overlay */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{ width: 220, height: 100, border: '2px solid rgba(201,168,76,0.8)', borderRadius: 10, boxShadow: '0 0 0 2000px rgba(0,0,0,0.35)' }} />
+      </div>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 14px', background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {error
+          ? <p style={{ fontSize: 11, color: '#fca5a5' }}>{error}</p>
+          : <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>Point camera at barcode</p>
+        }
+        <button onClick={onClose} style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 7, padding: '5px 12px', cursor: 'pointer' }}>
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Product / UPC search ──────────────────────────────────────────────────
+
+function ProductSearch({ onSelect, products }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+
+  const isUPC = (q) => /^\d{6,14}$/.test(q.trim());
+
+  const search = useCallback(async (q) => {
+    q = q.trim();
+    if (!q) { setResults([]); return; }
+    setLoading(true);
+    try {
+      if (isUPC(q)) {
+        // Try catalog first
+        const catalogMatch = products.find(p => p.upc === q);
+        if (catalogMatch) {
+          setResults([{ source: 'catalog', name: catalogMatch.name, sku: q, image: catalogMatch.image, id: catalogMatch.id }]);
+          setLoading(false);
+          return;
+        }
+        // UPC lookup
+        const res = await base44.functions.invoke('lookupUPC', { upc: q });
+        const data = res.data;
+        const hits = (data.results || []).slice(0, 4).map(r => ({
+          source: 'upc',
+          name: r.title,
+          sku: q,
+          image: r.image,
+        }));
+        setResults(hits.length ? hits : [{ source: 'none', name: `Unknown (${q})`, sku: q }]);
+      } else {
+        // Text search in catalog
+        const ql = q.toLowerCase();
+        const hits = products.filter(p =>
+          p.name?.toLowerCase().includes(ql) || p.upc?.includes(q)
+        ).slice(0, 6).map(p => ({ source: 'catalog', name: p.name, sku: p.upc || '', image: p.image, id: p.id }));
+        setResults(hits.length ? hits : []);
+      }
+    } catch {
+      setResults([]);
+      toast.error('Search failed');
+    }
+    setLoading(false);
+  }, [products]);
+
+  const handleScan = (code) => {
+    setShowCamera(false);
+    setQuery(code);
+    search(code);
+  };
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter') search(query);
+  };
+
+  const SRC_BADGE = {
+    catalog: { label: 'Catalog', color: 'var(--terrain2)', bg: 'var(--terrain-bg)', border: 'var(--terrain-bdr)' },
+    upc:     { label: 'UPC DB',  color: 'var(--ocean2)',   bg: 'var(--ocean-bg)',   border: 'var(--ocean-bdr)'   },
+    none:    { label: 'Manual',  color: 'var(--ink-faded)',bg: 'var(--parch-warm)', border: 'var(--parch-line)'  },
+  };
+
+  return (
+    <div>
+      {showCamera && (
+        <div style={{ marginBottom: 10 }}>
+          <CameraScanner onScan={handleScan} onClose={() => setShowCamera(false)} />
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 13, height: 13, color: 'var(--ink-ghost)', pointerEvents: 'none' }} />
+          <input
+            value={query}
+            onChange={e => { setQuery(e.target.value); if (e.target.value.length === 0) setResults([]); }}
+            onKeyDown={handleKey}
+            placeholder="Search name or scan UPC..."
+            style={{ width: '100%', height: 36, paddingLeft: 32, paddingRight: 10, borderRadius: 8, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 13, outline: 'none' }}
+          />
+        </div>
+        <button onClick={() => search(query)} disabled={loading}
+          style={{ padding: '0 12px', borderRadius: 8, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', color: 'var(--ink-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600 }}>
+          {loading ? <Loader style={{ width: 13, height: 13, animation: 'spin 0.8s linear infinite' }} /> : <Search style={{ width: 13, height: 13 }} />} Search
+        </button>
+        <button onClick={() => setShowCamera(v => !v)}
+          title="Scan with camera"
+          style={{ padding: '0 12px', borderRadius: 8, background: showCamera ? 'var(--gold-bg)' : 'var(--parch-warm)', border: `1px solid ${showCamera ? 'var(--gold-bdr)' : 'var(--parch-line)'}`, color: showCamera ? 'var(--gold2)' : 'var(--ink-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <Camera style={{ width: 15, height: 15 }} />
+        </button>
+      </div>
+
+      {results.length > 0 && (
+        <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 10, overflow: 'hidden', marginBottom: 6 }}>
+          {results.map((r, i) => {
+            const badge = SRC_BADGE[r.source] || SRC_BADGE.none;
+            return (
+              <button key={i} onClick={() => { onSelect(r); setQuery(''); setResults([]); }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: 'none', borderBottom: i < results.length - 1 ? '1px solid var(--parch-line)' : 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--parch-warm)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <div style={{ width: 38, height: 38, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {r.image
+                    ? <img src={r.image} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => e.target.style.display = 'none'} />
+                    : <Package style={{ width: 16, height: 16, color: 'var(--ink-ghost)' }} />}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</p>
+                  {r.sku && <p style={{ fontSize: 10, color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{r.sku}</p>}
+                </div>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, flexShrink: 0 }}>{badge.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Item editor row ───────────────────────────────────────────────────────
+
+function ItemRow({ item, onChange, onRemove, products }) {
+  const [showSearch, setShowSearch] = useState(!item.name);
+
+  const handleSelect = (result) => {
+    onChange('name', result.name);
+    onChange('sku', result.sku || '');
+    setShowSearch(false);
+  };
+
   return (
     <div style={{ background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', borderRadius: 10, padding: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+      {/* Product name row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
         <div style={{ flex: 1 }}>
-          <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>Item Name *</label>
-          <input value={item.name} onChange={e => onChange('name', e.target.value)} placeholder="e.g. iPhone 15 Pro"
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+            <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)' }}>Product *</label>
+            <button onClick={() => setShowSearch(v => !v)}
+              style={{ fontSize: 9, fontWeight: 600, color: 'var(--ocean2)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Search style={{ width: 10, height: 10 }} /> {showSearch ? 'Hide search' : 'Search / Scan'}
+            </button>
+          </div>
+          {showSearch && (
+            <div style={{ marginBottom: 6 }}>
+              <ProductSearch products={products} onSelect={handleSelect} />
+            </div>
+          )}
+          <input value={item.name} onChange={e => onChange('name', e.target.value)} placeholder="Item name..."
             style={{ width: '100%', height: 34, padding: '0 10px', borderRadius: 8, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 13, outline: 'none' }} />
-        </div>
-        <div style={{ width: 110 }}>
-          <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>SKU / Barcode</label>
-          <input value={item.sku} onChange={e => onChange('sku', e.target.value)} placeholder="Optional"
-            style={{ width: '100%', height: 34, padding: '0 10px', borderRadius: 8, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 12, outline: 'none', fontFamily: 'var(--font-mono)' }} />
-        </div>
-        <div style={{ width: 64 }}>
-          <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>Qty</label>
-          <input type="number" min="1" value={item.quantity} onChange={e => onChange('quantity', parseInt(e.target.value) || 1)}
-            style={{ width: '100%', height: 34, padding: '0 8px', borderRadius: 8, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 13, outline: 'none', textAlign: 'center' }} />
-        </div>
-        <div style={{ width: 90 }}>
-          <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>Cost/Unit ($)</label>
-          <input type="number" step="0.01" min="0" value={item.cost_per_unit} onChange={e => onChange('cost_per_unit', e.target.value)}
-            placeholder="0.00"
-            style={{ width: '100%', height: 34, padding: '0 8px', borderRadius: 8, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 13, outline: 'none' }} />
         </div>
         <button onClick={onRemove} style={{ marginTop: 18, width: 28, height: 28, borderRadius: 7, background: 'var(--crimson-bg)', border: '1px solid var(--crimson-bdr)', color: 'var(--crimson)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <X style={{ width: 12, height: 12 }} />
         </button>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+
+      {/* SKU / Qty / Cost row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px', gap: 8, marginBottom: 10 }}>
+        <div>
+          <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>SKU / UPC</label>
+          <input value={item.sku} onChange={e => onChange('sku', e.target.value)} placeholder="Optional"
+            style={{ width: '100%', height: 32, padding: '0 8px', borderRadius: 7, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 12, outline: 'none', fontFamily: 'var(--font-mono)' }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>Qty</label>
+          <input type="number" min="1" value={item.quantity} onChange={e => onChange('quantity', parseInt(e.target.value) || 1)}
+            style={{ width: '100%', height: 32, padding: '0 6px', borderRadius: 7, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 13, outline: 'none', textAlign: 'center' }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>Cost/Unit</label>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--ink-ghost)' }}>$</span>
+            <input type="number" step="0.01" min="0" value={item.cost_per_unit} onChange={e => onChange('cost_per_unit', e.target.value)}
+              placeholder="0.00"
+              style={{ width: '100%', height: 32, paddingLeft: 18, paddingRight: 6, borderRadius: 7, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 12, outline: 'none' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Condition */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div>
           <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Condition</label>
           <ConditionPicker value={item.condition} onChange={v => onChange('condition', v)} />
         </div>
         {item.condition !== 'good' && (
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 120 }}>
             <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 3 }}>Damage Notes</label>
             <input value={item.notes} onChange={e => onChange('notes', e.target.value)} placeholder="e.g. box dented, missing charger..."
               style={{ width: '100%', height: 30, padding: '0 10px', borderRadius: 7, border: '1px solid var(--parch-line)', background: 'var(--parch-card)', color: 'var(--ink)', fontSize: 12, outline: 'none' }} />
@@ -90,7 +312,39 @@ function ItemRow({ item, onChange, onRemove }) {
   );
 }
 
-// ── Shipment history card ────────────────────────────────────────────────
+// ── Box code input with camera ────────────────────────────────────────────
+
+function BoxCodeInput({ value, onChange, inputRef }) {
+  const [showCamera, setShowCamera] = useState(false);
+
+  const handleScan = (code) => {
+    onChange(code);
+    setShowCamera(false);
+    toast.success(`Scanned: ${code}`);
+  };
+
+  return (
+    <div>
+      {showCamera && (
+        <div style={{ marginBottom: 8 }}>
+          <CameraScanner onScan={handleScan} onClose={() => setShowCamera(false)} />
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <input ref={inputRef} value={value} onChange={e => onChange(e.target.value)}
+          placeholder="Scan or type tracking / box code..."
+          style={{ flex: 1, height: 40, padding: '0 12px', borderRadius: 9, border: '2px solid var(--gold-bdr)', background: 'var(--parch-warm)', color: 'var(--ink)', fontSize: 14, outline: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700 }} />
+        <button onClick={() => setShowCamera(v => !v)}
+          title="Scan with camera"
+          style={{ width: 40, height: 40, borderRadius: 9, background: showCamera ? 'var(--gold-bg)' : 'var(--parch-warm)', border: `1px solid ${showCamera ? 'var(--gold-bdr)' : 'var(--parch-line)'}`, color: showCamera ? 'var(--gold2)' : 'var(--ink-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Camera style={{ width: 18, height: 18 }} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Shipment history card ─────────────────────────────────────────────────
 
 function ShipmentCard({ shipment, items }) {
   const [open, setOpen] = useState(false);
@@ -105,7 +359,7 @@ function ShipmentCard({ shipment, items }) {
           <Package style={{ width: 18, height: 18, color: condS.color }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{shipment.box_code}</span>
             <ConditionBadge condition={shipment.box_condition} />
             {damageItems.length > 0 && (
@@ -148,7 +402,7 @@ function ShipmentCard({ shipment, items }) {
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────
+// ── Main page ─────────────────────────────────────────────────────────────
 
 const newItem = () => ({ id: crypto.randomUUID(), name: '', sku: '', quantity: 1, cost_per_unit: '', condition: 'good', notes: '' });
 
@@ -169,10 +423,13 @@ export default function PackageReceiving() {
     queryKey: ['shipments'],
     queryFn: () => base44.entities.ShipmentReceiving.list('-received_date', 50),
   });
-
   const { data: allItems = [] } = useQuery({
     queryKey: ['receivedItems'],
     queryFn: () => base44.entities.ReceivedItem.list('-created_date', 200),
+  });
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => base44.entities.Product.list(),
   });
 
   const addItem = () => setItems(prev => [...prev, newItem()]);
@@ -192,30 +449,21 @@ export default function PackageReceiving() {
     try {
       const validItems = items.filter(i => i.name.trim());
       const damageCount = validItems.filter(i => i.condition !== 'good').length;
-
       const shipment = await base44.entities.ShipmentReceiving.create({
-        box_code: boxCode.trim(),
-        supplier: supplier.trim() || null,
-        box_condition: boxCondition,
-        box_notes: boxNotes.trim() || null,
+        box_code: boxCode.trim(), supplier: supplier.trim() || null,
+        box_condition: boxCondition, box_notes: boxNotes.trim() || null,
         item_count: validItems.reduce((s, i) => s + (parseInt(i.quantity) || 1), 0),
-        damage_count: damageCount,
-        received_date: receivedDate,
+        damage_count: damageCount, received_date: receivedDate,
       });
-
       await Promise.all(validItems.map(item =>
         base44.entities.ReceivedItem.create({
-          shipment_id: shipment.id,
-          box_code: boxCode.trim(),
-          sku: item.sku.trim() || null,
-          name: item.name.trim(),
-          condition: item.condition,
-          notes: item.notes.trim() || null,
+          shipment_id: shipment.id, box_code: boxCode.trim(),
+          sku: item.sku.trim() || null, name: item.name.trim(),
+          condition: item.condition, notes: item.notes.trim() || null,
           quantity: parseInt(item.quantity) || 1,
           cost_per_unit: item.cost_per_unit ? parseFloat(item.cost_per_unit) : null,
         })
       ));
-
       queryClient.invalidateQueries({ queryKey: ['shipments'] });
       queryClient.invalidateQueries({ queryKey: ['receivedItems'] });
       toast.success(`Shipment ${boxCode} saved — ${validItems.length} item${validItems.length !== 1 ? 's' : ''} received`);
@@ -223,9 +471,7 @@ export default function PackageReceiving() {
       setTimeout(reset, 2500);
     } catch (err) {
       toast.error('Failed to save: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const totalItems = items.reduce((s, i) => s + (parseInt(i.quantity) || 1), 0);
@@ -241,7 +487,6 @@ export default function PackageReceiving() {
         <p className="page-subtitle">Scan, inspect, and log incoming shipments</p>
       </div>
 
-      {/* Tab bar */}
       <div className="tab-bar" style={{ marginBottom: 20, width: 'fit-content' }}>
         {[
           { key: 'receive', label: 'Receive Package', icon: BoxSelect },
@@ -271,33 +516,29 @@ export default function PackageReceiving() {
 
               {/* Box info */}
               <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                   <ScanBarcode style={{ width: 16, height: 16, color: 'var(--gold)' }} />
                   <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink)', margin: 0 }}>Box / Shipment Info</h2>
                 </div>
-                <div className="grid-2col" style={{ marginBottom: 12 }}>
-                  <div>
-                    <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Box Code / Tracking # *</label>
-                    <input ref={boxCodeRef} value={boxCode} onChange={e => setBoxCode(e.target.value)} placeholder="Scan or type barcode..."
-                      autoFocus
-                      style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 9, border: '2px solid var(--gold-bdr)', background: 'var(--parch-warm)', color: 'var(--ink)', fontSize: 14, outline: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700 }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Supplier</label>
-                    <input value={supplier} onChange={e => setSupplier(e.target.value)} placeholder="e.g. Amazon, Best Buy..."
-                      style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid var(--parch-line)', background: 'var(--parch-warm)', color: 'var(--ink)', fontSize: 13, outline: 'none' }} />
-                  </div>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Box Code / Tracking # *</label>
+                  <BoxCodeInput value={boxCode} onChange={setBoxCode} inputRef={boxCodeRef} />
                 </div>
                 <div className="grid-2col" style={{ marginBottom: 12 }}>
                   <div>
-                    <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Received Date</label>
-                    <input type="date" value={receivedDate} onChange={e => setReceivedDate(e.target.value)}
-                      style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid var(--parch-line)', background: 'var(--parch-warm)', color: 'var(--ink)', fontSize: 13, outline: 'none' }} />
+                    <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Supplier</label>
+                    <input value={supplier} onChange={e => setSupplier(e.target.value)} placeholder="e.g. Amazon, Best Buy..."
+                      style={{ width: '100%', height: 36, padding: '0 12px', borderRadius: 9, border: '1px solid var(--parch-line)', background: 'var(--parch-warm)', color: 'var(--ink)', fontSize: 13, outline: 'none' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Box Condition</label>
-                    <ConditionPicker value={boxCondition} onChange={setBoxCondition} />
+                    <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Received Date</label>
+                    <input type="date" value={receivedDate} onChange={e => setReceivedDate(e.target.value)}
+                      style={{ width: '100%', height: 36, padding: '0 12px', borderRadius: 9, border: '1px solid var(--parch-line)', background: 'var(--parch-warm)', color: 'var(--ink)', fontSize: 13, outline: 'none' }} />
                   </div>
+                </div>
+                <div style={{ marginBottom: boxCondition !== 'good' ? 12 : 0 }}>
+                  <label style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faded)', display: 'block', marginBottom: 4 }}>Box Condition</label>
+                  <ConditionPicker value={boxCondition} onChange={setBoxCondition} />
                 </div>
                 {boxCondition !== 'good' && (
                   <div>
@@ -321,20 +562,20 @@ export default function PackageReceiving() {
                     <Plus style={{ width: 12, height: 12 }} /> Add Item
                   </button>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {items.map(item => (
-                    <ItemRow key={item.id} item={item} onChange={(k, v) => updateItem(item.id, k, v)} onRemove={() => removeItem(item.id)} />
+                    <ItemRow key={item.id} item={item} products={products} onChange={(k, v) => updateItem(item.id, k, v)} onRemove={() => removeItem(item.id)} />
                   ))}
                 </div>
               </div>
 
               {/* Summary + Save */}
               <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
                   {[
-                    { label: 'Items', value: totalItems, color: 'var(--ocean2)' },
-                    { label: 'Issues', value: issueCount, color: issueCount > 0 ? 'var(--crimson2)' : 'var(--terrain2)' },
-                    { label: 'Total Cost', value: totalCost > 0 ? `$${totalCost.toFixed(2)}` : '—', color: 'var(--gold)' },
+                    { label: 'Items',      value: totalItems,                                          color: 'var(--ocean2)'   },
+                    { label: 'Issues',     value: issueCount,                                          color: issueCount > 0 ? 'var(--crimson2)' : 'var(--terrain2)' },
+                    { label: 'Total Cost', value: totalCost > 0 ? `$${totalCost.toFixed(2)}` : '—',  color: 'var(--gold)'     },
                   ].map(s => (
                     <div key={s.label}>
                       <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faded)', marginBottom: 2 }}>{s.label}</p>
@@ -351,8 +592,7 @@ export default function PackageReceiving() {
                     style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 22px', borderRadius: 9, fontSize: 13, fontWeight: 700, background: saving || !boxCode.trim() ? 'var(--parch-warm)' : 'var(--ink)', border: 'none', color: saving || !boxCode.trim() ? 'var(--ink-ghost)' : 'var(--ne-cream)', cursor: saving || !boxCode.trim() ? 'not-allowed' : 'pointer' }}>
                     {saving
                       ? <><div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--ink-ghost)', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} /> Saving...</>
-                      : <><Check style={{ width: 14, height: 14 }} /> Save Shipment</>
-                    }
+                      : <><Check style={{ width: 14, height: 14 }} /> Save Shipment</>}
                   </button>
                 </div>
               </div>
@@ -364,14 +604,13 @@ export default function PackageReceiving() {
       {/* ── HISTORY TAB ── */}
       {tab === 'history' && (
         <div style={{ maxWidth: 800 }}>
-          {/* Stats row */}
           {shipments.length > 0 && (
             <div className="grid-kpi" style={{ marginBottom: 16 }}>
               {[
-                { label: 'Total Shipments', value: shipments.length, color: 'var(--gold)' },
-                { label: 'Total Items', value: allItems.reduce((s, i) => s + (i.quantity || 1), 0), color: 'var(--ocean2)' },
-                { label: 'Issues Found', value: allItems.filter(i => i.condition !== 'good').length, color: 'var(--crimson2)' },
-                { label: 'Total Cost', value: `$${allItems.reduce((s, i) => s + (parseFloat(i.cost_per_unit) || 0) * (i.quantity || 1), 0).toFixed(0)}`, color: 'var(--terrain2)' },
+                { label: 'Total Shipments', value: shipments.length,                                                                                      color: 'var(--gold)'     },
+                { label: 'Total Items',     value: allItems.reduce((s, i) => s + (i.quantity || 1), 0),                                                    color: 'var(--ocean2)'   },
+                { label: 'Issues Found',    value: allItems.filter(i => i.condition !== 'good').length,                                                    color: 'var(--crimson2)' },
+                { label: 'Total Cost',      value: `$${allItems.reduce((s, i) => s + (parseFloat(i.cost_per_unit) || 0) * (i.quantity || 1), 0).toFixed(0)}`, color: 'var(--terrain2)' },
               ].map(s => (
                 <div key={s.label} className="kpi-card fade-up" style={{ borderTopColor: s.color }}>
                   <div className="kpi-label">{s.label}</div>
@@ -380,7 +619,6 @@ export default function PackageReceiving() {
               ))}
             </div>
           )}
-
           {shipments.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 14 }}>
               <Package style={{ width: 36, height: 36, color: 'var(--ink-ghost)', margin: '0 auto 12px' }} />
