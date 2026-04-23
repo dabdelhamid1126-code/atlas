@@ -6,6 +6,7 @@ import {
   Package, ScanBarcode, Plus, Check, X, BoxSelect, History,
   Camera, CameraOff, Search, Loader, ChevronDown, ChevronUp,
 } from 'lucide-react';
+import RetailerLogo from '@/components/shared/BrandLogo';
 import { toast } from 'sonner';
 
 const today = () => format(new Date(), 'yyyy-MM-dd');
@@ -399,8 +400,11 @@ function ShipmentCard({ shipment, items }) {
   return (
     <div style={{ background: 'var(--parch-card)', border: '1px solid var(--parch-line)', borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer' }} onClick={() => setOpen(!open)}>
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: condS.bg, border: `1px solid ${condS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Package style={{ width: 18, height: 18, color: condS.color }} />
+        <div style={{ flexShrink: 0 }}>
+          {shipment.supplier
+            ? <RetailerLogo retailer={shipment.supplier} size={38} />
+            : <div style={{ width: 38, height: 38, borderRadius: 10, background: condS.bg, border: `1px solid ${condS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package style={{ width: 18, height: 18, color: condS.color }} /></div>
+          }
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
