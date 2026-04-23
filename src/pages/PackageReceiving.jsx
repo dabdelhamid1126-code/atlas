@@ -46,15 +46,15 @@ function ConditionPicker({ value, onChange }) {
 
 function CameraScanner({ onScan, onClose }) {
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const rafRef = useRef(null);
   const [error, setError] = useState('');
-  const [scanning, setScanning] = useState(false);
+  const [capturing, setCapturing] = useState(false);
+  const [autoDetect, setAutoDetect] = useState(false);
 
   useEffect(() => {
-    let detector;
     const start = async () => {
-      setScanning(true);
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' },
@@ -66,25 +66,20 @@ function CameraScanner({ onScan, onClose }) {
         }
 
         if ('BarcodeDetector' in window) {
-          detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'] });
+          setAutoDetect(true);
+          const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'] });
           const detect = async () => {
             if (!videoRef.current) return;
             try {
               const barcodes = await detector.detect(videoRef.current);
-              if (barcodes.length > 0) {
-                onScan(barcodes[0].rawValue);
-                return; // stop scanning on first hit
-              }
+              if (barcodes.length > 0) { onScan(barcodes[0].rawValue); return; }
             } catch {}
             rafRef.current = requestAnimationFrame(detect);
           };
           rafRef.current = requestAnimationFrame(detect);
-        } else {
-          setError('Auto-detect not supported on this browser. Use the capture button below.');
         }
-      } catch (e) {
+      } catch {
         setError('Camera access denied or unavailable.');
-        setScanning(false);
       }
     };
     start();
@@ -94,19 +89,68 @@ function CameraScanner({ onScan, onClose }) {
     };
   }, [onScan]);
 
+  const handleCapture = async () => {
+    if (!videoRef.current) return;
+    setCapturing(true);
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+
+      if ('BarcodeDetector' in window) {
+        const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'] });
+        const barcodes = await detector.detect(canvas);
+        if (barcodes.length > 0) { onScan(barcodes[0].rawValue); return; }
+        setError('No barcode found — try again or type manually.');
+      } else {
+        // Upload frame to LLM vision to read the barcode
+        canvas.toBlob(async (blob) => {
+          try {
+            const { file_url } = await base44.integrations.Core.UploadFile({ file: blob });
+            const res = await base44.integrations.Core.InvokeLLM({
+              prompt: 'Read the barcode or QR code in this image. Return ONLY the raw barcode value as plain text, nothing else. If no barcode is visible, return the word NONE.',
+              file_urls: [file_url],
+            });
+            const val = (res || '').trim();
+            if (val && val !== 'NONE') { onScan(val); }
+            else { setError('No barcode found — try again or type manually.'); }
+          } catch { setError('Could not read barcode — try typing it manually.'); }
+          finally { setCapturing(false); }
+        }, 'image/jpeg', 0.92);
+        return; // setCapturing handled in blob callback
+      }
+    } catch { setError('Capture failed — try again.'); }
+    setCapturing(false);
+  };
+
   return (
     <div style={{ background: '#000', borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
-      <video ref={videoRef} muted playsInline style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block' }} />
+      <video ref={videoRef} muted playsInline style={{ width: '100%', maxHeight: 300, objectFit: 'cover', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
       {/* Aiming overlay */}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
         <div style={{ width: 220, height: 100, border: '2px solid rgba(201,168,76,0.8)', borderRadius: 10, boxShadow: '0 0 0 2000px rgba(0,0,0,0.35)' }} />
       </div>
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 14px', background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {error
-          ? <p style={{ fontSize: 11, color: '#fca5a5' }}>{error}</p>
-          : <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>Point camera at barcode</p>
-        }
-        <button onClick={onClose} style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 7, padding: '5px 12px', cursor: 'pointer' }}>
+      {/* Bottom bar */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 14px', background: 'linear-gradient(transparent, rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ flex: 1 }}>
+          {error
+            ? <p style={{ fontSize: 11, color: '#fca5a5', margin: 0 }}>{error}</p>
+            : <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', margin: 0 }}>{autoDetect ? 'Auto-detecting…' : 'Align barcode in box, then tap Capture'}</p>
+          }
+        </div>
+        {/* Capture shutter button */}
+        <button onClick={handleCapture} disabled={capturing}
+          style={{ width: 52, height: 52, borderRadius: '50%', border: '3px solid #fff', background: capturing ? 'rgba(255,255,255,0.4)' : '#fff', cursor: capturing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+          {capturing
+            ? <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #999', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+            : <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#000' }} />
+          }
+        </button>
+        <button onClick={onClose}
+          style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 7, padding: '6px 14px', cursor: 'pointer', flexShrink: 0 }}>
           Close
         </button>
       </div>
