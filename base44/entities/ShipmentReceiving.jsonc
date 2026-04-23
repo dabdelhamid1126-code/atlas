@@ -1,0 +1,46 @@
+{
+  "name": "ShipmentReceiving",
+  "type": "object",
+  "properties": {
+    "box_code": {
+      "type": "string",
+      "description": "Shipping label barcode or box ID"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Where the shipment came from"
+    },
+    "box_condition": {
+      "type": "string",
+      "enum": [
+        "good",
+        "damaged",
+        "missing"
+      ],
+      "default": "good",
+      "description": "Overall condition of the box"
+    },
+    "box_notes": {
+      "type": "string",
+      "description": "Notes about the box condition"
+    },
+    "item_count": {
+      "type": "number",
+      "description": "Total number of items in box"
+    },
+    "damage_count": {
+      "type": "number",
+      "description": "Number of damaged or missing items",
+      "default": 0
+    },
+    "received_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the shipment was received"
+    }
+  },
+  "required": [
+    "box_code",
+    "received_date"
+  ]
+}

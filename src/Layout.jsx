@@ -26,10 +26,11 @@ const NAV_GROUPS = [
   {
     label: 'Manage',
     items: [
-      { name: 'Inventory', page: 'Inventory',    icon: Boxes },
-      { name: 'New Order', page: 'NewOrders',    icon: PlusCircle },
-      { name: 'Products',  page: 'Products',     icon: Package },
-      { name: 'Import',    page: 'ImportOrders', icon: Download },
+      { name: 'Inventory',  page: 'Inventory',         icon: Boxes },
+      { name: 'New Order',  page: 'NewOrders',         icon: PlusCircle },
+      { name: 'Products',   page: 'Products',          icon: Package },
+      { name: 'Import',     page: 'ImportOrders',      icon: Download },
+      { name: 'Receiving',  page: 'PackageReceiving',  icon: Package },
     ],
   },
   {

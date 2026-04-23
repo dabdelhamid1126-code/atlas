@@ -18,6 +18,7 @@ import ReceiveItems from './pages/ReceiveItems';
 import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
 import NewOrders from './pages/NewOrders';
+import PackageReceiving from './pages/PackageReceiving';
 import __Layout from './Layout.jsx';
 
 
@@ -39,6 +40,7 @@ export const PAGES = {
     "Settings": Settings,
     "Transactions": Transactions,
     "NewOrders": NewOrders,
+    "PackageReceiving": PackageReceiving,
 }
 
 export const pagesConfig = {

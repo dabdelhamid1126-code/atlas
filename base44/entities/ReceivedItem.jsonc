@@ -1,0 +1,49 @@
+{
+  "name": "ReceivedItem",
+  "type": "object",
+  "properties": {
+    "shipment_id": {
+      "type": "string",
+      "description": "Reference to parent ShipmentReceiving ID"
+    },
+    "box_code": {
+      "type": "string",
+      "description": "Box code for quick reference"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Product SKU or barcode"
+    },
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "condition": {
+      "type": "string",
+      "enum": [
+        "good",
+        "damaged",
+        "missing"
+      ],
+      "default": "good",
+      "description": "Item condition"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Damage or condition notes"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "Quantity of this item"
+    },
+    "cost_per_unit": {
+      "type": "number",
+      "description": "Cost per unit in dollars"
+    }
+  },
+  "required": [
+    "shipment_id",
+    "name"
+  ]
+}
