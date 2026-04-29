@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import CommandPalette from '@/components/CommandPalette';
+import NamePromptModal from '@/components/NamePromptModal';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
@@ -72,11 +73,12 @@ function AtlasLogo({ size = 36 }) {
 
 /* ── Layout ──────────────────────────────────────────────────────── */
 export default function Layout({ children, currentPageName }) {
-  const [user,         setUser]         = useState(null);
-  const [sidebarOpen,  setSidebarOpen]  = useState(false);
-  const [collapsed,    setCollapsed]    = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [cmdOpen,      setCmdOpen]      = useState(false);
+  const [user,           setUser]           = useState(null);
+  const [sidebarOpen,    setSidebarOpen]    = useState(false);
+  const [collapsed,      setCollapsed]      = useState(false);
+  const [userMenuOpen,   setUserMenuOpen]   = useState(false);
+  const [cmdOpen,        setCmdOpen]        = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
   const location = useLocation();
 
   const openCmd = useCallback(() => setCmdOpen(true), []);
@@ -87,7 +89,12 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => {
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u && !u.full_name) setShowNamePrompt(true);
+    }).catch(() => {});
+  }, []);
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const isActive = (page) => currentPageName === page;
@@ -196,7 +203,7 @@ export default function Layout({ children, currentPageName }) {
                   <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--sidebar-accent)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.full_name || user.email?.split('@')[0] || 'User'}
                   </p>
-                  <p style={{ fontSize: 10, color: 'var(--sidebar-label)', margin: 0 }}>Charting</p>
+                  <p style={{ fontSize: 10, color: 'var(--sidebar-label)', margin: 0 }}>{user?.role || 'Member'}</p>
                 </div>
                 <ChevronDown style={{ width: 13, height: 13, color: 'var(--sidebar-text)', flexShrink: 0 }} />
               </>
@@ -246,6 +253,12 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
 
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+      {showNamePrompt && (
+        <NamePromptModal onComplete={(name) => {
+          setUser(u => ({ ...u, full_name: name }));
+          setShowNamePrompt(false);
+        }} />
+      )}
 
       {/* Mobile overlay */}
       {sidebarOpen && (
