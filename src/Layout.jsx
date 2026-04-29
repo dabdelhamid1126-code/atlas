@@ -200,7 +200,7 @@ export default function Layout({ children, currentPageName }) {
             {!collapsed && (
               <>
                 <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--sidebar-accent)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#f5e09a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.full_name || user.email?.split('@')[0] || 'User'}
                   </p>
                   <p style={{ fontSize: 10, color: 'var(--sidebar-label)', margin: 0 }}>{user?.role || 'Member'}</p>
