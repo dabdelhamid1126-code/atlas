@@ -200,10 +200,10 @@ export default function Layout({ children, currentPageName }) {
             {!collapsed && (
               <>
                 <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#f5e09a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.full_name || user.email?.split('@')[0] || 'User'}
                   </p>
-                  <p style={{ fontSize: 10, color: 'var(--sidebar-label)', margin: 0 }}>{user?.role || 'Member'}</p>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', margin: 0 }}>{user?.role || 'Member'}</p>
                 </div>
                 <ChevronDown style={{ width: 13, height: 13, color: 'var(--sidebar-text)', flexShrink: 0 }} />
               </>
