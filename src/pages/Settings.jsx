@@ -104,7 +104,7 @@ function ProfileSection() {
 
   const handleSave = async () => {
     try {
-      await base44.auth.updateMe({ phone: user.phone, businessName: user.businessName, businessLocation: user.businessLocation });
+      await base44.auth.updateMe({ full_name: user.full_name, phone: user.phone, businessName: user.businessName, businessLocation: user.businessLocation });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) { console.error(e); }
@@ -154,8 +154,7 @@ function ProfileSection() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div>
           <LBL>Full Name</LBL>
-          <div style={{ ...INP, cursor: 'not-allowed', color: C.inkFaded }}>{user.full_name || '—'}</div>
-          <p style={{ fontSize: 10, color: C.inkGhost, marginTop: 4, fontFamily: FONT }}>Managed by Base44</p>
+          <input value={user.full_name || ''} onChange={e => setUser(u => ({ ...u, full_name: e.target.value }))} placeholder="Your full name" style={INP} />
         </div>
         <div>
           <LBL>Email</LBL>
