@@ -92,7 +92,7 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
-      if (u && !u.full_name) setShowNamePrompt(true);
+      if (u && (!u.full_name || u.full_name.trim() === '')) setShowNamePrompt(true);
     }).catch(() => {});
   }, []);
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
