@@ -89,12 +89,19 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  useEffect(() => {
+  const refreshUser = useCallback(() => {
     base44.auth.me().then(u => {
       setUser(u);
       if (u && (!u.full_name || u.full_name.trim() === '')) setShowNamePrompt(true);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    refreshUser();
+    // Re-fetch user on focus so sidebar updates after Settings save
+    window.addEventListener('focus', refreshUser);
+    return () => window.removeEventListener('focus', refreshUser);
+  }, [refreshUser]);
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const isActive = (page) => currentPageName === page;

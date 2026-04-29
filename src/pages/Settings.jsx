@@ -107,6 +107,8 @@ function ProfileSection() {
       await base44.auth.updateMe({ full_name: user.full_name, phone: user.phone, businessName: user.businessName, businessLocation: user.businessLocation });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('focus'));
     } catch (e) { console.error(e); }
   };
 
