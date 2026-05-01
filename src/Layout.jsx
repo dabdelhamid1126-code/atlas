@@ -120,7 +120,7 @@ export default function Layout({ children, currentPageName }) {
             <Link to="/app" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
               <AtlasLogo size={30} />
               <div>
-                <p style={{ fontSize: 14, fontWeight: 900, margin: 0, lineHeight: 1, fontFamily: 'var(--font-serif)', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Atlas</p>
+                <p style={{ fontSize: 14, fontWeight: 900, margin: 0, lineHeight: 1, fontFamily: 'var(--font-serif)', letterSpacing: '0.18em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</p>
                 <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0' }}>Reselling, Quantified</p>
               </div>
             </Link>
@@ -291,7 +291,7 @@ export default function Layout({ children, currentPageName }) {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <AtlasLogo size={26} />
-            <span style={{ fontSize: 14, fontWeight: 900, fontFamily: 'var(--font-serif)', background: 'linear-gradient(135deg,#c9a84c,#f5e09a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Atlas</span>
+            <span style={{ fontSize: 14, fontWeight: 900, fontFamily: 'var(--font-serif)', letterSpacing: '0.18em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</span>
           </div>
         </div>
 

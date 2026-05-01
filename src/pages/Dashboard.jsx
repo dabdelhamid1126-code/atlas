@@ -222,6 +222,7 @@ export default function Dashboard() {
   const [modalImg,      setModalImg]      = useState(null);
   const navigate = useNavigate();
 
+  const [user,           setUser]           = useState(null);
   const [allOrders,      setAllOrders]      = useState([]);
   const [allRewards,     setAllRewards]     = useState([]);
   const [creditCards,    setCreditCards]    = useState([]);
@@ -235,6 +236,7 @@ export default function Dashboard() {
   const loadData = useCallback(async () => {
     const u = await base44.auth.me().catch(() => null);
     if (!u?.email) { setLoading(false); return; }
+    setUser(u);
     const byUser = { created_by: u.email };
     const [orders, rewards, cards, inv, gc, invs, dmg, ships, prods] = await Promise.all([
       base44.entities.PurchaseOrder.filter(byUser),
@@ -422,7 +424,7 @@ export default function Dashboard() {
       <div className="dash-header">
         <div>
           <h1 className="page-title">
-            {greeting()}, Explorer
+            {greeting()}, {user?.full_name?.split(' ')[0] || 'Explorer'}
             {refreshing && <RefreshCw size={14} className="spin" style={{ display:"inline", marginLeft:8, color:"var(--ink-dim)", verticalAlign:"middle" }} />}
           </h1>
           <p style={{ fontSize:11, color:"var(--ink-dim)", marginTop:4, letterSpacing:"0.03em" }}>
