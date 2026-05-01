@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 
 const AtlasLogo = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -62,6 +60,74 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [visible,  setVisible]  = useState(false);
 
+  // ── Star canvas animation ──────────────────────────────────────
+  useEffect(() => {
+    const canvas = document.getElementById('atlas-stars');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let raf;
+
+    const resize = () => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Generate stars
+    const STARS = Array.from({ length: 240 }, () =>({
+      x:     Math.random() * window.innerWidth,
+      y:     Math.random() * window.innerHeight,
+      r:     Math.random() * 1.4 + 0.2,
+      alpha: Math.random() * 0.6 + 0.1,
+      speed: Math.random() * 0.004 + 0.001,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
+    // Generate connections
+    const LINES = [];
+    for (let i = 0; i < STARS.length; i++) {
+      for (let j = i + 1; j < STARS.length; j++) {
+        const d = Math.hypot(STARS[i].x - STARS[j].x, STARS[i].y - STARS[j].y);
+        if (d < 140) LINES.push({ i, j, d });
+      }
+    }
+
+    let t = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      t += 0.01;
+
+      // Draw connection lines
+      LINES.forEach(({ i, j, d }) => {
+        const alpha = (1 - d / 140) * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(STARS[i].x, STARS[i].y);
+        ctx.lineTo(STARS[j].x, STARS[j].y);
+        ctx.strokeStyle = `rgba(196,146,46,${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      });
+
+      // Draw stars
+      STARS.forEach(s => {
+        const pulse = s.alpha * (0.7 + 0.3 * Math.sin(t * s.speed * 100 + s.phase));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,245,${Math.min(pulse * 1.3, 0.9)})`;
+        ctx.fill();
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
   useEffect(() => {
     setTimeout(() => setVisible(true), 80);
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -69,16 +135,27 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navigate   = useNavigate();
-  const goRegister = () => navigate("/register");
-  const goLogin    = () => base44.auth.redirectToLogin('/app');
+  const goRegister = () => window.location.href = "/register";
+  const goLogin    = () => window.location.href = "/login";
 
   return (
-    <div style={{ background: "#080706", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'Satoshi', 'Inter', system-ui, sans-serif" }}>
+    <div style={{ background: "#060503", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=Marcellus&family=Marcellus&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .serif { font-family: 'Satoshi', 'Inter', system-ui, sans-serif; font-style: normal; font-weight: 700; }
+        .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+
+        /* Star canvas */
+        #atlas-stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+
+        /* Logo watermark */
+        .logo-watermark { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+          width:min(90vw,800px); height:min(90vw,800px); pointer-events:none; z-index:0;
+          opacity:0.055; }
+
+        /* Make all sections sit above stars */
+        nav, section, footer { position:relative; z-index:1; }
 
         .fu { opacity: 0; transform: translateY(26px); transition: opacity 0.75s ease, transform 0.75s ease; }
         .fu.in { opacity: 1; transform: translateY(0); }
@@ -86,27 +163,27 @@ export default function LandingPage() {
         .d4{transition-delay:.40s}.d5{transition-delay:.52s}.d6{transition-delay:.64s}
 
         .btn-g { background:#C4922E; color:#080706; border:none; border-radius:8px;
-          font-family:'Satoshi','Inter',system-ui,sans-serif; font-weight:600; cursor:pointer;
+          font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer;
           display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-g:hover { background:#d9a43a; transform:translateY(-1px); }
 
         .btn-o { background:transparent; color:#f0ece4; border:1px solid #C4922E44;
-          border-radius:8px; font-family:'Satoshi','Inter',system-ui,sans-serif; font-weight:500;
+          border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:500;
           cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-o:hover { border-color:#C4922E88; background:#C4922E0a; }
 
-        .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:500; font-family:'Satoshi','Inter',system-ui,sans-serif;
-          transition:color 0.2s; letter-spacing:-0.01em; }
+        .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:400;
+          transition:color 0.2s; letter-spacing:0.02em; }
         .nl:hover { color:#C4922E; }
 
-        .fc { background:#0d0b08; border:1px solid #C4922E1a; border-radius:14px;
+        .fc { background:#161208; border:1px solid #C4922E33; border-radius:14px;
           padding:28px 22px; transition:all 0.25s; position:relative; overflow:hidden; }
-        .fc:hover { border-color:#C4922E44; transform:translateY(-3px); background:#111009; }
+        .fc:hover { border-color:#C4922E77; transform:translateY(-3px); background:#1e1810; }
 
         .dot-bg { background-image:radial-gradient(circle,#C4922E12 1px,transparent 1px);
           background-size:30px 30px; }
 
-        .gold-line { height:1px; background:linear-gradient(90deg,transparent,#C4922E44,transparent); }
+        .gold-line { height:1px; background:linear-gradient(90deg,transparent,#C4922E88,transparent); }
 
         @keyframes pulse { 0%,100%{opacity:.15} 50%{opacity:.3} }
         .pr { animation:pulse 3.5s ease-in-out infinite; }
@@ -121,12 +198,12 @@ export default function LandingPage() {
         .fa:hover { color:#9a9080; }
 
         @media(max-width:900px){
-          .hg{grid-template-columns:1fr !important; text-align:center;}
-          .hgr{margin:0 auto 40px; order:-1;}
+          .hg{grid-template-columns:1fr !important; text-align:center; gap:0 !important;}
+          .hgr{margin:0 auto 16px !important; order:-1; height:220px !important;}
           .hb{justify-content:center !important;}
           .fg{grid-template-columns:1fr 1fr !important;}
           .wg{grid-template-columns:1fr !important;}
-          .ht{font-size:42px !important;}
+          .ht{font-size:38px !important;}
           .sp{padding:60px 20px !important;}
           .nm{display:none !important;}
           .sm{display:flex !important;}
@@ -134,26 +211,55 @@ export default function LandingPage() {
         }
         @media(max-width:540px){
           .fg{grid-template-columns:1fr !important;}
+          .ht{font-size:32px !important;}
+          .hgr{height:180px !important;}
+        }
+        @media(max-width:540px){
+          .fg{grid-template-columns:1fr !important;}
           .ht{font-size:34px !important;}
         }
-      `}
-      </style>
+      `}</style>
+
+      {/* Star background */}
+      <canvas id="atlas-stars" />
+
+      {/* Logo watermark */}
+      <div className="logo-watermark">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
+          <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="8" opacity="1"/>
+          <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.6"/>
+          <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.5"/>
+          <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.5"/>
+          <polygon points="256,82 238,168 256,152 274,168" fill="#C4922E"/>
+          <polygon points="256,430 238,344 256,360 274,344" fill="#C4922E" opacity="0.5"/>
+          <polygon points="430,256 344,238 360,256 344,274" fill="#f5e09a"/>
+          <polygon points="82,256 168,238 152,256 168,274" fill="#C4922E" opacity="0.5"/>
+          <circle cx="256" cy="256" r="52" fill="none" stroke="#C4922E" strokeWidth="8"/>
+          <circle cx="256" cy="256" r="22" fill="#C4922E"/>
+          <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
+        </svg>
+      </div>
 
       {/* NAV */}
       <nav style={{
         position:"fixed", top:0, left:0, right:0, zIndex:50,
         padding:"16px 48px", display:"flex", alignItems:"center", justifyContent:"space-between",
-        background: scrolled ? "rgba(8,7,6,0.93)" : "transparent",
+        background: scrolled ? "rgba(8,7,6,0.92)" : "rgba(8,7,6,0.3)",
         backdropFilter: scrolled ? "blur(16px)" : "none",
         borderBottom: scrolled ? "1px solid #C4922E18" : "1px solid transparent",
         transition:"all 0.35s",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <AtlasLogo size={30}/>
-          <span style={{ fontSize:16, fontWeight:800, letterSpacing:"0.15em", color:"#f5e09a", fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>ATLAS</span>
+          <AtlasLogo size={42}/>
+          <span style={{ fontFamily:"'Marcellus', serif", fontSize:24, fontWeight:400, letterSpacing:"0.05em", color:"#f5e09a" }}>ATLAS</span>
         </div>
         <div className="nm" style={{ display:"flex", gap:28 }}>
-          {NAV_LINKS.map(l => <a key={l} href="#" className="nl">{l}</a>)}
+          {[
+          {label:'Features', path:'/features'},
+          {label:'Pricing',  path:'/pricing'},
+          {label:'Roadmap',  path:'/roadmap'},
+          {label:'About',    path:'/about'},
+        ].map(l => <a key={l.label} href={l.path} className="nl">{l.label}</a>)}
         </div>
         <div className="nm" style={{ display:"flex", gap:10 }}>
           <button className="btn-o" style={{ padding:"9px 20px", fontSize:13 }} onClick={goLogin}>Log In</button>
@@ -174,9 +280,9 @@ export default function LandingPage() {
       )}
 
       {/* HERO */}
-      <section className="dot-bg" style={{ minHeight:"100vh", padding:"130px 48px 80px", display:"flex", alignItems:"center" }} className="sp" style={{ padding:"130px 48px 80px" }}>
+      <section style={{ minHeight:"100vh", padding:"100px 48px 60px", display:"flex", alignItems:"center", background:"transparent" }} className="sp" style={{ padding:"100px 48px 60px" }} className="sp" style={{ padding:"130px 48px 80px" }}>
         <div style={{ maxWidth:1200, margin:"0 auto", width:"100%" }}>
-          <div className="hg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:60, alignItems:"center" }}>
+          <div className="hg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center" }}>
 
             {/* Left */}
             <div>
@@ -187,12 +293,12 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <h1 className={`fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:800, lineHeight:1.04, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
+              <h1 className={`serif fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:700, lineHeight:1.06, marginBottom:22 }}>
                 Run Your Reselling<br/>Business Like a<br/>
                 <span style={{ color:"#C4922E" }}>Hedge Fund.</span>
               </h1>
 
-              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#7a7060", lineHeight:1.8, marginBottom:36, maxWidth:440, fontWeight:400, letterSpacing:'-0.01em' }}>
+              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#7a7060", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300 }}>
                 Atlas gives you the tools, insights, and automation to track inventory, maximize profit, and make smarter decisions — every day.
               </p>
 
@@ -207,13 +313,13 @@ export default function LandingPage() {
             </div>
 
             {/* Right — Large logo with rings */}
-            <div className={`fu d2 ${visible?"in":""} hgr`} style={{ display:"flex", justifyContent:"center", alignItems:"center", position:"relative", height:400 }}>
-              <div className="pr"  style={{ position:"absolute", width:440, height:440, borderRadius:"50%", border:"1px solid #C4922E1e" }}/>
-              <div className="pr2" style={{ position:"absolute", width:330, height:330, borderRadius:"50%", border:"1px solid #C4922E18" }}/>
-              <div className="pr3" style={{ position:"absolute", width:220, height:220, borderRadius:"50%", border:"1px solid #C4922E14" }}/>
-              <div style={{ position:"absolute", width:280, height:280, borderRadius:"50%", background:"radial-gradient(circle, #C4922E14 0%, transparent 70%)" }}/>
+            <div className={`fu d2 ${visible?"in":""} hgr`} style={{ display:"flex", justifyContent:"center", alignItems:"center", position:"relative", height:320 }}>
+              <div className="pr"  style={{ position:"absolute", width:360, height:360, borderRadius:"50%", border:"1px solid #C4922E28" }}/>
+              <div className="pr2" style={{ position:"absolute", width:260, height:260, borderRadius:"50%", border:"1px solid #C4922E20" }}/>
+              <div className="pr3" style={{ position:"absolute", width:180, height:180, borderRadius:"50%", border:"1px solid #C4922E18" }}/>
+              <div style={{ position:"absolute", width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, #C4922E28 0%, #C4922E08 50%, transparent 70%)" }}/>
               <div className="fl" style={{ position:"relative", zIndex:1 }}>
-                <AtlasLogo size={260}/>
+                <AtlasLogo size={220}/>
               </div>
             </div>
 
@@ -224,25 +330,25 @@ export default function LandingPage() {
       <div className="gold-line"/>
 
       {/* FEATURES */}
-      <section style={{ padding:"100px 48px", background:"#060504" }} className="sp">
+      <section style={{ padding:"100px 48px", background:"rgba(10,9,6,0.85)", borderTop:"1px solid #C4922E22", borderBottom:"1px solid #C4922E22" }} className="sp">
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:60 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.22em", color:"#C4922E", textTransform:"uppercase", marginBottom:14 }}>Built for Resellers</p>
-            <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:14, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
+            <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:14 }}>
               Everything You Need.<br/>All in One Place.
             </h2>
-            <p style={{ fontSize:14, color:"#4a4238", maxWidth:460, margin:"0 auto", lineHeight:1.75, fontWeight:400, letterSpacing:'-0.01em' }}>
+            <p style={{ fontSize:14, color:"#4a4238", maxWidth:460, margin:"0 auto", lineHeight:1.7, fontWeight:300 }}>
               Every feature was built because we needed it ourselves. No fluff, no filler.
             </p>
           </div>
           <div className="fg" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
             {FEATURES.map((f, i) => (
               <div key={f.title} className={`fc fu d${i+1} ${visible?"in":""}`}>
-                <div style={{ width:50, height:50, background:"#C4922E10", border:"1px solid #C4922E28", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
+                <div style={{ width:50, height:50, background:"#C4922E18", border:"1px solid #C4922E44", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
                   {f.icon}
                 </div>
-                <div style={{ fontSize:13.5, fontWeight:650, color:"#e8e2d8", marginBottom:10, letterSpacing:'-0.015em' }}>{f.title}</div>
-                <div style={{ fontSize:12, color:"#5a5248", lineHeight:1.72, fontWeight:400, letterSpacing:'-0.005em' }}>{f.desc}</div>
+                <div style={{ fontSize:14, fontWeight:600, color:"#fff", marginBottom:10 }}>{f.title}</div>
+                <div style={{ fontSize:12, color:"#6a6258", lineHeight:1.65, fontWeight:300 }}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -252,15 +358,15 @@ export default function LandingPage() {
       <div className="gold-line"/>
 
       {/* WHY */}
-      <section style={{ padding:"100px 48px", background:"#080706" }} className="sp">
+      <section style={{ padding:"100px 48px", background:"rgba(8,7,6,0.88)" }} className="sp">
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div className="wg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
             <div>
               <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase", marginBottom:16 }}>Why Atlas</p>
-              <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
+              <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:20 }}>
                 Not Another<br/><span style={{ color:"#C4922E" }}>Spreadsheet Tool.</span>
               </h2>
-              <p style={{ fontSize:14, color:"#4a4238", lineHeight:1.8, marginBottom:36, fontWeight:400, letterSpacing:'-0.01em', maxWidth:400 }}>
+              <p style={{ fontSize:14, color:"#4a4238", lineHeight:1.8, marginBottom:36, fontWeight:300, maxWidth:400 }}>
                 Atlas thinks like a reseller. Clarity, automation, and real insights — not just another place to log numbers.
               </p>
               <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
@@ -286,8 +392,8 @@ export default function LandingPage() {
                 ["Goal Tracker","Monthly targets"],
               ].map(([label, sub]) => (
                 <div key={label} style={{ background:"#080706", padding:"20px 18px", transition:"background 0.2s", cursor:"default" }}
-                  onMouseEnter={e => e.currentTarget.style.background="#0f0d09"}
-                  onMouseLeave={e => e.currentTarget.style.background="#080706"}>
+                  onMouseEnter={e => e.currentTarget.style.background="#1a1610"}
+                  onMouseLeave={e => e.currentTarget.style.background="#0d0b08"}>
                   <div style={{ fontSize:13, fontWeight:600, color:"#b0aba2", marginBottom:4 }}>{label}</div>
                   <div style={{ fontSize:11, color:"#302c28", fontWeight:300 }}>{sub}</div>
                 </div>
@@ -300,18 +406,16 @@ export default function LandingPage() {
       <div className="gold-line"/>
 
       {/* CTA */}
-      <section className="dot-bg" style={{ padding:"110px 48px", background:"#060504", textAlign:"center", position:"relative", overflow:"hidden" }} className="sp">
-        <div style={{ position:"absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", opacity:0.04, pointerEvents:"none" }}>
-          <AtlasLogo size={560}/>
-        </div>
+      <section style={{ padding:"110px 48px", background:"rgba(6,5,4,0.82)", textAlign:"center", position:"relative", overflow:"hidden" }} className="sp">
+
         <div style={{ maxWidth:580, margin:"0 auto", position:"relative", zIndex:1 }}>
           <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
             <AtlasLogo size={60}/>
           </div>
-          <h2 style={{ fontSize:50, fontWeight:800, lineHeight:1.04, marginBottom:16, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
+          <h2 className="serif" style={{ fontSize:50, fontWeight:600, lineHeight:1.08, marginBottom:16 }}>
             Get Early Access<br/>to <span style={{ color:"#C4922E" }}>Atlas</span>
           </h2>
-          <p style={{ fontSize:15, color:"#4a4238", marginBottom:38, lineHeight:1.78, fontWeight:400, letterSpacing:'-0.01em' }}>
+          <p style={{ fontSize:15, color:"#4a4238", marginBottom:38, lineHeight:1.7, fontWeight:300 }}>
             Create your free account and start running your reselling business like a pro.
           </p>
           <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>
@@ -330,8 +434,8 @@ export default function LandingPage() {
           <div className="ftg" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:48, marginBottom:44 }}>
             <div>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
-                <AtlasLogo size={26}/>
-                <span style={{ fontSize:14, fontWeight:800, letterSpacing:"0.12em", color:"#f5e09a", fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>ATLAS</span>
+                <AtlasLogo size={36}/>
+                <span style={{ fontFamily:"'Marcellus', serif", fontSize:18, fontWeight:400, letterSpacing:"0.05em", color:"#f5e09a" }}>ATLAS</span>
               </div>
               <p style={{ fontSize:13, color:"#2e2820", lineHeight:1.65, maxWidth:220, fontWeight:300, marginBottom:18 }}>
                 The command center for serious resellers.
