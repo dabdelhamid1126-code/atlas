@@ -86,8 +86,8 @@
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
 
   /* Fonts */
-  --font-serif: 'Inter', system-ui, sans-serif;
-  --font-sans:  'Inter', system-ui, sans-serif;
+  --font-serif: 'Satoshi', 'Inter', system-ui, sans-serif;
+  --font-sans:  'Satoshi', 'Inter', system-ui, sans-serif;
   --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
 
   /* Chart colors */
@@ -263,54 +263,53 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "cv02","cv03","cv04","cv11";
+  font-feature-settings: "ss01","ss02","cv01","cv03";
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Inter', system-ui, sans-serif;
-  letter-spacing: -0.03em;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
 }
 
-h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; }
-h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
-h3 { font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
-h4 { font-size: 13px; font-weight: 650; letter-spacing: -0.01em; }
+h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+h4 { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
 
 p {
-  letter-spacing: -0.012em;
+  letter-spacing: -0.01em;
   line-height: 1.65;
   color: var(--ink-dim);
 }
 
 strong, b {
-  font-weight: 650;
+  font-weight: 700;
   color: var(--ink);
 }
 
 button {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-weight: 550;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 input, textarea, select {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-weight: 400;
   font-size: 13px;
   letter-spacing: -0.01em;
 }
 
 a {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
 }
 
 body {
@@ -394,22 +393,22 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Page title ──────────────────────────────────────────────────── */
 .page-title {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 22px;
   font-weight: 800;
   color: var(--ink);
-  letter-spacing: -0.04em;
-  line-height: 1.08;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   margin: 0;
 }
 
 .page-subtitle {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 12px;
   font-weight: 400;
   color: var(--ink-faded);
   margin-top: 5px;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
   line-height: 1.5;
 }
 
@@ -427,10 +426,10 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-label {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-ghost);
   margin-bottom: 0;
@@ -447,11 +446,11 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-sub {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 10px;
   font-weight: 400;
   color: var(--ink-ghost);
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
   line-height: 1.4;
 }
 
@@ -493,10 +492,10 @@ input:focus, textarea:focus, select:focus {
 }
 
 .section-div-label {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-faded);
   white-space: nowrap;
@@ -518,10 +517,10 @@ input:focus, textarea:focus, select:focus {
 .dash-table th {
   padding: 9px 13px;
   text-align: left;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-ghost);
   white-space: nowrap;
@@ -553,10 +552,10 @@ input:focus, textarea:focus, select:focus {
   border: none;
   background: transparent;
   color: var(--ink-faded);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 550;
-  letter-spacing: -0.005em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -572,10 +571,10 @@ input:focus, textarea:focus, select:focus {
 }
 
 .breakdown-label {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-faded);
 }
@@ -598,7 +597,7 @@ input:focus, textarea:focus, select:focus {
   border: none;
   background: var(--ink);
   color: var(--ne-cream);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -624,9 +623,10 @@ input:focus, textarea:focus, select:focus {
   gap: 4px;
   padding: 2px 9px;
   border-radius: 20px;
+  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
   font-size: 9.5px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   border-width: 1px;
   border-style: solid;
@@ -874,8 +874,8 @@ input:focus, textarea:focus, select:focus {
 }
 
 @layer utilities {
-  .font-display { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; }
-  .font-cinzel  { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; }
+  .font-display { font-family: 'Satoshi', 'Inter', system-ui, sans-serif; font-weight: 700; }
+  .font-cinzel  { font-family: 'Satoshi', 'Inter', system-ui, sans-serif; font-weight: 700; }
   .gradient-gold {
     background: linear-gradient(135deg, #c9a84c, #f5e09a, #c9a84c);
     -webkit-background-clip: text;

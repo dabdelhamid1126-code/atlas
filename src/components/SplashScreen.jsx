@@ -240,7 +240,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
         {/* Title — espresso #3D2B1A */}
         <div style={{ ...fadeUp(titleVisible), marginBottom:10, textAlign:'center' }}>
           <h1 style={{
-            fontFamily:'var(--font-serif)',
+            fontFamily:"'Satoshi', 'Inter', system-ui, sans-serif",
             fontSize:46, fontWeight:900,
             letterSpacing:'0.22em',
             color:'#3D2B1A',
@@ -254,7 +254,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:30, height:1, background:'rgba(160,114,42,0.4)' }}/>
             <p style={{
-              fontFamily:'var(--font-sans)',
+              fontFamily:"'Satoshi', 'Inter', system-ui, sans-serif",
               fontSize:10, fontWeight:600,
               letterSpacing:'0.3em', textTransform:'uppercase',
               color:'#664930', margin:0,
@@ -266,7 +266,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
         {/* Greeting */}
         <div style={{ ...fadeUp(greetVisible), marginBottom:38, textAlign:'center' }}>
           <p style={{
-            fontFamily:'var(--font-sans)',
+            fontFamily:"'Satoshi', 'Inter', system-ui, sans-serif",
             fontSize:14, fontStyle:'italic',
             color:'#8a6d56', margin:0,
           }}>
@@ -293,7 +293,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
             }}/>
           </div>
           <p style={{
-            fontFamily:'var(--font-mono)',
+            fontFamily:"ui-monospace, 'SF Mono', 'Consolas', monospace",
             fontSize:9, letterSpacing:'0.18em',
             textTransform:'uppercase',
             color:'rgba(102,73,48,0.5)', margin:0,
@@ -325,7 +325,7 @@ export default function SplashScreen({ onComplete, userName = '' }) {
       }}>
         <div style={{ width:18, height:1, background:'#997E67' }}/>
         <p style={{
-          fontFamily:'var(--font-mono)',
+          fontFamily:"ui-monospace, 'SF Mono', 'Consolas', monospace",
           fontSize:8, letterSpacing:'0.2em',
           color:'#997E67', margin:0, textTransform:'uppercase',
         }}>

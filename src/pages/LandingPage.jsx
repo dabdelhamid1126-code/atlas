@@ -73,11 +73,11 @@ export default function LandingPage() {
   const goLogin    = () => navigate("/app");
 
   return (
-    <div style={{ background: "#080706", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div style={{ background: "#080706", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'Satoshi', 'Inter', system-ui, sans-serif" }}>
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .serif { font-family: 'Inter', system-ui, sans-serif; font-style: normal; font-weight: 700; }
+        .serif { font-family: 'Satoshi', 'Inter', system-ui, sans-serif; font-style: normal; font-weight: 700; }
 
         .fu { opacity: 0; transform: translateY(26px); transition: opacity 0.75s ease, transform 0.75s ease; }
         .fu.in { opacity: 1; transform: translateY(0); }
@@ -85,16 +85,16 @@ export default function LandingPage() {
         .d4{transition-delay:.40s}.d5{transition-delay:.52s}.d6{transition-delay:.64s}
 
         .btn-g { background:#C4922E; color:#080706; border:none; border-radius:8px;
-          font-family:'Inter',system-ui,sans-serif; font-weight:600; cursor:pointer;
+          font-family:'Satoshi','Inter',system-ui,sans-serif; font-weight:600; cursor:pointer;
           display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-g:hover { background:#d9a43a; transform:translateY(-1px); }
 
         .btn-o { background:transparent; color:#f0ece4; border:1px solid #C4922E44;
-          border-radius:8px; font-family:'Inter',system-ui,sans-serif; font-weight:500;
+          border-radius:8px; font-family:'Satoshi','Inter',system-ui,sans-serif; font-weight:500;
           cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-o:hover { border-color:#C4922E88; background:#C4922E0a; }
 
-        .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:500;
+        .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:500; font-family:'Satoshi','Inter',system-ui,sans-serif;
           transition:color 0.2s; letter-spacing:-0.01em; }
         .nl:hover { color:#C4922E; }
 
@@ -149,7 +149,7 @@ export default function LandingPage() {
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <AtlasLogo size={30}/>
-          <span style={{ fontSize:16, fontWeight:800, letterSpacing:"0.15em", color:"#f5e09a", fontFamily:"'Inter',system-ui,sans-serif" }}>ATLAS</span>
+          <span style={{ fontSize:16, fontWeight:800, letterSpacing:"0.15em", color:"#f5e09a", fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>ATLAS</span>
         </div>
         <div className="nm" style={{ display:"flex", gap:28 }}>
           {NAV_LINKS.map(l => <a key={l} href="#" className="nl">{l}</a>)}
@@ -186,7 +186,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <h1 className={`fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:800, lineHeight:1.04, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+              <h1 className={`fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:800, lineHeight:1.04, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
                 Run Your Reselling<br/>Business Like a<br/>
                 <span style={{ color:"#C4922E" }}>Hedge Fund.</span>
               </h1>
@@ -227,7 +227,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:60 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.22em", color:"#C4922E", textTransform:"uppercase", marginBottom:14 }}>Built for Resellers</p>
-            <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:14, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+            <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:14, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
               Everything You Need.<br/>All in One Place.
             </h2>
             <p style={{ fontSize:14, color:"#4a4238", maxWidth:460, margin:"0 auto", lineHeight:1.75, fontWeight:400, letterSpacing:'-0.01em' }}>
@@ -256,7 +256,7 @@ export default function LandingPage() {
           <div className="wg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
             <div>
               <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase", marginBottom:16 }}>Why Atlas</p>
-              <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+              <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
                 Not Another<br/><span style={{ color:"#C4922E" }}>Spreadsheet Tool.</span>
               </h2>
               <p style={{ fontSize:14, color:"#4a4238", lineHeight:1.8, marginBottom:36, fontWeight:400, letterSpacing:'-0.01em', maxWidth:400 }}>
@@ -307,7 +307,7 @@ export default function LandingPage() {
           <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
             <AtlasLogo size={60}/>
           </div>
-          <h2 style={{ fontSize:50, fontWeight:800, lineHeight:1.04, marginBottom:16, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+          <h2 style={{ fontSize:50, fontWeight:800, lineHeight:1.04, marginBottom:16, letterSpacing:'-0.04em', fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>
             Get Early Access<br/>to <span style={{ color:"#C4922E" }}>Atlas</span>
           </h2>
           <p style={{ fontSize:15, color:"#4a4238", marginBottom:38, lineHeight:1.78, fontWeight:400, letterSpacing:'-0.01em' }}>
@@ -330,7 +330,7 @@ export default function LandingPage() {
             <div>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
                 <AtlasLogo size={26}/>
-                <span style={{ fontSize:14, fontWeight:800, letterSpacing:"0.12em", color:"#f5e09a", fontFamily:"'Inter',system-ui,sans-serif" }}>ATLAS</span>
+                <span style={{ fontSize:14, fontWeight:800, letterSpacing:"0.12em", color:"#f5e09a", fontFamily:"'Satoshi','Inter',system-ui,sans-serif" }}>ATLAS</span>
               </div>
               <p style={{ fontSize:13, color:"#2e2820", lineHeight:1.65, maxWidth:220, fontWeight:300, marginBottom:18 }}>
                 The command center for serious resellers.

@@ -5,9 +5,10 @@ module.exports = {
   theme: {
   	extend: {
       fontFamily: {
-        sans:    ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
-        inter:   ['Inter', 'system-ui', 'sans-serif'],
+        sans:    ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
+        inter:   ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
+        satoshi: ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
       },
   		borderRadius: {
   			lg: 'var(--radius)',
