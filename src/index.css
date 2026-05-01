@@ -86,8 +86,8 @@
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
 
   /* Fonts */
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans:  'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Inter', system-ui, sans-serif;
+  --font-sans:  'Inter', system-ui, sans-serif;
   --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
 
   /* Chart colors */
@@ -263,10 +263,35 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-sans);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+p {
+  letter-spacing: -0.01em;
+}
+
+button {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+}
+
+input, textarea, select {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+}
+
+a {
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 body {
@@ -350,20 +375,22 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Page title ──────────────────────────────────────────────────── */
 .page-title {
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--ink);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.03em;
   line-height: 1.1;
   margin: 0;
 }
 
 .page-subtitle {
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 12px;
+  font-weight: 400;
   color: var(--ink-dim);
   margin-top: 4px;
+  letter-spacing: -0.01em;
 }
 
 /* ── KPI cards ───────────────────────────────────────────────────── */
@@ -380,10 +407,10 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-label {
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faded);
   margin-bottom: 0;
@@ -399,9 +426,11 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-sub {
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 10px;
+  font-weight: 400;
   color: var(--ink-ghost);
+  letter-spacing: -0.01em;
 }
 
 .kpi-icon {
@@ -442,10 +471,10 @@ input:focus, textarea:focus, select:focus {
 }
 
 .section-div-label {
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-faded);
   white-space: nowrap;
@@ -467,10 +496,10 @@ input:focus, textarea:focus, select:focus {
 .dash-table th {
   padding: 8px 12px;
   text-align: left;
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faded);
   white-space: nowrap;
@@ -501,10 +530,10 @@ input:focus, textarea:focus, select:focus {
   border: none;
   background: transparent;
   color: var(--ink-faded);
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -520,10 +549,10 @@ input:focus, textarea:focus, select:focus {
 }
 
 .breakdown-label {
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faded);
 }
@@ -546,10 +575,10 @@ input:focus, textarea:focus, select:focus {
   border: none;
   background: var(--ink);
   color: var(--ne-cream);
-  font-family: var(--font-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: -0.01em;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
@@ -822,8 +851,8 @@ input:focus, textarea:focus, select:focus {
 }
 
 @layer utilities {
-  .font-display { font-family: var(--font-serif); }
-  .font-cinzel  { font-family: var(--font-serif); }
+  .font-display { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; }
+  .font-cinzel  { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; }
   .gradient-gold {
     background: linear-gradient(135deg, #c9a84c, #f5e09a, #c9a84c);
     -webkit-background-clip: text;
