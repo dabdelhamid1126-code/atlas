@@ -605,15 +605,61 @@ export default function NewOrders() {
   const [previewImg,   setPreviewImg]   = useState(null);
   const [activeTab,    setActiveTab]    = useState('details');
   const [userEmail,    setUserEmail]    = useState(null);
-  const [errors,       setErrors]       = useState({});   // ← validation errors
+  const [errors,       setErrors]       = useState({});
 
   const set = (field, val) => {
     setForm(prev=>({ ...prev, [field]:val }));
-    // Clear error for this field when user starts fixing it
     if (errors[field]) setErrors(prev=>({ ...prev, [field]:'' }));
   };
 
-  useEffect(()=>{ base44.auth.me().then(u=>setUserEmail(u?.email)).catch(()=>{}); },[]);
+  // ── Pre-fill from extension URL params ──────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('source') !== 'extension') return;
+
+    const retailer     = params.get('retailer') || '';
+    const orderNumber  = params.get('order_number') || '';
+    const orderDate    = params.get('order_date') || '';
+    const totalCost    = parseFloat(params.get('total_cost') || '0');
+    const status       = params.get('status') || 'pending';
+    const orderType    = params.get('order_type') || 'churning';
+    const tax          = parseFloat(params.get('tax') || '0');
+    const tracking     = params.get('tracking') || '';
+    const cardLastFour = params.get('card_last_four') || '';
+    const cardName     = params.get('card_name') || '';
+    const giftCardUsed = params.get('gift_card_used') === '1';
+    const giftCardAmt  = parseFloat(params.get('gift_card_amount') || '0');
+
+    let items = [];
+    try { items = JSON.parse(params.get('items') || '[]'); } catch {}
+
+    setForm(prev => ({
+      ...prev,
+      retailer,
+      order_number: orderNumber,
+      order_date:   orderDate || prev.order_date,
+      status,
+      order_type:   orderType === 'Store Pickup' ? 'churning' : orderType === 'Ship to Me' ? 'churning' : 'churning',
+      total_cost:   totalCost || prev.total_cost,
+      tax:          tax || prev.tax,
+      tracking_numbers: tracking ? [tracking] : prev.tracking_numbers,
+      notes: [
+        cardName ? `Card: ${cardName}${cardLastFour ? ` (ending ${cardLastFour})` : ''}` : '',
+        giftCardUsed && giftCardAmt ? `Gift card used: $${giftCardAmt.toFixed(2)}` : '',
+        items.length ? `Items: ${items.map(i => i.name).join(', ')}` : '',
+      ].filter(Boolean).join('\n'),
+    }));
+
+    // Pre-fill vendor in saved vendors list
+    if (retailer && !savedVendors.includes(retailer)) {
+      const updated = [retailer, ...savedVendors].slice(0, 50);
+      setSavedVendors(updated);
+      localStorage.setItem('atlas_vendors', JSON.stringify(updated));
+    }
+
+    // Clear URL params after reading
+    window.history.replaceState({}, '', window.location.pathname);
+  }, []);
   const { data:products    =[] } = useQuery({ queryKey:['products'],               queryFn:()=>base44.entities.Product.list() });
   const { data:creditCards =[] } = useQuery({ queryKey:['creditCards',userEmail],   queryFn:()=>userEmail?base44.entities.CreditCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
   const { data:giftCards   =[] } = useQuery({ queryKey:['giftCards',userEmail],     queryFn:()=>userEmail?base44.entities.GiftCard.filter({ created_by:userEmail }):[], enabled:userEmail!==null });
