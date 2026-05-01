@@ -125,7 +125,8 @@ export const AuthProvider = ({ children }) => {
 
   const navigateToLogin = () => {
     // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
+    // Pass only the pathname to avoid cross-origin redirect issues on mobile Safari
+    base44.auth.redirectToLogin(window.location.pathname || '/app');
   };
 
   return (
