@@ -50,8 +50,8 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      {/* Main / landing page */}
-      <Route path="/" element={
+      {/* Dashboard home */}
+      <Route path="/app" element={
         <LayoutWrapper currentPageName={mainPageKey}>
           <MainPage />
         </LayoutWrapper>
@@ -70,7 +70,6 @@ const AuthenticatedApp = () => {
         />
       ))}
 
-      <Route path="/landing" element={<LandingPage />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -84,9 +83,9 @@ function App() {
           <Router>
             <NavigationTracker />
             <Routes>
-              {/* Public landing page — no auth required */}
-              <Route path="/landing" element={<LandingPage />} />
-              {/* All authenticated routes */}
+              {/* Public landing page at root */}
+              <Route path="/" element={<LandingPage />} />
+              {/* All authenticated app routes */}
               <Route path="/*" element={<AuthenticatedApp />} />
             </Routes>
             <Toaster />

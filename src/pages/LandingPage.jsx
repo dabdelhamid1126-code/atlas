@@ -70,7 +70,7 @@ export default function LandingPage() {
 
   const navigate   = useNavigate();
   const goRegister = () => navigate("/register");
-  const goLogin    = () => navigate("/login");
+  const goLogin    = () => navigate("/app");
 
   return (
     <div style={{ background: "#080706", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>

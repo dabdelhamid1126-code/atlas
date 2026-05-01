@@ -117,7 +117,7 @@ export default function Layout({ children, currentPageName }) {
           </button>
         ) : (
           <>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <Link to="/app" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
               <AtlasLogo size={30} />
               <div>
                 <p style={{ fontSize: 14, fontWeight: 900, margin: 0, lineHeight: 1, fontFamily: 'var(--font-serif)', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Atlas</p>
