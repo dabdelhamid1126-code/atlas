@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 
 const AtlasLogo = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -135,8 +136,8 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const goRegister = () => window.location.href = "/register";
-  const goLogin    = () => window.location.href = "/login";
+  const goRegister = () => base44.auth.redirectToLogin('/app');
+  const goLogin    = () => base44.auth.redirectToLogin('/app');
 
   return (
     <div style={{ background: "#060503", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
