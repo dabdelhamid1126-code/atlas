@@ -73,12 +73,11 @@ export default function LandingPage() {
   const goLogin    = () => navigate("/app");
 
   return (
-    <div style={{ background: "#080706", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ background: "#080706", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+        .serif { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; }
 
         .fu { opacity: 0; transform: translateY(26px); transition: opacity 0.75s ease, transform 0.75s ease; }
         .fu.in { opacity: 1; transform: translateY(0); }
@@ -136,7 +135,8 @@ export default function LandingPage() {
           .fg{grid-template-columns:1fr !important;}
           .ht{font-size:34px !important;}
         }
-      `}</style>
+      `}
+      </style>
 
       {/* NAV */}
       <nav style={{
