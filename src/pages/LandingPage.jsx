@@ -186,12 +186,12 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <h1 className={`fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:800, lineHeight:1.06, marginBottom:22, letterSpacing:'-0.03em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+              <h1 className={`fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:800, lineHeight:1.04, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
                 Run Your Reselling<br/>Business Like a<br/>
                 <span style={{ color:"#C4922E" }}>Hedge Fund.</span>
               </h1>
 
-              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#7a7060", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300 }}>
+              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#7a7060", lineHeight:1.8, marginBottom:36, maxWidth:440, fontWeight:400, letterSpacing:'-0.01em' }}>
                 Atlas gives you the tools, insights, and automation to track inventory, maximize profit, and make smarter decisions — every day.
               </p>
 
@@ -227,10 +227,10 @@ export default function LandingPage() {
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:60 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.22em", color:"#C4922E", textTransform:"uppercase", marginBottom:14 }}>Built for Resellers</p>
-            <h2 style={{ fontSize:44, fontWeight:700, lineHeight:1.1, marginBottom:14, letterSpacing:'-0.025em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+            <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:14, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
               Everything You Need.<br/>All in One Place.
             </h2>
-            <p style={{ fontSize:14, color:"#4a4238", maxWidth:460, margin:"0 auto", lineHeight:1.7, fontWeight:300 }}>
+            <p style={{ fontSize:14, color:"#4a4238", maxWidth:460, margin:"0 auto", lineHeight:1.75, fontWeight:400, letterSpacing:'-0.01em' }}>
               Every feature was built because we needed it ourselves. No fluff, no filler.
             </p>
           </div>
@@ -240,8 +240,8 @@ export default function LandingPage() {
                 <div style={{ width:50, height:50, background:"#C4922E10", border:"1px solid #C4922E28", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
                   {f.icon}
                 </div>
-                <div style={{ fontSize:14, fontWeight:600, color:"#f0ece4", marginBottom:10 }}>{f.title}</div>
-                <div style={{ fontSize:12, color:"#4a4238", lineHeight:1.65, fontWeight:300 }}>{f.desc}</div>
+                <div style={{ fontSize:13.5, fontWeight:650, color:"#e8e2d8", marginBottom:10, letterSpacing:'-0.015em' }}>{f.title}</div>
+                <div style={{ fontSize:12, color:"#5a5248", lineHeight:1.72, fontWeight:400, letterSpacing:'-0.005em' }}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -256,10 +256,10 @@ export default function LandingPage() {
           <div className="wg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
             <div>
               <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase", marginBottom:16 }}>Why Atlas</p>
-              <h2 style={{ fontSize:44, fontWeight:700, lineHeight:1.1, marginBottom:20, letterSpacing:'-0.025em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+              <h2 style={{ fontSize:44, fontWeight:800, lineHeight:1.06, marginBottom:20, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
                 Not Another<br/><span style={{ color:"#C4922E" }}>Spreadsheet Tool.</span>
               </h2>
-              <p style={{ fontSize:14, color:"#4a4238", lineHeight:1.8, marginBottom:36, fontWeight:300, maxWidth:400 }}>
+              <p style={{ fontSize:14, color:"#4a4238", lineHeight:1.8, marginBottom:36, fontWeight:400, letterSpacing:'-0.01em', maxWidth:400 }}>
                 Atlas thinks like a reseller. Clarity, automation, and real insights — not just another place to log numbers.
               </p>
               <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
@@ -307,10 +307,10 @@ export default function LandingPage() {
           <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
             <AtlasLogo size={60}/>
           </div>
-          <h2 style={{ fontSize:50, fontWeight:800, lineHeight:1.08, marginBottom:16, letterSpacing:'-0.03em', fontFamily:"'Inter',system-ui,sans-serif" }}>
+          <h2 style={{ fontSize:50, fontWeight:800, lineHeight:1.04, marginBottom:16, letterSpacing:'-0.04em', fontFamily:"'Inter',system-ui,sans-serif" }}>
             Get Early Access<br/>to <span style={{ color:"#C4922E" }}>Atlas</span>
           </h2>
-          <p style={{ fontSize:15, color:"#4a4238", marginBottom:38, lineHeight:1.7, fontWeight:300 }}>
+          <p style={{ fontSize:15, color:"#4a4238", marginBottom:38, lineHeight:1.78, fontWeight:400, letterSpacing:'-0.01em' }}>
             Create your free account and start running your reselling business like a pro.
           </p>
           <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>

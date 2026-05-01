@@ -167,7 +167,7 @@ export default function Layout({ children, currentPageName }) {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 9,
                       padding: '6px 8px', borderRadius: 7,
-                      fontSize: 12.5, fontWeight: active ? 600 : 500,
+                      fontSize: 12, fontWeight: active ? 600 : 450, letterSpacing: '-0.005em',
                       marginBottom: 1, cursor: 'pointer', textDecoration: 'none',
                       justifyContent: collapsed ? 'center' : undefined,
                       borderLeft: active ? '2px solid #c9a84c' : '2px solid transparent',

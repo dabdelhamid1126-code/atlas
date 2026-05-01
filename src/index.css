@@ -264,30 +264,49 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02","cv03","cv04","cv11";
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
 }
 
+h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; }
+h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
+h3 { font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
+h4 { font-size: 13px; font-weight: 650; letter-spacing: -0.01em; }
+
 p {
-  letter-spacing: -0.01em;
+  letter-spacing: -0.012em;
+  line-height: 1.65;
+  color: var(--ink-dim);
+}
+
+strong, b {
+  font-weight: 650;
+  color: var(--ink);
 }
 
 button {
   font-family: 'Inter', system-ui, sans-serif;
-  font-weight: 500;
+  font-weight: 550;
+  letter-spacing: -0.01em;
 }
 
 input, textarea, select {
   font-family: 'Inter', system-ui, sans-serif;
   font-weight: 400;
+  font-size: 13px;
+  letter-spacing: -0.01em;
 }
 
 a {
@@ -377,10 +396,10 @@ input:focus, textarea:focus, select:focus {
 .page-title {
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--ink);
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
   margin: 0;
 }
 
@@ -388,16 +407,17 @@ input:focus, textarea:focus, select:focus {
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: var(--ink-dim);
-  margin-top: 4px;
-  letter-spacing: -0.01em;
+  color: var(--ink-faded);
+  margin-top: 5px;
+  letter-spacing: -0.005em;
+  line-height: 1.5;
 }
 
 /* ── KPI cards ───────────────────────────────────────────────────── */
 .kpi-card {
-  padding: 14px 16px;
+  padding: 15px 17px;
   border-radius: 12px;
-  border-top-width: 3px;
+  border-top-width: 2px;
   border-top-style: solid;
   background: var(--parch-card);
   border-left: 1px solid var(--parch-line);
@@ -408,21 +428,22 @@ input:focus, textarea:focus, select:focus {
 
 .kpi-label {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-faded);
+  color: var(--ink-ghost);
   margin-bottom: 0;
 }
 
 .kpi-value {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 700;
   line-height: 1;
   color: var(--ink);
-  margin: 6px 0 4px;
+  margin: 7px 0 4px;
+  letter-spacing: -0.02em;
 }
 
 .kpi-sub {
@@ -430,7 +451,8 @@ input:focus, textarea:focus, select:focus {
   font-size: 10px;
   font-weight: 400;
   color: var(--ink-ghost);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
+  line-height: 1.4;
 }
 
 .kpi-icon {
@@ -459,12 +481,12 @@ input:focus, textarea:focus, select:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 18px 0 12px;
+  margin: 22px 0 14px;
 }
 
 .section-div-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--gold);
   flex-shrink: 0;
@@ -472,9 +494,9 @@ input:focus, textarea:focus, select:focus {
 
 .section-div-label {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-faded);
   white-space: nowrap;
@@ -490,26 +512,27 @@ input:focus, textarea:focus, select:focus {
 .dash-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12.5px;
 }
 .dash-table thead tr { background: var(--parch-warm); }
 .dash-table th {
-  padding: 8px 12px;
+  padding: 9px 13px;
   text-align: left;
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-faded);
+  color: var(--ink-ghost);
   white-space: nowrap;
 }
 .dash-table td {
-  padding: 9px 12px;
+  padding: 10px 13px;
   border-bottom: 1px solid var(--parch-line);
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 12px;
+  line-height: 1.45;
 }
 .dash-table tbody tr:last-child td { border-bottom: none; }
 .dash-table tbody tr:hover td { background: var(--gold-bg); }
@@ -520,25 +543,25 @@ input:focus, textarea:focus, select:focus {
   gap: 2px;
   background: var(--parch-warm);
   border: 1px solid var(--parch-line);
-  border-radius: 8px;
+  border-radius: 9px;
   padding: 3px;
 }
 
 .tab-btn {
-  padding: 5px 14px;
-  border-radius: 6px;
+  padding: 5px 15px;
+  border-radius: 7px;
   border: none;
   background: transparent;
   color: var(--ink-faded);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-weight: 550;
+  letter-spacing: -0.005em;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 .tab-btn:hover { color: var(--ink); }
-.tab-btn.active { background: var(--ink); color: var(--ne-cream); }
+.tab-btn.active { background: var(--ink); color: var(--ne-cream); font-weight: 600; }
 
 /* ── Breakdown box ───────────────────────────────────────────────── */
 .breakdown-box {
@@ -599,11 +622,11 @@ input:focus, textarea:focus, select:focus {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   border-width: 1px;
   border-style: solid;
