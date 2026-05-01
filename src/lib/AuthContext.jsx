@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }) => {
     
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout(window.location.href);
+      base44.auth.logout('https://atlasresellhub.com');
     } else {
       // Just remove the token without redirect
       base44.auth.logout();
@@ -124,9 +124,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    // Pass only the pathname to avoid cross-origin redirect issues on mobile Safari
-    base44.auth.redirectToLogin(window.location.pathname || '/app');
+    // Redirect back to the Base44 app after login, not the landing page
+    const appUrl = 'https://atlasresellhub.base44.app/Dashboard';
+    base44.auth.redirectToLogin(appUrl);
   };
 
   return (
