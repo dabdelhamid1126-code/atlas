@@ -10,6 +10,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { ThemeProvider } from '@/lib/ThemeContext';
+import LandingPage from './pages/LandingPage';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -69,6 +70,7 @@ const AuthenticatedApp = () => {
         />
       ))}
 
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -81,7 +83,12 @@ function App() {
         <QueryClientProvider client={queryClientInstance}>
           <Router>
             <NavigationTracker />
-            <AuthenticatedApp />
+            <Routes>
+              {/* Public landing page — no auth required */}
+              <Route path="/landing" element={<LandingPage />} />
+              {/* All authenticated routes */}
+              <Route path="/*" element={<AuthenticatedApp />} />
+            </Routes>
             <Toaster />
           </Router>
         </QueryClientProvider>
