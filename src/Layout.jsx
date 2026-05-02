@@ -274,13 +274,13 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={`layout-sidebar${sidebarOpen ? ' open' : ''}`}
-        style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, width: collapsed ? 64 : 224, transition: 'width 0.3s ease, transform 0.3s ease', flexShrink: 0 }}>
+        style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, width: collapsed ? 56 : 200, transition: 'width 0.3s ease, transform 0.3s ease', flexShrink: 0 }}>
         <SidebarContent />
       </aside>
 
       {/* Main content — offset by sidebar width */}
       <main className="layout-main"
-        style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', width: `calc(100% - ${collapsed ? 64 : 224}px)`, marginLeft: collapsed ? 64 : 224, transition: 'width 0.3s ease, margin-left 0.3s ease' }}
+        style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', width: `calc(100% - ${collapsed ? 56 : 200}px)`, marginLeft: collapsed ? 56 : 200, transition: 'width 0.3s ease, margin-left 0.3s ease' }}
         data-collapsed={collapsed ? 'true' : 'false'}>
 
         {/* Mobile topbar */}
