@@ -114,18 +114,11 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     
-    if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout('https://atlasresellhub.com');
-    } else {
-      // Just remove the token without redirect
-      base44.auth.logout();
-    }
+    base44.auth.logout('https://atlasresellhub.com');
   };
 
   const navigateToLogin = () => {
-    const appUrl = `${window.location.origin}/Dashboard`;
-    base44.auth.redirectToLogin(appUrl);
+    base44.auth.redirectToLogin('https://atlasresellhub.com/Dashboard');
   };
 
   return (
