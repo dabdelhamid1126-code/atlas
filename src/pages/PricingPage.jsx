@@ -116,25 +116,6 @@ export default function PricingPage() {
             ))}
           </div>
 
-          {/* FAQ */}
-          <div style={{ maxWidth:680, margin:'0 auto' }}>
-            <h2 className="serif" style={{ fontSize:36, fontWeight:600, textAlign:'center', marginBottom:32 }}>
-              Frequently Asked <span style={{ color:'#C4922E' }}>Questions</span>
-            </h2>
-            {FAQ.map((item, i) => (
-              <div key={i} style={{ borderBottom:'1px solid rgba(196,146,46,0.12)', padding:'16px 0' }}>
-                <div onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  style={{ display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer' }}>
-                  <span style={{ fontSize:14, fontWeight:500, color:'#f0ece4' }}>{item.q}</span>
-                  <span style={{ color:'#C4922E', fontSize:20, fontWeight:300, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition:'transform 0.2s' }}>+</span>
-                </div>
-                {openFaq === i && (
-                  <p style={{ fontSize:13, color:'#5a5248', lineHeight:1.7, marginTop:10, fontWeight:300 }}>{item.a}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
     </LandingLayout>
   );
