@@ -62,7 +62,7 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [visible,  setVisible]  = useState(false);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(true); // ✅ Always open on landing page
 
   // ── Star canvas animation ──────────────────────────────────────
   useEffect(() => {
