@@ -118,6 +118,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
+    // Don't redirect in preview/sandbox environments
+    if (window.location.hostname.includes('base44.app') || window.location.hostname.includes('localhost')) {
+      return;
+    }
     base44.auth.redirectToLogin('https://atlasresellhub.com/Dashboard');
   };
 
