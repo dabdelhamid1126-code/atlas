@@ -124,7 +124,7 @@ export default function ThemeToggle() {
           padding:'2px 10px', borderRadius:99,
           background:'var(--gold-bg)',
           color:'var(--gold)',
-          border:'1px solid var(--gold-border)',
+          border:'1px solid var(--gold-bdr)',
         }}>
           {THEMES.find(t => t.id === theme)?.name}
         </span>

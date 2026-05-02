@@ -9,17 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Star,
-  Zap, Check, X, BarChart2, ChevronRight, AlertTriangle, TrendingUp, DollarSign,
-  Settings, Wifi
+  Zap, Check, X, BarChart2, AlertTriangle,
 } from 'lucide-react';
-import CardVisual from '@/components/payment-methods/CardVisual';
 import RetailerLogo, { CardLogo } from '@/components/shared/BrandLogo';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
 import QuickAddModal from '@/components/payment-methods/QuickAddModal';
 import CustomCardModal from '@/components/payment-methods/CustomCardModal';
 import CardAnalyticsView from '@/components/payment-methods/CardAnalyticsView';
-import StatusBadge from '@/components/shared/StatusBadge';
-import DataTable from '@/components/shared/DataTable';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import ReactBarcode from 'react-barcode';

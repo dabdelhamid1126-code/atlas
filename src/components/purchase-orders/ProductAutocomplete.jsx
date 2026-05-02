@@ -21,7 +21,7 @@ const guessCategory = (name) => {
 const CATEGORIES = ['phones','tablets','laptops','gaming','accessories','wearables','audio','other'];
 
 const SOURCE_STYLES = {
-  'Best Buy':  { bg:'var(--gold-bg)',    color:'var(--gold)',    border:'var(--gold-border)' },
+  'Best Buy':  { bg:'var(--gold-bg)',    color:'var(--gold)',    border:'var(--gold-bdr)' },
   'UPCitemdb': { bg:'var(--ocean-bg)',   color:'var(--ocean)',   border:'var(--ocean-bdr)'  },
   'Google':    { bg:'var(--terrain-bg)', color:'var(--terrain)', border:'var(--terrain-bdr)'},
 };
