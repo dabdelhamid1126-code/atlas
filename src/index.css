@@ -157,10 +157,10 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="midnight"] {
   --parch-bg:   #0a0e1a;
   --parch:      #0a0e1a;
-  --parch-card: rgba(100,180,255,0.04);
-  --parch-warm: rgba(100,180,255,0.07);
-  --parch-deep: rgba(100,180,255,0.1);
-  --parch-line: rgba(100,180,255,0.1);
+  --parch-card: #FFF8F0;
+  --parch-warm: #F5EDE0;
+  --parch-deep: #EDE0CC;
+  --parch-line: rgba(153,126,103,0.18);
 
   --ink:        rgba(200,220,255,0.95);
   --ink-dim:    rgba(160,200,255,0.75);
