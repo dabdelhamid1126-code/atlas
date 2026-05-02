@@ -124,8 +124,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    // Redirect back to the Base44 app after login, not the landing page
-    const appUrl = 'https://atlasresellhub.base44.app/Dashboard';
+    const appUrl = `${window.location.origin}/Dashboard`;
     base44.auth.redirectToLogin(appUrl);
   };
 
