@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Plus, Search, Eye, EyeOff, Pencil, Trash2, Barcode, CreditCard, Gift, Star,
-  Zap, Check, X, BarChart2, AlertTriangle,
+  Zap, Check, X, BarChart2, AlertTriangle, RefreshCw,
 } from 'lucide-react';
 import RetailerLogo, { CardLogo } from '@/components/shared/BrandLogo';
 import YACashbackTab from '@/components/payment-methods/YACashbackTab';
@@ -119,6 +119,7 @@ function CreditCardsTab({ queryClient }) {
   const [customCardOpen, setCustomCardOpen] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const [userEmail, setUserEmail] = useState(null);
   useEffect(() => { base44.auth.me().then(u => setUserEmail(u?.email)).catch(()=>{}); }, []);
@@ -227,6 +228,24 @@ function CreditCardsTab({ queryClient }) {
             color: showAnalytics ? 'var(--ocean2)' : 'var(--ink-dim)',
           }}>
           <BarChart2 style={{ width:13, height:13 }}/> Analytics
+        </button>
+        <button
+          onClick={async () => {
+            setSyncing(true);
+            try {
+              const res = await base44.functions.invoke('syncFromCardPointers', {});
+              const { created, updated, errors_count } = res.data?.summary || {};
+              toast.success(`Synced! ${created} created, ${updated} updated${errors_count > 0 ? `, ${errors_count} errors` : ''}`);
+              queryClient.invalidateQueries({ queryKey: ['creditCards'] });
+            } catch (err) {
+              toast.error('Sync failed: ' + err.message);
+            } finally {
+              setSyncing(false);
+            }
+          }}
+          disabled={syncing}
+          style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor: syncing ? 'not-allowed' : 'pointer', background:'var(--terrain-bg)', border:'1px solid var(--terrain-bdr)', color:'var(--terrain2)', opacity: syncing ? 0.7 : 1 }}>
+          <RefreshCw style={{ width:13, height:13, animation: syncing ? 'spin 1s linear infinite' : 'none' }}/> {syncing ? 'Syncing...' : 'Sync CardPointers'}
         </button>
         <button onClick={()=>setQuickAddOpen(true)}
           style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer', background:'var(--gold-bg)', border:'1px solid var(--gold-border)', color:'var(--gold2)' }}>
