@@ -194,16 +194,16 @@ export default function Expenses() {
 
       {/* KPIs */}
       <SectionDivider label="Overview" color="var(--gold)" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginBottom: 20 }}>
+      <div className="grid-kpi" style={{ marginBottom: 20 }}>
         {[
-          { label: 'Total Expenses', val: fmt$(stats.total),    accent: 'var(--crimson)', bg: 'var(--crimson-bg)', bdr: 'var(--crimson-bdr)' },
-          { label: 'Pending',        val: fmt$(stats.pending),  accent: 'var(--ink-faded)', bg: 'var(--parch-warm)', bdr: 'var(--parch-line)' },
-          { label: 'Approved',       val: fmt$(stats.approved), accent: 'var(--ocean)',   bg: 'var(--ocean-bg)',   bdr: 'var(--ocean-bdr)'   },
-          { label: 'Paid',           val: fmt$(stats.paid),     accent: 'var(--terrain)', bg: 'var(--terrain-bg)', bdr: 'var(--terrain-bdr)' },
+          { label: 'Total Expenses', val: fmt$(stats.total),    accent: 'var(--crimson)'  },
+          { label: 'Pending',        val: fmt$(stats.pending),  accent: 'var(--ink-faded)' },
+          { label: 'Approved',       val: fmt$(stats.approved), accent: 'var(--ocean)'    },
+          { label: 'Paid',           val: fmt$(stats.paid),     accent: 'var(--terrain)'  },
         ].map(k => (
-          <div key={k.label} style={{ background: 'var(--parch-card)', borderTop: `3px solid ${k.accent}`, borderRadius: 12, padding: '14px 16px 12px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-sm)' }}>
-            <p style={{ fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-dim)', margin: '0 0 6px' }}>{k.label}</p>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 900, color: k.accent, margin: 0, lineHeight: 1 }}>{k.val}</p>
+          <div key={k.label} className="kpi-card fade-up" style={{ borderTopColor: k.accent }}>
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value" style={{ color: k.accent }}>{k.val}</div>
           </div>
         ))}
       </div>
@@ -284,17 +284,17 @@ export default function Expenses() {
               <div style={{ padding: '10px 16px', background: 'var(--parch-warm)', borderTop: '1px solid var(--parch-line)', fontSize: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
-                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700, color: 'var(--ink-faded)', textTransform: 'uppercase', marginBottom: 4 }}>Category</p>
-                    <p style={{ color: 'var(--ink)', margin: 0 }}>{cat?.label}</p>
+                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700, color: 'var(--ink-faded)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>Category</p>
+                    <p style={{ color: 'var(--ink)', margin: 0, fontSize: 12, fontFamily: 'var(--font-serif)' }}>{cat?.label}</p>
                   </div>
                   <div>
-                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700, color: 'var(--ink-faded)', textTransform: 'uppercase', marginBottom: 4 }}>Status</p>
-                    <p style={{ color: 'var(--ink)', margin: 0 }}>{STATUS_META[exp.status]?.label}</p>
+                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700, color: 'var(--ink-faded)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>Status</p>
+                    <p style={{ color: 'var(--ink)', margin: 0, fontSize: 12, fontFamily: 'var(--font-serif)' }}>{STATUS_META[exp.status]?.label}</p>
                   </div>
                   {exp.notes && (
                     <div style={{ gridColumn: '1/-1' }}>
-                      <p style={{ fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700, color: 'var(--ink-faded)', textTransform: 'uppercase', marginBottom: 4 }}>Notes</p>
-                      <p style={{ color: 'var(--ink)', margin: 0, fontStyle: 'italic' }}>{exp.notes}</p>
+                      <p style={{ fontFamily: 'var(--font-serif)', fontSize: 9, fontWeight: 700, color: 'var(--ink-faded)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>Notes</p>
+                      <p style={{ color: 'var(--ink-dim)', margin: 0, fontStyle: 'italic', fontSize: 12, fontFamily: 'var(--font-serif)' }}>{exp.notes}</p>
                     </div>
                   )}
                 </div>

@@ -381,21 +381,18 @@ export default function Invoices() {
 
       {/* KPIs */}
       <SectionDivider label="Performance" color="var(--gold)"/>
-      <div className="kpi-grid" style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:20}}>
+      <div className="grid-kpi" style={{marginBottom:20}}>
         {[
-          {label:'Invoices', val:String(stats.total),                                        accent:'var(--ocean)',   bg:'var(--ocean-bg)',   bdr:'var(--ocean-bdr)'  },
-          {label:'Paid',     val:fmt$(stats.paidAmt),                                        accent:'var(--terrain)', bg:'var(--terrain-bg)', bdr:'var(--terrain-bdr)'},
-          {label:'Unpaid',   val:fmt$(stats.unpaidAmt),                                      accent:'var(--gold)',    bg:'var(--gold-bg)',    bdr:'var(--gold-bdr)'   },
-          {label:'Profit',   val:stats.profit!==0?fmt$(Math.abs(stats.profit)):'—',          accent:stats.profit>=0?'var(--terrain)':'var(--crimson)', bg:stats.profit>=0?'var(--terrain-bg)':'var(--crimson-bg)', bdr:stats.profit>=0?'var(--terrain-bdr)':'var(--crimson-bdr)'},
-          {label:'Overdue',  val:String(stats.overdue),                                      accent:stats.overdue>0?'var(--crimson)':'var(--ink-ghost)', bg:stats.overdue>0?'var(--crimson-bg)':'var(--parch-warm)', bdr:stats.overdue>0?'var(--crimson-bdr)':'var(--parch-line)'},
+          {label:'Invoices', val:String(stats.total),                               sub:'all time',       accent:'var(--ocean)'  },
+          {label:'Paid',     val:fmt$(stats.paidAmt),                               sub:'collected',      accent:'var(--terrain)'},
+          {label:'Unpaid',   val:fmt$(stats.unpaidAmt),                             sub:'outstanding',    accent:'var(--gold)'   },
+          {label:'Profit',   val:stats.profit!==0?fmt$(Math.abs(stats.profit)):'—', sub:'revenue − cost', accent:stats.profit>=0?'var(--terrain)':'var(--crimson)'},
+          {label:'Overdue',  val:String(stats.overdue),                             sub:'past due',       accent:stats.overdue>0?'var(--crimson)':'var(--ink-ghost)'},
         ].map(k=>(
-          <div key={k.label} style={{background:'var(--parch-card)',borderTop:`3px solid ${k.accent}`,borderRadius:12,padding:'14px 16px 12px',display:'flex',flexDirection:'column',boxShadow:'var(--shadow-sm)'}}>
-            <p style={{fontFamily:'var(--font-serif)',fontSize:9,fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',color:'var(--ink-dim)',margin:'0 0 6px'}}>{k.label}</p>
-            <p style={{fontFamily:'var(--font-mono)',fontSize:22,fontWeight:900,color:k.accent,margin:'0 0 4px',lineHeight:1}}>{k.val}</p>
-            <p style={{fontSize:10,color:'var(--ink-ghost)',margin:'0 0 14px',flex:1}}>{k.label==='Invoices'?'all time':k.label==='Paid'?'collected':k.label==='Unpaid'?'outstanding':k.label==='Profit'?'revenue − cost':'past due'}</p>
-            <div style={{width:28,height:28,borderRadius:7,background:k.bg,border:`1px solid ${k.bdr}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <FileText style={{width:13,height:13,color:k.accent}}/>
-            </div>
+          <div key={k.label} className="kpi-card fade-up" style={{borderTopColor:k.accent}}>
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value" style={{color:k.accent}}>{k.val}</div>
+            <div className="kpi-sub">{k.sub}</div>
           </div>
         ))}
       </div>
@@ -514,12 +511,12 @@ export default function Invoices() {
                 </div>
                 </div></div>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'var(--parch-warm)',borderTop:'1px solid var(--parch-line)',flexWrap:'wrap'}}>
-                  <span style={{fontSize:12,color:'var(--ink-faded)'}}>Subtotal: <strong style={{color:'var(--ink)',fontFamily:'var(--font-serif)'}}>{fmt$(inv.subtotal)}</strong></span>
-                  {(inv.tax||0)>0&&<><span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/><span style={{fontSize:11,color:'var(--ink-faded)'}}>Tax: {fmt$(inv.tax)}</span></>}
+                  <span style={{fontSize:12,color:'var(--ink-faded)',fontFamily:'var(--font-serif)'}}>Subtotal: <strong style={{color:'var(--ink)',fontFamily:'var(--font-mono)'}}>{fmt$(inv.subtotal)}</strong></span>
+                  {(inv.tax||0)>0&&<><span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/><span style={{fontSize:11,color:'var(--ink-faded)',fontFamily:'var(--font-serif)'}}>Tax: <strong style={{fontFamily:'var(--font-mono)'}}>{fmt$(inv.tax)}</strong></span></>}
                   <span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/>
-                  <span style={{fontSize:12,fontWeight:700,color:'var(--ink)',fontFamily:'var(--font-serif)'}}>Total: {fmt$(inv.total)}</span>
+                  <span style={{fontSize:12,fontWeight:700,color:'var(--ink)',fontFamily:'var(--font-serif)'}}>Total: <span style={{fontFamily:'var(--font-mono)'}}>{fmt$(inv.total)}</span></span>
                   {isPaid&&profit!==0&&<><span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/><span style={{fontSize:11,fontWeight:700,color:profit>=0?'var(--terrain)':'var(--crimson)',fontFamily:'var(--font-serif)'}}>{profit>=0?'+':''}{fmt$(profit)} profit</span></>}
-                  {inv.notes&&<><span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/><span style={{fontSize:11,color:'var(--ink-ghost)',fontStyle:'italic'}}>{inv.notes}</span></>}
+                  {inv.notes&&<><span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/><span style={{fontSize:11,color:'var(--ink-ghost)',fontStyle:'italic',fontFamily:'var(--font-serif)'}}>{inv.notes}</span></>}
                 </div>
               </>
             )}
