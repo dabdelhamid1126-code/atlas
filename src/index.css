@@ -864,6 +864,27 @@ input:focus, textarea:focus, select:focus {
   [role="dialog"].fixed { max-width: 100% !important; width: 100% !important; margin: 0 !important; border-radius: 16px 16px 0 0 !important; top: auto !important; bottom: 0 !important; left: 0 !important; transform: none !important; }
 }
 
+/* ── Global mobile safeguards ────────────────────────────────────── */
+body { overflow-x: hidden; }
+
+@media (max-width: 768px) {
+  /* KPI grids: always 2 columns on mobile */
+  .grid-kpi { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-grid  { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Tables: horizontal scroll */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+
+  /* Filter rows wrap */
+  .dash-filter-row { flex-wrap: wrap !important; }
+
+  /* Tab bars scroll horizontally */
+  .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; }
+
+  /* Page title size */
+  .page-title { font-size: 20px !important; }
+}
+
 /* ── Tailwind base ───────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;

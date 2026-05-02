@@ -41,7 +41,8 @@ export default function DataTable({ columns, data, loading, emptyMessage = "No d
   }
 
   return (
-    <div className="rounded-xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)' }}>
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+    <div className="rounded-xl border overflow-hidden" style={{ background: '#111827', borderColor: 'rgba(255,255,255,0.07)', minWidth: 600 }}>
       <table className="w-full">
         <thead className="border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
           <tr>
@@ -71,6 +72,7 @@ export default function DataTable({ columns, data, loading, emptyMessage = "No d
           ))}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

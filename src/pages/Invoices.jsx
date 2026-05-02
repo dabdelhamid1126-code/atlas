@@ -485,8 +485,10 @@ export default function Invoices() {
             </div>
 
             {expanded&&(
-              <>
-                <div style={{display:'grid',gridTemplateColumns:`48px 1fr 50px 80px 80px${isPaid?' 80px 80px':''}`,gap:6,padding:'6px 16px',borderBottom:'1px solid var(--parch-line)'}}>
+               <>
+                 <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
+                 <div style={{minWidth:480}}>
+                 <div style={{display:'grid',gridTemplateColumns:`48px 1fr 50px 80px 80px${isPaid?' 80px 80px':''}`,gap:6,padding:'6px 16px',borderBottom:'1px solid var(--parch-line)'}}>
                   {['','Product','Qty','Price','Total',...(isPaid?['Cost','Profit']:[])].map((h,i)=>(
                     <div key={i} style={{fontSize:9,fontWeight:700,color:'var(--ink-ghost)',textAlign:i<=1?'left':'right',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'var(--font-serif)'}}>{h}</div>
                   ))}
@@ -510,6 +512,7 @@ export default function Invoices() {
                     );
                   })}
                 </div>
+                </div></div>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'var(--parch-warm)',borderTop:'1px solid var(--parch-line)',flexWrap:'wrap'}}>
                   <span style={{fontSize:12,color:'var(--ink-faded)'}}>Subtotal: <strong style={{color:'var(--ink)',fontFamily:'var(--font-serif)'}}>{fmt$(inv.subtotal)}</strong></span>
                   {(inv.tax||0)>0&&<><span style={{width:1,height:12,background:'var(--parch-line)',display:'inline-block'}}/><span style={{fontSize:11,color:'var(--ink-faded)'}}>Tax: {fmt$(inv.tax)}</span></>}
