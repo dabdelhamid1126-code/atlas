@@ -424,7 +424,7 @@ export default function Dashboard() {
       <div className="dash-header">
         <div>
           <h1 className="page-title">
-            {greeting()}, {user?.full_name?.split(' ')[0] || 'Explorer'}
+            {greeting()}, {user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Explorer'}
             {refreshing && <RefreshCw size={14} className="spin" style={{ display:"inline", marginLeft:8, color:"var(--ink-dim)", verticalAlign:"middle" }} />}
           </h1>
           <p style={{ fontSize:11, color:"var(--ink-dim)", marginTop:4, letterSpacing:"0.03em" }}>
