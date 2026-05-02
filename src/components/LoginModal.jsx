@@ -5,6 +5,13 @@ export default function LoginModal({ isOpen, onClose }) {
   const { navigateToLogin } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -21,28 +28,75 @@ export default function LoginModal({ isOpen, onClose }) {
         }}
       />
 
-      {/* Right-side sidebar panel (like Chase) */}
+      {/* Responsive sidebar/modal panel */}
       <div
         style={{
           position: 'fixed',
-          right: 0,
-          top: 0,
+          right: isMobile ? 0 : 0,
+          left: isMobile ? 0 : 'auto',
+          top: isMobile ? 0 : 0,
+          bottom: 0,
           height: '100vh',
-          width: 400,
+          width: isMobile ? '100%' : 400,
           background: '#FFF9F3',
           zIndex: 1000,
-          boxShadow: '-8px 0 30px rgba(0, 0, 0, 0.3)',
+          boxShadow: isMobile ? 'none' : '-8px 0 30px rgba(0, 0, 0, 0.3)',
           display: 'flex',
           flexDirection: 'column',
-          padding: '40px 32px',
+          padding: isMobile ? '20px 20px' : '40px 32px',
           overflowY: 'auto',
+          borderRadius: isMobile ? '20px 20px 0 0' : 0,
+          animation: isMobile ? 'slideUp 0.3s ease-out' : 'slideInRight 0.3s ease-out',
         }}
       >
+        <style>{`
+          @keyframes slideUp {
+            from {
+              transform: translateY(100%);
+            }
+            to {
+              transform: translateY(0);
+            }
+          }
+          @keyframes slideInRight {
+            from {
+              transform: translateX(100%);
+            }
+            to {
+              transform: translateX(0);
+            }
+          }
+        `}</style>
+
+        {/* Close button (more prominent on mobile) */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: isMobile ? 16 : 16,
+            right: isMobile ? 16 : 16,
+            background: 'none',
+            border: 'none',
+            fontSize: 24,
+            cursor: 'pointer',
+            color: '#664930',
+            padding: 0,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: isMobile ? 20 : 28, marginTop: isMobile ? 16 : 0 }}>
           <h2 style={{
             fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 32,
+            fontSize: isMobile ? 28 : 32,
             fontWeight: 700,
             color: '#3D2B1A',
             margin: '0 0 6px',
@@ -51,7 +105,7 @@ export default function LoginModal({ isOpen, onClose }) {
             {isSignUp ? 'Join Atlas' : 'Welcome back'}
           </h2>
           <p style={{
-            fontSize: 13,
+            fontSize: isMobile ? 12 : 13,
             color: '#8a7a6f',
             margin: 0,
           }}>
@@ -62,10 +116,10 @@ export default function LoginModal({ isOpen, onClose }) {
         </div>
 
         {/* Email input */}
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 16 }}>
           <label style={{
             display: 'block',
-            fontSize: 13,
+            fontSize: isMobile ? 12 : 13,
             fontWeight: 600,
             color: '#3D2B1A',
             marginBottom: 8,
@@ -77,11 +131,11 @@ export default function LoginModal({ isOpen, onClose }) {
             placeholder="you@example.com"
             style={{
               width: '100%',
-              padding: '11px 12px',
+              padding: isMobile ? '12px 12px' : '11px 12px',
               border: '1px solid #D4C4B8',
               borderRadius: 6,
               background: 'white',
-              fontSize: 14,
+              fontSize: isMobile ? 16 : 14,
               color: '#3D2B1A',
               fontFamily: "'DM Sans', sans-serif",
               boxSizing: 'border-box',
@@ -99,7 +153,7 @@ export default function LoginModal({ isOpen, onClose }) {
             marginBottom: 8,
           }}>
             <label style={{
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               fontWeight: 600,
               color: '#3D2B1A',
               margin: 0,
@@ -113,7 +167,7 @@ export default function LoginModal({ isOpen, onClose }) {
                 border: 'none',
                 color: '#C4922E',
                 cursor: 'pointer',
-                fontSize: 12,
+                fontSize: isMobile ? 11 : 12,
                 fontWeight: 600,
               }}
             >
@@ -125,11 +179,11 @@ export default function LoginModal({ isOpen, onClose }) {
             placeholder="••••••••"
             style={{
               width: '100%',
-              padding: '11px 12px',
+              padding: isMobile ? '12px 12px' : '11px 12px',
               border: '1px solid #D4C4B8',
               borderRadius: 6,
               background: 'white',
-              fontSize: 14,
+              fontSize: isMobile ? 16 : 14,
               color: '#3D2B1A',
               fontFamily: "'DM Sans', sans-serif",
               boxSizing: 'border-box',
@@ -157,7 +211,7 @@ export default function LoginModal({ isOpen, onClose }) {
           <label
             htmlFor="remember"
             style={{
-              fontSize: 12,
+              fontSize: isMobile ? 11 : 12,
               color: '#3D2B1A',
               cursor: 'pointer',
               margin: 0,
@@ -169,23 +223,22 @@ export default function LoginModal({ isOpen, onClose }) {
 
         {/* Sign in button */}
         <button
-          onClick={navigateToLogin}
           style={{
             width: '100%',
-            padding: '12px 14px',
+            padding: isMobile ? '13px 14px' : '12px 14px',
             borderRadius: 6,
             border: 'none',
             background: '#3D2B1A',
             color: 'white',
-            fontSize: 14,
+            fontSize: isMobile ? 15 : 14,
             fontWeight: 700,
             cursor: 'pointer',
             fontFamily: "'DM Sans', sans-serif",
             marginBottom: 16,
             transition: 'background 0.2s',
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#2a1f15'}
-          onMouseLeave={(e) => e.currentTarget.style.background = '#3D2B1A'}
+          onMouseEnter={(e) => e.target.style.background = '#2a1f15'}
+          onMouseLeave={(e) => e.target.style.background = '#3D2B1A'}
         >
           {isSignUp ? 'Create Account' : 'Sign in'}
         </button>
@@ -197,9 +250,23 @@ export default function LoginModal({ isOpen, onClose }) {
           gap: 12,
           margin: '16px 0',
         }}>
-          <div style={{ flex: 1, height: 0.5, background: '#D4C4B8' }} />
-          <span style={{ fontSize: 11, color: '#997E67', fontWeight: 500 }}>OR</span>
-          <div style={{ flex: 1, height: 0.5, background: '#D4C4B8' }} />
+          <div style={{
+            flex: 1,
+            height: 0.5,
+            background: '#D4C4B8',
+          }} />
+          <span style={{
+            fontSize: isMobile ? 10 : 11,
+            color: '#997E67',
+            fontWeight: 500,
+          }}>
+            OR
+          </span>
+          <div style={{
+            flex: 1,
+            height: 0.5,
+            background: '#D4C4B8',
+          }} />
         </div>
 
         {/* Google button */}
@@ -207,11 +274,11 @@ export default function LoginModal({ isOpen, onClose }) {
           onClick={navigateToLogin}
           style={{
             width: '100%',
-            padding: '11px 12px',
+            padding: isMobile ? '12px 12px' : '11px 12px',
             border: '1px solid #D4C4B8',
             borderRadius: 6,
             background: 'white',
-            fontSize: 13,
+            fontSize: isMobile ? 13 : 13,
             fontWeight: 600,
             cursor: 'pointer',
             fontFamily: "'DM Sans', sans-serif",
@@ -223,8 +290,8 @@ export default function LoginModal({ isOpen, onClose }) {
             marginBottom: 16,
             transition: 'all 0.2s',
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+          onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+          onMouseLeave={(e) => e.target.style.background = 'white'}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M23.766 12.294c0-.817-.066-1.604-.189-2.365H12v4.476h6.844c-.293 1.569-1.223 2.894-2.604 3.778v3.268h4.216c2.464-2.27 3.884-5.612 3.884-9.157z" fill="#4285F4"/>
@@ -232,13 +299,13 @@ export default function LoginModal({ isOpen, onClose }) {
             <path d="M4.845 14.603c-.254-.786-.381-1.623-.381-2.603s.127-1.817.38-2.603V5.025H.467C.172 6.286 0 7.635 0 9c0 1.365.172 2.714.467 3.975l4.378-3.372z" fill="#FBBC04"/>
             <path d="M12 4.75c1.869 0 3.549.644 4.867 1.909l3.646-3.646C18.401 1.147 15.48 0 12 0 6.847 0 2.532 2.04.467 5.025l4.378 3.372c1.008-3.029 3.826-5.647 7.155-5.647z" fill="#EA4335"/>
           </svg>
-          Continue with Google
+          Google
         </button>
 
         {/* Links */}
         <div style={{
           textAlign: 'center',
-          fontSize: 12,
+          fontSize: isMobile ? 11 : 12,
           color: '#664930',
           marginTop: 12,
         }}>
@@ -262,7 +329,6 @@ export default function LoginModal({ isOpen, onClose }) {
           ) : (
             <>
               <button
-                onClick={navigateToLogin}
                 style={{
                   background: 'none',
                   border: 'none',
