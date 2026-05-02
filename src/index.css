@@ -303,7 +303,7 @@ strong, b {
 
 button {
   font-family: 'DM Sans', system-ui, sans-serif;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -561,7 +561,7 @@ input:focus, textarea:focus, select:focus {
   color: var(--ink-faded);
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.01em;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
