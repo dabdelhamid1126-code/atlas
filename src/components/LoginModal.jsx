@@ -6,6 +6,7 @@ export default function LoginModal({ isOpen, onClose }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isAuthenticating, setIsAuthenticating] = useState(false); // ✅ Disable close during OAuth
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -68,9 +69,10 @@ export default function LoginModal({ isOpen, onClose }) {
           }
         `}</style>
 
-        {/* Close button (more prominent on mobile) */}
+        {/* Close button (disabled during auth) */}
         <button
           onClick={onClose}
+          disabled={isAuthenticating}
           style={{
             position: 'absolute',
             top: isMobile ? 16 : 16,
@@ -78,8 +80,8 @@ export default function LoginModal({ isOpen, onClose }) {
             background: 'none',
             border: 'none',
             fontSize: 24,
-            cursor: 'pointer',
-            color: '#664930',
+            cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+            color: isAuthenticating ? '#ccc' : '#664930',
             padding: 0,
             width: 32,
             height: 32,
@@ -87,6 +89,7 @@ export default function LoginModal({ isOpen, onClose }) {
             alignItems: 'center',
             justifyContent: 'center',
             lineHeight: 1,
+            opacity: isAuthenticating ? 0.5 : 1,
           }}
         >
           ×
@@ -271,27 +274,32 @@ export default function LoginModal({ isOpen, onClose }) {
 
         {/* Google button */}
         <button
-          onClick={() => navigateToLogin()}
+          onClick={() => {
+            setIsAuthenticating(true);
+            navigateToLogin(); // This will open Base44 OAuth
+          }}
+          disabled={isAuthenticating}
           style={{
             width: '100%',
             padding: isMobile ? '12px 12px' : '11px 12px',
             border: '1px solid #D4C4B8',
             borderRadius: 6,
-            background: 'white',
+            background: isAuthenticating ? '#f0f0f0' : 'white',
             fontSize: isMobile ? 13 : 13,
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: isAuthenticating ? 'not-allowed' : 'pointer',
             fontFamily: "'DM Sans', sans-serif",
-            color: '#3D2B1A',
+            color: isAuthenticating ? '#999' : '#3D2B1A',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 8,
             marginBottom: 16,
             transition: 'all 0.2s',
+            opacity: isAuthenticating ? 0.6 : 1,
           }}
-          onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-          onMouseLeave={(e) => e.target.style.background = 'white'}
+          onMouseEnter={(e) => !isAuthenticating && (e.target.style.background = '#f5f5f5')}
+          onMouseLeave={(e) => !isAuthenticating && (e.target.style.background = 'white')}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M23.766 12.294c0-.817-.066-1.604-.189-2.365H12v4.476h6.844c-.293 1.569-1.223 2.894-2.604 3.778v3.268h4.216c2.464-2.27 3.884-5.612 3.884-9.157z" fill="#4285F4"/>
