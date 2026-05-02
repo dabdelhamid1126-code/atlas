@@ -116,7 +116,8 @@ export default function PricingPage() {
             ))}
           </div>
 
-      </section>
+          </div>
+          </section>
     </LandingLayout>
   );
 }
