@@ -32,7 +32,7 @@ export default function LoginModal({ isOpen, onClose }) {
       <div
         style={{
           position: 'fixed',
-          right: isMobile ? 0 : 0,
+          right: isMobile ? 'auto' : 0,
           left: isMobile ? 0 : 'auto',
           top: isMobile ? 0 : 0,
           bottom: 0,
@@ -271,7 +271,7 @@ export default function LoginModal({ isOpen, onClose }) {
 
         {/* Google button */}
         <button
-          onClick={navigateToLogin}
+          onClick={() => navigateToLogin()}
           style={{
             width: '100%',
             padding: isMobile ? '12px 12px' : '11px 12px',
