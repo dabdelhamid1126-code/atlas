@@ -507,24 +507,41 @@ export default function Products() {
 
       {/* Section divider + filters */}
       <SectionDivider title="Catalog"/>
-      <div style={{ display:'flex', gap:8, marginBottom:16, alignItems:'center', background:C.parchCard, border:`1px solid ${C.parchLine}`, borderRadius:14, padding:'8px 12px', flexWrap:'wrap', boxShadow:'0 1px 4px rgba(61,43,26,0.07)' }}>
-        <div style={{ position:'relative', flex:1, minWidth:180 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:16, background:C.parchCard, border:`1px solid ${C.parchLine}`, borderRadius:14, padding:'10px 12px', boxShadow:'0 1px 4px rgba(61,43,26,0.07)', overflow:'hidden' }}>
+        <div style={{ position:'relative', width:'100%' }}>
           <Search style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', width:14, height:14, color:C.inkGhost }}/>
           <input type="text" placeholder="Search products or UPC..." value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} style={{ ...INP, paddingLeft:32 }}/>
         </div>
-        {/* Filter pills matching .tab-btn from globals.css */}
-        <div style={{ display:'flex', gap:3, padding:3, borderRadius:8, background:C.parchWarm, border:`1px solid ${C.parchLine}` }}>
-          {['all',...CATEGORIES].map(cat=>{
-            const s      = cat==='all' ? null : CAT[cat];
-            const active = categoryFilter===cat;
+        {/* Scrollable emoji pill filters */}
+        <div style={{ display:'flex', gap:6, overflowX:'auto', WebkitOverflowScrolling:'touch', scrollbarWidth:'none', msOverflowStyle:'none', paddingBottom:2, paddingTop:2, flex:'0 0 auto', maxWidth:'100%' }}>
+          {[
+            { key:'all',         label:'All',         emoji:'🏷️' },
+            { key:'phones',      label:'Phones',      emoji:'📱' },
+            { key:'tablets',     label:'Tablets',     emoji:'📟' },
+            { key:'laptops',     label:'Laptops',     emoji:'💻' },
+            { key:'gaming',      label:'Gaming',      emoji:'🎮' },
+            { key:'accessories', label:'Accessories', emoji:'🔌' },
+            { key:'wearables',   label:'Wearables',   emoji:'⌚' },
+            { key:'audio',       label:'Audio',       emoji:'🎧' },
+            { key:'other',       label:'Other',       emoji:'📦' },
+          ].map(({ key, label, emoji }) => {
+            const active = categoryFilter === key;
             return (
-              <button key={cat} onClick={()=>{ setCategoryFilter(cat); setPage(1); }}
-                style={{ padding:'5px 12px', borderRadius:6, fontSize:11, fontWeight:600, letterSpacing:'0.06em', textTransform:'capitalize', cursor:'pointer', border:'none', fontFamily:FONT,
-                  background:  active ? C.ink       : 'transparent',
-                  color:       active ? C.neCream   : C.inkFaded,
-                  transition:  'background 0.15s, color 0.15s',
+              <button key={key} onClick={() => { setCategoryFilter(key); setPage(1); }}
+                style={{
+                  flexShrink: 0,
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '6px 14px', borderRadius: 99,
+                  fontSize: 12, fontWeight: active ? 600 : 400,
+                  cursor: 'pointer', border: 'none', fontFamily: FONT,
+                  whiteSpace: 'nowrap',
+                  background: active ? C.gold : C.parchWarm,
+                  color:      active ? '#fff' : C.inkFaded,
+                  boxShadow:  active ? '0 2px 8px rgba(160,114,42,0.25)' : 'none',
+                  transition: 'all 0.15s',
                 }}>
-                {cat}
+                <span style={{ fontSize: 13 }}>{emoji}</span>
+                {label}
               </button>
             );
           })}
