@@ -488,7 +488,7 @@ export default function Products() {
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:16 }}>
         <div>
           <h1 className="page-title">Products</h1>
-          <p className="page-subtitle">Master product catalog — {products.length} total — shared with all users</p>
+          <p className="page-subtitle">Master product catalog — {products.length} total</p>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
 
