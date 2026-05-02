@@ -82,7 +82,8 @@ function App() {
             <NavigationTracker />
             <Routes>
               {/* Public landing pages - no auth required */}
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/" element={<AuthenticatedApp />} />
+              <Route path="/landing" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/pricing" element={<PricingPage />} />
