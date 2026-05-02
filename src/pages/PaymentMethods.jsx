@@ -647,13 +647,14 @@ function GiftCardsTab({ queryClient }) {
   };
 
   const filteredCards = useMemo(() => {
-    setPage(0);
     return cards.filter(c => {
       const matchSearch = !search || c.brand?.toLowerCase().includes(search.toLowerCase()) || c.retailer?.toLowerCase().includes(search.toLowerCase()) || c.code?.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === 'all' || c.status === statusFilter;
       return matchSearch && matchStatus;
     });
   }, [cards, search, statusFilter]);
+
+  useEffect(() => { setPage(0); }, [search, statusFilter]);
 
   const totalValue  = cards.filter(c => c.status === 'available').reduce((s, c) => s + (c.value || 0), 0);
   const totalProfit = cards.filter(c => c.purchase_cost).reduce((s, c) => s + (c.value - c.purchase_cost), 0);
