@@ -136,8 +136,8 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const goRegister = () => { window.location.href = 'https://atlasresellhub.base44.app'; };
-  const goLogin    = () => { window.location.href = 'https://atlasresellhub.base44.app'; };
+  const goRegister = () => base44.auth.redirectToLogin('/app');
+  const goLogin    = () => base44.auth.redirectToLogin('/app');
 
   return (
     <div style={{ background: "#060503", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
