@@ -1,5 +1,6 @@
 // src/pages/landing/LandingLayout.jsx
 import React, { useState, useEffect } from 'react';
+import LoginModal from '@/components/LoginModal';
 
 const AtlasLogo = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -35,6 +36,7 @@ export { AtlasLogo, NAV_LINKS, FOOTER_COLS };
 export default function LandingLayout({ children, currentPage }) {
   const [scrolled,  setScrolled]  = useState(false);
   const [menuOpen,  setMenuOpen]  = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -81,7 +83,7 @@ export default function LandingLayout({ children, currentPage }) {
   }, []);
 
   const goTo    = (path) => window.location.href = path;
-  const goLogin = () => window.location.href = 'https://atlasresellhub.base44.app';
+  const goLogin = () => setLoginModalOpen(true);
 
   return (
     <div style={{ background:'#060503', minHeight:'100vh', color:'#f0ece4', overflowX:'hidden', fontFamily:"'DM Sans', sans-serif" }}>
@@ -192,6 +194,7 @@ export default function LandingLayout({ children, currentPage }) {
           </div>
         </div>
       </footer>
+      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
     </div>
   );
 }
