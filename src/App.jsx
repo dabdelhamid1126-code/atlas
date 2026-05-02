@@ -11,6 +11,10 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import LandingPage from './pages/LandingPage';
+import FeaturesPage from './pages/FeaturesPage';
+import PricingPage from './pages/PricingPage';
+import AboutPage from './pages/AboutPage';
+import RoadmapPage from './pages/RoadmapPage';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -50,13 +54,6 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      {/* Dashboard home */}
-      <Route path="/app" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-
       {/* All pages from pages.config.js */}
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
@@ -83,8 +80,12 @@ function App() {
           <Router>
             <NavigationTracker />
             <Routes>
-              {/* Public landing page at root */}
+              {/* Public landing pages - no auth required */}
               <Route path="/" element={<LandingPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/roadmap" element={<RoadmapPage />} />
               {/* All authenticated app routes */}
               <Route path="/*" element={<AuthenticatedApp />} />
             </Routes>

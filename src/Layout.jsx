@@ -120,8 +120,8 @@ export default function Layout({ children, currentPageName }) {
             <Link to="/app" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
               <AtlasLogo size={30} />
               <div>
-                <p style={{ fontSize: 14, fontWeight: 800, margin: 0, lineHeight: 1, fontFamily: "'Satoshi', 'Inter', system-ui, sans-serif", letterSpacing: '0.12em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</p>
-                <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0', fontFamily: "'Satoshi', 'Inter', system-ui, sans-serif" }}>Reselling, Quantified</p>
+                <p style={{ fontSize: 16, fontWeight: 400, margin: 0, lineHeight: 1, fontFamily: "'Marcellus', serif", letterSpacing: '0.08em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</p>
+                <p style={{ fontSize: 9, fontWeight: 400, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0', fontFamily: "'DM Sans', system-ui, sans-serif" }}>Reselling, Quantified</p>
               </div>
             </Link>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -291,7 +291,7 @@ export default function Layout({ children, currentPageName }) {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <AtlasLogo size={26} />
-            <span style={{ fontSize: 14, fontWeight: 800, fontFamily: "'Satoshi', 'Inter', system-ui, sans-serif", letterSpacing: '0.12em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</span>
+            <span style={{ fontSize: 16, fontWeight: 400, fontFamily: "'Marcellus', serif", letterSpacing: '0.08em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</span>
           </div>
         </div>
 

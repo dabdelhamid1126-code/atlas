@@ -1,6 +1,14 @@
-/* Google Fonts removed - using system font stack */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Marcellus&display=swap');
 
 /* ── Neutral Elegance (default) ──────────────────────────────────── */
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
 :root {
   /* Surfaces */
   --parch:       #FDF5EC;
@@ -263,7 +271,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -273,7 +281,7 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
@@ -296,20 +304,20 @@ strong, b {
 }
 
 button {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 input, textarea, select {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 400;
   font-size: 13px;
   letter-spacing: -0.01em;
 }
 
 a {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
 }
 
 body {
@@ -393,7 +401,8 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Page title ──────────────────────────────────────────────────── */
 .page-title {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 22px;
   font-weight: 800;
   color: var(--ink);
@@ -403,7 +412,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .page-subtitle {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 12px;
   font-weight: 400;
   color: var(--ink-faded);
@@ -426,7 +435,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-label {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -446,7 +455,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-sub {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 10px;
   font-weight: 400;
   color: var(--ink-ghost);
@@ -492,7 +501,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .section-div-label {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -517,7 +526,7 @@ input:focus, textarea:focus, select:focus {
 .dash-table th {
   padding: 9px 13px;
   text-align: left;
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -552,7 +561,7 @@ input:focus, textarea:focus, select:focus {
   border: none;
   background: transparent;
   color: var(--ink-faded);
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -571,7 +580,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .breakdown-label {
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -597,7 +606,7 @@ input:focus, textarea:focus, select:focus {
   border: none;
   background: var(--ink);
   color: var(--ne-cream);
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -623,7 +632,7 @@ input:focus, textarea:focus, select:focus {
   gap: 4px;
   padding: 2px 9px;
   border-radius: 20px;
-  font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -943,8 +952,8 @@ body { overflow-x: hidden; max-width: 100vw; }
 }
 
 @layer utilities {
-  .font-display { font-family: 'Satoshi', 'Inter', system-ui, sans-serif; font-weight: 700; }
-  .font-cinzel  { font-family: 'Satoshi', 'Inter', system-ui, sans-serif; font-weight: 700; }
+  .font-display { font-family: 'DM Sans', system-ui, sans-serif; font-weight: 700; }
+  .font-cinzel  { font-family: 'DM Sans', system-ui, sans-serif; font-weight: 700; }
   .gradient-gold {
     background: linear-gradient(135deg, #c9a84c, #f5e09a, #c9a84c);
     -webkit-background-clip: text;
