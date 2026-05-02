@@ -74,6 +74,11 @@ export default function PaymentMethods() {
         .pm-rate-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--parch-line); }
         .pm-rate-row:last-child { border-bottom:none; }
         .pm-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; min-height:300px; gap:10px; text-align:center; padding:24px; }
+        @media (max-width: 768px) {
+          .pm-split-panel { flex-direction: column !important; }
+          .pm-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--parch-line) !important; max-height: 240px !important; }
+          .pm-detail { padding: 14px !important; }
+        }
       `}</style>
       <div style={{ marginBottom: 20 }}>
         <h1 className="page-title">Payment Methods</h1>
