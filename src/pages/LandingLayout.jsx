@@ -164,7 +164,7 @@ export default function LandingLayout({ children, currentPage }) {
       {children}
 
       {/* FOOTER */}
-      <footer style={{ background:'rgba(4,3,2,0.92)', borderTop:'1px solid #C4922E22', padding:'56px 48px 28px', position:'relative', zIndex:1 }} className="sp" style={{ padding:'56px 48px 28px' }}>
+      <footer style={{ background:'rgba(4,3,2,0.92)', borderTop:'1px solid #C4922E22', padding:'56px 48px 28px', position:'relative', zIndex:1 }}>
         <div style={{ maxWidth:1200, margin:'0 auto' }}>
           <div className="two-col" style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr', gap:48, marginBottom:44 }}>
             <div>
