@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function LoginModal({ isOpen, onClose }) {
@@ -226,6 +226,7 @@ export default function LoginModal({ isOpen, onClose }) {
 
         {/* Sign in button */}
         <button
+          onClick={navigateToLogin}
           style={{
             width: '100%',
             padding: isMobile ? '13px 14px' : '12px 14px',
@@ -337,6 +338,7 @@ export default function LoginModal({ isOpen, onClose }) {
           ) : (
             <>
               <button
+                onClick={navigateToLogin}
                 style={{
                   background: 'none',
                   border: 'none',
