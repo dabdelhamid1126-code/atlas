@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
 import FeaturesPage from './pages/FeaturesPage';
 import PricingPage from './pages/PricingPage';
 import AboutPage from './pages/AboutPage';
@@ -82,6 +83,7 @@ function App() {
             <Routes>
               {/* Public landing pages - no auth required */}
               <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/about" element={<AboutPage />} />
