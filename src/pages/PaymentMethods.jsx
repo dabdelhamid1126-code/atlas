@@ -640,11 +640,13 @@ function GiftCardsTab({ queryClient }) {
   const handleBulkAdd = async () => {
     const lines = bulkInput.trim().split('\n').filter(l => l.trim());
     const newCards = lines.map(line => { const parts = line.split(',').map(p => p.trim()); if (parts.length < 3) throw new Error('Invalid format'); return { brand: parts[0], retailer: parts[1], value: parseFloat(parts[2]), code: parts[3] || '', pin: parts[4] || '', purchase_cost: parts[5] ? parseFloat(parts[5]) : null, status: 'available' }; });
-    await base44.entities.GiftCard.bulkCreate(newCards);
+    await Promise.all(newCards.map(card => base44.entities.GiftCard.create(card)));
     queryClient.invalidateQueries({ queryKey: ['giftCards'] });
     toast.success(`Added ${newCards.length} gift cards`);
     setBulkDialogOpen(false); setBulkInput('');
   };
+
+  useEffect(() => { setPage(0); }, [search, statusFilter]);
 
   const filteredCards = useMemo(() => {
     return cards.filter(c => {
@@ -653,8 +655,6 @@ function GiftCardsTab({ queryClient }) {
       return matchSearch && matchStatus;
     });
   }, [cards, search, statusFilter]);
-
-  useEffect(() => { setPage(0); }, [search, statusFilter]);
 
   const totalValue  = cards.filter(c => c.status === 'available').reduce((s, c) => s + (c.value || 0), 0);
   const totalProfit = cards.filter(c => c.purchase_cost).reduce((s, c) => s + (c.value - c.purchase_cost), 0);
