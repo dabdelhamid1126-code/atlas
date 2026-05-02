@@ -91,6 +91,7 @@ export default function PaymentMethods() {
           <button key={key} onClick={() => setTab(key)} style={{
             display:'flex', alignItems:'center', gap:6, padding:'7px 14px',
             borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer',
+            fontFamily: 'var(--font-serif)',
             background: tab===key ? 'var(--ink)' : 'transparent',
             color:       tab===key ? 'var(--ne-cream)' : 'var(--ink-dim)',
             border:      tab===key ? 'none' : '1px solid transparent',
