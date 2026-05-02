@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import PageHeader from '@/components/shared/PageHeader';
 import DataTable from '@/components/shared/DataTable';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -71,12 +70,9 @@ export default function GiftCards() {
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const newCard = await base44.entities.GiftCard.create(data);
-      
-      // Auto-create reward if card is selected
       if (data.credit_card_id && data.purchase_cost) {
         await createRewardForGiftCard(newCard, data.credit_card_id, data.purchase_cost);
       }
-      
       return newCard;
     },
     onSuccess: async () => {
@@ -84,7 +80,6 @@ export default function GiftCards() {
       queryClient.invalidateQueries({ queryKey: ['rewards'] });
       toast.success('Gift card added');
       setDialogOpen(false);
-      await logActivity('Added gift card', 'gift_card', `${formData.brand} $${formData.value}`);
     }
   });
 
@@ -105,60 +100,36 @@ export default function GiftCards() {
     }
   });
 
-  const logActivity = async (action, entityType, details) => {
-    const user = await base44.auth.me();
-    await base44.entities.ActivityLog.create({
-      action,
-      entity_type: entityType,
-      details,
-      user_name: user.full_name,
-      user_email: user.email
-    });
-  };
-
   const createRewardForGiftCard = async (giftCard, creditCardId, purchaseAmount) => {
-    // Fetch the credit card to ensure we have the latest data
-    const cards = await base44.entities.CreditCard.list();
-    const card = cards.find(c => c.id === creditCardId);
+    const allCards = await base44.entities.CreditCard.list();
+    const card = allCards.find(c => c.id === creditCardId);
     if (!card) return;
 
     let rewardAmount = 0;
     let rewardType = 'cashback';
     let currency = 'USD';
 
-    // Get points multiplier based on gift card category
     let pointsMultiplier = card.points_rate || 1;
     const category = giftCard.category || 'other';
-    
-    if (category === 'dining' && card.dining_points_rate) {
-      pointsMultiplier = card.dining_points_rate;
-    } else if (category === 'travel' && card.travel_points_rate) {
-      pointsMultiplier = card.travel_points_rate;
-    } else if (category === 'groceries' && card.groceries_points_rate) {
-      pointsMultiplier = card.groceries_points_rate;
-    } else if (category === 'gas' && card.gas_points_rate) {
-      pointsMultiplier = card.gas_points_rate;
-    } else if (category === 'streaming' && card.streaming_points_rate) {
-      pointsMultiplier = card.streaming_points_rate;
-    }
+    if (category === 'dining' && card.dining_points_rate) pointsMultiplier = card.dining_points_rate;
+    else if (category === 'travel' && card.travel_points_rate) pointsMultiplier = card.travel_points_rate;
+    else if (category === 'groceries' && card.groceries_points_rate) pointsMultiplier = card.groceries_points_rate;
+    else if (category === 'gas' && card.gas_points_rate) pointsMultiplier = card.gas_points_rate;
+    else if (category === 'streaming' && card.streaming_points_rate) pointsMultiplier = card.streaming_points_rate;
 
     if (card.reward_type === 'cashback' && card.cashback_rate) {
       rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
-      rewardType = 'cashback';
-      currency = 'USD';
+      rewardType = 'cashback'; currency = 'USD';
     } else if (card.reward_type === 'points' && pointsMultiplier) {
       rewardAmount = Math.round(purchaseAmount * pointsMultiplier);
-      rewardType = 'points';
-      currency = 'points';
+      rewardType = 'points'; currency = 'points';
     } else if (card.reward_type === 'both') {
       if (card.cashback_rate) {
         rewardAmount = (purchaseAmount * card.cashback_rate / 100).toFixed(2);
-        rewardType = 'cashback';
-        currency = 'USD';
+        rewardType = 'cashback'; currency = 'USD';
       } else if (pointsMultiplier) {
         rewardAmount = Math.round(purchaseAmount * pointsMultiplier);
-        rewardType = 'points';
-        currency = 'points';
+        rewardType = 'points'; currency = 'points';
       }
     }
 
@@ -170,7 +141,7 @@ export default function GiftCards() {
         type: rewardType,
         purchase_amount: purchaseAmount,
         amount: parseFloat(rewardAmount),
-        currency: currency,
+        currency,
         date_earned: format(new Date(), 'yyyy-MM-dd'),
         status: 'earned',
         notes: `Gift card purchase: ${giftCard.brand} $${giftCard.value}`
@@ -199,18 +170,9 @@ export default function GiftCards() {
     } else {
       setEditingCard(null);
       setFormData({
-        brand: '',
-        retailer: '',
-        category: 'other',
-        value: '',
-        code: '',
-        pin: '',
-        purchase_cost: '',
-        purchase_date: format(new Date(), 'yyyy-MM-dd'),
-        credit_card_id: '',
-        status: 'available',
-        used_order_number: '',
-        notes: ''
+        brand: '', retailer: '', category: 'other', value: '', code: '', pin: '',
+        purchase_cost: '', purchase_date: format(new Date(), 'yyyy-MM-dd'),
+        credit_card_id: '', status: 'available', used_order_number: '', notes: ''
       });
     }
     setDialogOpen(true);
@@ -220,7 +182,6 @@ export default function GiftCards() {
     const orderNumber = prompt('Enter order number where this card was used:');
     if (orderNumber) {
       await base44.entities.GiftCard.delete(card.id);
-      await logActivity('Gift card used and removed', 'gift_card', `${card.brand} $${card.value} used in order ${orderNumber}`);
       queryClient.invalidateQueries({ queryKey: ['giftCards'] });
       toast.success('Gift card removed from inventory');
     }
@@ -228,73 +189,51 @@ export default function GiftCards() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const card = creditCards.find(c => c.id === formData.credit_card_id);
+    const cc = creditCards.find(c => c.id === formData.credit_card_id);
     const data = {
       ...formData,
       value: parseFloat(formData.value),
       purchase_cost: formData.purchase_cost ? parseFloat(formData.purchase_cost) : null,
-      card_name: card?.card_name || null
+      card_name: cc?.card_name || null
     };
-
-    if (editingCard) {
-      updateMutation.mutate({ id: editingCard.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
+    if (editingCard) updateMutation.mutate({ id: editingCard.id, data });
+    else createMutation.mutate(data);
   };
 
-  const handleDelete = async (card) => {
+  const handleDelete = (card) => {
     if (confirm('Are you sure you want to delete this gift card?')) {
       deleteMutation.mutate(card.id);
-      await logActivity('Deleted gift card', 'gift_card', `${card.brand} $${card.value}`);
     }
   };
 
-  const toggleShowCode = (id) => {
-    setShowCode({ ...showCode, [id]: !showCode[id] });
-  };
+  const toggleShowCode = (id) => setShowCode(p => ({ ...p, [id]: !p[id] }));
 
   const maskCode = (code) => {
     if (!code) return '-';
     return code.slice(0, 4) + '****' + code.slice(-4);
   };
 
-  const openBarcodeDialog = (card) => {
-    setSelectedCard(card);
-    setBarcodeDialogOpen(true);
-  };
+  const openBarcodeDialog = (card) => { setSelectedCard(card); setBarcodeDialogOpen(true); };
 
   const handleBulkAdd = async () => {
-    try {
-      const lines = bulkInput.trim().split('\n').filter(l => l.trim());
-      const cards = lines.map(line => {
-        const parts = line.split(',').map(p => p.trim());
-        if (parts.length < 3) throw new Error('Invalid format');
-        return {
-          brand: parts[0],
-          retailer: parts[1],
-          value: parseFloat(parts[2]),
-          code: parts[3] || '',
-          pin: parts[4] || '',
-          purchase_cost: parts[5] ? parseFloat(parts[5]) : null,
-          status: 'available'
-        };
-      });
-      
-      await base44.entities.GiftCard.bulkCreate(cards);
-      queryClient.invalidateQueries({ queryKey: ['giftCards'] });
-      toast.success(`Added ${cards.length} gift cards`);
-      setBulkDialogOpen(false);
-      setBulkInput('');
-      await logActivity('Bulk added gift cards', 'gift_card', `Added ${cards.length} cards`);
-    } catch (error) {
-      toast.error('Error parsing bulk input. Check format.');
-      console.error(error);
-    }
+    const lines = bulkInput.trim().split('\n').filter(l => l.trim());
+    const newCards = lines.map(line => {
+      const parts = line.split(',').map(p => p.trim());
+      if (parts.length < 3) throw new Error('Invalid format');
+      return {
+        brand: parts[0], retailer: parts[1], value: parseFloat(parts[2]),
+        code: parts[3] || '', pin: parts[4] || '',
+        purchase_cost: parts[5] ? parseFloat(parts[5]) : null, status: 'available'
+      };
+    });
+    await Promise.all(newCards.map(card => base44.entities.GiftCard.create(card)));
+    queryClient.invalidateQueries({ queryKey: ['giftCards'] });
+    toast.success(`Added ${newCards.length} gift cards`);
+    setBulkDialogOpen(false); setBulkInput('');
   };
 
   const filteredCards = cards.filter(card => {
-    const matchesSearch = 
+    const matchesSearch =
       card.brand?.toLowerCase().includes(search.toLowerCase()) ||
       card.retailer?.toLowerCase().includes(search.toLowerCase()) ||
       card.code?.toLowerCase().includes(search.toLowerCase());
@@ -303,80 +242,43 @@ export default function GiftCards() {
   });
 
   const columns = [
-    { header: 'Brand', accessor: 'brand', cell: (row) => (
-      <span className="font-medium">{row.brand}</span>
-    )},
-    { header: 'Retailer', accessor: 'retailer', cell: (row) => (
-      <span className="text-sm">{row.retailer || '-'}</span>
-    )},
-    { header: 'Value', accessor: 'value', cell: (row) => (
-      <span className="font-semibold">${row.value?.toFixed(2)}</span>
-    )},
-    { header: 'Cost', accessor: 'purchase_cost', cell: (row) => (
-      <span className="text-sm">{row.purchase_cost ? `$${row.purchase_cost.toFixed(2)}` : '-'}</span>
-    )},
+    { header: 'Brand', accessor: 'brand', cell: (row) => <span className="font-medium">{row.brand}</span> },
+    { header: 'Retailer', accessor: 'retailer', cell: (row) => <span className="text-sm">{row.retailer || '-'}</span> },
+    { header: 'Value', accessor: 'value', cell: (row) => <span className="font-semibold">${row.value?.toFixed(2)}</span> },
+    { header: 'Cost', accessor: 'purchase_cost', cell: (row) => <span className="text-sm">{row.purchase_cost ? `$${row.purchase_cost.toFixed(2)}` : '-'}</span> },
     { header: 'Profit', accessor: 'profit', cell: (row) => {
       if (!row.purchase_cost) return <span className="text-sm text-slate-400">-</span>;
       const profit = row.value - row.purchase_cost;
-      return (
-        <span className={`font-semibold ${profit > 0 ? 'text-green-600' : 'text-red-600'}`}>
-          ${profit.toFixed(2)}
-        </span>
-      );
+      return <span className={`font-semibold ${profit > 0 ? 'text-green-600' : 'text-red-600'}`}>${profit.toFixed(2)}</span>;
     }},
     { header: 'Code', accessor: 'code', cell: (row) => (
       <div className="flex items-center gap-2">
-        <span className="font-mono text-sm">
-          {showCode[row.id] ? row.code : maskCode(row.code)}
-        </span>
+        <span className="font-mono text-sm">{showCode[row.id] ? row.code : maskCode(row.code)}</span>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleShowCode(row.id)}>
           {showCode[row.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
         </Button>
       </div>
     )},
-    { header: 'Status', accessor: 'status', cell: (row) => (
-      <StatusBadge status={row.status} />
-    )},
-    { header: 'Added', accessor: 'created_date', cell: (row) => (
-      format(new Date(row.created_date), 'MMM d, yyyy')
-    )},
+    { header: 'Status', accessor: 'status', cell: (row) => <StatusBadge status={row.status} /> },
+    { header: 'Added', accessor: 'created_date', cell: (row) => format(new Date(row.created_date), 'MMM d, yyyy') },
     { header: '', cell: (row) => (
       <div className="flex items-center gap-1">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => openBarcodeDialog(row)}
-          title="View Barcode"
-        >
+        <Button variant="ghost" size="icon" onClick={() => openBarcodeDialog(row)} title="View Barcode">
           <Barcode className="h-4 w-4" />
         </Button>
         {row.status === 'available' && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => markAsUsed(row)}
-            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-          >
+          <Button variant="ghost" size="sm" onClick={() => markAsUsed(row)} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">
             Mark Used
           </Button>
         )}
-        <Button variant="ghost" size="icon" onClick={() => openDialog(row)}>
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => handleDelete(row)}>
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </Button>
+        <Button variant="ghost" size="icon" onClick={() => openDialog(row)}><Pencil className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => handleDelete(row)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
       </div>
     )}
   ];
 
-  const totalValue = filteredCards
-    .filter(c => c.status === 'available')
-    .reduce((sum, c) => sum + (c.value || 0), 0);
-
-  const totalProfit = filteredCards
-    .filter(c => c.purchase_cost)
-    .reduce((sum, c) => sum + (c.value - c.purchase_cost), 0);
+  const totalValue = filteredCards.filter(c => c.status === 'available').reduce((s, c) => s + (c.value || 0), 0);
+  const totalProfit = filteredCards.filter(c => c.purchase_cost).reduce((s, c) => s + (c.value - c.purchase_cost), 0);
 
   return (
     <div>
@@ -393,10 +295,10 @@ export default function GiftCards() {
 
       <div className="grid-kpi" style={{ marginBottom: 16 }}>
         {[
-          { label: 'Total Cards',      value: filteredCards.length,                                             accent: 'var(--gold)',    valColor: 'var(--ink)'      },
-          { label: 'Available Cards',  value: filteredCards.filter(c => c.status === 'available').length,       accent: 'var(--terrain2)',valColor: 'var(--terrain2)' },
-          { label: 'Available Value',  value: `$${totalValue.toLocaleString()}`,                                accent: 'var(--ocean2)',  valColor: 'var(--ocean2)'   },
-          { label: 'Total Profit',     value: `$${totalProfit.toFixed(2)}`,                                     accent: 'var(--terrain2)',valColor: 'var(--terrain2)' },
+          { label: 'Total Cards',     value: filteredCards.length,                                       accent: 'var(--gold)',    valColor: 'var(--ink)'      },
+          { label: 'Available Cards', value: filteredCards.filter(c => c.status === 'available').length, accent: 'var(--terrain2)',valColor: 'var(--terrain2)' },
+          { label: 'Available Value', value: `$${totalValue.toLocaleString()}`,                          accent: 'var(--ocean2)',  valColor: 'var(--ocean2)'   },
+          { label: 'Total Profit',    value: `$${totalProfit.toFixed(2)}`,                               accent: 'var(--terrain2)',valColor: 'var(--terrain2)' },
         ].map(s => (
           <div key={s.label} className="kpi-card fade-up" style={{ borderTopColor: s.accent }}>
             <div className="kpi-label">{s.label}</div>
@@ -408,12 +310,7 @@ export default function GiftCards() {
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Search gift cards..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+          <Input placeholder="Search gift cards..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
@@ -421,173 +318,105 @@ export default function GiftCards() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="reserved">Reserved</SelectItem>
-            <SelectItem value="exported">Exported</SelectItem>
-            <SelectItem value="used">Used</SelectItem>
-            <SelectItem value="invalid">Invalid</SelectItem>
+            {['all','available','reserved','exported','used','invalid'].map(s => (
+              <SelectItem key={s} value={s}>{s === 'all' ? 'All Status' : s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredCards}
-        loading={isLoading}
-        emptyMessage="No gift cards found"
-      />
+      <DataTable columns={columns} data={filteredCards} loading={isLoading} emptyMessage="No gift cards found" />
 
+      {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingCard ? 'Edit Gift Card' : 'Add Gift Card'}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>{editingCard ? 'Edit Gift Card' : 'Add Gift Card'}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Brand *</Label>
                 <Select value={formData.brand} onValueChange={(v) => setFormData({ ...formData, brand: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select brand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BRANDS.map(b => (
-                      <SelectItem key={b} value={b}>{b}</SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
+                  <SelectContent>{BRANDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Retailer</Label>
-                <Input
-                  value={formData.retailer}
-                  onChange={(e) => setFormData({ ...formData, retailer: e.target.value })}
-                  placeholder="Where purchased"
-                />
+                <Input value={formData.retailer} onChange={(e) => setFormData({ ...formData, retailer: e.target.value })} placeholder="Where purchased" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Category *</Label>
+              <Label>Category</Label>
               <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dining">Dining</SelectItem>
-                  <SelectItem value="travel">Travel</SelectItem>
-                  <SelectItem value="groceries">Groceries</SelectItem>
-                  <SelectItem value="gas">Gas</SelectItem>
-                  <SelectItem value="streaming">Streaming</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {['dining','travel','groceries','gas','streaming','other'].map(c => (
+                    <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-slate-500">Category determines reward points rate</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Value ($) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                  required
-                />
+                <Input type="number" step="0.01" value={formData.value} onChange={(e) => setFormData({ ...formData, value: e.target.value })} required />
               </div>
               <div className="space-y-2">
                 <Label>Purchase Cost ($)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.purchase_cost}
-                  onChange={(e) => setFormData({ ...formData, purchase_cost: e.target.value })}
-                />
+                <Input type="number" step="0.01" value={formData.purchase_cost} onChange={(e) => setFormData({ ...formData, purchase_cost: e.target.value })} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Purchase Date</Label>
-              <Input
-                type="date"
-                value={formData.purchase_date}
-                onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Purchase Date</Label>
+                <Input type="date" value={formData.purchase_date} onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Credit Card Used</Label>
+                <Select value={formData.credit_card_id || ''} onValueChange={(v) => setFormData({ ...formData, credit_card_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select card" /></SelectTrigger>
+                  <SelectContent>
+                    {creditCards.filter(c => c.active !== false).map(card => (
+                      <SelectItem key={card.id} value={card.id}>{card.card_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Credit Card Used</Label>
-              <Select value={formData.credit_card_id ? creditCards.find(c => c.id === formData.credit_card_id)?.card_name : undefined} onValueChange={(cardName) => {
-                const card = creditCards.find(c => c.card_name === cardName);
-                setFormData({ ...formData, credit_card_id: card?.id || '' });
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select card (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>No card</SelectItem>
-                  {creditCards.filter(c => c.active).map(card => (
-                    <SelectItem key={card.id} value={card.card_name}>
-                      {card.card_name} - {card.reward_type === 'cashback' && `${card.cashback_rate}%`}
-                      {card.reward_type === 'points' && `${card.points_rate}x pts`}
-                      {card.reward_type === 'both' && `${card.cashback_rate}% / ${card.points_rate}x`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-slate-500">Track points earned from buying this gift card</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Card Code *</Label>
-              <Input
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>PIN</Label>
-              <Input
-                value={formData.pin}
-                onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
-                placeholder="Optional"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Card Code *</Label>
+                <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>PIN</Label>
+                <Input value={formData.pin} onChange={(e) => setFormData({ ...formData, pin: e.target.value })} placeholder="Optional" />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
               <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="reserved">Reserved</SelectItem>
-                  <SelectItem value="exported">Exported</SelectItem>
-                  <SelectItem value="used">Used</SelectItem>
-                  <SelectItem value="invalid">Invalid</SelectItem>
+                  {['available','reserved','exported','used','invalid'].map(s => (
+                    <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             {formData.status === 'used' && (
               <div className="space-y-2">
                 <Label>Order Number Used</Label>
-                <Input
-                  value={formData.used_order_number}
-                  onChange={(e) => setFormData({ ...formData, used_order_number: e.target.value })}
-                  placeholder="Order number"
-                />
+                <Input value={formData.used_order_number} onChange={(e) => setFormData({ ...formData, used_order_number: e.target.value })} />
               </div>
             )}
             <div className="space-y-2">
               <Label>Notes</Label>
-              <Input
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              />
+              <Input value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>
-                {editingCard ? 'Update' : 'Add'}
-              </Button>
+              <Button type="submit" style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>{editingCard ? 'Update' : 'Add'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -596,41 +425,27 @@ export default function GiftCards() {
       {/* Barcode Dialog */}
       <Dialog open={barcodeDialogOpen} onOpenChange={setBarcodeDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Gift Card Barcode - Scan Ready</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Gift Card Barcode</DialogTitle></DialogHeader>
           {selectedCard && (
-            <div className="space-y-6">
-              <div className="text-center space-y-4">
-                <div className="text-lg">
-                  <span className="font-bold">{selectedCard.brand}</span> - ${selectedCard.value}
-                </div>
-                <div className="flex justify-center bg-white p-8 rounded-lg border-2 border-slate-300">
-                  <ReactBarcode 
-                    value={selectedCard.code} 
-                    format="CODE128"
-                    displayValue={true}
-                    height={120}
-                    width={3}
-                    fontSize={18}
-                    margin={10}
-                  />
-                </div>
-                <div className="p-4 bg-slate-50 rounded">
-                  <p className="text-xs text-slate-500 uppercase tracking-wide">Card Code</p>
-                  <p className="font-mono font-bold text-lg mt-1">{selectedCard.code}</p>
-                </div>
-                {selectedCard.pin && (
-                  <div className="p-4 bg-slate-50 rounded">
-                    <p className="text-xs text-slate-500 uppercase tracking-wide">PIN</p>
-                    <p className="font-mono font-bold text-lg mt-1">{selectedCard.pin}</p>
-                  </div>
-                )}
+            <div className="space-y-4 text-center">
+              <p className="text-lg font-bold">{selectedCard.brand} — ${selectedCard.value}</p>
+              <div className="flex justify-center bg-white p-8 rounded-lg border">
+                <ReactBarcode value={selectedCard.code} format="CODE128" displayValue height={120} width={3} fontSize={18} margin={10} />
               </div>
+              <div className="p-4 bg-slate-50 rounded">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Card Code</p>
+                <p className="font-mono font-bold text-lg mt-1">{selectedCard.code}</p>
+              </div>
+              {selectedCard.pin && (
+                <div className="p-4 bg-slate-50 rounded">
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">PIN</p>
+                  <p className="font-mono font-bold text-lg mt-1">{selectedCard.pin}</p>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => window.print()}>Print Barcode</Button>
+            <Button variant="outline" onClick={() => window.print()}>Print</Button>
             <Button onClick={() => setBarcodeDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
@@ -639,33 +454,17 @@ export default function GiftCards() {
       {/* Bulk Add Dialog */}
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Bulk Add Gift Cards</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Bulk Add Gift Cards</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm font-medium mb-2">Format (one per line):</p>
+            <div className="p-4 bg-slate-50 rounded-lg">
+              <p className="text-sm font-medium mb-1">Format (one per line):</p>
               <code className="text-xs">Brand, Retailer, Value, Code, PIN, PurchaseCost</code>
-              <p className="text-xs text-gray-600 mt-2">Example:</p>
-              <code className="text-xs block mt-1">Amazon, Target, 100, AMZN1234, 5678, 92</code>
-              <code className="text-xs block">Apple, Walmart, 50, APPL5678, , 46</code>
             </div>
-            <div className="space-y-2">
-              <Label>Paste Gift Cards</Label>
-              <Textarea
-                value={bulkInput}
-                onChange={(e) => setBulkInput(e.target.value)}
-                rows={10}
-                placeholder="Paste cards here..."
-                className="font-mono text-xs"
-              />
-            </div>
+            <Textarea value={bulkInput} onChange={(e) => setBulkInput(e.target.value)} rows={10} placeholder="Paste cards here..." className="font-mono text-xs" />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleBulkAdd} style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>
-              Add Cards
-            </Button>
+            <Button onClick={handleBulkAdd} style={{ background: 'var(--ink)', color: 'var(--ne-cream)', border: 'none' }}>Add Cards</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
