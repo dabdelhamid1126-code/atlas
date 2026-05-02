@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import SplashScreen from '@/components/SplashScreen';
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -30,6 +30,14 @@ const AuthenticatedApp = () => {
   const [splashDone, setSplashDone] = useState(false);
   const userName = user?.full_name?.split(' ')[0] || '';
 
+  const needsLogin = !isLoadingAuth && !isLoadingPublicSettings && (
+    !user || authError?.type === 'auth_required'
+  );
+
+  useEffect(() => {
+    if (needsLogin) navigateToLogin();
+  }, [needsLogin]);
+
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -38,16 +46,8 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
-    if (authError.type === 'auth_required') { navigateToLogin(); return null; }
-  }
-
-  // Force login if no token / not authenticated
-  if (!isLoadingAuth && !isLoadingPublicSettings && !user) {
-    navigateToLogin();
-    return null;
-  }
+  if (authError?.type === 'user_not_registered') return <UserNotRegisteredError />;
+  if (needsLogin) return null;
 
   if (!splashDone) {
     return <SplashScreen onComplete={() => setSplashDone(true)} userName={userName} />;
