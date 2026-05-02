@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { base44 } from "@/api/base44Client";
 import {
   DollarSign, TrendingUp, CreditCard, Percent, ShoppingBag, Send,
   Package, CheckCircle, X, ImageOff, AlertTriangle, Truck, Activity,
@@ -14,245 +15,263 @@ import {
    THEME / TOKENS
 ───────────────────────────────────────────── */
 const CSS = `
-    --font-serif: ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-sans:  ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
-    --gold:        #b8860b;
-    --gold2:       #d4a017;
-    --gold-bg:     rgba(184,134,11,0.08);
-    --gold-bdr:    rgba(184,134,11,0.22);
-    --crimson:     #922b21;
-    --crimson-bg:  rgba(146,43,33,0.08);
-    --crimson-bdr: rgba(146,43,33,0.2);
-    --ocean:       #1a5276;
-    --ocean-bg:    rgba(26,82,118,0.08);
-    --ocean-bdr:   rgba(26,82,118,0.2);
-    --terrain:     #2d5a27;
-    --terrain-bg:  rgba(45,90,39,0.08);
-    --terrain-bdr: rgba(45,90,39,0.2);
-    --violet:      #5b2c6f;
-    --violet-bg:   rgba(91,44,111,0.08);
-    --violet-bdr:  rgba(91,44,111,0.2);
-    --rose:        #943126;
-    --ink:         #1c1510;
-    --ink-dim:     #5a4a3a;
-    --ink-faded:   #7a6a5a;
-    --ink-ghost:   #a89880;
-    --parch:       #fdf8f0;
-    --parch-card:  #fffdf8;
-    --parch-warm:  #f8f3e8;
-    --parch-line:  rgba(184,134,11,0.14);
-    --shadow-sm:   0 1px 4px rgba(28,21,16,0.06);
-    --shadow-md:   0 4px 16px rgba(28,21,16,0.08);
-    --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --font-serif: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
+  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:  'DM Mono', 'ui-monospace', 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
 
-  body, #root {
-    background: var(--parch);
-    font-family: var(--font-sans);
-    color: var(--ink);
-    font-size: 13px;
-    line-height: 1.5;
-  }
+  /* ── Neutral Elegance palette (Figma) ── */
+  /* #FFDBBB · #CCBEB1 · #997E67 · #664930   */
 
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--parch-line); border-radius: 99px; }
+  --gold:        #A0722A;
+  --gold2:       #C4922E;
+  --gold-bg:     rgba(160,114,42,0.08);
+  --gold-bdr:    rgba(160,114,42,0.22);
 
-  /* ── Tab bar ── */
-  .tab-bar {
-    display: flex;
-    gap: 2px;
-    background: var(--parch-warm);
-    border: 1px solid var(--parch-line);
-    border-radius: var(--r-sm);
-    padding: 3px;
-  }
-  .tab-btn {
-    padding: 5px 13px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    font-family: var(--font-sans);
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--ink-dim);
-    transition: background 0.15s, color 0.15s;
-    letter-spacing: 0.02em;
-  }
-  .tab-btn.active {
-    background: var(--ink);
-    color: var(--gold2);
-  }
-  .tab-btn:hover:not(.active) { background: rgba(28,21,16,0.05); }
+  --crimson:     #8b3a2a;
+  --crimson-bg:  rgba(139,58,42,0.08);
+  --crimson-bdr: rgba(139,58,42,0.2);
 
-  /* ── Card ── */
-  .card {
-    background: var(--parch-card);
-    border: 1px solid var(--parch-line);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-sm);
-  }
-  .card-hover {
-    background: var(--parch-card);
-    border: 1px solid var(--parch-line);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s, border-color 0.2s;
-  }
-  .card-hover:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--gold-bdr);
-  }
+  --ocean:       #2a5c7a;
+  --ocean-bg:    rgba(42,92,122,0.08);
+  --ocean-bdr:   rgba(42,92,122,0.2);
 
-  /* ── KPI card ── */
-  .kpi-card {
-    padding: 14px;
-    border-radius: var(--r-lg);
-    background: var(--parch-card);
-    border: 1px solid var(--parch-line);
-    border-top-width: 3px;
-    position: relative;
-    overflow: hidden;
-    transition: box-shadow 0.2s;
-  }
-  .kpi-card:hover { box-shadow: var(--shadow-md); }
-  .kpi-label {
-    font-family: var(--font-serif);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-faded);
-    margin-bottom: 6px;
-  }
-  .kpi-value {
-    font-size: 20px;
-    font-weight: 600;
-    line-height: 1;
-    letter-spacing: -0.5px;
-    font-family: var(--font-mono);
-  }
-  .kpi-sub {
-    font-size: 10px;
-    color: var(--ink-ghost);
-    margin-top: 5px;
-  }
-  .kpi-icon {
-    position: absolute;
-    top: 14px; right: 14px;
-    width: 30px; height: 30px;
-    border-radius: var(--r-sm);
-    display: flex; align-items: center; justify-content: center;
-    background: var(--parch-warm);
-    border: 1px solid var(--parch-line);
-  }
+  --terrain:     #4a7a35;
+  --terrain-bg:  rgba(74,122,53,0.08);
+  --terrain-bdr: rgba(74,122,53,0.2);
 
-  /* ── Section divider ── */
-  .section-div {
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 12px; margin-top: 4px;
-  }
-  .section-div-dot {
-    width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
-  }
-  .section-div-label {
-    font-family: var(--font-serif);
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--gold); white-space: nowrap;
-  }
-  .section-div-line {
-    flex: 1; height: 1px;
-    background: linear-gradient(90deg, rgba(184,134,11,0.25), rgba(184,134,11,0.06), transparent);
-  }
+  --violet:      #5a3a6e;
+  --violet-bg:   rgba(90,58,110,0.08);
+  --violet-bdr:  rgba(90,58,110,0.2);
 
-  /* ── Table ── */
-  .dash-table { width: 100%; border-collapse: collapse; }
-  .dash-table thead tr { background: var(--parch-warm); }
-  .dash-table th {
-    padding: 10px 14px;
-    text-align: left;
-    font-family: var(--font-serif);
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--ink-faded);
-    white-space: nowrap;
-  }
-  .dash-table td {
-    padding: 11px 14px;
-    border-top: 1px solid var(--parch-line);
-    font-size: 12px;
-    color: var(--ink);
-  }
-  .dash-table tbody tr { transition: background 0.12s; }
-  .dash-table tbody tr:hover { background: rgba(184,134,11,0.025); }
+  --rose:        #8b3a2a;
 
-  /* ── Status badge ── */
-  .status-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 9px; border-radius: 99px;
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.07em; text-transform: uppercase;
-    white-space: nowrap; border: 1px solid;
-  }
+  /* ── Ink scale (from espresso #664930) ── */
+  --ink:         #3D2B1A;
+  --ink-dim:     #664930;
+  --ink-faded:   #8a6d56;
+  --ink-ghost:   #b89e8a;
 
-  /* ── Alert banner ── */
-  .alert-banner {
-    display: flex; align-items: center; gap: 10px;
-    padding: 11px 14px; border-radius: var(--r-md);
-    cursor: pointer; border: 1px solid; width: 100%; text-align: left;
-    transition: opacity 0.15s;
-    font-family: var(--font-sans);
-  }
-  .alert-banner:hover { opacity: 0.85; }
+  /* ── Surface scale (from cream #FFDBBB) ── */
+  --parch:       #FDF5EC;
+  --parch-card:  #FFF8F0;
+  --parch-warm:  #F5EDE0;
+  --parch-line:  rgba(153,126,103,0.18);
 
-  /* ── Pipeline card ── */
-  .pipeline-card {
-    border-radius: var(--r-md); padding: 12px 6px;
-    text-align: center; display: flex; flex-direction: column;
-    align-items: center; gap: 4px; cursor: pointer;
-    border: 1px solid; transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .pipeline-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  --shadow-sm:   0 1px 4px rgba(61,43,26,0.07);
+  --shadow-md:   0 4px 20px rgba(61,43,26,0.10);
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
+}
 
-  /* ── Refresh btn ── */
-  .refresh-btn {
-    padding: 7px 16px; border-radius: var(--r-sm);
-    background: var(--ink); color: var(--gold2);
-    font-size: 11px; font-weight: 700; cursor: pointer; border: none;
-    font-family: var(--font-serif); letter-spacing: 0.04em;
-    transition: opacity 0.15s;
-  }
-  .refresh-btn:hover { opacity: 0.85; }
-  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── Breakdown box ── */
-  .breakdown-box {
-    border-radius: var(--r-md); padding: 14px;
-  }
-  .breakdown-label {
-    font-family: var(--font-serif);
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .breakdown-value {
-    font-size: 20px; font-weight: 600; line-height: 1;
-    font-family: var(--font-mono);
-  }
+body, #root {
+  background: var(--parch);
+  font-family: var(--font-sans);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
 
-  /* ── Spin ── */
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spin { animation: spin 1s linear infinite; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(153,126,103,0.3); border-radius: 99px; }
 
-  /* ── Fade in ── */
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-up { animation: fadeUp 0.35s ease both; }
+/* ── Tab bar ── */
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  background: var(--parch-warm);
+  border: 1px solid var(--parch-line);
+  border-radius: var(--r-sm);
+  padding: 3px;
+}
+.tab-btn {
+  padding: 5px 13px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--ink-dim);
+  transition: background 0.15s, color 0.15s;
+  letter-spacing: 0.02em;
+}
+.tab-btn.active {
+  background: var(--ink);
+  color: #FFF8F0;
+}
+.tab-btn:hover:not(.active) { background: rgba(61,43,26,0.05); }
+
+/* ── Card ── */
+.card {
+  background: var(--parch-card);
+  border: 1px solid var(--parch-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.card-hover {
+  background: var(--parch-card);
+  border: 1px solid var(--parch-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.card-hover:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--gold-bdr);
+}
+
+/* ── KPI card ── */
+.kpi-card {
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--parch-card);
+  border: 1px solid var(--parch-line);
+  border-top-width: 3px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.kpi-card:hover { box-shadow: var(--shadow-md); }
+.kpi-label {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faded);
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  font-family: var(--font-mono);
+}
+.kpi-sub {
+  font-size: 10px;
+  color: var(--ink-ghost);
+  margin-top: 5px;
+}
+.kpi-icon {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 30px; height: 30px;
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--parch-warm);
+  border: 1px solid var(--parch-line);
+}
+
+/* ── Section divider ── */
+.section-div {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px; margin-top: 4px;
+}
+.section-div-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.section-div-label {
+  font-family: var(--font-serif);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold); white-space: nowrap;
+}
+.section-div-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(160,114,42,0.25), rgba(160,114,42,0.06), transparent);
+}
+
+/* ── Table ── */
+.dash-table { width: 100%; border-collapse: collapse; }
+.dash-table thead tr { background: var(--parch-warm); }
+.dash-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-family: var(--font-serif);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faded);
+  white-space: nowrap;
+}
+.dash-table td {
+  padding: 11px 14px;
+  border-top: 1px solid var(--parch-line);
+  font-size: 12px;
+  color: var(--ink);
+}
+.dash-table tbody tr { transition: background 0.12s; }
+.dash-table tbody tr:hover { background: rgba(160,114,42,0.025); }
+
+/* ── Status badge ── */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  white-space: nowrap; border: 1px solid;
+}
+
+/* ── Alert banner ── */
+.alert-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--r-md);
+  cursor: pointer; border: 1px solid; width: 100%; text-align: left;
+  transition: opacity 0.15s;
+  font-family: var(--font-sans);
+}
+.alert-banner:hover { opacity: 0.85; }
+
+/* ── Pipeline card ── */
+.pipeline-card {
+  border-radius: var(--r-md); padding: 12px 6px;
+  text-align: center; display: flex; flex-direction: column;
+  align-items: center; gap: 4px; cursor: pointer;
+  border: 1px solid; transition: transform 0.15s, box-shadow 0.15s;
+}
+.pipeline-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* ── Refresh btn ── */
+.refresh-btn {
+  padding: 7px 16px; border-radius: var(--r-sm);
+  background: var(--ink); color: #FFF8F0;
+  font-size: 11px; font-weight: 700; cursor: pointer; border: none;
+  font-family: var(--font-serif); letter-spacing: 0.04em;
+  transition: opacity 0.15s;
+}
+.refresh-btn:hover { opacity: 0.85; }
+.refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Breakdown box ── */
+.breakdown-box {
+  border-radius: var(--r-md); padding: 14px;
+}
+.breakdown-label {
+  font-family: var(--font-serif);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.breakdown-value {
+  font-size: 20px; font-weight: 600; line-height: 1;
+  font-family: var(--font-mono);
+}
+
+/* ── Spin ── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
+/* ── Fade in ── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp 0.35s ease both; }
 `;
 
 /* ─────────────────────────────────────────────
@@ -260,17 +279,17 @@ const CSS = `
 ───────────────────────────────────────────── */
 const TIME_FILTERS = ["Today", "7 Days", "30 Days", "YTD", "All Time"];
 const MODE_FILTERS = ["All", "Churning", "Resell"];
-const PIE_COLORS   = ["#b8860b","#8e44ad","#2980b9","#4a8c42","#c0392b","#d4a017"];
+const PIE_COLORS   = ["#A0722A","#5a3a6e","#2a5c7a","#4a7a35","#8b3a2a","#C4922E"];
 
 const STATUS_CONFIG = {
   pending:            { label:"Pending",   icon:Clock,        color:"#9c8f7e", bg:"rgba(156,143,126,0.10)", border:"rgba(156,143,126,0.25)" },
-  ordered:            { label:"Ordered",   icon:ShoppingBag,  color:"#1a5276", bg:"rgba(26,82,118,0.10)",   border:"rgba(26,82,118,0.22)"   },
-  shipped:            { label:"Shipped",   icon:Send,         color:"#5b2c6f", bg:"rgba(91,44,111,0.10)",   border:"rgba(91,44,111,0.20)"   },
-  received:           { label:"Received",  icon:Package,      color:"#1a5276", bg:"rgba(26,82,118,0.10)",   border:"rgba(26,82,118,0.22)"   },
-  partially_received: { label:"Partial",   icon:Package,      color:"#b8860b", bg:"rgba(184,134,11,0.10)",  border:"rgba(184,134,11,0.22)"  },
-  paid:               { label:"Paid",      icon:CheckCircle,  color:"#2d5a27", bg:"rgba(45,90,39,0.10)",    border:"rgba(45,90,39,0.20)"    },
-  completed:          { label:"Completed", icon:CheckCircle,  color:"#b8860b", bg:"rgba(184,134,11,0.10)",  border:"rgba(184,134,11,0.22)"  },
-  cancelled:          { label:"Cancelled", icon:X,            color:"#922b21", bg:"rgba(146,43,33,0.10)",   border:"rgba(146,43,33,0.20)"   },
+  ordered:            { label:"Ordered",   icon:ShoppingBag,  color:"#2a5c7a", bg:"rgba(26,82,118,0.10)",   border:"rgba(26,82,118,0.22)"   },
+  shipped:            { label:"Shipped",   icon:Send,         color:"#5a3a6e", bg:"rgba(91,44,111,0.10)",   border:"rgba(91,44,111,0.20)"   },
+  received:           { label:"Received",  icon:Package,      color:"#2a5c7a", bg:"rgba(26,82,118,0.10)",   border:"rgba(26,82,118,0.22)"   },
+  partially_received: { label:"Partial",   icon:Package,      color:"#A0722A", bg:"rgba(160,114,42,0.10)",  border:"rgba(160,114,42,0.22)"  },
+  paid:               { label:"Paid",      icon:CheckCircle,  color:"#4a7a35", bg:"rgba(45,90,39,0.10)",    border:"rgba(45,90,39,0.20)"    },
+  completed:          { label:"Completed", icon:CheckCircle,  color:"#A0722A", bg:"rgba(160,114,42,0.10)",  border:"rgba(160,114,42,0.22)"  },
+  cancelled:          { label:"Cancelled", icon:X,            color:"#8b3a2a", bg:"rgba(139,58,42,0.10)",   border:"rgba(139,58,42,0.20)"   },
 };
 
 const KPI_DEFS = [
@@ -312,62 +331,35 @@ function cssVar(name) {
 }
 
 /* ─────────────────────────────────────────────
-   MOCK DATA  (replace with real base44 calls)
+   DATE HELPERS
 ───────────────────────────────────────────── */
-const MOCK_METRICS = {
-  totalCost:     42380, saleRevenue: 61200, cashback: 3840,
-  netProfit:     22660, avgRoi:      53.5,  yaCashback: 1200,
-  inStockUnits:  148,   giftCardValue: 560, points: 12400,
-};
-const MOCK_TREND = [
-  { month:"Nov", revenue:9200,  profit:3100, spent:7400, cashback:480 },
-  { month:"Dec", revenue:14800, profit:5200, spent:10600,cashback:720 },
-  { month:"Jan", revenue:8900,  profit:2800, spent:7200, cashback:310 },
-  { month:"Feb", revenue:11400, profit:4100, spent:8600, cashback:550 },
-  { month:"Mar", revenue:9700,  profit:3400, spent:7500, cashback:420 },
-  { month:"Apr", revenue:7200,  profit:4060, spent:8880, cashback:360 },
-];
-const MOCK_BY_STATUS = [
-  { name:"ordered",   value:14 },
-  { name:"shipped",   value:8  },
-  { name:"received",  value:21 },
-  { name:"completed", value:37 },
-  { name:"pending",   value:5  },
-];
-const MOCK_TOP_CARDS = [
-  { name:"Amex Gold",    spent:18400, orders:34 },
-  { name:"Chase Sapph.", spent:12100, orders:22 },
-  { name:"Citi Double",  spent:7200,  orders:15 },
-  { name:"Cap One VX",   spent:3100,  orders:8  },
-  { name:"Discover It",  spent:1580,  orders:4  },
-];
-const MOCK_COST_BREAKDOWN = [
-  { name:"Fees",     value:1840 },
-  { name:"Shipping", value:2310 },
-  { name:"Tax",      value:3120 },
-];
-const MOCK_TRANSACTIONS = [
-  { id:1, productName:"Sony WH-1000XM5 Headphones",    platform:"Amazon",   salePlatform:"eBay",    totalPrice:248, salePrice:310, cashbackAmount:12.4,  profit:74,   status:"completed", transactionDate:"2024-04-08", productImageUrl:null },
-  { id:2, productName:"Apple AirPods Pro 2nd Gen",     platform:"BestBuy",  salePlatform:"StockX",  totalPrice:189, salePrice:229, cashbackAmount:9.45,  profit:49,   status:"shipped",   transactionDate:"2024-04-07", productImageUrl:null },
-  { id:3, productName:"Dyson V15 Detect Vacuum",       platform:"Costco",   salePlatform:"—",       totalPrice:499, salePrice:null,cashbackAmount:24.95, profit:null, status:"received",  transactionDate:"2024-04-06", productImageUrl:null },
-  { id:4, productName:"Nintendo Switch OLED Bundle",   platform:"Target",   salePlatform:"Facebook",totalPrice:349, salePrice:410, cashbackAmount:17.45, profit:78,   status:"completed", transactionDate:"2024-04-05", productImageUrl:null },
-  { id:5, productName:"Instant Pot Duo 7-in-1",        platform:"Walmart",  salePlatform:"Mercari", totalPrice:79,  salePrice:95,  cashbackAmount:3.95,  profit:20,   status:"paid",      transactionDate:"2024-04-04", productImageUrl:null },
-  { id:6, productName:"LEGO Star Wars Millennium Fal.", platform:"Amazon",   salePlatform:"—",       totalPrice:699, salePrice:null,cashbackAmount:34.95, profit:null, status:"ordered",   transactionDate:"2024-04-03", productImageUrl:null },
-  { id:7, productName:"KitchenAid Stand Mixer 5Qt",    platform:"Williams", salePlatform:"eBay",    totalPrice:329, salePrice:389, cashbackAmount:16.45, profit:76,   status:"completed", transactionDate:"2024-04-02", productImageUrl:null },
-  { id:8, productName:"Canon EOS R50 Mirrorless Kit",  platform:"BestBuy",  salePlatform:"—",       totalPrice:879, salePrice:null,cashbackAmount:43.95, profit:null, status:"pending",   transactionDate:"2024-04-01", productImageUrl:null },
-];
-const MOCK_ALERTS = { overdueInvoices:2, damagedItems:1, inTransit:4 };
-const STATUS_COUNTS = { pending:5, ordered:14, shipped:8, received:21, partially_received:3, paid:6, completed:37, cancelled:2 };
+function getDateCutoff(timeFilter) {
+  const now  = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const sub = (d, n) => { const x = new Date(d); x.setDate(x.getDate()-n); return x; };
+  switch (timeFilter) {
+    case "Today":   return today;
+    case "7 Days":  return sub(today, 7);
+    case "30 Days": return sub(today, 30);
+    case "YTD":     return new Date(now.getFullYear(), 0, 1);
+    default:        return new Date(1970, 0, 1);
+  }
+}
+function parseD(iso) { try { return iso ? new Date(iso) : null; } catch { return null; } }
+function subMonths(date, n) { const d = new Date(date); d.setMonth(d.getMonth()-n); return d; }
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d)   { return new Date(d.getFullYear(), d.getMonth()+1, 0, 23,59,59); }
+function fmtMonth(d)     { return d.toLocaleDateString("en-US",{ month:"short" }); }
 
 /* ─────────────────────────────────────────────
    SUB-COMPONENTS
 ───────────────────────────────────────────── */
-function SectionDivider({ title, dotColor="var(--gold)", lineColor="rgba(184,134,11,0.25)" }) {
+function SectionDivider({ title, dotColor="var(--gold)", lineColor="rgba(160,114,42,0.25)" }) {
   return (
     <div className="section-div">
       <div className="section-div-dot" style={{ background: dotColor }} />
       <span className="section-div-label" style={{ color: dotColor }}>{title}</span>
-      <div className="section-div-line" style={{ background:`linear-gradient(90deg,${lineColor},rgba(184,134,11,0.06),transparent)` }} />
+      <div className="section-div-line" style={{ background:`linear-gradient(90deg,${lineColor},rgba(160,114,42,0.06),transparent)` }} />
     </div>
   );
 }
@@ -466,22 +458,141 @@ function BreakdownTooltip({ active, payload }) {
    MAIN DASHBOARD
 ───────────────────────────────────────────── */
 export default function Dashboard() {
-  const [timeFilter, setTimeFilter] = useState("30 Days");
-  const [modeFilter, setModeFilter] = useState("All");
+  const [timeFilter,    setTimeFilter]    = useState("30 Days");
+  const [modeFilter,    setModeFilter]    = useState("All");
   const [showBreakdown, setShowBreakdown] = useState(true);
-  const [refreshing, setRefreshing]       = useState(false);
+  const [loading,       setLoading]       = useState(true);
+  const [refreshing,    setRefreshing]    = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
-  const [modalImg, setModalImg]           = useState(null);
+  const [modalImg,      setModalImg]      = useState(null);
+  const [user,          setUser]          = useState(null);
 
-  const metrics      = MOCK_METRICS;
-  const trendData    = MOCK_TREND;
-  const byStatus     = MOCK_BY_STATUS;
-  const topCards     = MOCK_TOP_CARDS;
-  const costBreakdown= MOCK_COST_BREAKDOWN;
-  const transactions = MOCK_TRANSACTIONS;
-  const alerts       = MOCK_ALERTS;
-  const statusCounts = STATUS_COUNTS;
-  const totalOrders  = Object.values(statusCounts).reduce((a,b)=>a+b,0);
+  const [allOrders,    setAllOrders]    = useState([]);
+  const [metrics,      setMetrics]      = useState({ totalCost:0, saleRevenue:0, cashback:0, netProfit:0, avgRoi:0, yaCashback:0, inStockUnits:0, giftCardValue:0, points:0 });
+  const [trendData,    setTrendData]    = useState([]);
+  const [byStatus,     setByStatus]     = useState([]);
+  const [topCards,     setTopCards]     = useState([]);
+  const [costBreakdown,setCostBreakdown]= useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [alerts,       setAlerts]       = useState({ overdueInvoices:0, damagedItems:0, inTransit:0 });
+  const [statusCounts, setStatusCounts] = useState({});
+
+  const totalOrders = Object.values(statusCounts).reduce((a,b)=>a+b,0);
+
+  const filterByMode = useCallback((orders) =>
+    modeFilter === "All" ? orders : orders.filter(o =>
+      modeFilter === "Churning" ? o.order_type === "churning" : o.order_type === "marketplace"
+    ), [modeFilter]);
+
+  const filterByTime = useCallback((items, dateField) => {
+    const cutoff = getDateCutoff(timeFilter);
+    return items.filter(i => { const d = parseD(i[dateField]); return d && d >= cutoff; });
+  }, [timeFilter]);
+
+  const computeData = useCallback((orders, rewards, creditCards, inventoryItems, giftCards, invoices, damagedItems, shipmentsData) => {
+    const filteredOrders  = filterByTime(filterByMode(orders), "order_date");
+    const filteredRewards = filterByTime(rewards, "date_earned");
+
+    const totalCost   = filteredOrders.reduce((s,o) => s + parseFloat(o.total_cost||0), 0);
+    const saleRevenue = filteredOrders.reduce((sum,o) =>
+      sum + (o.sale_events||[]).reduce((s,ev) =>
+        s + (ev.items||[]).reduce((is,item) =>
+          is + (parseFloat(item.sale_price)||0)*(parseInt(item.quantity)||1), 0), 0), 0);
+    const allCB     = filteredRewards.filter(r => r.currency === "USD");
+    const cashback  = allCB.reduce((s,r) => s+(r.amount||0), 0);
+    const yaCashback= allCB.filter(r => r.notes?.includes("Young Adult")||r.notes?.includes("YACB")||r.notes?.includes("Prime Young Adult")).reduce((s,r)=>s+(r.amount||0),0);
+    const points    = filteredRewards.filter(r=>r.currency==="points").reduce((s,r)=>s+(r.amount||0),0);
+    const netProfit = saleRevenue - totalCost + cashback;
+    const avgRoi    = totalCost > 0 ? (netProfit/totalCost)*100 : 0;
+    const inStockUnits  = inventoryItems.filter(i=>i.status==="in_stock"||i.status==="received").reduce((s,i)=>s+(i.quantity||1),0);
+    const giftCardValue = giftCards.filter(g=>g.status==="available").reduce((s,g)=>s+parseFloat(g.value||0),0);
+
+    setMetrics({ totalCost, saleRevenue, cashback, netProfit, avgRoi, yaCashback, inStockUnits, giftCardValue, points });
+
+    const now = new Date();
+    const trend = [];
+    for (let i=5; i>=0; i--) {
+      const md = subMonths(now, i);
+      const mStart = startOfMonth(md), mEnd = endOfMonth(md);
+      const mOrds = filteredOrders.filter(o=>{ const d=parseD(o.order_date); return d&&d>=mStart&&d<=mEnd; });
+      const mRews = filteredRewards.filter(r=>{ const d=parseD(r.date_earned); return d&&d>=mStart&&d<=mEnd; });
+      const spent   = mOrds.reduce((s,o)=>s+parseFloat(o.total_cost||0),0);
+      const revenue = mOrds.reduce((sum,o)=>sum+(o.sale_events||[]).reduce((s,ev)=>s+(ev.items||[]).reduce((is,item)=>is+(parseFloat(item.sale_price)||0)*(parseInt(item.quantity)||1),0),0),0);
+      const cb      = mRews.filter(r=>r.currency==="USD").reduce((s,r)=>s+(r.amount||0),0);
+      trend.push({ month:fmtMonth(md), revenue, profit:revenue-spent, spent, cashback:cb });
+    }
+    setTrendData(trend);
+
+    const sc = {};
+    filteredOrders.forEach(o=>{ if(o.status){ const k=o.status.toLowerCase(); sc[k]=(sc[k]||0)+1; } });
+    setStatusCounts(sc);
+    setByStatus(Object.entries(sc).map(([name,value])=>({ name, value })));
+
+    const cardMap = {};
+    filteredOrders.forEach(o=>{
+      if(o.credit_card_id){
+        if(!cardMap[o.credit_card_id]){ const c=creditCards.find(c=>c.id===o.credit_card_id); cardMap[o.credit_card_id]={ name:c?.card_name||o.card_name||"Unknown", spent:0, orders:0 }; }
+        cardMap[o.credit_card_id].spent  += (o.final_cost||o.total_cost||0);
+        cardMap[o.credit_card_id].orders += 1;
+      }
+    });
+    setTopCards(Object.values(cardMap).sort((a,b)=>b.spent-a.spent).slice(0,5));
+
+    const fees     = filteredOrders.reduce((s,o)=>s+parseFloat(o.fees||o.platform_fee||0),0);
+    const shipping = filteredOrders.reduce((s,o)=>s+parseFloat(o.shipping_cost||0),0);
+    const tax      = filteredOrders.reduce((s,o)=>s+parseFloat(o.tax||0),0);
+    const bd = [{ name:"Fees", value:fees },{ name:"Shipping", value:shipping },{ name:"Tax", value:tax }].filter(x=>x.value>0);
+    setCostBreakdown(bd.length ? bd : [{ name:"Fees",value:0 },{ name:"Shipping",value:0 },{ name:"Tax",value:0 }]);
+
+    const sorted = [...filteredOrders].sort((a,b)=>new Date(b.order_date||b.created_date)-new Date(a.order_date||a.created_date)).slice(0,10);
+    setTransactions(sorted.map(o=>({
+      id:           o.id,
+      productName:  o.product_name||o.items?.[0]?.product_name||"—",
+      platform:     o.retailer||o.platform||"—",
+      salePlatform: o.sale_platform||o.sale_events?.[0]?.platform||"—",
+      totalPrice:   parseFloat(o.final_cost||o.total_cost||0),
+      salePrice:    o.sale_events?.length ? o.sale_events.reduce((s,ev)=>s+(ev.items||[]).reduce((is,item)=>is+(parseFloat(item.sale_price)||0)*(parseInt(item.quantity)||1),0),0) : null,
+      cashbackAmount: parseFloat(o.cashback_amount||0),
+      profit:       (() => { const evs=o.sale_events||[]; if(!evs.length) return null; const rev=evs.reduce((s,ev)=>s+(ev.items||[]).reduce((is,item)=>is+(parseFloat(item.sale_price)||0)*(parseInt(item.quantity)||1),0),0); return rev-parseFloat(o.total_cost||o.final_cost||0)+parseFloat(o.cashback_amount||0); })(),
+      status:       o.status,
+      transactionDate: o.order_date||o.created_date,
+      productImageUrl: o.image_url||o.product_image_url||o.items?.[0]?.image_url||null,
+    })));
+
+    const today = new Date().toISOString().slice(0,10);
+    setAlerts({
+      overdueInvoices: invoices.filter(inv=>inv.status==="overdue"||(inv.status==="sent"&&inv.due_date&&inv.due_date<today)).length,
+      damagedItems:    damagedItems.filter(d=>d.status==="reported"||d.status==="assessed").length,
+      inTransit:       shipmentsData.filter(s=>!s.delivered_date&&s.status&&!s.status.toLowerCase().includes("delivered")).length,
+    });
+
+  }, [filterByMode, filterByTime]);
+
+  const loadData = useCallback(async (silent=false) => {
+    try {
+      const currentUser = await base44.auth.me().catch(()=>null);
+      if (!currentUser?.email) return;
+      setUser(currentUser);
+      const byUser = { created_by: currentUser.email };
+      const [orders, rewards, creditCards, inventoryItems, giftCards, invoices, damagedItems, shipmentsData] = await Promise.all([
+        base44.entities.PurchaseOrder.filter(byUser),
+        base44.entities.Reward.filter(byUser),
+        base44.entities.CreditCard.filter(byUser),
+        base44.entities.InventoryItem.filter(byUser).catch(()=>[]),
+        base44.entities.GiftCard.filter(byUser).catch(()=>[]),
+        base44.entities.Invoice.filter(byUser).catch(()=>[]),
+        base44.entities.DamagedItem.filter(byUser).catch(()=>[]),
+        base44.entities.Shipment.filter(byUser).catch(()=>[]),
+      ]);
+      setAllOrders(orders);
+      computeData(orders, rewards, creditCards, inventoryItems, giftCards, invoices, damagedItems, shipmentsData);
+      setLastRefreshed(new Date());
+    } catch(e) { console.error(e); }
+    finally { if (!silent) setLoading(false); }
+  }, [computeData]);
+
+  useEffect(() => { loadData(); }, []);
+  useEffect(() => { if (!loading) loadData(); }, [timeFilter, modeFilter]);
 
   const activeAlerts = [
     alerts.overdueInvoices > 0 && { icon:FileWarning, color:"var(--crimson)", bg:"var(--crimson-bg)", border:"var(--crimson-bdr)", title:`${alerts.overdueInvoices} Overdue Invoice${alerts.overdueInvoices>1?"s":""}`, value:"Action required" },
@@ -491,14 +602,27 @@ export default function Dashboard() {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); setLastRefreshed(new Date()); }, 900);
-  }, []);
+    loadData(true).finally(()=>setRefreshing(false));
+  }, [loadData]);
+
+  const firstName = user?.full_name?.split(" ")[0] || "Explorer";
 
   const timeSince = () => {
     const s = Math.floor((Date.now() - lastRefreshed)/1000);
     if (s < 60) return `${s}s ago`;
     return `${Math.floor(s/60)}m ago`;
   };
+
+  if (loading) return (
+    <div style={{ maxWidth:1340, margin:"0 auto", padding:"16px 16px 40px" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:8 }}>
+        {[...Array(8)].map((_,i) => (
+          <div key={i} style={{ height:76, borderRadius:12, background:"var(--parch-warm)", border:"1px solid var(--parch-line)", animation:"pulse 1.5s ease infinite" }} />
+        ))}
+      </div>
+      <div style={{ height:200, borderRadius:12, background:"var(--parch-warm)", border:"1px solid var(--parch-line)" }} />
+    </div>
+  );
 
   return (
     <>
@@ -510,7 +634,7 @@ export default function Dashboard() {
         <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:8 }}>
           <div>
             <h1 style={{ fontFamily:"var(--font-serif)", fontSize:24, fontWeight:900, color:"var(--ink)", letterSpacing:"-0.3px", lineHeight:1.1 }}>
-              {greeting()}, Explorer
+              {greeting()}, {firstName}
               {refreshing && <RefreshCw size={14} className="spin" style={{ display:"inline", marginLeft:8, color:"var(--ink-dim)", verticalAlign:"middle" }} />}
             </h1>
             <p style={{ fontSize:11, color:"var(--ink-dim)", marginTop:4, letterSpacing:"0.03em", fontFamily:"var(--font-sans)" }}>
@@ -586,13 +710,13 @@ export default function Dashboard() {
         </div>
 
         {/* ── Pipeline ── */}
-        <SectionDivider title="Route Map" dotColor="var(--ocean)" lineColor="rgba(26,82,118,0.25)" />
+        <SectionDivider title="Route Map" dotColor="var(--ocean)" lineColor="rgba(42,92,122,0.25)" />
         <div className="card" style={{ padding:"12px 14px", marginBottom:12 }}>
           <p style={{ fontFamily:"var(--font-serif)", fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-dim)", marginBottom:10 }}>
             Order Pipeline · {totalOrders} Total
           </p>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:5, position:"relative" }}>
-            <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"linear-gradient(90deg,transparent,rgba(184,134,11,0.2) 10%,rgba(184,134,11,0.2) 90%,transparent)", pointerEvents:"none" }} />
+            <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"linear-gradient(90deg,transparent,rgba(160,114,42,0.2) 10%,rgba(160,114,42,0.2) 90%,transparent)", pointerEvents:"none" }} />
             {Object.keys(STATUS_CONFIG).map(s => <PipelineCard key={s} status={s} count={statusCounts[s]||0} />)}
           </div>
         </div>
@@ -612,7 +736,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={190}>
               <AreaChart data={trendData} margin={{ top:4, right:4, left:0, bottom:0 }}>
                 <defs>
-                  {[["gRevenue","#b8860b"],["gProfit","#2d5a27"],["gSpent","#1a5276"],["gCash","#5b2c6f"]].map(([id,c]) => (
+                  {[["gRevenue","#A0722A"],["gProfit","#4a7a35"],["gSpent","#2a5c7a"],["gCash","#5a3a6e"]].map(([id,c]) => (
                     <linearGradient key={id} id={id} x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor={c} stopOpacity={0.18}/>
                       <stop offset="95%" stopColor={c} stopOpacity={0}/>
@@ -623,13 +747,13 @@ export default function Dashboard() {
                 <XAxis dataKey="month" tick={{ fontSize:10, fill:"var(--ink-ghost)", fontFamily:"var(--font-sans)" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize:10, fill:"var(--ink-ghost)", fontFamily:"var(--font-mono)" }} axisLine={false} tickLine={false} tickFormatter={v=>`$${v>=1000?(v/1000).toFixed(0)+"k":v}`} />
                 <Tooltip content={<ChartTooltip />} />
-                {[["revenue","#b8860b","gRevenue"],["profit","#2d5a27","gProfit"],["spent","#1a5276","gSpent"],["cashback","#5b2c6f","gCash"]].map(([key,c,g]) => (
+                {[["revenue","#A0722A","gRevenue"],["profit","#4a7a35","gProfit"],["spent","#2a5c7a","gSpent"],["cashback","#5a3a6e","gCash"]].map(([key,c,g]) => (
                   <Area key={key} type="monotone" dataKey={key} stroke={c} fill={`url(#${g})`} strokeWidth={2} name={key.charAt(0).toUpperCase()+key.slice(1)} dot={{ r:3, fill:c }} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
             <div style={{ display:"flex", flexWrap:"wrap", gap:10, marginTop:10 }}>
-              {[["#b8860b","Revenue"],["#2d5a27","Profit"],["#1a5276","Spent"],["#5b2c6f","Cashback"]].map(([c,l]) => (
+              {[["#A0722A","Revenue"],["#4a7a35","Profit"],["#2a5c7a","Spent"],["#5a3a6e","Cashback"]].map(([c,l]) => (
                 <div key={l} style={{ display:"flex", alignItems:"center", gap:5, fontSize:10, color:"var(--ink-faded)" }}>
                   <span style={{ width:8, height:8, borderRadius:"50%", background:c, display:"inline-block" }} />
                   {l}
@@ -675,7 +799,7 @@ export default function Dashboard() {
                   <YAxis type="category" dataKey="name" tick={{ fontSize:10, fill:"var(--ink-ghost)", fontFamily:"var(--font-sans)" }} axisLine={false} tickLine={false} width={52} />
                   <Tooltip content={<BreakdownTooltip />} />
                   <Bar dataKey="value" radius={[0,5,5,0]}>
-                    {costBreakdown.map((_,i) => <Cell key={i} fill={["#ef4444","#60a5fa","#8b5cf6"][i]} />)}
+                    {costBreakdown.map((_,i) => <Cell key={i} fill={["#8b3a2a","#2a5c7a","#5a3a6e"][i]} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -705,7 +829,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── Transactions Table ── */}
-        <SectionDivider title="Recent Expeditions" dotColor="var(--terrain)" lineColor="rgba(45,90,39,0.25)" />
+        <SectionDivider title="Recent Expeditions" dotColor="var(--terrain)" lineColor="rgba(74,122,53,0.25)" />
         <div className="card" style={{ overflow:"hidden" }}>
           <div style={{ padding:"10px 14px", borderBottom:"1px solid var(--parch-line)", background:"var(--parch-warm)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div style={{ fontFamily:"var(--font-serif)", fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-dim)" }}>
@@ -729,7 +853,6 @@ export default function Dashboard() {
                   const profit = t.profit;
                   return (
                     <tr key={t.id}>
-                      {/* Thumbnail */}
                       <td style={{ padding:"10px 14px" }}>
                         <div
                           onClick={() => t.productImageUrl && setModalImg({ src:t.productImageUrl, alt:t.productName })}
@@ -741,27 +864,18 @@ export default function Dashboard() {
                           }
                         </div>
                       </td>
-                      {/* Product */}
                       <td style={{ maxWidth:180 }}>
                         <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontWeight:600, color:"var(--ink)", fontSize:12 }}>{t.productName}</span>
                       </td>
-                      {/* Platform */}
                       <td style={{ color:"var(--ink-faded)", fontSize:12, whiteSpace:"nowrap" }}>{t.platform}</td>
-                      {/* Buyer / sale platform */}
                       <td style={{ color:"var(--ink-faded)", fontSize:11, whiteSpace:"nowrap" }}>{t.salePlatform || "—"}</td>
-                      {/* Cost */}
                       <td style={{ fontWeight:600, color:"var(--ocean)", fontSize:12, whiteSpace:"nowrap", fontFamily:"var(--font-mono)" }}>{fmt(t.totalPrice)}</td>
-                      {/* Sale price */}
                       <td style={{ fontWeight:600, color:"var(--terrain)", fontSize:12, whiteSpace:"nowrap", fontFamily:"var(--font-mono)" }}>{t.salePrice ? fmt(t.salePrice) : "—"}</td>
-                      {/* Cashback */}
                       <td style={{ fontWeight:600, color:"var(--violet)", fontSize:12, whiteSpace:"nowrap", fontFamily:"var(--font-mono)" }}>{fmt(t.cashbackAmount)}</td>
-                      {/* Profit */}
                       <td style={{ fontWeight:700, fontSize:12, whiteSpace:"nowrap", fontFamily:"var(--font-mono)", color: profit==null?"var(--ink-ghost)": profit>=0?"var(--gold)":"var(--crimson)" }}>
                         {profit==null ? "—" : `${profit>=0?"+":""}${fmt(profit)}`}
                       </td>
-                      {/* Status */}
                       <td><StatusBadge status={t.status} /></td>
-                      {/* Date */}
                       <td style={{ fontSize:11, color:"var(--ink-ghost)", fontFamily:"var(--font-mono)", whiteSpace:"nowrap" }}>{fmtDate(t.transactionDate)}</td>
                     </tr>
                   );
