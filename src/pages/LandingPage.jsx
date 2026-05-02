@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
+import LoginModal from "@/components/LoginModal";
 
 const AtlasLogo = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -61,6 +62,7 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [visible,  setVisible]  = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // ── Star canvas animation ──────────────────────────────────────
   useEffect(() => {
@@ -137,8 +139,8 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const goRegister = () => navigateToLogin();
-  const goLogin    = () => navigateToLogin();
+  const goRegister = () => setLoginModalOpen(true);
+  const goLogin    = () => setLoginModalOpen(true);
 
   return (
     <div style={{ background: "#060503", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
@@ -470,6 +472,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
     </div>
   );
 }
