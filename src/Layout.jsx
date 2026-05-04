@@ -1,324 +1,295 @@
-import React, { useState, useEffect, useCallback } from ‘react’;
-import CommandPalette from ‘@/components/CommandPalette’;
-import NamePromptModal from ‘@/components/NamePromptModal’;
-import { Link, useLocation } from ‘react-router-dom’;
-import { createPageUrl } from ‘./utils’;
-import { base44 } from ‘@/api/base44Client’;
+import React, { useState, useEffect, useCallback } from 'react';
+import CommandPalette from '@/components/CommandPalette';
+import NamePromptModal from '@/components/NamePromptModal';
+import { Link, useLocation } from 'react-router-dom';
+import { createPageUrl } from './utils';
+import { base44 } from '@/api/base44Client';
 import {
-LayoutDashboard, BarChart3, TrendingUp,
-Boxes, PlusCircle, Package, Download,
-ArrowLeftRight, FileText, Receipt,
-Settings as SettingsIcon, CreditCard,
-Menu, LogOut, ChevronDown, ChevronLeft,
-PanelLeftClose, PanelLeftOpen, Search,
-} from ‘lucide-react’;
-import { Avatar, AvatarFallback, AvatarImage } from ‘@/components/ui/avatar’;
+  LayoutDashboard, BarChart3, TrendingUp,
+  Boxes, PlusCircle, Package, Download,
+  ArrowLeftRight, FileText, Receipt,
+  Settings as SettingsIcon, CreditCard,
+  Menu, LogOut, ChevronDown,
+  PanelLeftClose, PanelLeftOpen, Search,
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-/* ── NEW: Navigation with sections (BuyingAIO pattern) ──────────────────────────────────────────────────── */
 const NAV_SECTIONS = [
-{
-title: ‘COMMAND’,
-items: [
-{ name: ‘Dashboard’, page: ‘Dashboard’, icon: LayoutDashboard },
-],
-},
-{
-title: ‘OPERATIONS’,
-items: [
-{ name: ‘New Order’, page: ‘NewOrders’, icon: PlusCircle },
-{ name: ‘Purchase Orders’, page: ‘PurchaseOrders’, icon: Package },
-{ name: ‘Transactions’, page: ‘Transactions’, icon: ArrowLeftRight },
-{ name: ‘Invoices’, page: ‘Invoices’, icon: FileText },
-{ name: ‘Import’, page: ‘ImportOrders’, icon: Download },
-{ name: ‘Receiving’, page: ‘PackageReceiving’, icon: Package },
-],
-},
-{
-title: ‘INVENTORY’,
-items: [
-{ name: ‘Inventory’, page: ‘Inventory’, icon: Boxes },
-{ name: ‘Products’, page: ‘Products’, icon: Package },
-],
-},
-{
-title: ‘ANALYTICS’,
-items: [
-{ name: ‘Analytics’, page: ‘Analytics’, icon: BarChart3 },
-{ name: ‘Forecast’, page: ‘Forecast’, icon: TrendingUp },
-{ name: ‘Expenses’, page: ‘Expenses’, icon: Receipt },
-],
-},
-{
-title: ‘TOOLS’,
-items: [
-{ name: ‘Payment Methods’, page: ‘PaymentMethods’, icon: CreditCard },
-{ name: ‘Settings’, page: ‘Settings’, icon: SettingsIcon },
-],
-},
+  {
+    title: 'COMMAND',
+    items: [
+      { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: 'OPERATIONS',
+    items: [
+      { name: 'New Order',       page: 'NewOrders',       icon: PlusCircle     },
+      { name: 'Purchase Orders', page: 'PurchaseOrders',  icon: Package        },
+      { name: 'Transactions',    page: 'Transactions',    icon: ArrowLeftRight  },
+      { name: 'Invoices',        page: 'Invoices',        icon: FileText       },
+      { name: 'Import',          page: 'ImportOrders',    icon: Download       },
+      { name: 'Receiving',       page: 'PackageReceiving',icon: Package        },
+    ],
+  },
+  {
+    title: 'INVENTORY',
+    items: [
+      { name: 'Inventory', page: 'Inventory', icon: Boxes   },
+      { name: 'Products',  page: 'Products',  icon: Package },
+    ],
+  },
+  {
+    title: 'ANALYTICS',
+    items: [
+      { name: 'Analytics', page: 'Analytics', icon: BarChart3  },
+      { name: 'Forecast',  page: 'Forecast',  icon: TrendingUp },
+      { name: 'Expenses',  page: 'Expenses',  icon: Receipt    },
+    ],
+  },
+  {
+    title: 'TOOLS',
+    items: [
+      { name: 'Payment Methods', page: 'PaymentMethods', icon: CreditCard   },
+      { name: 'Settings',        page: 'Settings',       icon: SettingsIcon },
+    ],
+  },
 ];
 
-/* ── Atlas Logo ──────────────────────────────────────────────────── */
 function AtlasLogo({ size = 36 }) {
-const s = size;
-const scale = s / 512;
-const p = (x, y) => `${x * scale},${y * scale}`;
-const cx = s / 2, cy = s / 2;
-return (
-<svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill=“none” xmlns=“http://www.w3.org/2000/svg”>
-<rect width={s} height={s} rx={s * 0.195} fill=”#1e1a14”/>
-<rect width={s} height={s} rx={s * 0.195} fill=“none” stroke=”#C4922E” strokeWidth={s * 0.008} opacity=“0.4”/>
-<polygon points={[p(256,60),p(420,155),p(420,345),p(256,440),p(92,345),p(92,155)].join(’ ‘)} fill=“none” stroke=”#C4922E” strokeWidth={s * 0.023} opacity=“0.9”/>
-<polygon points={[p(256,110),p(375,175),p(375,305),p(256,370),p(137,305),p(137,175)].join(’ ‘)} fill=“none” stroke=”#C4922E” strokeWidth={s * 0.008} opacity=“0.3”/>
-<line x1={p(256,80).split(’,’)[0]} y1={p(256,80).split(’,’)[1]} x2={p(256,432).split(’,’)[0]} y2={p(256,432).split(’,’)[1]} stroke=”#C4922E” strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity=“0.35”/>
-<line x1={p(80,256).split(’,’)[0]} y1={p(80,256).split(’,’)[1]} x2={p(432,256).split(’,’)[0]} y2={p(432,256).split(’,’)[1]} stroke=”#C4922E” strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity=“0.35”/>
-<line x1={p(112,112).split(’,’)[0]} y1={p(112,112).split(’,’)[1]} x2={p(400,400).split(’,’)[0]} y2={p(400,400).split(’,’)[1]} stroke=”#C4922E” strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity=“0.18”/>
-<line x1={p(400,112).split(’,’)[0]} y1={p(400,112).split(’,’)[1]} x2={p(112,400).split(’,’)[0]} y2={p(112,400).split(’,’)[1]} stroke=”#C4922E” strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity=“0.18”/>
-<polygon points={[p(256,82),p(238,168),p(256,152),p(274,168)].join(’ ‘)} fill=”#C4922E”/>
-<polygon points={[p(256,430),p(238,344),p(256,360),p(274,344)].join(’ ‘)} fill=”#C4922E” opacity=“0.25”/>
-<polygon points={[p(430,256),p(344,238),p(360,256),p(344,274)].join(’ ‘)} fill=”#f5e09a”/>
-<polygon points={[p(82,256),p(168,238),p(152,256),p(168,274)].join(’ ’)} fill=”#C4922E” opacity=“0.25”/>
-<circle cx={cx} cy={cy} r={s * 0.1015} fill=”#1e1a14” stroke=”#C4922E” strokeWidth={s * 0.0195}/>
-<circle cx={cx} cy={cy} r={s * 0.043} fill=”#C4922E”/>
-<circle cx={cx} cy={cy} r={s * 0.0195} fill=”#f5e09a”/>
-</svg>
-);
+  const s = size;
+  const scale = s / 512;
+  const p = (x, y) => `${x * scale},${y * scale}`;
+  const cx = s / 2, cy = s / 2;
+  return (
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width={s} height={s} rx={s * 0.195} fill="#1e1a14"/>
+      <rect width={s} height={s} rx={s * 0.195} fill="none" stroke="#C4922E" strokeWidth={s * 0.008} opacity="0.4"/>
+      <polygon points={[p(256,60),p(420,155),p(420,345),p(256,440),p(92,345),p(92,155)].join(' ')} fill="none" stroke="#C4922E" strokeWidth={s * 0.023} opacity="0.9"/>
+      <polygon points={[p(256,110),p(375,175),p(375,305),p(256,370),p(137,305),p(137,175)].join(' ')} fill="none" stroke="#C4922E" strokeWidth={s * 0.008} opacity="0.3"/>
+      <line x1={p(256,80).split(',')[0]} y1={p(256,80).split(',')[1]} x2={p(256,432).split(',')[0]} y2={p(256,432).split(',')[1]} stroke="#C4922E" strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity="0.35"/>
+      <line x1={p(80,256).split(',')[0]} y1={p(80,256).split(',')[1]} x2={p(432,256).split(',')[0]} y2={p(432,256).split(',')[1]} stroke="#C4922E" strokeWidth={s * 0.006} strokeDasharray={`${s*0.035} ${s*0.035}`} opacity="0.35"/>
+      <line x1={p(112,112).split(',')[0]} y1={p(112,112).split(',')[1]} x2={p(400,400).split(',')[0]} y2={p(400,400).split(',')[1]} stroke="#C4922E" strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity="0.18"/>
+      <line x1={p(400,112).split(',')[0]} y1={p(400,112).split(',')[1]} x2={p(112,400).split(',')[0]} y2={p(112,400).split(',')[1]} stroke="#C4922E" strokeWidth={s * 0.004} strokeDasharray={`${s*0.023} ${s*0.035}`} opacity="0.18"/>
+      <polygon points={[p(256,82),p(238,168),p(256,152),p(274,168)].join(' ')} fill="#C4922E"/>
+      <polygon points={[p(256,430),p(238,344),p(256,360),p(274,344)].join(' ')} fill="#C4922E" opacity="0.25"/>
+      <polygon points={[p(430,256),p(344,238),p(360,256),p(344,274)].join(' ')} fill="#f5e09a"/>
+      <polygon points={[p(82,256),p(168,238),p(152,256),p(168,274)].join(' ')} fill="#C4922E" opacity="0.25"/>
+      <circle cx={cx} cy={cy} r={s * 0.1015} fill="#1e1a14" stroke="#C4922E" strokeWidth={s * 0.0195}/>
+      <circle cx={cx} cy={cy} r={s * 0.043} fill="#C4922E"/>
+      <circle cx={cx} cy={cy} r={s * 0.0195} fill="#f5e09a"/>
+    </svg>
+  );
 }
 
-/* ── Layout ──────────────────────────────────────────────────────── */
 export default function Layout({ children, currentPageName }) {
-const [user,           setUser]           = useState(null);
-const [sidebarOpen,    setSidebarOpen]    = useState(false);
-const [collapsed,      setCollapsed]      = useState(false);
-const [userMenuOpen,   setUserMenuOpen]   = useState(false);
-const [cmdOpen,        setCmdOpen]        = useState(false);
-const [showNamePrompt, setShowNamePrompt] = useState(false);
-const location = useLocation();
+  const [user,           setUser]           = useState(null);
+  const [sidebarOpen,    setSidebarOpen]    = useState(false);
+  const [collapsed,      setCollapsed]      = useState(false);
+  const [userMenuOpen,   setUserMenuOpen]   = useState(false);
+  const [cmdOpen,        setCmdOpen]        = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const location = useLocation();
 
-const openCmd = useCallback(() => setCmdOpen(true), []);
+  const openCmd = useCallback(() => setCmdOpen(true), []);
 
-useEffect(() => {
-const h = (e) => { if ((e.metaKey || e.ctrlKey) && e.key === ‘k’) { e.preventDefault(); setCmdOpen(true); } };
-window.addEventListener(‘keydown’, h);
-return () => window.removeEventListener(‘keydown’, h);
-}, []);
+  useEffect(() => {
+    const h = (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(true); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
 
-const refreshUser = useCallback(() => {
-base44.auth.me().then(u => {
-setUser(u);
-if (u && (!u.full_name || u.full_name.trim() === ‘’)) setShowNamePrompt(true);
-}).catch(() => {});
-}, []);
+  const refreshUser = useCallback(() => {
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u && (!u.full_name || u.full_name.trim() === '')) setShowNamePrompt(true);
+    }).catch(() => {});
+  }, []);
 
-useEffect(() => {
-refreshUser();
-window.addEventListener(‘focus’, refreshUser);
-return () => window.removeEventListener(‘focus’, refreshUser);
-}, [refreshUser]);
+  useEffect(() => {
+    refreshUser();
+    window.addEventListener('focus', refreshUser);
+    return () => window.removeEventListener('focus', refreshUser);
+  }, [refreshUser]);
 
-useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
-const isActive = (page) => currentPageName === page;
+  const isActive = (page) => currentPageName === page;
 
-const SidebarContent = () => (
-<div style={{ display: ‘flex’, flexDirection: ‘column’, height: ‘100%’, background: ‘var(–sidebar-bg)’, borderRight: ‘1px solid var(–sidebar-border)’ }}>
+  const SidebarContent = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)' }}>
 
-```
-  {/* Logo */}
-  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: collapsed ? '12px 6px' : '14px 14px', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid var(--sidebar-border)' }}>
-    {collapsed ? (
-      <button onClick={() => setCollapsed(false)} title="Expand" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
-        <PanelLeftOpen style={{ width: 18, height: 18 }} />
-      </button>
-    ) : (
-      <>
-        <Link to="/app" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <AtlasLogo size={30} />
-          <div>
-            <p style={{ fontSize: 16, fontWeight: 400, margin: 0, lineHeight: 1, fontFamily: "'Marcellus', serif", letterSpacing: '0.08em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</p>
-            <p style={{ fontSize: 9, fontWeight: 400, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0', fontFamily: "'DM Sans', system-ui, sans-serif" }}>Dalia Distro</p>
-          </div>
-        </Link>
-        <button onClick={() => setCollapsed(true)} title="Collapse" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
-          <PanelLeftClose style={{ width: 17, height: 17 }} />
-        </button>
-      </>
-    )}
-  </div>
-
-  {/* NEW: Section-based navigation (BuyingAIO pattern) */}
-  <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: collapsed ? '8px 4px' : '12px 8px' }}>
-    {NAV_SECTIONS.map((section) => (
-      <div key={section.title} style={{ marginBottom: collapsed ? 0 : '16px' }}>
-        {/* Section title (hidden when collapsed) */}
-        {!collapsed && (
-          <p style={{
-            fontSize: '10px',
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'rgba(255, 255, 255, 0.5)',
-            padding: '0 12px 8px',
-            margin: '0 0 8px',
-            borderBottom: '1px solid rgba(201,168,76,0.1)',
-          }}>
-            {section.title}
-          </p>
-        )}
-
-        {/* Nav items */}
-        <ul style={{ listStyle: 'none', padding: 0, margin: collapsed ? '4px 0' : '0', display: 'flex', flexDirection: 'column', gap: collapsed ? '4px' : '2px' }}>
-          {section.items.map(({ name, page, icon: Icon }) => {
-            const active = isActive(page);
-            return (
-              <li key={page}>
-                <Link
-                  to={createPageUrl(page)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 9,
-                    padding: collapsed ? '8px 6px' : '8px 12px',
-                    borderRadius: 12,
-                    fontSize: '13px',
-                    fontWeight: active ? 600 : 450,
-                    letterSpacing: '-0.005em',
-                    cursor: 'pointer',
-                    textDecoration: 'none',
-                    justifyContent: collapsed ? 'center' : undefined,
-                    // NEW: Pill background + inset border for active state (from BuyingAIO)
-                    background: active 
-                      ? 'rgba(201,168,76,0.15)' 
-                      : 'transparent',
-                    border: active 
-                      ? '1px solid rgba(201,168,76,0.35)' 
-                      : '1px solid transparent',
-                    color: active ? '#f5e09a' : 'var(--sidebar-text)',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'rgba(201,168,76,0.08)';
-                      e.currentTarget.style.color = '#f5e09a';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'var(--sidebar-text)';
-                    }
-                  }}
-                >
-                  <Icon style={{ width: 16, height: 16, flexShrink: 0, opacity: active ? 1 : 0.65 }} />
-                  {!collapsed && <span style={{ flex: 1 }}>{name}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    ))}
-  </nav>
-
-  {/* User strip */}
-  {user && (
-    <div style={{ padding: '8px', borderTop: '1px solid rgba(201,168,76,0.18)', position: 'relative' }}>
-      <button
-        onClick={() => setUserMenuOpen(!userMenuOpen)}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: collapsed ? '8px 4px' : '8px 10px', borderRadius: 10, border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.07)', cursor: 'pointer', justifyContent: collapsed ? 'center' : undefined }}
-      >
-        <Avatar style={{ width: 32, height: 32, flexShrink: 0 }}>
-          {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
-          <AvatarFallback style={{ fontSize: 12, fontWeight: 800, background: 'linear-gradient(135deg,#8b6914,#c9a84c)', color: '#0a0800' }}>
-            {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
-          </AvatarFallback>
-        </Avatar>
-        {!collapsed && (
+      {/* Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: collapsed ? '12px 6px' : '14px 14px', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid var(--sidebar-border)' }}>
+        {collapsed ? (
+          <button onClick={() => setCollapsed(false)} title="Expand" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
+            <PanelLeftOpen style={{ width: 18, height: 18 }} />
+          </button>
+        ) : (
           <>
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#f5e09a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user.full_name || user.email?.split('@')[0] || 'User'}
-              </p>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', margin: 0 }}>{user?.role || 'Member'}</p>
-            </div>
-            <ChevronDown style={{ width: 13, height: 13, color: 'var(--sidebar-text)', flexShrink: 0 }} />
+            <Link to="/Dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+              <AtlasLogo size={30} />
+              <div>
+                <p style={{ fontSize: 16, fontWeight: 400, margin: 0, lineHeight: 1, fontFamily: "'Marcellus', serif", letterSpacing: '0.08em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</p>
+                <p style={{ fontSize: 9, fontWeight: 400, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0', fontFamily: "'DM Sans', system-ui, sans-serif" }}>Dalia Distro</p>
+              </div>
+            </Link>
+            <button onClick={() => setCollapsed(true)} title="Collapse" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
+              <PanelLeftClose style={{ width: 17, height: 17 }} />
+            </button>
           </>
         )}
-      </button>
+      </div>
 
-      {userMenuOpen && (
-        <div style={{ position: 'absolute', bottom: '100%', left: 8, right: 8, marginBottom: 4, background: '#1a1712', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12, boxShadow: 'var(--shadow-lg)', overflow: 'hidden', zIndex: 50 }}>
-          {[
-            { page: 'Settings', icon: SettingsIcon, label: 'Settings' },
-            { page: 'PaymentMethods', icon: CreditCard, label: 'Payment Methods' },
-          ].map(({ page, icon: Icon, label }) => (
-            <Link key={page} to={createPageUrl(page)} onClick={() => setUserMenuOpen(false)}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: 13, color: 'var(--sidebar-text)', textDecoration: 'none', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
-              <Icon style={{ width: 13, height: 13 }} /> {label}
-            </Link>
-          ))}
-          <button onClick={() => { setUserMenuOpen(false); base44.auth.logout(); }}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: 13, color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer' }}>
-            <LogOut style={{ width: 13, height: 13 }} /> Sign Out
+      {/* Section-based navigation */}
+      <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: collapsed ? '8px 4px' : '12px 8px' }}>
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.title} style={{ marginBottom: collapsed ? 0 : '16px' }}>
+            {!collapsed && (
+              <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', padding: '0 12px 8px', margin: '0 0 8px', borderBottom: '1px solid rgba(201,168,76,0.1)' }}>
+                {section.title}
+              </p>
+            )}
+            <ul style={{ listStyle: 'none', padding: 0, margin: collapsed ? '4px 0' : '0', display: 'flex', flexDirection: 'column', gap: collapsed ? '4px' : '2px' }}>
+              {section.items.map(({ name, page, icon: Icon }) => {
+                const active = isActive(page);
+                return (
+                  <li key={page}>
+                    <Link
+                      to={createPageUrl(page)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 9,
+                        padding: collapsed ? '8px 6px' : '8px 12px',
+                        borderRadius: 12, fontSize: '13px',
+                        fontWeight: active ? 600 : 450, letterSpacing: '-0.005em',
+                        cursor: 'pointer', textDecoration: 'none',
+                        justifyContent: collapsed ? 'center' : undefined,
+                        background: active ? 'rgba(201,168,76,0.15)' : 'transparent',
+                        border: active ? '1px solid rgba(201,168,76,0.35)' : '1px solid transparent',
+                        color: active ? '#f5e09a' : 'var(--sidebar-text)',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(201,168,76,0.08)'; e.currentTarget.style.color = '#f5e09a'; } }}
+                      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--sidebar-text)'; } }}
+                    >
+                      <Icon style={{ width: 16, height: 16, flexShrink: 0, opacity: active ? 1 : 0.65 }} />
+                      {!collapsed && <span style={{ flex: 1 }}>{name}</span>}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
+      {/* User strip */}
+      {user && (
+        <div style={{ padding: '8px', borderTop: '1px solid rgba(201,168,76,0.18)', position: 'relative' }}>
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: collapsed ? '8px 4px' : '8px 10px', borderRadius: 10, border: '1px solid rgba(201,168,76,0.18)', background: 'rgba(201,168,76,0.07)', cursor: 'pointer', justifyContent: collapsed ? 'center' : undefined }}
+          >
+            <Avatar style={{ width: 32, height: 32, flexShrink: 0 }}>
+              {user.profile_picture_url && <AvatarImage src={user.profile_picture_url} />}
+              <AvatarFallback style={{ fontSize: 12, fontWeight: 800, background: 'linear-gradient(135deg,#8b6914,#c9a84c)', color: '#0a0800' }}>
+                {user.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <>
+                <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#f5e09a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.full_name || user.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', margin: 0 }}>{user?.role || 'Member'}</p>
+                </div>
+                <ChevronDown style={{ width: 13, height: 13, color: 'var(--sidebar-text)', flexShrink: 0 }} />
+              </>
+            )}
           </button>
+
+          {userMenuOpen && (
+            <div style={{ position: 'absolute', bottom: '100%', left: 8, right: 8, marginBottom: 4, background: '#1a1712', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12, boxShadow: 'var(--shadow-lg)', overflow: 'hidden', zIndex: 50 }}>
+              {[
+                { page: 'Settings',       icon: SettingsIcon, label: 'Settings'        },
+                { page: 'PaymentMethods', icon: CreditCard,   label: 'Payment Methods' },
+              ].map(({ page, icon: Icon, label }) => (
+                <Link key={page} to={createPageUrl(page)} onClick={() => setUserMenuOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: 13, color: 'var(--sidebar-text)', textDecoration: 'none', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
+                  <Icon style={{ width: 13, height: 13 }} /> {label}
+                </Link>
+              ))}
+              <button onClick={() => { setUserMenuOpen(false); base44.auth.logout(); }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: 13, color: 'var(--crimson)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <LogOut style={{ width: 13, height: 13 }} /> Sign Out
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
-  )}
-</div>
-```
+  );
 
-);
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--parch-bg)' }}>
+      <style>{`
+        @media (max-width: 1023px) {
+          .layout-sidebar { transform: translateX(-100%) !important; position: fixed !important; z-index: 50; }
+          .layout-sidebar.open { transform: translateX(0) !important; }
+          .layout-main { margin-left: 0 !important; width: 100% !important; }
+          .layout-topbar-mobile { display: flex !important; }
+          .page-content-wrap { padding: 14px !important; }
+        }
+        @media (min-width: 1024px) {
+          .layout-sidebar { transform: translateX(0) !important; position: fixed !important; }
+          .layout-topbar-mobile { display: none !important; }
+        }
+      `}</style>
 
-return (
-<div style={{ display: ‘flex’, height: ‘100vh’, overflow: ‘hidden’, background: ‘var(–parch-bg)’ }}>
-<style>{`@media (max-width: 1023px) { .layout-sidebar { transform: translateX(-100%) !important; position: fixed !important; z-index: 50; } .layout-sidebar.open { transform: translateX(0) !important; } .layout-main { margin-left: 0 !important; width: 100% !important; } .layout-topbar-mobile { display: flex !important; } .page-content-wrap { padding: 14px !important; } } @media (min-width: 1024px) { .layout-sidebar { transform: translateX(0) !important; position: fixed !important; } .layout-topbar-mobile { display: none !important; } }`}</style>
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+      {showNamePrompt && (
+        <NamePromptModal onComplete={(name) => {
+          setUser(u => ({ ...u, full_name: name }));
+          setShowNamePrompt(false);
+        }} />
+      )}
 
-```
-  <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
-  {showNamePrompt && (
-    <NamePromptModal onComplete={(name) => {
-      setUser(u => ({ ...u, full_name: name }));
-      setShowNamePrompt(false);
-    }} />
-  )}
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.35)' }} onClick={() => setSidebarOpen(false)} />
+      )}
 
-  {/* Mobile overlay */}
-  {sidebarOpen && (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.35)' }} onClick={() => setSidebarOpen(false)} />
-  )}
+      {/* Sidebar */}
+      <aside className={`layout-sidebar${sidebarOpen ? ' open' : ''}`}
+        style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, width: collapsed ? 56 : 200, transition: 'width 0.3s ease, transform 0.3s ease', flexShrink: 0 }}>
+        <SidebarContent />
+      </aside>
 
-  {/* Sidebar */}
-  <aside className={`layout-sidebar${sidebarOpen ? ' open' : ''}`}
-    style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, width: collapsed ? 56 : 200, transition: 'width 0.3s ease, transform 0.3s ease', flexShrink: 0 }}>
-    <SidebarContent />
-  </aside>
+      {/* Main content */}
+      <main className="layout-main"
+        style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', width: `calc(100% - ${collapsed ? 56 : 200}px)`, marginLeft: collapsed ? 56 : 200, transition: 'width 0.3s ease, margin-left 0.3s ease' }}
+        data-collapsed={collapsed ? 'true' : 'false'}>
 
-  {/* Main content */}
-  <main className="layout-main"
-    style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', width: `calc(100% - ${collapsed ? 56 : 200}px)`, marginLeft: collapsed ? 56 : 200, transition: 'width 0.3s ease, margin-left 0.3s ease' }}
-    data-collapsed={collapsed ? 'true' : 'false'}>
+        {/* Mobile topbar */}
+        <div className="layout-topbar-mobile"
+          style={{ alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--sidebar-bg)', borderBottom: '1px solid var(--sidebar-border)', flexShrink: 0 }}>
+          <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer' }}>
+            <Menu style={{ width: 20, height: 20 }} />
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AtlasLogo size={26} />
+            <span style={{ fontSize: 16, fontWeight: 400, fontFamily: "'Marcellus', serif", letterSpacing: '0.08em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</span>
+          </div>
+        </div>
 
-    {/* Mobile topbar */}
-    <div className="layout-topbar-mobile"
-      style={{ alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--sidebar-bg)', borderBottom: '1px solid var(--sidebar-border)', flexShrink: 0 }}>
-      <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer' }}>
-        <Menu style={{ width: 20, height: 20 }} />
-      </button>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <AtlasLogo size={26} />
-        <span style={{ fontSize: 16, fontWeight: 400, fontFamily: "'Marcellus', serif", letterSpacing: '0.08em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</span>
-      </div>
+        {/* Page content */}
+        <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)', width: '100%' }}>
+          <div className="page-content-wrap" style={{ padding: '20px 24px 32px', width: '100%', maxWidth: 1440, margin: '0 auto', boxSizing: 'border-box' }}>
+            {children}
+          </div>
+        </div>
+      </main>
     </div>
-
-    {/* Page content */}
-    <div style={{ flex: 1, overflowY: 'auto', background: 'var(--parch-bg)', width: '100%' }}>
-      <div className="page-content-wrap" style={{ padding: '20px 24px 32px', width: '100%', maxWidth: 1440, margin: '0 auto', boxSizing: 'border-box' }}>
-        {children}
-      </div>
-    </div>
-  </main>
-</div>
-```
-
-);
+  );
 }
