@@ -25,7 +25,6 @@ const NAV_SECTIONS = [
     title: 'OPERATIONS',
     items: [
       { name: 'New Order',       page: 'NewOrders',       icon: PlusCircle     },
-      { name: 'Purchase Orders', page: 'PurchaseOrders',  icon: Package        },
       { name: 'Transactions',    page: 'Transactions',    icon: ArrowLeftRight  },
       { name: 'Invoices',        page: 'Invoices',        icon: FileText       },
       { name: 'Import',          page: 'ImportOrders',    icon: Download       },
