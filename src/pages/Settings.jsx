@@ -501,14 +501,6 @@ function SecuritySection({ user }) {
   />
 </section>
 
-      const [vendorConfigs, setVendorConfigs] = useState(() => {
-  try {
-    return JSON.parse(localStorage.getItem('vendorConfigs') || '[]');
-  } catch {
-    return [];
-  }
-});
-      
       <SectionDivider title="Actions" color={C.crimson} />
       <div style={{ padding: '12px 0' }}>
         <p style={{ fontSize: 13, fontWeight: 500, color: C.ink, margin: '0 0 4px', fontFamily: FONT }}>Sign Out</p>
@@ -532,6 +524,15 @@ const TABS = [
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [user, setUser] = useState(null);
+
+  // Vendor Cashback Config State
+  const [vendorConfigs, setVendorConfigs] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('vendorConfigs') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
