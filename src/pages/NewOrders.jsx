@@ -612,12 +612,11 @@ export default function NewOrders() {
     if (errors[field]) setErrors(prev=>({ ...prev, [field]:'' }));
   };
 
-  // ── Pre-fill from extension URL params ──────────────────────────
   // ── Fetch current user email on mount ──
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
-        const user = await base44.auth.currentUser();
+        const user = await base44.auth.me();
         console.log('👤 Current user:', user);
         if (user?.email) {
           console.log('✅ Set userEmail to:', user.email);
