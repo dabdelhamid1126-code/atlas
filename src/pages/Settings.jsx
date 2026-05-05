@@ -1,3 +1,4 @@
+import VendorCashbackConfig from '@/components/VendorCashbackConfig';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import RetailerLogo from '@/components/shared/BrandLogo';
@@ -489,6 +490,25 @@ function SecuritySection({ user }) {
         </div>
       ))}
 
+      <section style={{ marginBottom: 30 }}>
+  <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Vendor Cashback Settings</h2>
+  <VendorCashbackConfig 
+    value={vendorConfigs}
+    onChange={(updated) => {
+      setVendorConfigs(updated);
+      localStorage.setItem('vendorConfigs', JSON.stringify(updated));
+    }}
+  />
+</section>
+
+      const [vendorConfigs, setVendorConfigs] = useState(() => {
+  try {
+    return JSON.parse(localStorage.getItem('vendorConfigs') || '[]');
+  } catch {
+    return [];
+  }
+});
+      
       <SectionDivider title="Actions" color={C.crimson} />
       <div style={{ padding: '12px 0' }}>
         <p style={{ fontSize: 13, fontWeight: 500, color: C.ink, margin: '0 0 4px', fontFamily: FONT }}>Sign Out</p>
