@@ -618,9 +618,15 @@ export default function NewOrders() {
     const getCurrentUser = async () => {
       try {
         const user = await base44.auth.currentUser();
-        if (user?.email) setUserEmail(user.email);
+        console.log('👤 Current user:', user);
+        if (user?.email) {
+          console.log('✅ Set userEmail to:', user.email);
+          setUserEmail(user.email);
+        } else {
+          console.log('⚠️  No email found in user');
+        }
       } catch (err) {
-        console.error('Failed to fetch current user:', err);
+        console.error('❌ Failed to fetch current user:', err);
       }
     };
     getCurrentUser();
@@ -677,28 +683,32 @@ export default function NewOrders() {
   
   const { data:products    =[] } = useQuery({ queryKey:['products'],               queryFn:()=>base44.entities.Product.list() });
   const { data:creditCards =[] } = useQuery({
-    queryKey:['creditCards', userEmail],
+    queryKey:['creditCards'],
     queryFn: async () => {
-      if (!userEmail) return [];
+      console.log('📋 Loading credit cards...');
       try {
-        return await base44.entities.CreditCard.filter({ created_by: userEmail }) || [];
-      } catch {
+        const cards = await base44.entities.CreditCard.list() || [];
+        console.log('✅ Loaded cards:', cards);
+        return cards;
+      } catch (err) {
+        console.error('❌ Error loading cards:', err);
         return [];
       }
-    },
-    enabled: userEmail !== null
+    }
   });
   const { data:giftCards   =[] } = useQuery({
-    queryKey:['giftCards', userEmail],
+    queryKey:['giftCards'],
     queryFn: async () => {
-      if (!userEmail) return [];
+      console.log('🎁 Loading gift cards...');
       try {
-        return await base44.entities.GiftCard.filter({ created_by: userEmail }) || [];
-      } catch {
+        const cards = await base44.entities.GiftCard.list() || [];
+        console.log('✅ Loaded gift cards:', cards);
+        return cards;
+      } catch (err) {
+        console.error('❌ Error loading gift cards:', err);
         return [];
       }
-    },
-    enabled: userEmail !== null
+    }
   });
   const { data:sellers     =[] } = useQuery({ queryKey:['sellers'],                 queryFn:()=>base44.entities.Seller.list() });
 
