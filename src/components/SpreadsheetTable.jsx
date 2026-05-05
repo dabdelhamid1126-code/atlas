@@ -609,5 +609,3 @@ export const SpreadsheetTable = ({
     </div>
   );
 };
-
-export default SpreadsheetTable;
