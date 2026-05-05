@@ -24,7 +24,7 @@ import { calculateTrueCost, calculateProfit, calculateROI, fmt$, getVendorConfig
  * - vendors: array of available vendors
  * - vendorConfigs: array of vendor cashback configs
  */
-export const SpreadsheetTable = ({
+export default function SpreadsheetTable({
   rows,
   onRowsChange,
   onSave,
@@ -608,4 +608,4 @@ export const SpreadsheetTable = ({
       </div>
     </div>
   );
-};
+}
