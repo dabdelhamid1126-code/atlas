@@ -14,6 +14,12 @@ export default function LoginModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const handleDiscord = () => {
+    setIsAuthenticating(true);
+    // Redirect to Discord OAuth endpoint
+    window.location.href = '/api/auth/discord';
+  };
+
   const handleGoogle = () => {
     setIsAuthenticating(true);
     navigateToLogin();
@@ -114,6 +120,38 @@ export default function LoginModal({ isOpen, onClose }) {
             Sign in or create your account to continue
           </p>
         </div>
+
+        {/* Sign in with Discord */}
+        <button
+          onClick={handleDiscord}
+          disabled={isAuthenticating}
+          style={{
+            width: '100%',
+            padding: '13px 14px',
+            border: '1px solid #5865F2',
+            borderRadius: 8,
+            background: isAuthenticating ? '#e6e9ff' : '#5865F2',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+            color: isAuthenticating ? '#999' : 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            marginBottom: 12,
+            transition: 'all 0.2s',
+            opacity: isAuthenticating ? 0.6 : 1,
+          }}
+          onMouseEnter={e => !isAuthenticating && (e.currentTarget.style.background = '#4752c4')}
+          onMouseLeave={e => !isAuthenticating && (e.currentTarget.style.background = '#5865F2')}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.3671C18.7976 3.5845 17.1152 3.0613 15.3328 2.76242C15.1145 3.1671 14.8968 3.5859 14.7226 4.03297C12.7039 3.71939 10.7189 3.71939 8.75625 4.03297C8.5823 3.5859 8.3626 3.1671 8.1443 2.76242C6.3619 3.0704 4.6795 3.5936 3.1611 4.3761C0.439655 8.9457 -0.267272 13.3903 0.0839798 17.7667C2.2644 19.3047 4.3762 20.1625 6.44531 20.5747C6.94649 19.8684 7.39605 19.1157 7.78563 18.3226C7.07172 18.0669 6.3825 17.7292 5.73438 17.3188C5.87952 17.2189 6.02466 17.1152 6.16492 17.0088C9.90274 18.8349 14.1545 18.8349 17.8738 17.0088C18.0191 17.1169 18.1644 17.2206 18.309 17.3188C17.6609 17.7293 16.9717 18.0669 16.2578 18.3226C16.6473 19.1157 17.0969 19.8684 17.5981 20.5747C19.6672 20.1625 21.7791 19.3047 23.9596 17.7667C24.3953 13.3903 23.4766 8.9457 20.317 4.3671ZM8.02002 14.8457C6.8375 14.8457 5.86313 13.8789 5.86313 12.6471C5.86313 11.4153 6.8186 10.4485 8.02002 10.4485C9.22145 10.4485 10.1779 11.4153 10.1779 12.6471C10.1779 13.8789 9.22145 14.8457 8.02002 14.8457ZM15.9947 14.8457C14.8121 14.8457 13.8377 13.8789 13.8377 12.6471C13.8377 11.4153 14.7932 10.4485 15.9947 10.4485C17.1961 10.4485 18.1526 11.4153 18.1526 12.6471C18.1526 13.8789 17.1961 14.8457 15.9947 14.8457Z"/>
+          </svg>
+          {isAuthenticating ? 'Redirecting...' : 'Continue with Discord'}
+        </button>
 
         {/* Sign in with Google */}
         <button
