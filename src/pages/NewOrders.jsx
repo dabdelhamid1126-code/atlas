@@ -13,6 +13,7 @@ import {
   Minus, Check, ChevronDown as ChevronDownIcon, AlertCircle,
 } from 'lucide-react';
 import ProductAutocomplete from '@/components/purchase-orders/ProductAutocomplete';
+import SpreadsheetTable from '@/components/SpreadsheetTable';
 /* ------------------------------------------------------------------ */
 /*  CONSTANTS                                                           */
 /* ------------------------------------------------------------------ */
@@ -606,6 +607,10 @@ export default function NewOrders() {
   const [activeTab,    setActiveTab]    = useState('details');
   const [userEmail,    setUserEmail]    = useState(null);
   const [errors,       setErrors]       = useState({});
+  const [mode,         setMode]         = useState('form'); // 'form' | 'spreadsheet'
+  const [spreadsheetRows, setSpreadsheetRows] = useState([
+    { id: 1, product: '', vendor: '', qty: 1, cost: 0, sale: 0, status: 'Ordered', payment: '' },
+  ]);
 
   const set = (field, val) => {
     setForm(prev=>({ ...prev, [field]:val }));
@@ -847,6 +852,32 @@ export default function NewOrders() {
     });
   };
 
+  /* SPREADSHEET SAVE */
+  const handleSaveSpreadsheet = async (rows) => {
+    const validRows = rows.filter(r => r.product?.trim() && r.vendor?.trim());
+    if (validRows.length === 0) { toast.error('Add at least one row with a product and vendor'); return; }
+    try {
+      for (const row of validRows) {
+        await base44.entities.PurchaseOrder.create({
+          order_type: 'churning',
+          retailer: row.vendor,
+          order_date: format(new Date(), 'yyyy-MM-dd'),
+          status: row.status?.toLowerCase() || 'ordered',
+          order_number: `ORD-${Date.now()}-${row.id}`,
+          items: [{ product_name: row.product, quantity_ordered: parseInt(row.qty) || 1, unit_cost: parseFloat(row.cost) || 0 }],
+          total_cost: (parseFloat(row.cost) || 0) * (parseInt(row.qty) || 1),
+          final_cost: (parseFloat(row.cost) || 0) * (parseInt(row.qty) || 1),
+          notes: row.payment ? `Payment: ${row.payment}` : null,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      toast.success(`✅ Saved ${validRows.length} order${validRows.length !== 1 ? 's' : ''}`);
+      setSpreadsheetRows([{ id: Date.now(), product: '', vendor: '', qty: 1, cost: 0, sale: 0, status: 'Ordered', payment: '' }]);
+    } catch {
+      toast.error('Failed to save orders');
+    }
+  };
+
   const TABS = [
     { id:'details', label:'Details', icon:ClipboardList, hasError: !!errors.retailer },
     { id:'items',   label:'Items',   icon:Package,       hasError: !!errors.items    },
@@ -859,11 +890,32 @@ export default function NewOrders() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       {previewImg && <ImagePreviewModal src={previewImg.src} alt={previewImg.alt} onClose={()=>setPreviewImg(null)}/>}
 
-      <div style={{ marginBottom:20 }}>
-        <h1 className="page-title">Add Order</h1>
-        <p className="page-subtitle">Record a new purchase</p>
+      <div style={{ marginBottom:20, display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10 }}>
+        <div>
+          <h1 className="page-title">Add Order</h1>
+          <p className="page-subtitle">Record a new purchase</p>
+        </div>
+        <div style={{ display:'flex', gap:4, padding:3, borderRadius:10, background:'var(--parch-warm)', border:'1px solid var(--parch-line)', width:'fit-content' }}>
+          {[{ v:'form', label:'Classic Form' },{ v:'spreadsheet', label:'Spreadsheet' }].map(({ v, label }) => (
+            <button key={v} type="button" onClick={() => setMode(v)}
+              style={{ padding:'7px 14px', borderRadius:8, fontSize:11, fontWeight:700, cursor:'pointer', border:'1px solid', fontFamily:'var(--font-serif)',
+                ...(mode===v ? { background:'var(--ink)', color:'var(--ne-cream)', borderColor:'var(--ink)' } : { background:'transparent', color:'var(--ink-dim)', borderColor:'transparent' }) }}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {mode === 'spreadsheet' && (
+        <SpreadsheetTable
+          rows={spreadsheetRows}
+          onRowsChange={setSpreadsheetRows}
+          onSave={handleSaveSpreadsheet}
+          vendors={DEFAULT_VENDORS}
+        />
+      )}
+
+      {mode === 'form' && (<>
       {/* Global validation banner — shows when there are errors */}
       {Object.keys(errors).length > 0 && (
         <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'12px 14px', borderRadius:10, background:'var(--crimson-bg)', border:'1px solid var(--crimson-bdr)', marginBottom:14 }}>
@@ -1301,6 +1353,7 @@ export default function NewOrders() {
           Cancel
         </button>
       </form>
+      </>)}
     </div>
   );
 }
