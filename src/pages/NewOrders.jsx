@@ -612,6 +612,20 @@ export default function NewOrders() {
   };
 
   // ── Pre-fill from extension URL params ──────────────────────────
+  // ── Fetch current user email on mount ──
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const user = await base44.auth.currentUser();
+        if (user?.email) setUserEmail(user.email);
+      } catch (err) {
+        console.error('Failed to fetch current user:', err);
+      }
+    };
+    getCurrentUser();
+  }, []);
+
+  // ── Pre-fill from extension URL params ──────────────────────────
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('source') !== 'extension') return;
@@ -662,28 +676,28 @@ export default function NewOrders() {
   
   const { data:products    =[] } = useQuery({ queryKey:['products'],               queryFn:()=>base44.entities.Product.list() });
   const { data:creditCards =[] } = useQuery({
-    queryKey:['creditCards'],
+    queryKey:['creditCards', userEmail],
     queryFn: async () => {
+      if (!userEmail) return [];
       try {
-        const user = await base44.auth.currentUser();
-        if (!user?.email) return [];
-        return await base44.entities.CreditCard.filter({ created_by: user.email }) || [];
+        return await base44.entities.CreditCard.filter({ created_by: userEmail }) || [];
       } catch {
         return [];
       }
-    }
+    },
+    enabled: userEmail !== null
   });
   const { data:giftCards   =[] } = useQuery({
-    queryKey:['giftCards'],
+    queryKey:['giftCards', userEmail],
     queryFn: async () => {
+      if (!userEmail) return [];
       try {
-        const user = await base44.auth.currentUser();
-        if (!user?.email) return [];
-        return await base44.entities.GiftCard.filter({ created_by: user.email }) || [];
+        return await base44.entities.GiftCard.filter({ created_by: userEmail }) || [];
       } catch {
         return [];
       }
-    }
+    },
+    enabled: userEmail !== null
   });
   const { data:sellers     =[] } = useQuery({ queryKey:['sellers'],                 queryFn:()=>base44.entities.Seller.list() });
 
