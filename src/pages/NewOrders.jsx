@@ -604,6 +604,7 @@ export default function NewOrders() {
   });
   const [previewImg,   setPreviewImg]   = useState(null);
   const [activeTab,    setActiveTab]    = useState('details');
+  const [userEmail,    setUserEmail]    = useState(null);
   const [errors,       setErrors]       = useState({});
 
   const set = (field, val) => {
