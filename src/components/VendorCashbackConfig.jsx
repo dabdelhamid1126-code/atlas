@@ -270,5 +270,3 @@ export default function VendorCashbackConfig({ value = [], onChange }) {
     </div>
   );
 }
-
-export default VendorCashbackConfig;
