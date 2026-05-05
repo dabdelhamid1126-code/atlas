@@ -18,6 +18,28 @@ const fmt$ = (v) => {
   return n < 0 ? `-$${Math.abs(n).toFixed(2)}` : `$${n.toFixed(2)}`;
 };
 
+// Vendor logo mapping - add/update vendors and their logo URLs
+const VENDOR_LOGOS = {
+  'Amazon': 'https://logo.clearbit.com/amazon.com',
+  'Best Buy': 'https://logo.clearbit.com/bestbuy.com',
+  'Target': 'https://logo.clearbit.com/target.com',
+  'Walmart': 'https://logo.clearbit.com/walmart.com',
+  'Costco': 'https://logo.clearbit.com/costco.com',
+  'eBay': 'https://logo.clearbit.com/ebay.com',
+  'Apple': 'https://logo.clearbit.com/apple.com',
+  'Staples': 'https://logo.clearbit.com/staples.com',
+  'Newegg': 'https://logo.clearbit.com/newegg.com',
+  'B&H Photo': 'https://logo.clearbit.com/bhphotovideo.com',
+  'Costco Wholesale': 'https://logo.clearbit.com/costco.com',
+  'Facebook Marketplace': 'https://logo.clearbit.com/facebook.com',
+  'Windy City': 'https://logo.clearbit.com/windycity.com',
+};
+
+const getVendorLogo = (vendorName) => {
+  if (!vendorName) return null;
+  return VENDOR_LOGOS[vendorName] || null;
+};
+
 export default function Transactions() {
   const queryClient = useQueryClient();
   const [mode,                setMode]                = useState('all');
@@ -437,13 +459,14 @@ export default function Transactions() {
         {totalPages > 1 && <span style={{ fontSize:11, color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>Page {safePage} of {totalPages}</span>}
       </div>
 
-      {/* Order Cards */}
+      {/* Order Cards - PASS getVendorLogo helper */}
       <OrderGroupedCards
         data={pagedOrders}
         creditCards={creditCards}
         rewards={rewards}
         products={products}
         giftCards={giftCards}
+        getVendorLogo={getVendorLogo}
         onEdit={async (order) => {
           try {
             const fresh = await base44.entities.PurchaseOrder.get(order.id);
