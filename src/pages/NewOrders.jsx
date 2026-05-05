@@ -1155,22 +1155,29 @@ export default function NewOrders() {
             <SectionHeader color="var(--ocean)" title="Credit Card"/>
             {!isSplit ? (
               <Select value={form.credit_card_id||''} onValueChange={v=>set('credit_card_id',v)}>
-                <SelectTrigger className="h-9" style={INP}>
+                <SelectTrigger className="h-12" style={{...INP, padding:'10px 14px', fontSize:'13px'}}>
                   {form.credit_card_id ? (
-                    <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
-                      <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={16} fallback={selectedCard?.card_name||'C'}/>
-                      <span style={{ fontSize:12, flex:1 }}>{selectedCard?.card_name}</span>
-                      {selectedCard?.cashback_rate>0&&<span style={{ fontFamily:'var(--font-mono)', fontSize:11, color:'var(--violet)', fontWeight:700 }}>{selectedCard.cashback_rate}% CB</span>}
+                    <div style={{ display:'flex', alignItems:'center', gap:10, flex:1 }}>
+                      <BrandLogo domain={getCardDomain(selectedCard?.card_name)} size={22} fallback={selectedCard?.card_name||'C'}/>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ fontSize:13, fontWeight:600, color:'var(--ink)', margin:0 }}>{selectedCard?.card_name}</p>
+                        {selectedCard?.cashback_rate>0&&<p style={{ fontSize:11, color:'var(--violet)', fontFamily:'var(--font-mono)', fontWeight:700, margin:'2px 0 0' }}>{selectedCard.cashback_rate}% Cashback</p>}
+                      </div>
                     </div>
                   ) : <SelectValue placeholder="Select card..."/>}
                 </SelectTrigger>
-                <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)' }}>
+                <SelectContent style={{ background:'var(--parch-card)', border:'1px solid var(--parch-line)', minWidth:'300px' }}>
                   {creditCards.filter(c=>c.active!==false).map(c=>(
-                    <SelectItem key={c.id} value={c.id} style={{ color:'var(--ink)' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                        <BrandLogo domain={getCardDomain(c.card_name)} size={18} fallback={c.card_name}/>
-                        <span>{c.card_name}{c.last_4_digits?` ...${c.last_4_digits}`:''}</span>
-                        {c.cashback_rate>0&&<span style={{ color:'var(--violet)', fontFamily:'var(--font-mono)', fontSize:11 }}>{c.cashback_rate}%</span>}
+                    <SelectItem key={c.id} value={c.id} style={{ color:'var(--ink)', padding:'12px 8px' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                        <BrandLogo domain={getCardDomain(c.card_name)} size={24} fallback={c.card_name}/>
+                        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                          <span style={{ fontSize:13, fontWeight:600, color:'var(--ink)' }}>{c.card_name}</span>
+                          <div style={{ display:'flex', gap:12, fontSize:11 }}>
+                            {c.last_4_digits&&<span style={{ color:'var(--ink-ghost)', fontFamily:'var(--font-mono)' }}>...{c.last_4_digits}</span>}
+                            {c.cashback_rate>0&&<span style={{ color:'var(--violet)', fontFamily:'var(--font-mono)', fontWeight:700 }}>{c.cashback_rate}%</span>}
+                          </div>
+                        </div>
                       </div>
                     </SelectItem>
                   ))}
