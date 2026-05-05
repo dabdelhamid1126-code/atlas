@@ -684,5 +684,3 @@ export default function ImportOrders({
     </div>
   );
 }
-
-export default ImportOrders;
