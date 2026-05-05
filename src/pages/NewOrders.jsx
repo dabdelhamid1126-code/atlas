@@ -683,32 +683,42 @@ export default function NewOrders() {
   
   const { data:products    =[] } = useQuery({ queryKey:['products'],               queryFn:()=>base44.entities.Product.list() });
   const { data:creditCards =[] } = useQuery({
-    queryKey:['creditCards'],
+    queryKey:['creditCards', userEmail],
     queryFn: async () => {
-      console.log('📋 Loading credit cards...');
+      console.log('📋 Loading credit cards for email:', userEmail);
+      if (!userEmail) {
+        console.log('⚠️  No userEmail yet');
+        return [];
+      }
       try {
-        const cards = await base44.entities.CreditCard.list() || [];
+        const cards = await base44.entities.CreditCard.filter({ created_by: userEmail }) || [];
         console.log('✅ Loaded cards:', cards);
         return cards;
       } catch (err) {
         console.error('❌ Error loading cards:', err);
         return [];
       }
-    }
+    },
+    enabled: userEmail !== null
   });
   const { data:giftCards   =[] } = useQuery({
-    queryKey:['giftCards'],
+    queryKey:['giftCards', userEmail],
     queryFn: async () => {
-      console.log('🎁 Loading gift cards...');
+      console.log('🎁 Loading gift cards for email:', userEmail);
+      if (!userEmail) {
+        console.log('⚠️  No userEmail yet');
+        return [];
+      }
       try {
-        const cards = await base44.entities.GiftCard.list() || [];
+        const cards = await base44.entities.GiftCard.filter({ created_by: userEmail }) || [];
         console.log('✅ Loaded gift cards:', cards);
         return cards;
       } catch (err) {
         console.error('❌ Error loading gift cards:', err);
         return [];
       }
-    }
+    },
+    enabled: userEmail !== null
   });
   const { data:sellers     =[] } = useQuery({ queryKey:['sellers'],                 queryFn:()=>base44.entities.Seller.list() });
 
