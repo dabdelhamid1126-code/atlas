@@ -1,5 +1,5 @@
 // src/components/ImportOrders.jsx
-// COMPLETE: CSV/Excel importer with product matching + smart pricing
+// COMPLETE: CSV importer with product matching + smart pricing
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { Upload, X, AlertCircle, Check, Download, RefreshCw } from 'lucide-react';
@@ -10,7 +10,7 @@ import { calculateTrueCost, fmt$, getVendorConfig } from '@/utils/smartPricing';
  * ImportOrders Component
  * 
  * Features:
- * - Drag & drop CSV/Excel upload
+ * - Drag & drop CSV upload
  * - Auto-detect columns
  * - Product matching from saved products
  * - Smart price calculation (actual price - cashback = true cost)
@@ -90,28 +90,6 @@ export default function ImportOrders({
     return { headers: headerRow, rows: dataRows };
   }, []);
 
-  // Parse Excel
-  const parseExcel = useCallback(async (file) => {
-    try {
-      const XLSX = await import('xlsx');
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      if (data.length === 0) return { headers: [], rows: [] };
-
-      const headers = data[0];
-      const rows = data.slice(1);
-
-      return { headers, rows };
-    } catch (error) {
-      console.error('Excel parse error:', error);
-      toast.error('Failed to parse Excel file. Try CSV instead.');
-      return { headers: [], rows: [] };
-    }
-  }, []);
-
   // Handle file
   const handleFile = useCallback(async (file) => {
     if (!file) return;
@@ -123,10 +101,8 @@ export default function ImportOrders({
       if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
         const text = await file.text();
         parsed = parseCSV(text);
-      } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
-        parsed = await parseExcel(file);
       } else {
-        toast.error('Please upload a CSV or Excel file');
+        toast.error('Please upload a CSV file');
         setIsLoading(false);
         return;
       }
@@ -192,7 +168,7 @@ export default function ImportOrders({
     } finally {
       setIsLoading(false);
     }
-  }, [parseCSV, parseExcel, autoDetectColumns, products, vendorConfigs]);
+  }, [parseCSV, autoDetectColumns, products, vendorConfigs]);
 
   // Drag handlers
   const handleDrag = (e) => {
@@ -315,7 +291,7 @@ export default function ImportOrders({
             <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginBottom: 8, fontFamily: 'var(--font-serif)' }}>
               Import Orders
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--ink-faded)' }}>Upload CSV or Excel with smart pricing auto-calculation</p>
+            <p style={{ fontSize: 13, color: 'var(--ink-faded)' }}>Upload CSV with smart pricing auto-calculation</p>
           </div>
 
           <div
@@ -340,17 +316,17 @@ export default function ImportOrders({
           >
             <input
               type="file"
-              accept=".csv,.xlsx"
+              accept=".csv"
               onChange={(e) => handleFile(e.target.files?.[0])}
               style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
             />
             <Upload style={{ width: 40, height: 40, color: dragActive ? 'var(--gold)' : 'var(--ocean)' }} />
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>
-                Drag & drop your file here
+                Drag & drop your CSV file here
               </p>
               <p style={{ fontSize: 12, color: 'var(--ink-faded)', margin: '4px 0 0' }}>
-                or click to browse (CSV or Excel)
+                or click to browse
               </p>
             </div>
           </div>
