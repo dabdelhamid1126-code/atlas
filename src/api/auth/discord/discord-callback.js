@@ -15,14 +15,14 @@ export default async function handler(req, res) {
   try {
     // Step 1: Exchange authorization code for Discord access token
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: process.env.DISCORD_CLIENT_ID,
+        client_id:     process.env.DISCORD_CLIENT_ID,
         client_secret: process.env.DISCORD_CLIENT_SECRET,
         code,
-        grant_type: 'authorization_code',
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/discord/callback`,
+        grant_type:    'authorization_code',
+        redirect_uri:  `${process.env.NEXTAUTH_URL}/api/auth/discord/callback`,
       }),
     });
 
@@ -52,7 +52,6 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.BASE44_API_KEY}`,
           'api_key': process.env.BASE44_API_KEY,
         },
         body: JSON.stringify({
@@ -80,6 +79,7 @@ export default async function handler(req, res) {
     redirectUrl.searchParams.set('username', discordUser.username);
 
     res.redirect(redirectUrl.toString());
+
   } catch (err) {
     console.error('Discord OAuth callback error:', err);
     res.redirect(`${process.env.NEXTAUTH_URL}/login?discord_error=unknown`);
