@@ -31,7 +31,7 @@ export default function SpreadsheetTable({
   products = [],
   vendors = ['Amazon', 'Best Buy', 'Target', 'Walmart', 'Costco', 'Staples'],
   vendorConfigs = [],
-}) => {
+}) {
   const [openSearch, setOpenSearch] = useState(null);
   const searchRef = useRef({});
 
