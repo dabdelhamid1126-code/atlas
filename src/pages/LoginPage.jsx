@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 
+console.log('LoginPage.jsx loaded');
+console.log('base44 object available:', !!base44);
+console.log('base44.auth available:', !!base44?.auth);
+
 const AtlasLogo = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="512" height="512" rx="100" fill="#1e1a14"/>
@@ -37,22 +41,18 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoadingAuth, navigate]);
 
-  // Discord SSO Login
   const handleDiscordSignIn = () => {
-    console.log('Discord button clicked');
     setIsLoading(true);
     setError('');
     try {
-      console.log('Calling base44.auth.loginWithProvider for Discord SSO');
+      // Use Base44 SDK method for Discord SSO
       base44.auth.loginWithProvider('sso', '/dashboard');
     } catch (err) {
-      console.error('Discord login error:', err);
       setError('Failed to start Discord login. Please try again.');
       setIsLoading(false);
     }
   };
 
-  // Email/Password Login
   const handleEmailSignIn = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -65,21 +65,27 @@ export default function LoginPage() {
     }
 
     try {
-      console.log(`Attempting ${isSignUp ? 'signup' : 'login'} with email: ${email}`);
+      console.log(`📧 Attempting ${isSignUp ? 'signup' : 'login'} with email: ${email}`);
       
       // Use Base44 SDK method for email/password authentication
-      const result = await base44.auth.loginViaEmailPassword(email, password);
-      
-      console.log('Email login result:', result);
+      if (base44?.auth?.loginViaEmailPassword) {
+        const result = await base44.auth.loginViaEmailPassword(email, password);
+        
+        console.log('📧 Email login result:', result);
 
-      if (result) {
-        // Give Base44 a moment to set the session
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 500);
+        if (result) {
+          // Give Base44 a moment to set the session
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 500);
+        }
+      } else {
+        console.error('🔴 base44.auth.loginViaEmailPassword not available');
+        setError('Email authentication not available. Please try again.');
+        setIsLoading(false);
       }
     } catch (err) {
-      console.error('Email login error:', err);
+      console.error('🔴 Email login error:', err);
       
       // Determine error message
       let errorMessage = 'Failed to sign in. Please try again.';
@@ -239,8 +245,8 @@ export default function LoginPage() {
           onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#4752C4')}
           onMouseLeave={(e) => !isLoading && (e.currentTarget.style.background = '#5865F2')}
         >
-          <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">
-            <path d="M107.7 8.07A105.15 105.15 0 0090.2 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-14.84 0 72.37 72.37 0 00-3.36-6.83 105.89 105.89 0 00-17.5 8.07 750.85 750.85 0 00-119.88 37.85 83.47 83.47 0 0027.64 55.92 110.35 110.35 0 0033.26 10.7q5.18-7.5 9.84-15.5a67.15 67.15 0 00-10.85-5.3q1.8-1.36 3.54-2.77a75.36 75.36 0 0060.6 0c1.2 1 2.36 2 3.54 2.77a67.82 67.82 0 00-10.88 5.3c4.5 8 9 16 9.86 15.5a110.5 110.5 0 0033.3-10.7 84.29 84.29 0 0027.64-56c0-35.88-30.08-67.92-67.6-67.92zM42.45 65.69c-5.89 0-10.74 5.27-10.74 11.74s4.85 11.74 10.74 11.74c5.88 0 10.73-5.27 10.73-11.74-.02-6.47-4.85-11.74-10.73-11.74zM84.14 65.69c-5.74 0-10.63 5.27-10.63 11.74s4.89 11.74 10.63 11.74c5.9 0 10.75-5.27 10.75-11.74s-4.84-11.74-10.75-11.74z"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+            <path d="M20.317 4.3671C18.7975 3.60784 17.151 3.07249 15.4319 2.81444C15.4007 2.81052 15.3695 2.82681 15.3534 2.85928C15.1424 3.27953 14.9087 3.81359 14.7451 4.22775C12.9004 3.94575 11.0707 3.94575 9.27273 4.22775C9.10951 3.81266 8.87231 3.27953 8.65126 2.85928C8.63512 2.82681 8.60547 2.81052 8.5743 2.81444C6.85499 3.07115 5.20832 3.60652 4.08826 4.3671C4.07367 4.3736 4.06251 4.38217 4.05928 4.39282C2.18537 7.61554 1.71213 10.7582 2.03835 13.8424C2.04248 13.8926 2.07265 13.9379 2.11199 13.9632C3.89188 15.1913 5.59927 16.0218 7.27268 16.5723C7.3015 16.5783 7.33178 16.5703 7.34616 16.5439C7.72624 15.9115 8.06932 15.2502 8.35655 14.5583C8.37267 14.5229 8.35504 14.4845 8.31812 14.4764C7.67147 14.2917 7.05347 14.0492 6.4504 13.7569C6.40895 13.7329 6.40625 13.6781 6.44765 13.6529C6.57267 13.5655 6.6988 13.4763 6.82231 13.3847C6.84275 13.3692 6.8686 13.3638 6.89076 13.3746C9.88328 14.8737 13.2656 14.8737 16.2262 13.3746C16.2484 13.3629 16.2743 13.3682 16.2948 13.3837C16.4183 13.4754 16.5445 13.5655 16.6695 13.6529C16.7109 13.6781 16.7082 13.7329 16.6667 13.7569C16.0636 14.0565 15.4462 14.2917 14.7979 14.4755C14.761 14.4836 14.7434 14.5229 14.7595 14.5583C15.0474 15.2502 15.3905 15.9115 15.7692 16.5439C15.7836 16.5703 15.8139 16.5783 15.8427 16.5723C17.5156 16.0218 19.2231 15.1913 21.003 13.9632C21.0424 13.9379 21.0726 13.8926 21.0767 13.8424C21.4501 10.1771 20.5383 7.13783 18.6915 4.39282C18.6883 4.38217 18.677 4.3736 18.6624 4.3671ZM8.02002 11.3989C7.10625 11.3989 6.33125 10.576 6.33125 9.56662C6.33125 8.55725 7.09086 7.73425 8.02002 7.73425C8.95248 7.73425 9.71625 8.56505 9.71625 9.56662C9.71625 10.576 8.95248 11.3989 8.02002 11.3989ZM15.9775 11.3989C15.0638 11.3989 14.2888 10.576 14.2888 9.56662C14.2888 8.55725 15.0484 7.73425 15.9775 7.73425C16.9099 7.73425 17.6738 8.56505 17.6738 9.56662C17.6738 10.576 16.9099 11.3989 15.9775 11.3989Z"/>
           </svg>
           {isLoading ? 'Connecting to Discord...' : 'Continue with Discord'}
         </button>
