@@ -1,0 +1,127 @@
+{
+  "name": "GiftCard",
+  "type": "object",
+  "properties": {
+    "brand": {
+      "type": "string",
+      "description": "Gift card brand"
+    },
+    "retailer": {
+      "type": "string",
+      "description": "Retailer purchased from"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "dining",
+        "travel",
+        "groceries",
+        "gas",
+        "streaming",
+        "other"
+      ],
+      "default": "other",
+      "description": "Purchase category for reward calculation"
+    },
+    "value": {
+      "type": "number",
+      "description": "Card value"
+    },
+    "code": {
+      "type": "string",
+      "description": "Gift card code"
+    },
+    "pin": {
+      "type": "string",
+      "description": "PIN if applicable"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "reserved",
+        "exported",
+        "used",
+        "invalid"
+      ],
+      "default": "available",
+      "description": "Card status"
+    },
+    "purchase_cost": {
+      "type": "number",
+      "description": "What we paid for the card"
+    },
+    "purchase_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date gift card was purchased"
+    },
+    "credit_card_id": {
+      "type": "string",
+      "description": "Credit card used to purchase this gift card"
+    },
+    "card_name": {
+      "type": "string",
+      "description": "Credit card name for quick reference"
+    },
+    "export_id": {
+      "type": "string",
+      "description": "Reference to export if exported"
+    },
+    "used_order_number": {
+      "type": "string",
+      "description": "Order number where card was used"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "brand",
+    "value",
+    "code",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
