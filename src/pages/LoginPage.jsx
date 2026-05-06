@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/lib/AuthContext';
 
 const AtlasLogo = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="512" height="512" rx="100" fill="#1e1a14"/>
-    <rect width="512" height="512" rx="100" fill="none" stroke="#C4922E" stroke-width="4" opacity="0.3"/>
-    <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" stroke-width="12" opacity="0.9"/>
-    <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" stroke-width="4" opacity="0.3"/>
-    <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" stroke-width="3" stroke-dasharray="18 18" opacity="0.35"/>
-    <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" stroke-width="3" stroke-dasharray="18 18" opacity="0.35"/>
+    <rect width="512" height="512" rx="100" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.3"/>
+    <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="12" opacity="0.9"/>
+    <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.3"/>
+    <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
+    <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
     <polygon points="256,82 238,168 256,152 274,168" fill="#C4922E"/>
     <polygon points="256,430 238,344 256,360 274,344" fill="#C4922E" opacity="0.25"/>
     <polygon points="430,256 344,238 360,256 344,274" fill="#f5e09a"/>
     <polygon points="82,256 168,238 152,256 168,274" fill="#C4922E" opacity="0.25"/>
-    <circle cx="256" cy="256" r="52" fill="#1e1a14" stroke="#C4922E" stroke-width="10"/>
+    <circle cx="256" cy="256" r="52" fill="#1e1a14" stroke="#C4922E" strokeWidth="10"/>
     <circle cx="256" cy="256" r="22" fill="#C4922E"/>
     <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
   </svg>
 );
 
 export default function LoginModal({ isOpen, onClose }) {
-  const { signInWithDiscord, signInWithEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,8 +29,9 @@ export default function LoginModal({ isOpen, onClose }) {
   const handleDiscordSignIn = async () => {
     setIsLoading(true);
     try {
-      // Redirect to Base44 SSO endpoint for Discord
-      window.location.href = `https://app.base44.com/api/apps/6982109ef976b5f09c0b7b7e/auth/sso/callback?provider=discord`;
+      // Base44 SSO for Discord - redirects to Discord OAuth
+      // Make sure SSO is enabled in Base44 settings
+      window.location.href = '/auth/sso';
     } catch (err) {
       setError(err.message || 'Failed to sign in with Discord');
       setIsLoading(false);
@@ -43,8 +42,19 @@ export default function LoginModal({ isOpen, onClose }) {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    
+    if (!email || !password) {
+      setError('Please enter email and password');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await signInWithEmail(email, password);
+      // Email/password auth - use Base44's built-in auth or your own API
+      // This is a placeholder - implement based on your auth method
+      console.log('Email login attempt:', email);
+      setError('Email login not yet configured - please use Discord');
+      setIsLoading(false);
     } catch (err) {
       setError(err.message || 'Failed to sign in');
       setIsLoading(false);
