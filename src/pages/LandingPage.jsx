@@ -235,25 +235,25 @@ export default function LandingPage() {
       <section style={{ minHeight:"100vh", padding:"130px 48px 80px", display:"flex", alignItems:"center", background:"transparent" }}>
         <div style={{ maxWidth:1200, margin:"0 auto", width:"100%" }}>
           <div className="hg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center" }}>
-            <div>
+            <div style={{ textAlign: "center" }}>
               <div className={`fu ${visible?"in":""}`} style={{ marginBottom:24 }}>
                 <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#C4922E16", border:"1px solid #C4922E40", borderRadius:99, padding:"5px 14px" }}>
                   <div style={{ width:7, height:7, borderRadius:"50%", background:"#C4922E" }}/>
                   <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase" }}>Private Beta</span>
                 </div>
               </div>
-              <h1 className={`serif fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:700, lineHeight:1.06, marginBottom:22 }}>
+              <h1 className={`serif fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:700, lineHeight:1.06, marginBottom:22, color:"#e8ddd0" }}>
                 Run Your Reselling<br/>Business Like a<br/>
                 <span style={{ color:"#C4922E" }}>Hedge Fund.</span>
               </h1>
-              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#7a7060", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300 }}>
+              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#9a8a7a", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300, margin:"0 auto 36px auto" }}>
                 Atlas gives you the tools, insights, and automation to track inventory, maximize profit, and make smarter decisions — every day.
               </p>
-              <div className={`fu d3 ${visible?"in":""} hb`} style={{ display:"flex", gap:14, marginBottom:28, flexWrap:"wrap" }}>
+              <div className={`fu d3 ${visible?"in":""} hb`} style={{ display:"flex", gap:14, marginBottom:28, flexWrap:"wrap", justifyContent:"center" }}>
                 <button className="btn-g" style={{ padding:"14px 30px", fontSize:15 }} onClick={goRegister}>Join Beta →</button>
                 <button className="btn-o" style={{ padding:"14px 26px", fontSize:15 }} onClick={goLogin}>Log In</button>
               </div>
-              <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#2e2820" }}>
+              <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#4a4238" }}>
                 No credit card required · Free to get started
               </p>
             </div>
@@ -277,10 +277,10 @@ export default function LandingPage() {
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:60 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.22em", color:"#C4922E", textTransform:"uppercase", marginBottom:14 }}>Built for Resellers</p>
-            <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:14 }}>
+            <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:14, color:"#e8ddd0" }}>
               Everything You Need.<br/>All in One Place.
             </h2>
-            <p style={{ fontSize:14, color:"#4a4238", maxWidth:460, margin:"0 auto", lineHeight:1.7, fontWeight:300 }}>
+            <p style={{ fontSize:14, color:"#9a8a7a", maxWidth:460, margin:"0 auto", lineHeight:1.7, fontWeight:300 }}>
               Every feature was built because we needed it ourselves. No fluff, no filler.
             </p>
           </div>
@@ -290,8 +290,8 @@ export default function LandingPage() {
                 <div style={{ width:50, height:50, background:"#C4922E18", border:"1px solid #C4922E44", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
                   {f.icon}
                 </div>
-                <div style={{ fontSize:14, fontWeight:600, color:"#fff", marginBottom:10 }}>{f.title}</div>
-                <div style={{ fontSize:12, color:"#6a6258", lineHeight:1.65, fontWeight:300 }}>{f.desc}</div>
+                <div style={{ fontSize:14, fontWeight:600, color:"#e8ddd0", marginBottom:10 }}>{f.title}</div>
+                <div style={{ fontSize:12, color:"#8a7a6a", lineHeight:1.65, fontWeight:300 }}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -306,10 +306,10 @@ export default function LandingPage() {
           <div className="wg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
             <div>
               <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase", marginBottom:16 }}>Why Atlas</p>
-              <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:20 }}>
+              <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:20, color:"#e8ddd0" }}>
                 Not Another<br/><span style={{ color:"#C4922E" }}>Spreadsheet Tool.</span>
               </h2>
-              <p style={{ fontSize:14, color:"#4a4238", lineHeight:1.8, marginBottom:36, fontWeight:300, maxWidth:400 }}>
+              <p style={{ fontSize:14, color:"#9a8a7a", lineHeight:1.8, marginBottom:36, fontWeight:300, maxWidth:400 }}>
                 Atlas thinks like a reseller. Clarity, automation, and real insights — not just another place to log numbers.
               </p>
               <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
@@ -318,7 +318,7 @@ export default function LandingPage() {
                     <div style={{ width:20, height:20, borderRadius:"50%", background:"#C4922E12", border:"1px solid #C4922E3a", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                       <div style={{ width:6, height:6, borderRadius:"50%", background:"#C4922E" }}/>
                     </div>
-                    <span style={{ fontSize:13, color:"#8a8070", fontWeight:400, lineHeight:1.5 }}>{p}</span>
+                    <span style={{ fontSize:13, color:"#9a8a7a", fontWeight:400, lineHeight:1.5 }}>{p}</span>
                   </div>
                 ))}
               </div>
@@ -337,8 +337,8 @@ export default function LandingPage() {
                 <div key={label} style={{ background:"#080706", padding:"20px 18px", transition:"background 0.2s", cursor:"default" }}
                   onMouseEnter={e => e.currentTarget.style.background="#1a1610"}
                   onMouseLeave={e => e.currentTarget.style.background="#0d0b08"}>
-                  <div style={{ fontSize:13, fontWeight:600, color:"#b0aba2", marginBottom:4 }}>{label}</div>
-                  <div style={{ fontSize:11, color:"#302c28", fontWeight:300 }}>{sub}</div>
+                  <div style={{ fontSize:13, fontWeight:600, color:"#c8b8a8", marginBottom:4 }}>{label}</div>
+                  <div style={{ fontSize:11, color:"#5a4a3a", fontWeight:300 }}>{sub}</div>
                 </div>
               ))}
             </div>
@@ -354,10 +354,10 @@ export default function LandingPage() {
           <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
             <AtlasLogo size={60}/>
           </div>
-          <h2 className="serif" style={{ fontSize:50, fontWeight:600, lineHeight:1.08, marginBottom:16 }}>
+          <h2 className="serif" style={{ fontSize:50, fontWeight:600, lineHeight:1.08, marginBottom:16, color:"#e8ddd0" }}>
             Get Early Access<br/>to <span style={{ color:"#C4922E" }}>Atlas</span>
           </h2>
-          <p style={{ fontSize:15, color:"#4a4238", marginBottom:38, lineHeight:1.7, fontWeight:300 }}>
+          <p style={{ fontSize:15, color:"#9a8a7a", marginBottom:38, lineHeight:1.7, fontWeight:300 }}>
             Create your free account and start running your reselling business like a pro.
           </p>
           <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>
@@ -379,12 +379,12 @@ export default function LandingPage() {
                 <AtlasLogo size={36}/>
                 <span style={{ fontFamily:"'Marcellus', serif", fontSize:18, fontWeight:400, letterSpacing:"0.05em", color:"#f5e09a" }}>ATLAS</span>
               </div>
-              <p style={{ fontSize:13, color:"#2e2820", lineHeight:1.65, maxWidth:220, fontWeight:300, marginBottom:18 }}>
+              <p style={{ fontSize:13, color:"#7a6a5a", lineHeight:1.65, maxWidth:220, fontWeight:300, marginBottom:18 }}>
                 The command center for serious resellers.
               </p>
               <div style={{ display:"flex", gap:16 }}>
                 {["Twitter","Discord","Instagram"].map(s => (
-                  <a key={s} href="#" className="fa" style={{ fontSize:12 }}>{s}</a>
+                  <a key={s} href="#" className="fa" style={{ fontSize:12, color:"#5a4a3a" }}>{s}</a>
                 ))}
               </div>
             </div>
@@ -392,18 +392,18 @@ export default function LandingPage() {
               <div key={col.title}>
                 <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.16em", color:"#C4922E", textTransform:"uppercase", marginBottom:16 }}>{col.title}</p>
                 <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                  {col.links.map(l => <a key={l} href="#" className="fa">{l}</a>)}
+                  {col.links.map(l => <a key={l} href="#" className="fa" style={{ color:"#5a4a3a", fontSize:13 }}>{l}</a>)}
                 </div>
               </div>
             ))}
           </div>
           <div style={{ borderTop:"1px solid #C4922E0a", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
-            <p style={{ fontSize:12, color:"#201c16" }}>© 2026 Atlas. All rights reserved.</p>
+            <p style={{ fontSize:12, color:"#3a2a1a" }}>© 2026 Atlas. All rights reserved.</p>
             <div style={{ display:"flex", gap:22 }}>
               {["Privacy Policy","Terms of Service"].map(l => (
-                <a key={l} href="#" style={{ fontSize:12, color:"#201c16", textDecoration:"none", transition:"color 0.2s" }}
-                  onMouseEnter={e=>e.currentTarget.style.color="#4a4238"}
-                  onMouseLeave={e=>e.currentTarget.style.color="#201c16"}>{l}</a>
+                <a key={l} href="#" style={{ fontSize:12, color:"#3a2a1a", textDecoration:"none", transition:"color 0.2s" }}
+                  onMouseEnter={e=>e.currentTarget.style.color="#5a4a3a"}
+                  onMouseLeave={e=>e.currentTarget.style.color="#3a2a1a"}>{l}</a>
               ))}
             </div>
           </div>
