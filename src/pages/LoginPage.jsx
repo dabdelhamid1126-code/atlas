@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AtlasLogo = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -18,22 +19,22 @@ const AtlasLogo = ({ size = 48 }) => (
   </svg>
 );
 
-export default function LoginModal({ isOpen, onClose }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginPage() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  if (!isOpen) return null;
-
-  const handleDiscordSignIn = async () => {
+  const handleDiscordSignIn = () => {
     setIsLoading(true);
+    setError('');
     try {
-      // Base44 SSO for Discord - redirects to Discord OAuth
-      // Make sure SSO is enabled in Base44 settings
+      // Redirect to Base44 SSO endpoint
+      // Base44 will handle the Discord OAuth flow
       window.location.href = '/auth/sso';
     } catch (err) {
-      setError(err.message || 'Failed to sign in with Discord');
+      setError('Failed to start Discord login. Please try again.');
       setIsLoading(false);
     }
   };
@@ -42,7 +43,7 @@ export default function LoginModal({ isOpen, onClose }) {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     if (!email || !password) {
       setError('Please enter email and password');
       setIsLoading(false);
@@ -50,10 +51,9 @@ export default function LoginModal({ isOpen, onClose }) {
     }
 
     try {
-      // Email/password auth - use Base44's built-in auth or your own API
-      // This is a placeholder - implement based on your auth method
-      console.log('Email login attempt:', email);
-      setError('Email login not yet configured - please use Discord');
+      // For now, email login shows message to use Discord
+      // You can implement email/password auth later with your backend
+      setError('Email login is currently disabled. Please use Discord to sign in.');
       setIsLoading(false);
     } catch (err) {
       setError(err.message || 'Failed to sign in');
@@ -61,15 +61,8 @@ export default function LoginModal({ isOpen, onClose }) {
     }
   };
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
     <div
-      onClick={handleOverlayClick}
       style={{
         position: 'fixed',
         inset: 0,
@@ -94,7 +87,7 @@ export default function LoginModal({ isOpen, onClose }) {
       >
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={() => navigate('/')}
           style={{
             position: 'absolute',
             top: '16px',
@@ -189,7 +182,7 @@ export default function LoginModal({ isOpen, onClose }) {
           <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">
             <path d="M107.7 8.07A105.15 105.15 0 0090.2 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-14.84 0 72.37 72.37 0 00-3.36-6.83 105.89 105.89 0 00-17.5 8.07 750.85 750.85 0 00-119.88 37.85 83.47 83.47 0 0027.64 55.92 110.35 110.35 0 0033.26 10.7q5.18-7.5 9.84-15.5a67.15 67.15 0 00-10.85-5.3q1.8-1.36 3.54-2.77a75.36 75.36 0 0060.6 0c1.2 1 2.36 2 3.54 2.77a67.82 67.82 0 00-10.88 5.3c4.5 8 9 16 9.86 15.5a110.5 110.5 0 0033.3-10.7 84.29 84.29 0 0027.64-56c0-35.88-30.08-67.92-67.6-67.92zM42.45 65.69c-5.89 0-10.74 5.27-10.74 11.74s4.85 11.74 10.74 11.74c5.88 0 10.73-5.27 10.73-11.74-.02-6.47-4.85-11.74-10.73-11.74zM84.14 65.69c-5.74 0-10.63 5.27-10.63 11.74s4.89 11.74 10.63 11.74c5.9 0 10.75-5.27 10.75-11.74s-4.84-11.74-10.75-11.74z"/>
           </svg>
-          Continue with Discord
+          {isLoading ? 'Connecting to Discord...' : 'Continue with Discord'}
         </button>
 
         {/* Divider */}
