@@ -31,13 +31,8 @@ export default function LoginModal({ isOpen, onClose }) {
   const handleDiscordSignIn = async () => {
     setIsLoading(true);
     try {
-      // Check if signInWithDiscord exists
-      if (typeof signInWithDiscord === 'function') {
-        await signInWithDiscord();
-      } else {
-        // Fallback: redirect to Discord auth endpoint
-        window.location.href = '/auth/sso';
-      }
+      // Redirect to Base44 SSO endpoint for Discord
+      window.location.href = `https://app.base44.com/api/apps/6982109ef976b5f09c0b7b7e/auth/sso/callback?provider=discord`;
     } catch (err) {
       setError(err.message || 'Failed to sign in with Discord');
       setIsLoading(false);
@@ -181,7 +176,7 @@ export default function LoginModal({ isOpen, onClose }) {
           onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#4752C4')}
           onMouseLeave={(e) => !isLoading && (e.currentTarget.style.background = '#5865F2')}
         >
-          <svg width="20" height="20" viewBox="0 0 127.14 96.36" fill="currentColor">
+          <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">
             <path d="M107.7 8.07A105.15 105.15 0 0090.2 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-14.84 0 72.37 72.37 0 00-3.36-6.83 105.89 105.89 0 00-17.5 8.07 750.85 750.85 0 00-119.88 37.85 83.47 83.47 0 0027.64 55.92 110.35 110.35 0 0033.26 10.7q5.18-7.5 9.84-15.5a67.15 67.15 0 00-10.85-5.3q1.8-1.36 3.54-2.77a75.36 75.36 0 0060.6 0c1.2 1 2.36 2 3.54 2.77a67.82 67.82 0 00-10.88 5.3c4.5 8 9 16 9.86 15.5a110.5 110.5 0 0033.3-10.7 84.29 84.29 0 0027.64-56c0-35.88-30.08-67.92-67.6-67.92zM42.45 65.69c-5.89 0-10.74 5.27-10.74 11.74s4.85 11.74 10.74 11.74c5.88 0 10.73-5.27 10.73-11.74-.02-6.47-4.85-11.74-10.73-11.74zM84.14 65.69c-5.74 0-10.63 5.27-10.63 11.74s4.89 11.74 10.63 11.74c5.9 0 10.75-5.27 10.75-11.74s-4.84-11.74-10.75-11.74z"/>
           </svg>
           Continue with Discord
