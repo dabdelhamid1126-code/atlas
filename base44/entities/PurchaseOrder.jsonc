@@ -162,7 +162,12 @@
             "type": "string"
           },
           "upc": {
-            "type": "string"
+            "type": "string",
+            "description": "UPC barcode"
+          },
+          "product_image": {
+            "type": "string",
+            "description": "Product image URL"
           },
           "quantity_ordered": {
             "type": "number"
@@ -172,6 +177,10 @@
           },
           "unit_cost": {
             "type": "number"
+          },
+          "sale_price": {
+            "type": "number",
+            "description": "Sale price (fallback if no sale_events)"
           }
         }
       }
@@ -209,7 +218,8 @@
                   "type": "string"
                 },
                 "qty": {
-                  "type": "number"
+                  "type": "number",
+                  "description": "Quantity sold (MUST be qty, not quantity_ordered)"
                 },
                 "sale_price": {
                   "type": "number"
@@ -251,6 +261,10 @@
     "fees": {
       "type": "number",
       "description": "Additional fees"
+    },
+    "cashback_amount": {
+      "type": "number",
+      "description": "Total cashback earned on this order"
     },
     "include_tax_in_cashback": {
       "type": "boolean",
@@ -298,5 +312,46 @@
     "order_number",
     "retailer",
     "status"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
 }
