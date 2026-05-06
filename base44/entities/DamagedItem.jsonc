@@ -1,0 +1,107 @@
+{
+  "name": "DamagedItem",
+  "type": "object",
+  "properties": {
+    "inventory_item_id": {
+      "type": "string",
+      "description": "Reference to inventory item"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "serial_number": {
+      "type": "string",
+      "description": "Serial number if applicable"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantity damaged"
+    },
+    "damage_type": {
+      "type": "string",
+      "enum": [
+        "physical",
+        "water",
+        "defective",
+        "missing_parts",
+        "other"
+      ],
+      "description": "Type of damage"
+    },
+    "description": {
+      "type": "string",
+      "description": "Damage description"
+    },
+    "estimated_loss": {
+      "type": "number",
+      "description": "Estimated financial loss"
+    },
+    "reported_by": {
+      "type": "string",
+      "description": "Who reported the damage"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "reported",
+        "assessed",
+        "written_off",
+        "repaired"
+      ],
+      "default": "reported",
+      "description": "Status of damaged item"
+    },
+    "resolution": {
+      "type": "string",
+      "description": "Resolution notes"
+    }
+  },
+  "required": [
+    "product_name",
+    "quantity",
+    "damage_type",
+    "description"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
