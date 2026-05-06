@@ -14,10 +14,10 @@ export default function LoginModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleDiscord = () => {
+  const handleSSO = () => {
     setIsAuthenticating(true);
-    // Redirect to Discord OAuth endpoint
-    window.location.href = '/api/auth/discord';
+    // Base44 SSO login - redirects to Base44's SSO flow
+    window.location.href = '/auth/sso';
   };
 
   const handleGoogle = () => {
@@ -121,9 +121,9 @@ export default function LoginModal({ isOpen, onClose }) {
           </p>
         </div>
 
-        {/* Sign in with Discord */}
+        {/* Sign in with Base44 SSO (Discord) */}
         <button
-          onClick={handleDiscord}
+          onClick={handleSSO}
           disabled={isAuthenticating}
           style={{
             width: '100%',
