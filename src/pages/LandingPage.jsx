@@ -209,7 +209,7 @@ export default function LandingPage() {
         </div>
         <div className="nm" style={{ display:"flex", gap:28 }}>
           {["Features", "Pricing", "Roadmap", "About"].map(label => (
-            <a key={label} href="#" className="nl">{label}</a>
+            <a key={label} href={`/${label.toLowerCase()}`} className="nl">{label}</a>
           ))}
         </div>
         <div className="nm" style={{ display:"flex", gap:10 }}>
@@ -224,7 +224,7 @@ export default function LandingPage() {
         <div style={{ position:"fixed", inset:0, background:"#080706", zIndex:100, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:28 }}>
           <button onClick={() => setMenuOpen(false)} style={{ position:"absolute", top:20, right:24, background:"none", border:"none", color:"#f0ece4", fontSize:30, cursor:"pointer" }}>×</button>
           {["Features", "Pricing", "Roadmap", "About"].map(label => (
-            <a key={label} href="#" className="nl" style={{ fontSize:18 }} onClick={() => setMenuOpen(false)}>{label}</a>
+            <a key={label} href={`/${label.toLowerCase()}`} className="nl" style={{ fontSize:18 }} onClick={() => setMenuOpen(false)}>{label}</a>
           ))}
           <button className="btn-g" style={{ padding:"13px 36px", fontSize:15, marginTop:8 }} onClick={goRegister}>Join Beta →</button>
           <button className="btn-o" style={{ padding:"11px 32px", fontSize:14 }} onClick={goLogin}>Log In</button>
