@@ -1,0 +1,127 @@
+{
+  "name": "Export",
+  "type": "object",
+  "properties": {
+    "export_number": {
+      "type": "string",
+      "description": "Unique export number"
+    },
+    "buyer": {
+      "type": "string",
+      "description": "Buyer name/company"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "shipped",
+        "completed",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Export status"
+    },
+    "items": {
+      "type": "array",
+      "description": "Exported items",
+      "items": {
+        "type": "object",
+        "properties": {
+          "inventory_item_id": {
+            "type": "string"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "serial_numbers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "gift_cards": {
+      "type": "array",
+      "description": "Gift card IDs included",
+      "items": {
+        "type": "string"
+      }
+    },
+    "total_value": {
+      "type": "number",
+      "description": "Total export value"
+    },
+    "export_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of export"
+    },
+    "invoice_id": {
+      "type": "string",
+      "description": "Associated invoice"
+    },
+    "shipping_info": {
+      "type": "string",
+      "description": "Shipping details"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Export notes"
+    }
+  },
+  "required": [
+    "export_number",
+    "buyer",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
