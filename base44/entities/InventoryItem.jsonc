@@ -1,0 +1,90 @@
+{
+  "name": "InventoryItem",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Reference to Product"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name for quick reference"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantity in stock"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "received",
+        "in_stock",
+        "reserved",
+        "exported",
+        "damaged"
+      ],
+      "default": "pending",
+      "description": "Current status"
+    },
+    "purchase_order_id": {
+      "type": "string",
+      "description": "Reference to purchase order"
+    },
+    "unit_cost": {
+      "type": "number",
+      "description": "Cost per unit"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "product_id",
+    "product_name",
+    "quantity",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
