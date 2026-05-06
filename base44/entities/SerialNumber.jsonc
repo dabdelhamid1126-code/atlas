@@ -1,0 +1,100 @@
+{
+  "name": "SerialNumber",
+  "type": "object",
+  "properties": {
+    "serial": {
+      "type": "string",
+      "description": "Serial number"
+    },
+    "inventory_item_id": {
+      "type": "string",
+      "description": "Reference to inventory item"
+    },
+    "product_id": {
+      "type": "string",
+      "description": "Reference to product"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "purchase_order_id": {
+      "type": "string",
+      "description": "Reference to purchase order"
+    },
+    "order_number": {
+      "type": "string",
+      "description": "Purchase order number"
+    },
+    "tracking_number": {
+      "type": "string",
+      "description": "Tracking number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in_stock",
+        "exported",
+        "damaged",
+        "returned"
+      ],
+      "default": "in_stock",
+      "description": "Current status"
+    },
+    "export_id": {
+      "type": "string",
+      "description": "Reference to export if exported"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "serial",
+    "product_id",
+    "product_name",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
