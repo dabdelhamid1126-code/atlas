@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/AuthContext';
+import React, { useState } from 'react';
 
 const AtlasLogo = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -20,45 +19,20 @@ const AtlasLogo = ({ size = 48 }) => (
 );
 
 export default function LoginModal({ isOpen, onClose }) {
-  const { checkAppState } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
-  const handleDiscordSignIn = async () => {
+  const handleDiscordSignIn = () => {
     setIsLoading(true);
     setError('');
     try {
-      // Base44 SSO for Discord
-      // This will handle the full OAuth flow
-      window.location.href = '/auth/sso?provider=discord';
+      // Base44 SSO endpoint for Discord
+      // This redirects to Discord OAuth login
+      window.location.href = '/auth/sso';
     } catch (err) {
-      setError('Failed to initiate Discord login. Please try again.');
-      setIsLoading(false);
-    }
-  };
-
-  const handleEmailSignIn = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    
-    if (!email || !password) {
-      setError('Please enter email and password');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      // Email/password auth through Base44
-      // This would need to be implemented based on your Base44 configuration
-      setError('Email login is currently disabled. Please use Discord.');
-      setIsLoading(false);
-    } catch (err) {
-      setError(err.message || 'Failed to sign in');
+      setError('Failed to start Discord login. Please try again.');
       setIsLoading(false);
     }
   };
@@ -182,7 +156,6 @@ export default function LoginModal({ isOpen, onClose }) {
             justifyContent: 'center',
             gap: '10px',
             transition: 'all 0.2s',
-            marginBottom: '12px',
             opacity: isLoading ? 0.7 : 1,
           }}
           onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#4752C4')}
@@ -193,114 +166,6 @@ export default function LoginModal({ isOpen, onClose }) {
           </svg>
           {isLoading ? 'Connecting to Discord...' : 'Continue with Discord'}
         </button>
-
-        {/* Divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          margin: '24px 0',
-        }}>
-          <div style={{ flex: 1, height: '1px', background: '#C4922E44' }}/>
-          <span style={{ fontSize: '12px', color: '#4a4238', fontWeight: 500 }}>OR</span>
-          <div style={{ flex: 1, height: '1px', background: '#C4922E44' }}/>
-        </div>
-
-        {/* Email form */}
-        <form onSubmit={handleEmailSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* Email input */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#1a1610',
-              marginBottom: '6px',
-            }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #C4922E44',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontFamily: "'DM Sans', sans-serif",
-                color: '#1a1610',
-                background: '#fff',
-                transition: 'all 0.2s',
-                cursor: isLoading ? 'not-allowed' : 'text',
-                opacity: isLoading ? 0.7 : 1,
-              }}
-              onFocus={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E88')}
-              onBlur={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E44')}
-            />
-          </div>
-
-          {/* Password input */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#1a1610',
-              marginBottom: '6px',
-            }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #C4922E44',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontFamily: "'DM Sans', sans-serif",
-                color: '#1a1610',
-                background: '#fff',
-                transition: 'all 0.2s',
-                cursor: isLoading ? 'not-allowed' : 'text',
-                opacity: isLoading ? 0.7 : 1,
-              }}
-              onFocus={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E88')}
-              onBlur={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E44')}
-            />
-          </div>
-
-          {/* Sign in button */}
-          <button
-            type="submit"
-            disabled={isLoading || !email || !password}
-            style={{
-              padding: '12px 16px',
-              background: '#1a1610',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: isLoading || !email || !password ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s',
-              marginTop: '8px',
-              opacity: isLoading || !email || !password ? 0.6 : 1,
-            }}
-            onMouseEnter={(e) => !isLoading && !(!email || !password) && (e.currentTarget.style.background = '#2a2420')}
-            onMouseLeave={(e) => !isLoading && !(!email || !password) && (e.currentTarget.style.background = '#1a1610')}
-          >
-            {isLoading ? 'Signing in...' : 'Sign In with Email'}
-          </button>
-        </form>
 
         {/* Footer */}
         <p style={{
