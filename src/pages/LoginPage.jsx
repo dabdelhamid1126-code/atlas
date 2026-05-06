@@ -37,18 +37,22 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoadingAuth, navigate]);
 
+  // Discord SSO Login
   const handleDiscordSignIn = () => {
+    console.log('Discord button clicked');
     setIsLoading(true);
     setError('');
     try {
-      // Use Base44 SDK method for Discord SSO
+      console.log('Calling base44.auth.loginWithProvider for Discord SSO');
       base44.auth.loginWithProvider('sso', '/dashboard');
     } catch (err) {
+      console.error('Discord login error:', err);
       setError('Failed to start Discord login. Please try again.');
       setIsLoading(false);
     }
   };
 
+  // Email/Password Login
   const handleEmailSignIn = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -61,36 +65,33 @@ export default function LoginPage() {
     }
 
     try {
-      // Use Base44's built-in email/password authentication
-      const response = await fetch('/auth/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-          mode: isSignUp ? 'signup' : 'login',
-        }),
-      });
+      console.log(`Attempting ${isSignUp ? 'signup' : 'login'} with email: ${email}`);
+      
+      // Use Base44 SDK method for email/password authentication
+      const result = await base44.auth.loginViaEmailPassword(email, password);
+      
+      console.log('Email login result:', result);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || `${isSignUp ? 'Sign up' : 'Login'} failed. Please try again.`);
-        setIsLoading(false);
-        return;
-      }
-
-      // If successful, check auth state and redirect
-      if (data.success || response.ok) {
+      if (result) {
         // Give Base44 a moment to set the session
         setTimeout(() => {
           navigate('/dashboard', { replace: true });
         }, 500);
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      console.error('Email login error:', err);
+      
+      // Determine error message
+      let errorMessage = 'Failed to sign in. Please try again.';
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.statusCode === 401) {
+        errorMessage = 'Invalid email or password';
+      } else if (err.statusCode === 409) {
+        errorMessage = 'Email already exists';
+      }
+      
+      setError(errorMessage);
       setIsLoading(false);
     }
   };
