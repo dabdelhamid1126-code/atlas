@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/lib/AuthContext";
 import LoginModal from "@/components/LoginModal";
 
 const AtlasLogo = ({ size = 36 }) => (
@@ -49,46 +48,41 @@ const WHY_POINTS = [
   "Built by a reseller — every feature exists because we needed it",
 ];
 
-const NAV_LINKS = ["Features", "Early Access", "Roadmap", "About", "FAQ"];
-
 const FOOTER_COLS = [
-  { title: "Product",   links: ["Features", "Early Access", "Roadmap", "Changelog"] },
-  { title: "Company",   links: ["About", "Careers", "Contact"] },
+  { title: "Product", links: ["Features", "Pricing", "Roadmap", "Changelog"] },
+  { title: "Company", links: ["About", "Careers", "Contact"] },
   { title: "Resources", links: ["Blog", "Guides", "Support"] },
 ];
 
 export default function LandingPage() {
-  const { navigateToLogin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [visible,  setVisible]  = useState(false);
-  const [loginModalOpen, setLoginModalOpen] = useState(false); // ✅ Closed by default, opens on "Log In" click
+  const [visible, setVisible] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
-  // ── Star canvas animation ──────────────────────────────────────
+  // Star canvas animation
   useEffect(() => {
     const canvas = document.getElementById('atlas-stars');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let raf;
-
+    
     const resize = () => {
-      canvas.width  = window.innerWidth;
+      canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
     resize();
     window.addEventListener('resize', resize);
 
-    // Generate stars
-    const STARS = Array.from({ length: 240 }, () =>({
-      x:     Math.random() * window.innerWidth,
-      y:     Math.random() * window.innerHeight,
-      r:     Math.random() * 1.4 + 0.2,
+    const STARS = Array.from({ length: 240 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.4 + 0.2,
       alpha: Math.random() * 0.6 + 0.1,
       speed: Math.random() * 0.004 + 0.001,
       phase: Math.random() * Math.PI * 2,
     }));
 
-    // Generate connections
     const LINES = [];
     for (let i = 0; i < STARS.length; i++) {
       for (let j = i + 1; j < STARS.length; j++) {
@@ -102,7 +96,6 @@ export default function LandingPage() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       t += 0.01;
 
-      // Draw connection lines
       LINES.forEach(({ i, j, d }) => {
         const alpha = (1 - d / 140) * 0.18;
         ctx.beginPath();
@@ -113,7 +106,6 @@ export default function LandingPage() {
         ctx.stroke();
       });
 
-      // Draw stars
       STARS.forEach(s => {
         const pulse = s.alpha * (0.7 + 0.3 * Math.sin(t * s.speed * 100 + s.phase));
         ctx.beginPath();
@@ -124,8 +116,8 @@ export default function LandingPage() {
 
       raf = requestAnimationFrame(draw);
     };
-    draw();
 
+    draw();
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
@@ -140,67 +132,38 @@ export default function LandingPage() {
   }, []);
 
   const goRegister = () => setLoginModalOpen(true);
-  const goLogin    = () => setLoginModalOpen(true);
+  const goLogin = () => setLoginModalOpen(true);
 
   return (
     <div style={{ background: "#060503", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=Marcellus&family=Marcellus&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=Marcellus&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
         .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
-
-        /* Star canvas */
         #atlas-stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
-
-        /* Logo watermark */
-        .logo-watermark { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-          width:min(90vw,800px); height:min(90vw,800px); pointer-events:none; z-index:0;
-          opacity:0.055; }
-
-        /* Make all sections sit above stars */
+        .logo-watermark { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:min(90vw,800px); height:min(90vw,800px); pointer-events:none; z-index:0; opacity:0.055; }
         nav, section, footer { position:relative; z-index:1; }
-
         .fu { opacity: 0; transform: translateY(26px); transition: opacity 0.75s ease, transform 0.75s ease; }
         .fu.in { opacity: 1; transform: translateY(0); }
         .d1{transition-delay:.08s}.d2{transition-delay:.18s}.d3{transition-delay:.28s}
         .d4{transition-delay:.40s}.d5{transition-delay:.52s}.d6{transition-delay:.64s}
-
-        .btn-g { background:#C4922E; color:#080706; border:none; border-radius:8px;
-          font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer;
-          display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
+        .btn-g { background:#C4922E; color:#080706; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-g:hover { background:#d9a43a; transform:translateY(-1px); }
-
-        .btn-o { background:transparent; color:#f0ece4; border:1px solid #C4922E44;
-          border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:500;
-          cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
+        .btn-o { background:transparent; color:#f0ece4; border:1px solid #C4922E44; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-o:hover { border-color:#C4922E88; background:#C4922E0a; }
-
-        .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:400;
-          transition:color 0.2s; letter-spacing:0.02em; }
+        .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:400; transition:color 0.2s; letter-spacing:0.02em; }
         .nl:hover { color:#C4922E; }
-
-        .fc { background:#161208; border:1px solid #C4922E33; border-radius:14px;
-          padding:28px 22px; transition:all 0.25s; position:relative; overflow:hidden; }
+        .fc { background:#161208; border:1px solid #C4922E33; border-radius:14px; padding:28px 22px; transition:all 0.25s; position:relative; overflow:hidden; }
         .fc:hover { border-color:#C4922E77; transform:translateY(-3px); background:#1e1810; }
-
-        .dot-bg { background-image:radial-gradient(circle,#C4922E12 1px,transparent 1px);
-          background-size:30px 30px; }
-
         .gold-line { height:1px; background:linear-gradient(90deg,transparent,#C4922E88,transparent); }
-
         @keyframes pulse { 0%,100%{opacity:.15} 50%{opacity:.3} }
         .pr { animation:pulse 3.5s ease-in-out infinite; }
         .pr2 { animation:pulse 3.5s ease-in-out infinite; animation-delay:1.2s; }
         .pr3 { animation:pulse 3.5s ease-in-out infinite; animation-delay:2.4s; }
-
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
         .fl { animation:float 5.5s ease-in-out infinite; }
-
-        .fa { text-decoration:none; color:#3a342c; font-size:13px; font-weight:300;
-          transition:color 0.2s; }
+        .fa { text-decoration:none; color:#3a342c; font-size:13px; font-weight:300; transition:color 0.2s; }
         .fa:hover { color:#9a9080; }
-
         @media(max-width:900px){
           .hg{grid-template-columns:1fr !important; text-align:center; gap:0 !important;}
           .hgr{margin:0 auto 16px !important; order:-1; height:220px !important;}
@@ -218,16 +181,10 @@ export default function LandingPage() {
           .ht{font-size:32px !important;}
           .hgr{height:180px !important;}
         }
-        @media(max-width:540px){
-          .fg{grid-template-columns:1fr !important;}
-          .ht{font-size:34px !important;}
-        }
       `}</style>
 
-      {/* Star background */}
       <canvas id="atlas-stars" />
 
-      {/* Logo watermark */}
       <div className="logo-watermark">
         <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
           <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="8" opacity="1"/>
@@ -245,50 +202,39 @@ export default function LandingPage() {
       </div>
 
       {/* NAV */}
-      <nav style={{
-        position:"fixed", top:0, left:0, right:0, zIndex:50,
-        padding:"16px 48px", display:"flex", alignItems:"center", justifyContent:"space-between",
-        background: scrolled ? "rgba(8,7,6,0.92)" : "rgba(8,7,6,0.3)",
-        backdropFilter: scrolled ? "blur(16px)" : "none",
-        borderBottom: scrolled ? "1px solid #C4922E18" : "1px solid transparent",
-        transition:"all 0.35s",
-      }}>
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:50, padding:"16px 48px", display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(8,7,6,0.92)" : "rgba(8,7,6,0.3)", backdropFilter: scrolled ? "blur(16px)" : "none", borderBottom: scrolled ? "1px solid #C4922E18" : "1px solid transparent", transition:"all 0.35s" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <AtlasLogo size={42}/>
           <span style={{ fontFamily:"'Marcellus', serif", fontSize:24, fontWeight:400, letterSpacing:"0.05em", color:"#f5e09a" }}>ATLAS</span>
         </div>
         <div className="nm" style={{ display:"flex", gap:28 }}>
-          {[
-          {label:'Features', path:'/features'},
-          {label:'Pricing',  path:'/pricing'},
-          {label:'Roadmap',  path:'/roadmap'},
-          {label:'About',    path:'/about'},
-        ].map(l => <a key={l.label} href={l.path} className="nl">{l.label}</a>)}
+          {["Features", "Pricing", "Roadmap", "About"].map(label => (
+            <a key={label} href="#" className="nl">{label}</a>
+          ))}
         </div>
         <div className="nm" style={{ display:"flex", gap:10 }}>
           <button className="btn-o" style={{ padding:"9px 20px", fontSize:13 }} onClick={goLogin}>Log In</button>
           <button className="btn-g" style={{ padding:"9px 22px", fontSize:13 }} onClick={goRegister}>Join Beta →</button>
         </div>
-        <button className="sm" onClick={() => setMenuOpen(true)}
-          style={{ display:"none", background:"none", border:"none", color:"#f0ece4", cursor:"pointer", fontSize:24 }}>☰</button>
+        <button className="sm" onClick={() => setMenuOpen(true)} style={{ display:"none", background:"none", border:"none", color:"#f0ece4", cursor:"pointer", fontSize:24 }}>☰</button>
       </nav>
 
       {/* Mobile menu */}
       {menuOpen && (
         <div style={{ position:"fixed", inset:0, background:"#080706", zIndex:100, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:28 }}>
           <button onClick={() => setMenuOpen(false)} style={{ position:"absolute", top:20, right:24, background:"none", border:"none", color:"#f0ece4", fontSize:30, cursor:"pointer" }}>×</button>
-          {NAV_LINKS.map(l => <a key={l} href="#" className="nl" style={{ fontSize:18 }} onClick={() => setMenuOpen(false)}>{l}</a>)}
+          {["Features", "Pricing", "Roadmap", "About"].map(label => (
+            <a key={label} href="#" className="nl" style={{ fontSize:18 }} onClick={() => setMenuOpen(false)}>{label}</a>
+          ))}
           <button className="btn-g" style={{ padding:"13px 36px", fontSize:15, marginTop:8 }} onClick={goRegister}>Join Beta →</button>
           <button className="btn-o" style={{ padding:"11px 32px", fontSize:14 }} onClick={goLogin}>Log In</button>
         </div>
       )}
 
       {/* HERO */}
-      <section style={{ minHeight:"100vh", padding:"100px 48px 60px", display:"flex", alignItems:"center", background:"transparent" }} className="sp" style={{ padding:"100px 48px 60px" }} className="sp" style={{ padding:"130px 48px 80px" }}>
+      <section style={{ minHeight:"100vh", padding:"130px 48px 80px", display:"flex", alignItems:"center", background:"transparent" }}>
         <div style={{ maxWidth:1200, margin:"0 auto", width:"100%" }}>
           <div className="hg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center" }}>
-
-            {/* Left */}
             <div>
               <div className={`fu ${visible?"in":""}`} style={{ marginBottom:24 }}>
                 <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#C4922E16", border:"1px solid #C4922E40", borderRadius:99, padding:"5px 14px" }}>
@@ -296,29 +242,23 @@ export default function LandingPage() {
                   <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase" }}>Private Beta</span>
                 </div>
               </div>
-
               <h1 className={`serif fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:700, lineHeight:1.06, marginBottom:22 }}>
                 Run Your Reselling<br/>Business Like a<br/>
                 <span style={{ color:"#C4922E" }}>Hedge Fund.</span>
               </h1>
-
               <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#7a7060", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300 }}>
                 Atlas gives you the tools, insights, and automation to track inventory, maximize profit, and make smarter decisions — every day.
               </p>
-
               <div className={`fu d3 ${visible?"in":""} hb`} style={{ display:"flex", gap:14, marginBottom:28, flexWrap:"wrap" }}>
                 <button className="btn-g" style={{ padding:"14px 30px", fontSize:15 }} onClick={goRegister}>Join Beta →</button>
                 <button className="btn-o" style={{ padding:"14px 26px", fontSize:15 }} onClick={goLogin}>Log In</button>
               </div>
-
               <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#2e2820" }}>
                 No credit card required · Free to get started
               </p>
             </div>
-
-            {/* Right — Large logo with rings */}
             <div className={`fu d2 ${visible?"in":""} hgr`} style={{ display:"flex", justifyContent:"center", alignItems:"center", position:"relative", height:320 }}>
-              <div className="pr"  style={{ position:"absolute", width:360, height:360, borderRadius:"50%", border:"1px solid #C4922E28" }}/>
+              <div className="pr" style={{ position:"absolute", width:360, height:360, borderRadius:"50%", border:"1px solid #C4922E28" }}/>
               <div className="pr2" style={{ position:"absolute", width:260, height:260, borderRadius:"50%", border:"1px solid #C4922E20" }}/>
               <div className="pr3" style={{ position:"absolute", width:180, height:180, borderRadius:"50%", border:"1px solid #C4922E18" }}/>
               <div style={{ position:"absolute", width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, #C4922E28 0%, #C4922E08 50%, transparent 70%)" }}/>
@@ -326,7 +266,6 @@ export default function LandingPage() {
                 <AtlasLogo size={220}/>
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -334,7 +273,7 @@ export default function LandingPage() {
       <div className="gold-line"/>
 
       {/* FEATURES */}
-      <section style={{ padding:"100px 48px", background:"rgba(10,9,6,0.85)", borderTop:"1px solid #C4922E22", borderBottom:"1px solid #C4922E22" }} className="sp">
+      <section style={{ padding:"100px 48px", background:"rgba(10,9,6,0.85)", borderTop:"1px solid #C4922E22", borderBottom:"1px solid #C4922E22" }}>
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:60 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.22em", color:"#C4922E", textTransform:"uppercase", marginBottom:14 }}>Built for Resellers</p>
@@ -362,7 +301,7 @@ export default function LandingPage() {
       <div className="gold-line"/>
 
       {/* WHY */}
-      <section style={{ padding:"100px 48px", background:"rgba(8,7,6,0.88)" }} className="sp">
+      <section style={{ padding:"100px 48px", background:"rgba(8,7,6,0.88)" }}>
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div className="wg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
             <div>
@@ -391,7 +330,7 @@ export default function LandingPage() {
                 ["Gmail Import","Auto-sync orders"],
                 ["Inventory","Cost basis tracking"],
                 ["Gift Cards","Codes & balances"],
-                ["Analytics","ROI by store & card"],
+                ["Analytics","ROI by store"],
                 ["Forecasting","Trend-based outlook"],
                 ["Goal Tracker","Monthly targets"],
               ].map(([label, sub]) => (
@@ -410,8 +349,7 @@ export default function LandingPage() {
       <div className="gold-line"/>
 
       {/* CTA */}
-      <section style={{ padding:"110px 48px", background:"rgba(6,5,4,0.82)", textAlign:"center", position:"relative", overflow:"hidden" }} className="sp">
-
+      <section style={{ padding:"110px 48px", background:"rgba(6,5,4,0.82)", textAlign:"center", position:"relative", overflow:"hidden" }}>
         <div style={{ maxWidth:580, margin:"0 auto", position:"relative", zIndex:1 }}>
           <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
             <AtlasLogo size={60}/>
@@ -433,7 +371,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ background:"#040302", borderTop:"1px solid #C4922E12", padding:"56px 48px 28px" }} className="sp">
+      <footer style={{ background:"#040302", borderTop:"1px solid #C4922E12", padding:"56px 48px 28px" }}>
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div className="ftg" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:48, marginBottom:44 }}>
             <div>
