@@ -1,66 +1,103 @@
 import React from 'react';
-import LandingLayout from './LandingLayout';
+import Layout from '@/components/Layout';
 
 export default function PricingPage() {
+  const plans = [
+    {
+      name: 'Free',
+      price: '0',
+      features: [
+        'Basic profit tracking',
+        'Up to 50 orders/month',
+        'Manual data entry',
+        'Basic analytics',
+      ]
+    },
+    {
+      name: 'Pro',
+      price: '29',
+      popular: true,
+      features: [
+        'All Free features',
+        'Unlimited orders',
+        'Gmail auto-import',
+        'Advanced analytics',
+        'Goal tracking',
+        'Card optimization',
+        'Priority support',
+      ]
+    },
+    {
+      name: 'Enterprise',
+      price: 'Custom',
+      features: [
+        'All Pro features',
+        'Custom integrations',
+        'API access',
+        'Dedicated support',
+        'Advanced reporting',
+      ]
+    },
+  ];
+
   return (
-    <LandingLayout currentPage="pricing">
-      <section style={{ paddingTop: 140, paddingBottom: 140, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ maxWidth: 800, textAlign: 'center' }}>
-          
-          {/* Coming Soon Badge */}
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.22em', color: '#C4922E', textTransform: 'uppercase', marginBottom: 24 }}>
-            Coming Soon
-          </p>
+    <Layout>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <h1 style={{ fontSize: 48, fontWeight: 700, marginBottom: 16, color: '#f0ece4', textAlign: 'center' }}>Pricing</h1>
+        <p style={{ fontSize: 16, color: '#8a7a6a', marginBottom: 48, maxWidth: 600, margin: '0 auto 48px' }}>
+          Simple, transparent pricing for serious resellers.
+        </p>
 
-          {/* Main Heading */}
-          <h1 className="serif" style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, marginBottom: 20, color: '#f0ece4' }}>
-            Pricing Details Coming <span style={{ color: '#C4922E' }}>Soon</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p style={{ fontSize: 18, color: '#9a9080', marginBottom: 32, lineHeight: 1.6, maxWidth: 500, margin: '0 auto 32px' }}>
-            We're working on finalized pricing plans. Get early access to Atlas and help shape what matters most.
-          </p>
-
-          {/* CTA Button */}
-          <button 
-            onClick={() => window.location.href = 'https://atlasresellhub.base44.app'}
-            style={{
-              padding: '16px 36px',
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+          {plans.map(plan => (
+            <div key={plan.name} style={{
+              background: '#161208',
+              border: plan.popular ? '2px solid #C4922E' : '1px solid #C4922E33',
               borderRadius: 12,
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
-              background: '#C4922E',
-              color: '#080706',
-              border: 'none',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-          >
-            Join the Beta
-          </button>
-
-          {/* Decorative element */}
-          <div style={{ marginTop: 64, display: 'flex', justifyContent: 'center', gap: 16 }}>
-            {[0, 1, 2].map(i => (
-              <div
-                key={i}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: '#C4922E',
-                  opacity: 0.3 + i * 0.25,
-                }}
-              />
-            ))}
-          </div>
-
+              padding: 32,
+              transform: plan.popular ? 'scale(1.05)' : 'scale(1)',
+            }}>
+              {plan.popular && (
+                <div style={{ background: '#C4922E', color: '#080706', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, marginBottom: 16, display: 'inline-block' }}>
+                  MOST POPULAR
+                </div>
+              )}
+              <h2 style={{ fontSize: 24, fontWeight: 700, color: '#e8ddd0', marginBottom: 8 }}>
+                {plan.name}
+              </h2>
+              <div style={{ marginBottom: 24 }}>
+                <span style={{ fontSize: 36, fontWeight: 700, color: '#C4922E' }}>
+                  ${plan.price}
+                </span>
+                {plan.price !== 'Custom' && (
+                  <span style={{ color: '#8a7a6a', marginLeft: 8 }}>/month</span>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {plan.features.map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#8a7a6a', fontSize: 14 }}>
+                    <span style={{ color: '#C4922E' }}>✓</span>
+                    {f}
+                  </div>
+                ))}
+              </div>
+              <button style={{
+                width: '100%',
+                marginTop: 24,
+                padding: '12px 16px',
+                background: plan.popular ? '#C4922E' : 'transparent',
+                color: plan.popular ? '#080706' : '#C4922E',
+                border: plan.popular ? 'none' : '1px solid #C4922E',
+                borderRadius: 8,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}>
+                Get Started
+              </button>
+            </div>
+          ))}
         </div>
-      </section>
-    </LandingLayout>
+      </div>
+    </Layout>
   );
 }
