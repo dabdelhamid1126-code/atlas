@@ -253,7 +253,7 @@ export default function LandingPage() {
                 <button className="btn-g" style={{ padding:"14px 30px", fontSize:15 }} onClick={goRegister}>Join Beta →</button>
                 <button className="btn-o" style={{ padding:"14px 26px", fontSize:15 }} onClick={goLogin}>Log In</button>
               </div>
-              <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#4a4238" }}>
+              <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#5a4a3a" }}>
                 No credit card required · Free to get started
               </p>
             </div>
@@ -366,7 +366,7 @@ export default function LandingPage() {
             </button>
             <button className="btn-o" style={{ padding:"15px 28px", fontSize:15 }} onClick={goLogin}>Log In</button>
           </div>
-          <p style={{ fontSize:12, color:"#252018" }}>No credit card required · Free to get started</p>
+          <p style={{ fontSize:12, color:"#5a4a3a" }}>No credit card required · Free to get started</p>
         </div>
       </section>
 
@@ -398,12 +398,12 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ borderTop:"1px solid #C4922E0a", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
-            <p style={{ fontSize:12, color:"#3a2a1a" }}>© 2026 Atlas. All rights reserved.</p>
+            <p style={{ fontSize:12, color:"#4a3a2a" }}>© 2026 Atlas. All rights reserved.</p>
             <div style={{ display:"flex", gap:22 }}>
               {["Privacy Policy","Terms of Service"].map(l => (
-                <a key={l} href="#" style={{ fontSize:12, color:"#3a2a1a", textDecoration:"none", transition:"color 0.2s" }}
-                  onMouseEnter={e=>e.currentTarget.style.color="#5a4a3a"}
-                  onMouseLeave={e=>e.currentTarget.style.color="#3a2a1a"}>{l}</a>
+                <a key={l} href="#" style={{ fontSize:12, color:"#4a3a2a", textDecoration:"none", transition:"color 0.2s" }}
+                  onMouseEnter={e=>e.currentTarget.style.color="#6a5a4a"}
+                  onMouseLeave={e=>e.currentTarget.style.color="#4a3a2a"}>{l}</a>
               ))}
             </div>
           </div>
