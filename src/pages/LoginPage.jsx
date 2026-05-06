@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { base44 } from '@/api/base44Client';
 
 const AtlasLogo = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -40,10 +41,8 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
     try {
-      // Use Base44's built-in SSO redirect
-      // This will handle the Discord OAuth flow and redirect back with auth token
-      const redirectUrl = `/dashboard`;
-      window.location.href = `/auth/sso?redirect=${encodeURIComponent(redirectUrl)}`;
+      // Use Base44 SDK method for Discord SSO
+      base44.auth.loginWithProvider('sso', '/dashboard');
     } catch (err) {
       setError('Failed to start Discord login. Please try again.');
       setIsLoading(false);
