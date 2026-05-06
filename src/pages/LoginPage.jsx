@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 
 const AtlasLogo = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -21,18 +22,28 @@ const AtlasLogo = ({ size = 48 }) => (
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoadingAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoadingAuth) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, isLoadingAuth, navigate]);
 
   const handleDiscordSignIn = () => {
     setIsLoading(true);
     setError('');
     try {
-      // Redirect to Base44 SSO endpoint
-      // Base44 will handle the Discord OAuth flow
-      window.location.href = '/auth/sso';
+      // Use Base44's built-in SSO redirect
+      // This will handle the Discord OAuth flow and redirect back with auth token
+      const redirectUrl = `/dashboard`;
+      window.location.href = `/auth/sso?redirect=${encodeURIComponent(redirectUrl)}`;
     } catch (err) {
       setError('Failed to start Discord login. Please try again.');
       setIsLoading(false);
@@ -51,15 +62,64 @@ export default function LoginPage() {
     }
 
     try {
-      // For now, email login shows message to use Discord
-      // You can implement email/password auth later with your backend
-      setError('Email login is currently disabled. Please use Discord to sign in.');
-      setIsLoading(false);
+      // Use Base44's built-in email/password authentication
+      const response = await fetch('/auth/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          mode: isSignUp ? 'signup' : 'login',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || `${isSignUp ? 'Sign up' : 'Login'} failed. Please try again.`);
+        setIsLoading(false);
+        return;
+      }
+
+      // If successful, check auth state and redirect
+      if (data.success || response.ok) {
+        // Give Base44 a moment to set the session
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 500);
+      }
     } catch (err) {
-      setError(err.message || 'Failed to sign in');
+      setError('An error occurred. Please try again.');
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking auth
+  if (isLoadingAuth) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#060503',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 20,
+        }}>
+          <AtlasLogo size={56}/>
+          <p style={{ color: '#8a7a6a', fontSize: 14 }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -135,7 +195,7 @@ export default function LoginPage() {
           marginBottom: '36px',
           fontWeight: 300,
         }}>
-          Sign in or create your account to continue
+          {isSignUp ? 'Create your account to get started' : 'Sign in or create your account to continue'}
         </p>
 
         {/* Error message */}
@@ -269,7 +329,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Sign in button */}
+          {/* Sign in / Sign up button */}
           <button
             type="submit"
             disabled={isLoading || !email || !password}
@@ -289,9 +349,43 @@ export default function LoginPage() {
             onMouseEnter={(e) => !isLoading && !(!email || !password) && (e.currentTarget.style.background = '#2a2420')}
             onMouseLeave={(e) => !isLoading && !(!email || !password) && (e.currentTarget.style.background = '#1a1610')}
           >
-            {isLoading ? 'Signing in...' : 'Sign In with Email'}
+            {isLoading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In with Email'}
           </button>
         </form>
+
+        {/* Toggle Sign Up / Sign In */}
+        <p style={{
+          fontSize: '13px',
+          color: '#4a4238',
+          textAlign: 'center',
+          marginTop: '20px',
+          fontWeight: 300,
+        }}>
+          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <button
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError('');
+              setEmail('');
+              setPassword('');
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#C4922E',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '13px',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+              padding: 0,
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          >
+            {isSignUp ? 'Sign In' : 'Sign Up'}
+          </button>
+        </p>
 
         {/* Footer */}
         <p style={{
