@@ -1,0 +1,124 @@
+{
+  "name": "Reward",
+  "type": "object",
+  "properties": {
+    "credit_card_id": {
+      "type": "string",
+      "description": "Reference to credit card"
+    },
+    "card_name": {
+      "type": "string",
+      "description": "Credit card name for quick reference"
+    },
+    "source": {
+      "type": "string",
+      "description": "Credit card or retailer name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "cashback",
+        "points",
+        "loyalty_rewards"
+      ],
+      "description": "Type of reward"
+    },
+    "purchase_amount": {
+      "type": "number",
+      "description": "Purchase amount used to calculate reward"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Points or dollar value"
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD",
+        "points"
+      ],
+      "default": "USD",
+      "description": "Currency type"
+    },
+    "purchase_order_id": {
+      "type": "string",
+      "description": "Related purchase order"
+    },
+    "order_number": {
+      "type": "string",
+      "description": "Order reference number"
+    },
+    "date_earned": {
+      "type": "string",
+      "format": "date",
+      "description": "When the reward was earned"
+    },
+    "date_redeemed": {
+      "type": "string",
+      "format": "date",
+      "description": "When the reward was redeemed"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "earned",
+        "redeemed",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "Reward status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "source",
+    "type",
+    "amount",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
