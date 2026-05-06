@@ -1,0 +1,79 @@
+{
+  "name": "Goal",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "profit",
+        "revenue",
+        "cashback",
+        "transactions"
+      ],
+      "description": "Goal type"
+    },
+    "timeframe": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "monthly"
+      ],
+      "description": "Goal timeframe"
+    },
+    "target_value": {
+      "type": "number",
+      "description": "Target value for the goal"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this goal is active"
+    }
+  },
+  "required": [
+    "type",
+    "timeframe",
+    "target_value"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
