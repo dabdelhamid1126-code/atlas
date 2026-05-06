@@ -1,104 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { Toaster } from "@/components/ui/toaster"
-import SplashScreen from '@/components/SplashScreen';
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
-import NavigationTracker from '@/lib/NavigationTracker'
-import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import PageNotFound from './lib/PageNotFound';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { ThemeProvider } from '@/lib/ThemeContext';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import FeaturesPage from './pages/FeaturesPage';
-import PricingPage from './pages/PricingPage';
-import AboutPage from './pages/AboutPage';
-import RoadmapPage from './pages/RoadmapPage';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from '@/lib/AuthContext';
+import LandingPage from '@/pages/LandingPage';
+import LoginPage from '@/pages/LoginPage';
+import Dashboard from '@/pages/Dashboard';
+import Inventory from '@/pages/Inventory';
+import Analytics from '@/pages/Analytics';
+import Transactions from '@/pages/Transactions';
+import Rewards from '@/pages/Rewards';
+import GiftCards from '@/pages/GiftCards';
+import Forecast from '@/pages/Forecast';
+import Invoices from '@/pages/Invoices';
+import Settings from '@/pages/Settings';
+import ImportOrders from '@/pages/ImportOrders';
+import NewOrders from '@/pages/NewOrders';
+import CommandPalette from '@/components/CommandPalette';
 
-const { Pages, Layout, mainPage } = pagesConfig;
-const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
-
-const LayoutWrapper = ({ children, currentPageName }) => Layout
-  ? <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
-
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
-  const [splashDone, setSplashDone] = useState(false);
-  const userName = user?.full_name?.split(' ')[0] || '';
-
-  const needsLogin = !isLoadingAuth && !isLoadingPublicSettings && (
-    !user || authError?.type === 'auth_required'
-  );
-
+export default function App() {
   useEffect(() => {
-    if (needsLogin) navigateToLogin();
-  }, [needsLogin]);
-
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (authError?.type === 'user_not_registered') return <UserNotRegisteredError />;
-  if (needsLogin) return null;
-
-  if (!splashDone) {
-    return <SplashScreen onComplete={() => setSplashDone(true)} userName={userName} />;
-  }
+    // Import Marcellus font
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Marcellus&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }, []);
 
   return (
-    <Routes>
-      {/* All pages from pages.config.js */}
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
+    <AuthProvider>
+      <Router>
+        <CommandPalette />
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
-      <Route path="/" element={<Navigate to="/Dashboard" replace />} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
-  );
-};
+          {/* Protected routes */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/rewards" element={<Rewards />} />
+          <Route path="/gift-cards" element={<GiftCards />} />
+          <Route path="/forecast" element={<Forecast />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/import-orders" element={<ImportOrders />} />
+          <Route path="/new-orders" element={<NewOrders />} />
 
-function App() {
-  return (
-    <ThemeProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <NavigationTracker />
-            <Routes>
-              {/* Public landing pages - no auth required */}
-              <Route path="/" element={<AuthenticatedApp />} />
-              <Route path="/landing" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/roadmap" element={<RoadmapPage />} />
-              {/* All authenticated app routes */}
-              <Route path="/*" element={<AuthenticatedApp />} />
-            </Routes>
-            <Toaster />
-          </Router>
-        </QueryClientProvider>
-      </AuthProvider>
-    </ThemeProvider>
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
-
-export default App;
