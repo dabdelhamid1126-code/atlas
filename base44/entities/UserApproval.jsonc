@@ -1,0 +1,89 @@
+{
+  "name": "UserApproval",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of user requesting approval"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of user"
+    },
+    "requested_role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "staff",
+        "manager",
+        "admin"
+      ],
+      "description": "Role requested"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Approval status"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of approver"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When approved"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about the approval"
+    }
+  },
+  "required": [
+    "user_email",
+    "user_name",
+    "requested_role",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
