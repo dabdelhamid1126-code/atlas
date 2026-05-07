@@ -50,7 +50,12 @@ const WHY_POINTS = [
   "Built by a reseller — every feature exists because we needed it",
 ];
 
-const NAV_LINKS = ["Features", "Early Access", "Roadmap", "About", "FAQ"];
+const NAV_LINKS = [
+  { label: "Features", path: "/features" },
+  { label: "Pricing", path: "/pricing" },
+  { label: "Roadmap", path: "/roadmap" },
+  { label: "About", path: "/about" },
+];
 
 const FOOTER_COLS = [
   { title: "Product",   links: ["Features", "Early Access", "Roadmap", "Changelog"] },
@@ -281,7 +286,7 @@ export default function LandingPage() {
       {menuOpen && (
         <div style={{ position:"fixed", inset:0, background:"#080706", zIndex:100, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:28 }}>
           <button onClick={() => setMenuOpen(false)} style={{ position:"absolute", top:20, right:24, background:"none", border:"none", color:"#f0ece4", fontSize:30, cursor:"pointer" }}>×</button>
-          {NAV_LINKS.map(l => <a key={l} href="#" className="nl" style={{ fontSize:18 }} onClick={() => setMenuOpen(false)}>{l}</a>)}
+          {NAV_LINKS.map(l => <a key={l.label} href="#" onClick={(e) => { e.preventDefault(); goToPage(l.path); setMenuOpen(false); }} className="nl" style={{ fontSize:18 }}>{l.label}</a>)}
           <button className="btn-g" style={{ padding:"13px 36px", fontSize:15, marginTop:8 }} onClick={goRegister}>Join Beta →</button>
           <button className="btn-o" style={{ padding:"11px 32px", fontSize:14 }} onClick={goLogin}>Log In</button>
         </div>
