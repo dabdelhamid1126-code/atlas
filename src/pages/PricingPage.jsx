@@ -13,7 +13,7 @@ export default function PricingPage() {
           </p>
 
           {/* Main Heading */}
-          <h1 className="serif" style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1, marginBottom: 20, color: '#f0ece4' }}>
+          <h1 className="serif" style={{ fontSize:  64, fontWeight: 700,  lineHeight:  1.1, marginBottom: 20, color: '#f0ece4' color:"#f0ece4" }}>
             Pricing Details Coming <span style={{ color: '#C4922E' }}>Soon</span>
           </h1>
 
