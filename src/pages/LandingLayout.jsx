@@ -1,5 +1,6 @@
 // src/pages/landing/LandingLayout.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LoginModal from '@/components/LoginModal';
 
 const AtlasLogo = ({ size = 36 }) => (
@@ -37,6 +38,7 @@ export default function LandingLayout({ children, currentPage }) {
   const [scrolled,  setScrolled]  = useState(false);
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -82,7 +84,7 @@ export default function LandingLayout({ children, currentPage }) {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
   }, []);
 
-  const goTo    = (path) => window.location.href = path;
+  const goTo    = (path) => navigate(path);
   const goLogin = () => setLoginModalOpen(true);
 
   return (
@@ -140,7 +142,7 @@ export default function LandingLayout({ children, currentPage }) {
         </div>
         <div className="nm" style={{ display:'flex', gap:28 }}>
           {NAV_LINKS.map(l => (
-            <a key={l.label} href={l.path} className={`nl${currentPage === l.label.toLowerCase() ? ' active' : ''}`}>{l.label}</a>
+            <a key={l.label} href="#" onClick={(e) => { e.preventDefault(); goTo(l.path); }} className={`nl${currentPage === l.label.toLowerCase() ? ' active' : ''}`}>{l.label}</a>
           ))}
         </div>
         <div className="nm" style={{ display:'flex', gap:10 }}>
@@ -154,7 +156,7 @@ export default function LandingLayout({ children, currentPage }) {
       {menuOpen && (
         <div style={{ position:'fixed', inset:0, background:'#080706', zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:28 }}>
           <button onClick={() => setMenuOpen(false)} style={{ position:'absolute', top:20, right:24, background:'none', border:'none', color:'#f0ece4', fontSize:30, cursor:'pointer' }}>×</button>
-          {NAV_LINKS.map(l => <a key={l.label} href={l.path} className="nl" style={{ fontSize:18 }}>{l.label}</a>)}
+          {NAV_LINKS.map(l => <a key={l.label} href="#" onClick={(e) => { e.preventDefault(); goTo(l.path); setMenuOpen(false); }} className="nl" style={{ fontSize:18 }}>{l.label}</a>)}
           <button className="btn-g" style={{ padding:'13px 36px', fontSize:15, marginTop:8 }} onClick={goLogin}>Join Beta →</button>
           <button className="btn-o" style={{ padding:'11px 32px', fontSize:14 }} onClick={goLogin}>Log In</button>
         </div>
