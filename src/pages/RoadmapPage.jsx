@@ -54,7 +54,7 @@ export default function RoadmapPage() {
           {/* Header */}
           <div style={{ textAlign:'center', marginBottom:72 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.22em', color:'#C4922E', textTransform:'uppercase', marginBottom:14 }}>What's Coming</p>
-            <h1 className="serif" style={{ fontSize: 56, fontWeight:700,  lineHeight: 1.08, marginBottom:16 color:"#f0ece4" }}>
+            <h1 className="serif" style={{ fontSize: 56, fontWeight:700,  lineHeight: 1.08, marginBottom:16, color:"#f0ece4" }}>
               The Atlas <span style={{ color:'#C4922E' }}>Roadmap.</span>
             </h1>
             <p style={{ fontSize:15, color:'#f0ece4', maxWidth:480, margin:'0 auto', lineHeight:1.7, fontWeight:300 }}>
