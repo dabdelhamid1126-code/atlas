@@ -77,10 +77,10 @@
     "read": {
       "$or": [
         {
-          "data.assigned_to": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "created_by": "{{user.email}}"
+          "data.assigned_to": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -92,10 +92,10 @@
     "update": {
       "$or": [
         {
-          "data.assigned_to": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "created_by": "{{user.email}}"
+          "data.assigned_to": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -106,9 +106,6 @@
     },
     "delete": {
       "$or": [
-        {
-          "data.assigned_to": "{{user.email}}"
-        },
         {
           "created_by": "{{user.email}}"
         },
