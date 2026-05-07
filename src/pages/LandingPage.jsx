@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+const AtlasLogo = ({ size = 36 }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="12" opacity="0.9"/>
+    <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.3"/>
+    <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
+    <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
+    <polygon points="256,82 238,168 256,152 274,168" fill="#C4922E"/>
+    <polygon points="256,430 238,344 256,360 274,344" fill="#C4922E" opacity="0.25"/>
+    <polygon points="430,256 344,238 360,256 344,274" fill="#f5e09a"/>
+    <polygon points="82,256 168,238 152,256 168,274" fill="#C4922E" opacity="0.25"/>
+    <circle cx="256" cy="256" r="52" fill="#1e1a14" stroke="#C4922E" strokeWidth="10"/>
+    <circle cx="256" cy="256" r="22" fill="#C4922E"/>
+    <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
+  </svg>
+);
+
 const FEATURES = [
   {
     title: "Profit Tracking",
@@ -33,9 +49,9 @@ const WHY_POINTS = [
 ];
 
 const FOOTER_COLS = [
-  { title: "Product", links: [["Features", "/features"], ["Pricing", "/pricing"], ["Roadmap", "/roadmap"], ["Changelog", "https://github.com"]] },
-  { title: "Company", links: [["About", "/about"], ["Careers", "https://careers.atlasresellhub.com"], ["Contact", "https://contact.atlasresellhub.com"]] },
-  { title: "Resources", links: [["Blog", "https://blog.atlasresellhub.com"], ["Guides", "https://guides.atlasresellhub.com"], ["Support", "https://support.atlasresellhub.com"]] },
+  { title: "Product", links: ["Features", "Pricing", "Roadmap", "Changelog"] },
+  { title: "Company", links: ["About", "Careers", "Contact"] },
+  { title: "Resources", links: ["Blog", "Guides", "Support"] },
 ];
 
 export default function LandingPage() {
@@ -58,14 +74,14 @@ export default function LandingPage() {
     resize();
     window.addEventListener('resize', resize);
 
-    const STARS = Array.from({ length: 240 }, () => (({
+    const STARS = Array.from({ length: 240 }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       r: Math.random() * 1.4 + 0.2,
       alpha: Math.random() * 0.6 + 0.1,
       speed: Math.random() * 0.004 + 0.001,
       phase: Math.random() * Math.PI * 2,
-    })));
+    }));
 
     const LINES = [];
     for (let i = 0; i < STARS.length; i++) {
@@ -128,9 +144,9 @@ export default function LandingPage() {
         .fu.in { opacity: 1; transform: translateY(0); }
         .d1{transition-delay:.08s}.d2{transition-delay:.18s}.d3{transition-delay:.28s}
         .d4{transition-delay:.40s}.d5{transition-delay:.52s}.d6{transition-delay:.64s}
-        .btn-g { background:#C4922E; color:#080706; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; padding:12px 24px; }
+        .btn-g { background:#C4922E; color:#080706; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-g:hover { background:#d9a43a; transform:translateY(-1px); }
-        .btn-o { background:transparent; color:#f0ece4; border:1px solid #C4922E44; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; padding:12px 24px; }
+        .btn-o { background:transparent; color:#f0ece4; border:1px solid #C4922E44; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-o:hover { border-color:#C4922E88; background:#C4922E0a; }
         .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:400; transition:color 0.2s; letter-spacing:0.02em; }
         .nl:hover { color:#C4922E; }
@@ -166,100 +182,160 @@ export default function LandingPage() {
 
       <canvas id="atlas-stars" />
 
-      {/* Navigation */}
-      <nav style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: scrolled ? "14px 32px" : "24px 32px",
-        transition: "all 0.3s",
-        background: scrolled ? "rgba(6, 5, 3, 0.8)" : "transparent",
-        backdropFilter: scrolled ? "blur(8px)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(196, 146, 46, 0.1)" : "none",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-      }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", cursor: "pointer" }}>
-          <svg width="32" height="32" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="12" opacity="0.9"/>
-            <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.3"/>
-            <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
-            <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
-            <polygon points="256,82 238,168 256,152 274,168" fill="#C4922E"/>
-            <polygon points="256,430 238,344 256,360 274,344" fill="#C4922E" opacity="0.25"/>
-            <polygon points="430,256 344,238 360,256 344,274" fill="#f5e09a"/>
-            <polygon points="82,256 168,238 152,256 168,274" fill="#C4922E" opacity="0.25"/>
-            <circle cx="256" cy="256" r="52" fill="#1e1a14" stroke="#C4922E" strokeWidth="10"/>
-            <circle cx="256" cy="256" r="22" fill="#C4922E"/>
-            <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
-          </svg>
-          <span style={{ fontSize: "18px", fontWeight: "700", letterSpacing: "-0.01em" }}>Atlas</span>
-        </a>
+      <div className="logo-watermark">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
+          <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="8" opacity="1"/>
+          <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.6"/>
+          <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.5"/>
+          <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.5"/>
+          <polygon points="256,82 238,168 256,152 274,168" fill="#C4922E"/>
+          <polygon points="256,430 238,344 256,360 274,344" fill="#C4922E" opacity="0.5"/>
+          <polygon points="430,256 344,238 360,256 344,274" fill="#f5e09a"/>
+          <polygon points="82,256 168,238 152,256 168,274" fill="#C4922E" opacity="0.5"/>
+          <circle cx="256" cy="256" r="52" fill="none" stroke="#C4922E" strokeWidth="8"/>
+          <circle cx="256" cy="256" r="22" fill="#C4922E"/>
+          <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
+        </svg>
+      </div>
 
-        <div style={{ display: "flex", gap: "32px", alignItems: "center" }} className="nm">
-          <a href="/features" className="nl">Features</a>
-          <a href="/pricing" className="nl">Pricing</a>
-          <a href="/roadmap" className="nl">Roadmap</a>
-          <a href="/about" className="nl">About</a>
+      {/* NAV */}
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:50, padding:"16px 48px", display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(8,7,6,0.92)" : "rgba(8,7,6,0.3)", backdropFilter: scrolled ? "blur(16px)" : "none", borderBottom: scrolled ? "1px solid #C4922E18" : "1px solid transparent", transition:"all 0.35s" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <AtlasLogo size={42}/>
+          <span style={{ fontFamily:"'Marcellus', serif", fontSize:24, fontWeight:400, letterSpacing:"0.05em", color:"#f5e09a" }}>ATLAS</span>
         </div>
-
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <button onClick={() => navigate('/login')} className="btn-o" style={{ padding: "10px 20px", fontSize: "13px" }}>
-            Log In
-          </button>
-          <button onClick={() => navigate('/login')} className="btn-g" style={{ padding: "10px 20px", fontSize: "13px" }}>
-            Join Beta
-          </button>
+        <div className="nm" style={{ display:"flex", gap:28 }}>
+          {["Features", "Pricing", "Roadmap", "About"].map(label => (
+            <a key={label} href={`/${label.toLowerCase()}`} className="nl">{label}</a>
+          ))}
         </div>
+        <div className="nm" style={{ display:"flex", gap:10 }}>
+          <button className="btn-o" style={{ padding:"9px 20px", fontSize:13 }} onClick={() => navigate("/login")}>Log In</button>
+          <button className="btn-g" style={{ padding:"9px 22px", fontSize:13 }} onClick={() => navigate("/login")}>Join Beta →</button>
+        </div>
+        <button className="sm" onClick={() => setMenuOpen(true)} style={{ display:"none", background:"none", border:"none", color:"#f0ece4", cursor:"pointer", fontSize:24 }}>☰</button>
       </nav>
 
-      {/* Hero Section */}
-      <section style={{ padding: "100px 32px 80px", maxWidth: "1400px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }} className="hg">
-          <div style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(26px)", transition: "all 0.75s ease" }}>
-            <h1 style={{ fontSize: "54px", fontWeight: "700", lineHeight: "1.2", marginBottom: "20px", fontFamily: "'Cormorant Garamond', serif" }} className="ht">
-              Run Your Reselling Business Like a <span style={{ color: "#C4922E" }}>Hedge Fund.</span>
-            </h1>
-            <p style={{ fontSize: "16px", color: "#8a7a6a", lineHeight: "1.6", marginBottom: "32px", maxWidth: "480px" }}>
-              Atlas gives you the tools, insights, and automation to track inventory, maximize profit, and make smarter decisions — every day.
-            </p>
-            <div style={{ display: "flex", gap: "12px", alignItems: "center" }} className="hb">
-              <button onClick={() => navigate('/login')} className="btn-g">Join Beta</button>
-              <button onClick={() => navigate('/features')} className="btn-o">Learn More</button>
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div style={{ position:"fixed", inset:0, background:"#080706", zIndex:100, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:28 }}>
+          <button onClick={() => setMenuOpen(false)} style={{ position:"absolute", top:20, right:24, background:"none", border:"none", color:"#f0ece4", fontSize:30, cursor:"pointer" }}>×</button>
+          {["Features", "Pricing", "Roadmap", "About"].map(label => (
+            <a key={label} href={`/${label.toLowerCase()}`} className="nl" style={{ fontSize:18 }} onClick={() => setMenuOpen(false)}>{label}</a>
+          ))}
+          <button className="btn-g" style={{ padding:"13px 36px", fontSize:15, marginTop:8 }} onClick={() => navigate("/login")}>Join Beta →</button>
+          <button className="btn-o" style={{ padding:"11px 32px", fontSize:14 }} onClick={() => navigate("/login")}>Log In</button>
+        </div>
+      )}
+
+      {/* HERO */}
+      <section style={{ minHeight:"100vh", padding:"130px 48px 80px", display:"flex", alignItems:"center", background:"transparent" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", width:"100%" }}>
+          <div className="hg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center" }}>
+            <div style={{ textAlign: "center" }}>
+              <div className={`fu ${visible?"in":""}`} style={{ marginBottom:24 }}>
+                <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#C4922E16", border:"1px solid #C4922E40", borderRadius:99, padding:"5px 14px" }}>
+                  <div style={{ width:7, height:7, borderRadius:"50%", background:"#C4922E" }}/>
+                  <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase" }}>Private Beta</span>
+                </div>
+              </div>
+              <h1 className={`serif fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:700, lineHeight:1.06, marginBottom:22, color:"#e8ddd0" }}>
+                Run Your Reselling<br/>Business Like a<br/>
+                <span style={{ color:"#C4922E" }}>Hedge Fund.</span>
+              </h1>
+              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#9a8a7a", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300, margin:"0 auto 36px auto" }}>
+                Atlas gives you the tools, insights, and automation to track inventory, maximize profit, and make smarter decisions — every day.
+              </p>
+              <div className={`fu d3 ${visible?"in":""} hb`} style={{ display:"flex", gap:14, marginBottom:28, flexWrap:"wrap", justifyContent:"center" }}>
+                <button className="btn-g" style={{ padding:"14px 30px", fontSize:15 }} onClick={() => navigate("/login")}>Join Beta →</button>
+                <button className="btn-o" style={{ padding:"14px 26px", fontSize:15 }} onClick={() => navigate("/login")}>Log In</button>
+              </div>
+              <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#5a4a3a" }}>
+                No credit card required · Free to get started
+              </p>
+            </div>
+            <div className={`fu d2 ${visible?"in":""} hgr`} style={{ display:"flex", justifyContent:"center", alignItems:"center", position:"relative", height:320 }}>
+              <div className="pr" style={{ position:"absolute", width:360, height:360, borderRadius:"50%", border:"1px solid #C4922E28" }}/>
+              <div className="pr2" style={{ position:"absolute", width:260, height:260, borderRadius:"50%", border:"1px solid #C4922E20" }}/>
+              <div className="pr3" style={{ position:"absolute", width:180, height:180, borderRadius:"50%", border:"1px solid #C4922E18" }}/>
+              <div style={{ position:"absolute", width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, #C4922E28 0%, #C4922E08 50%, transparent 70%)" }}/>
+              <div className="fl" style={{ position:"relative", zIndex:1 }}>
+                <AtlasLogo size={220}/>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section style={{ padding: "80px 32px", maxWidth: "1400px", margin: "0 auto" }}>
-        <h2 style={{ fontSize: "36px", fontWeight: "700", textAlign: "center", marginBottom: "60px", fontFamily: "'Cormorant Garamond', serif" }}>
-          Everything you need to scale.
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }} className="fg">
-          {FEATURES.map((f, i) => (
-            <div key={i} className="fc" style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(26px)", transition: `all 0.75s ease ${0.1 * (i + 1)}s` }}>
-              <div style={{ marginBottom: "16px" }}>{f.icon}</div>
-              <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>{f.title}</h3>
-              <p style={{ fontSize: "13px", color: "#8a7a6a", lineHeight: "1.5" }}>{f.desc}</p>
-            </div>
-          ))}
+      <div className="gold-line"/>
+
+      {/* FEATURES */}
+      <section style={{ padding:"100px 48px", background:"rgba(10,9,6,0.85)", borderTop:"1px solid #C4922E22", borderBottom:"1px solid #C4922E22" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ textAlign:"center", marginBottom:60 }}>
+            <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.22em", color:"#C4922E", textTransform:"uppercase", marginBottom:14 }}>Built for Resellers</p>
+            <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:14, color:"#e8ddd0" }}>
+              Everything You Need.<br/>All in One Place.
+            </h2>
+            <p style={{ fontSize:14, color:"#9a8a7a", maxWidth:460, margin:"0 auto", lineHeight:1.7, fontWeight:300 }}>
+              Every feature was built because we needed it ourselves. No fluff, no filler.
+            </p>
+          </div>
+          <div className="fg" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
+            {FEATURES.map((f, i) => (
+              <div key={f.title} className={`fc fu d${i+1} ${visible?"in":""}`}>
+                <div style={{ width:50, height:50, background:"#C4922E18", border:"1px solid #C4922E44", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
+                  {f.icon}
+                </div>
+                <div style={{ fontSize:14, fontWeight:600, color:"#e8ddd0", marginBottom:10 }}>{f.title}</div>
+                <div style={{ fontSize:12, color:"#8a7a6a", lineHeight:1.65, fontWeight:300 }}>{f.desc}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Why Atlas Section */}
-      <section style={{ padding: "80px 32px", maxWidth: "1400px", margin: "0 auto", borderTop: "1px solid rgba(196, 146, 46, 0.1)", borderBottom: "1px solid rgba(196, 146, 46, 0.1)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }} className="hg">
-          <div>
-            <h2 style={{ fontSize: "36px", fontWeight: "700", marginBottom: "32px", fontFamily: "'Cormorant Garamond', serif" }}>
-              Why Atlas.
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }} className="wg">
-              {WHY_POINTS.map((p, i) => (
-                <div key={i} style={{ display: "flex", gap: "12px", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(26px)", transition: `all 0.75s ease ${0.08 * (i + 1)}s` }}>
-                  <div style={{ width: "6px", height: "6px", background: "#C4922E", borderRadius: "50%", marginTop: "8px", flexShrink: 0 }} />
-                  <p style={{ fontSize: "15px", color: "#d0c5b5", lineHeight: "1.6" }}>{p}</p>
+      <div className="gold-line"/>
+
+      {/* WHY */}
+      <section style={{ padding:"100px 48px", background:"rgba(8,7,6,0.88)" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div className="wg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
+            <div>
+              <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:"#C4922E", textTransform:"uppercase", marginBottom:16 }}>Why Atlas</p>
+              <h2 className="serif" style={{ fontSize:44, fontWeight:600, lineHeight:1.1, marginBottom:20, color:"#e8ddd0" }}>
+                Not Another<br/><span style={{ color:"#C4922E" }}>Spreadsheet Tool.</span>
+              </h2>
+              <p style={{ fontSize:14, color:"#9a8a7a", lineHeight:1.8, marginBottom:36, fontWeight:300, maxWidth:400 }}>
+                Atlas thinks like a reseller. Clarity, automation, and real insights — not just another place to log numbers.
+              </p>
+              <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+                {WHY_POINTS.map(p => (
+                  <div key={p} style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <div style={{ width:20, height:20, borderRadius:"50%", background:"#C4922E12", border:"1px solid #C4922E3a", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <div style={{ width:6, height:6, borderRadius:"50%", background:"#C4922E" }}/>
+                    </div>
+                    <span style={{ fontSize:13, color:"#9a8a7a", fontWeight:400, lineHeight:1.5 }}>{p}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:1, background:"#C4922E12", borderRadius:16, overflow:"hidden", border:"1px solid #C4922E18" }}>
+              {[
+                ["Profit Tracking","After all fees"],
+                ["Card Optimizer","Per store rates"],
+                ["Gmail Import","Auto-sync orders"],
+                ["Inventory","Cost basis tracking"],
+                ["Gift Cards","Codes & balances"],
+                ["Analytics","ROI by store"],
+                ["Forecasting","Trend-based outlook"],
+                ["Goal Tracker","Monthly targets"],
+              ].map(([label, sub]) => (
+                <div key={label} style={{ background:"#080706", padding:"20px 18px", transition:"background 0.2s", cursor:"default" }}
+                  onMouseEnter={e => e.currentTarget.style.background="#1a1610"}
+                  onMouseLeave={e => e.currentTarget.style.background="#0d0b08"}>
+                  <div style={{ fontSize:13, fontWeight:600, color:"#c8b8a8", marginBottom:4 }}>{label}</div>
+                  <div style={{ fontSize:11, color:"#5a4a3a", fontWeight:300 }}>{sub}</div>
                 </div>
               ))}
             </div>
@@ -267,26 +343,65 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ padding: "60px 32px 40px", borderTop: "1px solid rgba(196, 146, 46, 0.1)", marginTop: "80px" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "40px", marginBottom: "40px" }} className="ftg">
-            {FOOTER_COLS.map((col, i) => (
-              <div key={i}>
-                <h4 style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", color: "#9a8a7a", marginBottom: "16px", letterSpacing: "0.1em" }}>{col.title}</h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {col.links.map((link, j) => (
-                    <a key={j} href={link[1]} className="fa">{link[0]}</a>
-                  ))}
+      <div className="gold-line"/>
+
+      {/* CTA */}
+      <section style={{ padding:"110px 48px", background:"rgba(6,5,4,0.82)", textAlign:"center", position:"relative", overflow:"hidden" }}>
+        <div style={{ maxWidth:580, margin:"0 auto", position:"relative", zIndex:1 }}>
+          <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
+            <AtlasLogo size={60}/>
+          </div>
+          <h2 className="serif" style={{ fontSize:50, fontWeight:600, lineHeight:1.08, marginBottom:16, color:"#e8ddd0" }}>
+            Get Early Access<br/>to <span style={{ color:"#C4922E" }}>Atlas</span>
+          </h2>
+          <p style={{ fontSize:15, color:"#9a8a7a", marginBottom:38, lineHeight:1.7, fontWeight:300 }}>
+            Create your free account and start running your reselling business like a pro.
+          </p>
+          <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>
+            <button className="btn-g" style={{ padding:"15px 36px", fontSize:15 }} onClick={() => navigate("/login")}>
+              Create Free Account →
+            </button>
+            <button className="btn-o" style={{ padding:"15px 28px", fontSize:15 }} onClick={() => navigate("/login")}>Log In</button>
+          </div>
+          <p style={{ fontSize:12, color:"#5a4a3a" }}>No credit card required · Free to get started</p>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ background:"#040302", borderTop:"1px solid #C4922E12", padding:"56px 48px 28px" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div className="ftg" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:48, marginBottom:44 }}>
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                <AtlasLogo size={36}/>
+                <span style={{ fontFamily:"'Marcellus', serif", fontSize:18, fontWeight:400, letterSpacing:"0.05em", color:"#f5e09a" }}>ATLAS</span>
+              </div>
+              <p style={{ fontSize:13, color:"#7a6a5a", lineHeight:1.65, maxWidth:220, fontWeight:300, marginBottom:18 }}>
+                The command center for serious resellers.
+              </p>
+              <div style={{ display:"flex", gap:16 }}>
+                {["Twitter","Discord","Instagram"].map(s => (
+                  <a key={s} href="#" className="fa" style={{ fontSize:12, color:"#5a4a3a" }}>{s}</a>
+                ))}
+              </div>
+            </div>
+            {FOOTER_COLS.map(col => (
+              <div key={col.title}>
+                <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.16em", color:"#C4922E", textTransform:"uppercase", marginBottom:16 }}>{col.title}</p>
+                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  {col.links.map(l => <a key={l} href="#" className="fa" style={{ color:"#5a4a3a", fontSize:13 }}>{l}</a>)}
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ paddingTop: "24px", borderTop: "1px solid rgba(196, 146, 46, 0.1)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "#5a4a3a" }}>
-            <p>© 2025 Atlas. All rights reserved.</p>
-            <div style={{ display: "flex", gap: "16px" }}>
-              <a href="https://twitter.com/atlasresellhub" className="fa">Twitter</a>
-              <a href="https://discord.gg/atlasresellhub" className="fa">Discord</a>
+          <div style={{ borderTop:"1px solid #C4922E0a", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
+            <p style={{ fontSize:12, color:"#4a3a2a" }}>© 2026 Atlas. All rights reserved.</p>
+            <div style={{ display:"flex", gap:22 }}>
+              {["Privacy Policy","Terms of Service"].map(l => (
+                <a key={l} href="#" style={{ fontSize:12, color:"#4a3a2a", textDecoration:"none", transition:"color 0.2s" }}
+                  onMouseEnter={e=>e.currentTarget.style.color="#6a5a4a"}
+                  onMouseLeave={e=>e.currentTarget.style.color="#4a3a2a"}>{l}</a>
+              ))}
             </div>
           </div>
         </div>
