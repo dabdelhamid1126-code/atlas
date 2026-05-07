@@ -17,7 +17,7 @@ export default function AboutPage() {
           {/* Hero */}
           <div style={{ textAlign:'center', marginBottom:80 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.22em', color:'#C4922E', textTransform:'uppercase', marginBottom:14 }}>Our Story</p>
-            <h1 className="serif" style={{ fontSize:56, fontWeight:700, lineHeight:1.08, marginBottom:20 }}>
+            <h1 className="serif" style={{ fontSize: 56, fontWeight:700,  lineHeight: 1.08, marginBottom:20, color:"#f0ece4" }}>
               Built by a Reseller,<br/><span style={{ color:'#C4922E' }}>For Resellers.</span>
             </h1>
             <p style={{ fontSize:16, color:'#f0ece4', maxWidth:560, margin:'0 auto', lineHeight:1.8, fontWeight:300 }}>
@@ -28,7 +28,7 @@ export default function AboutPage() {
           {/* Story */}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:60, alignItems:'center', marginBottom:80 }} className="two-col">
             <div>
-              <h2 className="serif" style={{ fontSize:40, fontWeight:600, lineHeight:1.1, marginBottom:20 }}>
+              <h2 className="serif" style={{ fontSize: 40, fontWeight:600,  lineHeight: 1.1, marginBottom:20, color:"#f0ece4" }}>
                 Why Atlas <span style={{ color:'#C4922E' }}>Exists</span>
               </h2>
               <p style={{ fontSize:14, color:'#f0ece4', lineHeight:1.8, marginBottom:16, fontWeight:300 }}>
@@ -43,7 +43,7 @@ export default function AboutPage() {
             </div>
             <div style={{ background:'rgba(14,11,6,0.85)', border:'1px solid rgba(196,146,46,0.18)', borderRadius:20, padding:'32px 28px' }}>
               <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.16em', color:'#C4922E', textTransform:'uppercase', marginBottom:20 }}>The Mission</p>
-              <p className="serif" style={{ fontSize:28, fontWeight:600, lineHeight:1.3, color:'#f0ece4', marginBottom:16 }}>
+              <p className="serif" style={{ fontSize: 28, fontWeight:600,  lineHeight: 1.3, color:'#f0ece4', marginBottom:16, color:"#f0ece4" }}>
                 "Give every serious reseller the operational clarity of a hedge fund."
               </p>
               <p style={{ fontSize:13, color:'#f0ece4', fontWeight:300, lineHeight:1.6 }}>
