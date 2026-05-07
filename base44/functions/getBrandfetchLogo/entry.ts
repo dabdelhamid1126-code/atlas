@@ -1,37 +1,32 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { company } = await req.json();
+    const { domain } = await req.json();
 
-    if (!company) {
-      return Response.json({ error: 'Company name required' }, { status: 400 });
+    if (!domain) {
+      return Response.json({ error: 'Domain required' }, { status: 400 });
     }
 
-    const apiKey = Deno.env.get('BRANDFETCH');
-    if (!apiKey) {
-      return Response.json({ error: 'Brandfetch API key not configured' }, { status: 500 });
-    }
-
-    const response = await fetch(`https://api.brandfetch.io/v2/search?query=${encodeURIComponent(company)}`, {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
-    });
-
-    if (!response.ok) {
-      return Response.json({ error: 'Failed to fetch from Brandfetch' }, { status: response.status });
-    }
-
-    const data = await response.json();
-    const result = data.length > 0 ? data[0] : null;
+    // Get API key from Base44 Secrets (ISSUE #1 FIX!)
+    // API key is NEVER exposed to frontend
+    const apiKey = Deno.env.get('BRANDFETCH_API_KEY');
     
-    if (!result) {
-      return Response.json({ logoUrl: null });
+    if (!apiKey) {
+      console.error('BRANDFETCH_API_KEY not configured in Secrets');
+      return Response.json(
+        { error: 'Logo service unavailable' }, 
+        { status: 503 }
+      );
     }
 
-    const logoUrl = result.icon || result.logo || null;
+    // Call Brandfetch API with the secret key
+    const logoUrl = `https://cdn.brandfetch.io/domain/${domain}?c=${apiKey}`;
+    
     return Response.json({ logoUrl });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Logo fetch error:', error);
+    return Response.json({ error: 'Failed to fetch logo' }, { status: 500 });
   }
 });
