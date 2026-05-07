@@ -148,7 +148,7 @@ export default function LandingPage() {
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=Marcellus&family=Marcellus&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+        .serif { font-family: 'Cormorant Garamond', Georgia, serif; color: #f0ece4; }
 
         /* Star canvas */
         #atlas-stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
@@ -197,7 +197,7 @@ export default function LandingPage() {
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
         .fl { animation:float 5.5s ease-in-out infinite; }
 
-        .fa { text-decoration:none; color:#3a342c; font-size:13px; font-weight:300;
+        .fa { text-decoration:none; color:#f0ece4; font-size:13px; font-weight:300;
           transition:color 0.2s; }
         .fa:hover { color:#f0ece4; }
 
@@ -284,9 +284,9 @@ export default function LandingPage() {
       )}
 
       {/* HERO */}
-      <section style={{ minHeight:"100vh", padding:"100px 48px 60px", display:"flex", alignItems:"center", background:"transparent" }} className="sp" style={{ padding:"100px 48px 60px" }} className="sp" style={{ padding:"130px 48px 80px" }}>
+      <section style={{ minHeight:"100vh", padding:"130px 48px 80px", display:"flex", alignItems:"center", background:"transparent" }}>
         <div style={{ maxWidth:1200, margin:"0 auto", width:"100%" }}>
-          <div className="hg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center" }}>
+          <div className="hg" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center", justifyContent:"center", textAlign:"center" }}>
 
             {/* Left */}
             <div>
@@ -379,7 +379,7 @@ export default function LandingPage() {
                     <div style={{ width:20, height:20, borderRadius:"50%", background:"#C4922E12", border:"1px solid #C4922E3a", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                       <div style={{ width:6, height:6, borderRadius:"50%", background:"#C4922E" }}/>
                     </div>
-                    <span style={{ fontSize:13, color:"#8a8070", fontWeight:400, lineHeight:1.5 }}>{p}</span>
+                    <span style={{ fontSize:13, color:"#f0ece4", fontWeight:400, lineHeight:1.5 }}>{p}</span>
                   </div>
                 ))}
               </div>
@@ -398,8 +398,8 @@ export default function LandingPage() {
                 <div key={label} style={{ background:"#080706", padding:"20px 18px", transition:"background 0.2s", cursor:"default" }}
                   onMouseEnter={e => e.currentTarget.style.background="#1a1610"}
                   onMouseLeave={e => e.currentTarget.style.background="#0d0b08"}>
-                  <div style={{ fontSize:13, fontWeight:600, color:"#b0aba2", marginBottom:4 }}>{label}</div>
-                  <div style={{ fontSize:11, color:"#302c28", fontWeight:300 }}>{sub}</div>
+                  <div style={{ fontSize:13, fontWeight:600, color:"#f0ece4", marginBottom:4 }}>{label}</div>
+                  <div style={{ fontSize:11, color:"#f0ece4", fontWeight:300 }}>{sub}</div>
                 </div>
               ))}
             </div>
@@ -428,7 +428,7 @@ export default function LandingPage() {
             </button>
             <button className="btn-o" style={{ padding:"15px 28px", fontSize:15 }} onClick={goLogin}>Log In</button>
           </div>
-          <p style={{ fontSize:12, color:"#252018" }}>No credit card required · Free to get started</p>
+          <p style={{ fontSize:12, color:"#f0ece4" }}>No credit card required · Free to get started</p>
         </div>
       </section>
 
