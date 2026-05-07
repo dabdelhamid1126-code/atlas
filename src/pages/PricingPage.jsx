@@ -18,7 +18,7 @@ export default function PricingPage() {
           </h1>
 
           {/* Subtitle */}
-          <p style={{ fontSize: 18, color: '#9a9080', marginBottom: 32, lineHeight: 1.6, maxWidth: 500, margin: '0 auto 32px' }}>
+          <p style={{ fontSize: 18, color: '#f0ece4', marginBottom: 32, lineHeight: 1.6, maxWidth: 500, margin: '0 auto 32px' }}>
             We're working on finalized pricing plans. Get early access to Atlas and help shape what matters most.
           </p>
 
