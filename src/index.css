@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Marcellus&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Marcellus&display=swap');
 
 /* ── Neutral Elegance (default) ──────────────────────────────────── */
 body {
@@ -7,6 +7,11 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* KPI values use Cormorant Garamond */
+.kpi-value {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
 }
 
 :root {
@@ -279,16 +284,16 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
 }
 
-h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
-h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-h4 { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.005em; }
+h4 { font-size: 15px; font-weight: 600; letter-spacing: 0; }
 
 p {
   letter-spacing: -0.01em;
@@ -399,12 +404,11 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Page title ──────────────────────────────────────────────────── */
 .page-title {
-  font-family: 'Cormorant Garamond', Georgia, serif !important;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 22px;
-  font-weight: 800;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--ink);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   line-height: 1.1;
   margin: 0;
 }
@@ -443,13 +447,13 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-value {
-  font-family: var(--font-mono);
-  font-size: 21px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1;
   color: var(--ink);
   margin: 7px 0 4px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .kpi-sub {

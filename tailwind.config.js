@@ -5,10 +5,11 @@ module.exports = {
   theme: {
   	extend: {
       fontFamily: {
-        sans:    ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
-        inter:   ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
-        satoshi: ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
+        sans:      ['DM Sans', 'system-ui', 'sans-serif'],
+        display:   ['Cormorant Garamond', 'Georgia', 'serif'],
+        serif:     ['Cormorant Garamond', 'Georgia', 'serif'],
+        marcellus: ['Marcellus', 'Georgia', 'serif'],
+        mono:      ['ui-monospace', 'SF Mono', 'Consolas', 'monospace'],
       },
   		borderRadius: {
   			lg: 'var(--radius)',
