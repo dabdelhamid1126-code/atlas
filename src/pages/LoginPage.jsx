@@ -42,12 +42,28 @@ export default function LoginPage() {
   }, [isAuthenticated, isLoadingAuth, navigate]);
 
   const handleDiscordSignIn = () => {
+    console.log('🔵 Discord button clicked!');
     setIsLoading(true);
     setError('');
+    
     try {
-      // Use Base44 SDK method for Discord SSO
-      base44.auth.loginWithProvider('sso', '/dashboard');
+      console.log('🔵 base44 object:', base44);
+      console.log('🔵 base44.auth:', base44?.auth);
+      console.log('🔵 loginWithProvider:', base44?.auth?.loginWithProvider);
+      
+      // Method 1: Try Base44 SDK
+      if (base44?.auth?.loginWithProvider) {
+        console.log('🔵 Using base44.auth.loginWithProvider');
+        base44.auth.loginWithProvider('sso', '/dashboard');
+        return;
+      }
+      
+      // Method 2: Fallback to direct redirect
+      console.log('🔵 base44.auth.loginWithProvider not available, using direct redirect');
+      window.location.href = '/auth/sso';
+      
     } catch (err) {
+      console.error('🔴 Discord login error:', err);
       setError('Failed to start Discord login. Please try again.');
       setIsLoading(false);
     }
