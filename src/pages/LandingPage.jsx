@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import LoginModal from "@/components/LoginModal";
 
@@ -141,6 +142,9 @@ export default function LandingPage() {
 
   const goRegister = () => setLoginModalOpen(true);
   const goLogin    = () => setLoginModalOpen(true);
+  const navigate   = useNavigate();
+  
+  const goToPage = (path) => navigate(path);
 
   return (
     <div style={{ background: "#060503", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
@@ -263,7 +267,7 @@ export default function LandingPage() {
           {label:'Pricing',  path:'/pricing'},
           {label:'Roadmap',  path:'/roadmap'},
           {label:'About',    path:'/about'},
-        ].map(l => <a key={l.label} href={l.path} className="nl">{l.label}</a>)}
+        ].map(l => <a key={l.label} href="#" onClick={(e) => { e.preventDefault(); goToPage(l.path); }} className="nl">{l.label}</a>)}
         </div>
         <div className="nm" style={{ display:"flex", gap:10 }}>
           <button className="btn-o" style={{ padding:"9px 20px", fontSize:13 }} onClick={goLogin}>Log In</button>
@@ -297,21 +301,21 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <h1 className={`serif fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:700, lineHeight:1.06, marginBottom:22 }}>
+              <h1 className={`serif fu d1 ${visible?"in":""} ht`} style={{ fontSize:62, fontWeight:700, lineHeight:1.06, marginBottom:22, textAlign:"center" }}>
                 Run Your Reselling<br/>Business Like a<br/>
                 <span style={{ color:"#C4922E" }}>Hedge Fund.</span>
               </h1>
 
-              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#f0ece4", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300 }}>
+              <p className={`fu d2 ${visible?"in":""}`} style={{ fontSize:15, color:"#f0ece4", lineHeight:1.75, marginBottom:36, maxWidth:440, fontWeight:300, margin:"0 auto 36px", textAlign:"center" }}>
                 Atlas gives you the tools, insights, and automation to track inventory, maximize profit, and make smarter decisions — every day.
               </p>
 
-              <div className={`fu d3 ${visible?"in":""} hb`} style={{ display:"flex", gap:14, marginBottom:28, flexWrap:"wrap" }}>
+              <div className={`fu d3 ${visible?"in":""} hb`} style={{ display:"flex", gap:14, marginBottom:28, flexWrap:"wrap", justifyContent:"center" }}>
                 <button className="btn-g" style={{ padding:"14px 30px", fontSize:15 }} onClick={goRegister}>Join Beta →</button>
                 <button className="btn-o" style={{ padding:"14px 26px", fontSize:15 }} onClick={goLogin}>Log In</button>
               </div>
 
-              <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#f0ece4" }}>
+              <p className={`fu d4 ${visible?"in":""}`} style={{ fontSize:12, color:"#f0ece4", textAlign:"center" }}>
                 No credit card required · Free to get started
               </p>
             </div>
