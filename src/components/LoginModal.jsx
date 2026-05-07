@@ -84,8 +84,8 @@ export default function LoginModal({ isOpen, onClose }) {
         </button>
 
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <svg width="60" height="60" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <svg width="80" height="80" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="512" height="512" rx="100" fill="#1e1a14"/>
             <rect width="512" height="512" rx="100" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.4"/>
             <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="12" opacity="0.9"/>
@@ -252,12 +252,21 @@ export default function LoginModal({ isOpen, onClose }) {
           fontSize: 12,
           color: '#999999',
           textAlign: 'center',
-          margin: 0,
+          margin: '0 0 16px',
           lineHeight: 1.5,
         }}>
           By continuing, you agree to Atlas's{' '}
           <a href="#" style={{ color: '#C4922E', textDecoration: 'none', fontWeight: 500 }}>Terms of Service</a>
         </p>
+
+        {/* Forgot password and signup */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+          <a href="#" style={{ color: '#999999', textDecoration: 'none' }}>Forgot password?</a>
+          <div style={{ color: '#999999' }}>
+            Need an account?{' '}
+            <a href="#" style={{ color: '#C4922E', textDecoration: 'none', fontWeight: 600 }}>Sign up</a>
+          </div>
+        </div>
       </div>
     </>
   );
