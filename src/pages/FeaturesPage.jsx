@@ -44,7 +44,7 @@ export default function FeaturesPage() {
             <h1 className="serif" style={{ fontSize:56, fontWeight:700, lineHeight:1.08, marginBottom:16 }}>
               Every Feature <span style={{ color:'#C4922E' }}>Earned.</span>
             </h1>
-            <p style={{ fontSize:15, color:'#7a7060', maxWidth:480, margin:'0 auto', lineHeight:1.7, fontWeight:300 }}>
+            <p style={{ fontSize:15, color:'#f0ece4', maxWidth:480, margin:'0 auto', lineHeight:1.7, fontWeight:300 }}>
               No fluff, no filler. Every feature exists because we needed it ourselves as resellers.
             </p>
           </div>
@@ -55,7 +55,7 @@ export default function FeaturesPage() {
               <button key={tag} onClick={() => setActiveTag(tag)}
                 style={{ padding:'7px 16px', borderRadius:99, fontSize:12, fontWeight:600, cursor:'pointer', transition:'all 0.2s',
                   background: activeTag === tag ? '#C4922E' : 'rgba(196,146,46,0.08)',
-                  color:      activeTag === tag ? '#080706' : '#7a7060',
+                  color:      activeTag === tag ? '#080706' : '#f0ece4',
                   border:     activeTag === tag ? 'none' : '1px solid rgba(196,146,46,0.2)',
                 }}>
                 {tag}
@@ -80,7 +80,7 @@ export default function FeaturesPage() {
                     </span>
                   </div>
                   <div style={{ fontSize:15, fontWeight:600, color:'#fff', marginBottom:8 }}>{f.title}</div>
-                  <div style={{ fontSize:13, color:'#5a5248', lineHeight:1.65, fontWeight:300 }}>{f.desc}</div>
+                  <div style={{ fontSize:13, color:'#f0ece4', lineHeight:1.65, fontWeight:300 }}>{f.desc}</div>
                 </div>
               );
             })}
@@ -91,7 +91,7 @@ export default function FeaturesPage() {
             <h2 className="serif" style={{ fontSize:40, fontWeight:600, marginBottom:14 }}>
               Ready to get started with <span style={{ color:'#C4922E' }}>Atlas?</span>
             </h2>
-            <p style={{ fontSize:14, color:'#5a5248', marginBottom:28, fontWeight:300 }}>Create your free account and unlock every feature today.</p>
+            <p style={{ fontSize:14, color:'#f0ece4', marginBottom:28, fontWeight:300 }}>Create your free account and unlock every feature today.</p>
             <button className="btn-g" style={{ padding:'14px 36px', fontSize:15 }} onClick={() => window.location.href='https://atlasresellhub.base44.app'}>
               Create Free Account →
             </button>
