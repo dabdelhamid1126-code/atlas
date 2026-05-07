@@ -1,306 +1,288 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/lib/AuthContext';
-
-const AtlasLogo = ({ size = 48 }) => (
-  <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="512" height="512" rx="100" fill="#1e1a14"/>
-    <rect width="512" height="512" rx="100" fill="none" stroke="#C4922E" stroke-width="4" opacity="0.3"/>
-    <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" stroke-width="12" opacity="0.9"/>
-    <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" stroke-width="4" opacity="0.3"/>
-    <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" stroke-width="3" stroke-dasharray="18 18" opacity="0.35"/>
-    <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" stroke-width="3" stroke-dasharray="18 18" opacity="0.35"/>
-    <polygon points="256,82 238,168 256,152 274,168" fill="#C4922E"/>
-    <polygon points="256,430 238,344 256,360 274,344" fill="#C4922E" opacity="0.25"/>
-    <polygon points="430,256 344,238 360,256 344,274" fill="#f5e09a"/>
-    <polygon points="82,256 168,238 152,256 168,274" fill="#C4922E" opacity="0.25"/>
-    <circle cx="256" cy="256" r="52" fill="#1e1a14" stroke="#C4922E" stroke-width="10"/>
-    <circle cx="256" cy="256" r="22" fill="#C4922E"/>
-    <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
-  </svg>
-);
+import React, { useState, useEffect } from 'react';
 
 export default function LoginModal({ isOpen, onClose }) {
-  const { signInWithDiscord, signInWithEmail } = useAuth();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!isOpen) return null;
 
-  const handleDiscordSignIn = async () => {
-    setIsLoading(true);
-    try {
-      // Redirect to Base44 SSO endpoint for Discord
-      window.location.href = `https://app.base44.com/api/apps/6982109ef976b5f09c0b7b7e/auth/sso/callback?provider=discord`;
-    } catch (err) {
-      setError(err.message || 'Failed to sign in with Discord');
-      setIsLoading(false);
-    }
+  const handleDiscord = () => {
+    setIsAuthenticating(true);
+    // Redirect to Discord OAuth
+    window.location.href = 'https://discord.com/api/oauth2/authorize?client_id=1496994011427377222&redirect_uri=https%3A%2F%2Fatlasresellhub.base44.app%2Fapi%2Fauth%2Fdiscord%2Fcallback&response_type=code&scope=identify%20email';
   };
 
-  const handleEmailSignIn = async (e) => {
+  const handleGoogle = () => {
+    setIsAuthenticating(true);
+    // Redirect to Google OAuth
+    window.location.href = '/api/auth/google';
+  };
+
+  const handleEmailLogin = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    try {
-      await signInWithEmail(email, password);
-    } catch (err) {
-      setError(err.message || 'Failed to sign in');
-      setIsLoading(false);
-    }
-  };
+    setLoginError('');
+    setIsAuthenticating(true);
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
+    try {
+      const response = await fetch('/api/auth/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        setLoginError(error.message || 'Login failed. Please check your credentials.');
+        setIsAuthenticating(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        window.location.href = '/Dashboard';
+      }
+    } catch (err) {
+      setLoginError('Connection error. Please try again.');
+      setIsAuthenticating(false);
     }
   };
 
   return (
-    <div
-      onClick={handleOverlayClick}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        backdropFilter: 'blur(4px)',
-      }}
-    >
+    <>
+      {/* Backdrop */}
       <div
+        onClick={!isAuthenticating ? onClose : undefined}
         style={{
-          background: '#f5f1ea',
-          borderRadius: '16px',
-          padding: '48px 40px',
-          maxWidth: '420px',
-          width: '90%',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          position: 'relative',
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.3)',
+          zIndex: 999,
         }}
-      >
+      />
+
+      {/* Modal */}
+      <div style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: '#FDF5EC',
+        borderRadius: 16,
+        padding: isMobile ? '32px 24px' : '48px 40px',
+        maxWidth: isMobile ? 'calc(100vw - 32px)' : 420,
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        zIndex: 1000,
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+      }}>
+
         {/* Close button */}
         <button
           onClick={onClose}
+          disabled={isAuthenticating}
           style={{
             position: 'absolute',
-            top: '16px',
-            right: '16px',
+            top: 16,
+            right: 16,
             background: 'none',
             border: 'none',
-            fontSize: '28px',
-            color: '#1a1610',
-            cursor: 'pointer',
-            padding: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            transition: 'all 0.2s',
+            fontSize: 24,
+            cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+            color: '#3D2B1A',
+            opacity: isAuthenticating ? 0.5 : 1,
           }}
-          onMouseEnter={(e) => e.currentTarget.style.color = '#C4922E'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#1a1610'}
         >
           ×
         </button>
 
         {/* Logo */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
-          <AtlasLogo size={56}/>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <svg width="56" height="56" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="12" opacity="0.9"/>
+            <circle cx="256" cy="256" r="52" fill="none" stroke="#C4922E" strokeWidth="10"/>
+            <circle cx="256" cy="256" r="22" fill="#C4922E"/>
+            <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
+          </svg>
         </div>
 
         {/* Header */}
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: 700,
-          color: '#1a1610',
-          textAlign: 'center',
-          marginBottom: '12px',
-          lineHeight: 1.1,
-          fontFamily: "'DM Sans', sans-serif",
-        }}>
-          Welcome to Atlas
-        </h1>
-        <p style={{
-          fontSize: '14px',
-          color: '#4a4238',
-          textAlign: 'center',
-          marginBottom: '36px',
-          fontWeight: 300,
-        }}>
-          Sign in or create your account to continue
-        </p>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: isMobile ? 30 : 34,
+            fontWeight: 700,
+            color: '#3D2B1A',
+            margin: '0 0 8px',
+            lineHeight: 1.2,
+          }}>
+            Welcome to Atlas
+          </h2>
+          <p style={{ fontSize: 13, color: '#8a7a6f', margin: 0 }}>
+            Sign in or create your account to continue
+          </p>
+        </div>
 
         {/* Error message */}
-        {error && (
+        {loginError && (
           <div style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '8px',
-            padding: '12px',
-            marginBottom: '24px',
-            fontSize: '13px',
-            color: '#991b1b',
-            textAlign: 'center',
+            background: '#ffe6e6',
+            border: '1px solid #ff6b6b',
+            borderRadius: 8,
+            padding: '12px 14px',
+            marginBottom: 16,
+            fontSize: 12,
+            color: '#c92a2a',
           }}>
-            {error}
+            {loginError}
           </div>
         )}
 
-        {/* Discord button */}
+        {/* Sign in with Discord */}
         <button
-          onClick={handleDiscordSignIn}
-          disabled={isLoading}
+          onClick={handleDiscord}
+          disabled={isAuthenticating}
           style={{
             width: '100%',
-            padding: '14px 16px',
-            background: '#5865F2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
+            padding: '13px 14px',
+            border: '1px solid #5865F2',
+            borderRadius: 8,
+            background: isAuthenticating ? '#e6e9ff' : '#5865F2',
+            fontSize: 14,
             fontWeight: 600,
-            cursor: isLoading ? 'not-allowed' : 'pointer',
+            cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+            color: isAuthenticating ? '#999' : 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '10px',
+            gap: 10,
+            marginBottom: 12,
             transition: 'all 0.2s',
-            marginBottom: '12px',
-            opacity: isLoading ? 0.7 : 1,
+            opacity: isAuthenticating ? 0.6 : 1,
           }}
-          onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#4752C4')}
-          onMouseLeave={(e) => !isLoading && (e.currentTarget.style.background = '#5865F2')}
+          onMouseEnter={e => !isAuthenticating && (e.currentTarget.style.background = '#4752c4')}
+          onMouseLeave={e => !isAuthenticating && (e.currentTarget.style.background = '#5865F2')}
         >
-          <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">
-            <path d="M107.7 8.07A105.15 105.15 0 0090.2 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-14.84 0 72.37 72.37 0 00-3.36-6.83 105.89 105.89 0 00-17.5 8.07 750.85 750.85 0 00-119.88 37.85 83.47 83.47 0 0027.64 55.92 110.35 110.35 0 0033.26 10.7q5.18-7.5 9.84-15.5a67.15 67.15 0 00-10.85-5.3q1.8-1.36 3.54-2.77a75.36 75.36 0 0060.6 0c1.2 1 2.36 2 3.54 2.77a67.82 67.82 0 00-10.88 5.3c4.5 8 9 16 9.86 15.5a110.5 110.5 0 0033.3-10.7 84.29 84.29 0 0027.64-56c0-35.88-30.08-67.92-67.6-67.92zM42.45 65.69c-5.89 0-10.74 5.27-10.74 11.74s4.85 11.74 10.74 11.74c5.88 0 10.73-5.27 10.73-11.74-.02-6.47-4.85-11.74-10.73-11.74zM84.14 65.69c-5.74 0-10.63 5.27-10.63 11.74s4.89 11.74 10.63 11.74c5.9 0 10.75-5.27 10.75-11.74s-4.84-11.74-10.75-11.74z"/>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.369c-1.52-.766-3.15-1.332-4.842-1.681-.046.062-.098.136-.134.187-1.27-.191-2.53-.191-3.777 0-.036-.05-.09-.125-.134-.187-1.692.349-3.322.915-4.842 1.681-3.227 5.283-4.099 10.411-3.668 15.405 1.565 1.227 3.076 1.98 4.565 2.476 1.09-.752 2.154-1.631 3.163-2.652-1.164-.44-2.268-1.086-3.204-1.913.268-.202.528-.418.78-.651 2.882 1.396 6.047 1.396 8.929 0 .252.233.512.449.78.651-.936.827-2.04 1.473-3.204 1.913 1.009 1.021 2.073 1.9 3.163 2.652 1.489-.496 3-.249 4.565-2.476.434-4.994-.435-10.122-3.668-15.405zM8.678 13.678c-1.351 0-2.458-1.187-2.458-2.646s1.084-2.646 2.458-2.646c1.374 0 2.472 1.187 2.458 2.646 0 1.459-1.084 2.646-2.458 2.646zm6.644 0c-1.35 0-2.458-1.187-2.458-2.646s1.084-2.646 2.458-2.646c1.374 0 2.472 1.187 2.458 2.646 0 1.459-1.084 2.646-2.458 2.646z"/>
           </svg>
           Continue with Discord
         </button>
 
-        {/* Divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          margin: '24px 0',
-        }}>
-          <div style={{ flex: 1, height: '1px', background: '#C4922E44' }}/>
-          <span style={{ fontSize: '12px', color: '#4a4238', fontWeight: 500 }}>OR</span>
-          <div style={{ flex: 1, height: '1px', background: '#C4922E44' }}/>
+        {/* OR divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1, height: 1, background: '#d9ccc0' }}></div>
+          <span style={{ fontSize: 12, color: '#8a7a6f', fontWeight: 600, textTransform: 'uppercase' }}>OR</span>
+          <div style={{ flex: 1, height: 1, background: '#d9ccc0' }}></div>
         </div>
 
-        {/* Email form */}
-        <form onSubmit={handleEmailSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* Email input */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#1a1610',
-              marginBottom: '6px',
-            }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #C4922E44',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontFamily: "'DM Sans', sans-serif",
-                color: '#1a1610',
-                background: '#fff',
-                transition: 'all 0.2s',
-                cursor: isLoading ? 'not-allowed' : 'text',
-                opacity: isLoading ? 0.7 : 1,
-              }}
-              onFocus={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E88')}
-              onBlur={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E44')}
-            />
-          </div>
-
-          {/* Password input */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#1a1610',
-              marginBottom: '6px',
-            }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #C4922E44',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontFamily: "'DM Sans', sans-serif",
-                color: '#1a1610',
-                background: '#fff',
-                transition: 'all 0.2s',
-                cursor: isLoading ? 'not-allowed' : 'text',
-                opacity: isLoading ? 0.7 : 1,
-              }}
-              onFocus={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E88')}
-              onBlur={(e) => !isLoading && (e.currentTarget.style.borderColor = '#C4922E44')}
-            />
-          </div>
-
-          {/* Sign in button */}
-          <button
-            type="submit"
-            disabled={isLoading || !email || !password}
+        {/* Email input */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#3D2B1A', marginBottom: 6 }}>
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            disabled={isAuthenticating}
+            placeholder="your@email.com"
             style={{
-              padding: '12px 16px',
-              background: '#1a1610',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: isLoading || !email || !password ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s',
-              marginTop: '8px',
-              opacity: isLoading || !email || !password ? 0.6 : 1,
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: 6,
+              border: '1px solid #d9ccc0',
+              fontSize: 13,
+              fontFamily: "'DM Sans', sans-serif",
+              background: isAuthenticating ? '#f5f5f5' : 'white',
+              color: '#3D2B1A',
+              opacity: isAuthenticating ? 0.6 : 1,
+              cursor: isAuthenticating ? 'not-allowed' : 'text',
+              boxSizing: 'border-box',
             }}
-            onMouseEnter={(e) => !isLoading && !(!email || !password) && (e.currentTarget.style.background = '#2a2420')}
-            onMouseLeave={(e) => !isLoading && !(!email || !password) && (e.currentTarget.style.background = '#1a1610')}
-          >
-            {isLoading ? 'Signing in...' : 'Sign In with Email'}
-          </button>
-        </form>
+          />
+        </div>
+
+        {/* Password input */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#3D2B1A', marginBottom: 6 }}>
+            Password
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            disabled={isAuthenticating}
+            placeholder="••••••••"
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: 6,
+              border: '1px solid #d9ccc0',
+              fontSize: 13,
+              fontFamily: "'DM Sans', sans-serif",
+              background: isAuthenticating ? '#f5f5f5' : 'white',
+              color: '#3D2B1A',
+              opacity: isAuthenticating ? 0.6 : 1,
+              cursor: isAuthenticating ? 'not-allowed' : 'text',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        {/* Sign in button */}
+        <button
+          onClick={handleEmailLogin}
+          disabled={isAuthenticating || !email || !password}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            borderRadius: 8,
+            border: 'none',
+            background: isAuthenticating || !email || !password ? '#d9ccc0' : '#3D2B1A',
+            color: '#FDF5EC',
+            fontSize: 14,
+            fontWeight: 600,
+            fontFamily: "'DM Sans', sans-serif",
+            cursor: isAuthenticating || !email || !password ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+            opacity: isAuthenticating || !email || !password ? 0.6 : 1,
+          }}
+          onMouseEnter={e => {
+            if (!isAuthenticating && email && password) {
+              e.currentTarget.style.background = '#2a1f16';
+            }
+          }}
+          onMouseLeave={e => {
+            if (!isAuthenticating && email && password) {
+              e.currentTarget.style.background = '#3D2B1A';
+            }
+          }}
+        >
+          {isAuthenticating ? 'Signing in...' : 'Sign in with Email'}
+        </button>
 
         {/* Footer */}
         <p style={{
-          fontSize: '12px',
-          color: '#4a4238',
+          fontSize: 11,
+          color: '#8a7a6f',
           textAlign: 'center',
-          marginTop: '24px',
-          fontWeight: 300,
+          margin: '16px 0 0',
+          lineHeight: 1.4,
         }}>
-          By continuing, you agree to Atlas's Terms of Service
+          By continuing, you agree to Atlas's <a href="#" style={{ color: '#C4922E', textDecoration: 'none' }}>Terms of Service</a>
         </p>
       </div>
-    </div>
+    </>
   );
 }
