@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
 
 export default function LoginModal({ isOpen, onClose }) {
   const { navigateToLogin } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -19,56 +14,10 @@ export default function LoginModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleDiscordSignIn = () => {
+  const handleDiscord = () => {
     setIsAuthenticating(true);
-    setError('');
-    try {
-      console.log('🔵 Discord login clicked');
-      // Use Base44 SDK method for Discord SSO
-      if (base44?.auth?.loginWithProvider) {
-        base44.auth.loginWithProvider('sso', '/dashboard');
-      } else {
-        window.location.href = '/auth/sso';
-      }
-    } catch (err) {
-      console.error('Discord error:', err);
-      setError('Failed to start Discord login');
-      setIsAuthenticating(false);
-    }
-  };
-
-  const handleEmailSignIn = async (e) => {
-    e.preventDefault();
-    setIsAuthenticating(true);
-    setError('');
-
-    if (!email || !password) {
-      setError('Please enter email and password');
-      setIsAuthenticating(false);
-      return;
-    }
-
-    try {
-      console.log(`📧 Email login attempt: ${email}`);
-      
-      if (base44?.auth?.loginViaEmailPassword) {
-        const result = await base44.auth.loginViaEmailPassword(email, password);
-        console.log('Email result:', result);
-        
-        if (result) {
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 500);
-        }
-      } else {
-        setError('Email authentication not available');
-        setIsAuthenticating(false);
-      }
-    } catch (err) {
-      console.error('Email error:', err);
-      setError(err.message || 'Login failed');
-      setIsAuthenticating(false);
-    }
+    // Redirect to Discord OAuth endpoint
+    window.location.href = '/api/auth/discord';
   };
 
   const handleGoogle = () => {
@@ -172,52 +121,36 @@ export default function LoginModal({ isOpen, onClose }) {
           </p>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div style={{
-            background: '#ffe0e0',
-            border: '1px solid #ff9999',
-            borderRadius: 6,
-            padding: '10px 12px',
-            marginBottom: 16,
-            fontSize: 12,
-            color: '#c00',
-            textAlign: 'center'
-          }}>
-            {error}
-          </div>
-        )}
-
-        {/* Discord button */}
+        {/* Sign in with Discord */}
         <button
-          onClick={handleDiscordSignIn}
+          onClick={handleDiscord}
           disabled={isAuthenticating}
           style={{
             width: '100%',
             padding: '13px 14px',
-            border: 'none',
+            border: '1px solid #5865F2',
             borderRadius: 8,
-            background: '#5865F2',
-            color: 'white',
+            background: isAuthenticating ? '#e6e9ff' : '#5865F2',
             fontSize: 14,
             fontWeight: 600,
             cursor: isAuthenticating ? 'not-allowed' : 'pointer',
             fontFamily: "'DM Sans', sans-serif",
+            color: isAuthenticating ? '#999' : 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 8,
+            gap: 10,
             marginBottom: 12,
             transition: 'all 0.2s',
             opacity: isAuthenticating ? 0.6 : 1,
           }}
-          onMouseEnter={e => !isAuthenticating && (e.currentTarget.style.background = '#4752C4')}
+          onMouseEnter={e => !isAuthenticating && (e.currentTarget.style.background = '#4752c4')}
           onMouseLeave={e => !isAuthenticating && (e.currentTarget.style.background = '#5865F2')}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.317 4.3671C18.7975 3.60784 17.151 3.07249 15.4319 2.81444C15.4007 2.81052 15.3695 2.82681 15.3534 2.85928C15.1424 3.27953 14.9087 3.81359 14.7451 4.22775C12.9004 3.94575 11.0707 3.94575 9.27273 4.22775C9.10951 3.81266 8.87231 3.27953 8.65126 2.85928C8.63512 2.82681 8.60547 2.81052 8.5743 2.81444C6.85499 3.07115 5.20832 3.60652 4.08826 4.3671C4.07367 4.3736 4.06251 4.38217 4.05928 4.39282C2.18537 7.61554 1.71213 10.7582 2.03835 13.8424C2.04248 13.8926 2.07265 13.9379 2.11199 13.9632C3.89188 15.1913 5.59927 16.0218 7.27268 16.5723C7.3015 16.5783 7.33178 16.5703 7.34616 16.5439C7.72624 15.9115 8.06932 15.2502 8.35655 14.5583C8.37267 14.5229 8.35504 14.4845 8.31812 14.4764C7.67147 14.2917 7.05347 14.0492 6.4504 13.7569C6.40895 13.7329 6.40625 13.6781 6.44765 13.6529C6.57267 13.5655 6.6988 13.4763 6.82231 13.3847C6.84275 13.3692 6.8686 13.3638 6.89076 13.3746C9.88328 14.8737 13.2656 14.8737 16.2262 13.3746C16.2484 13.3629 16.2743 13.3682 16.2948 13.3837C16.4183 13.4754 16.5445 13.5655 16.6695 13.6529C16.7109 13.6781 16.7082 13.7329 16.6667 13.7569C16.0636 14.0565 15.4462 14.2917 14.7979 14.4755C14.761 14.4836 14.7434 14.5229 14.7595 14.5583C15.0474 15.2502 15.3905 15.9115 15.7692 16.5439C15.7836 16.5703 15.8139 16.5783 15.8427 16.5723C17.5156 16.0218 19.2231 15.1913 21.003 13.9632C21.0424 13.9379 21.0726 13.8926 21.0767 13.8424C21.4501 10.1771 20.5383 7.13783 18.6915 4.39282C18.6883 4.38217 18.677 4.3736 18.6624 4.3671ZM8.02002 11.3989C7.10625 11.3989 6.33125 10.576 6.33125 9.56662C6.33125 8.55725 7.09086 7.73425 8.02002 7.73425C8.95248 7.73425 9.71625 8.56505 9.71625 9.56662C9.71625 10.576 8.95248 11.3989 8.02002 11.3989ZM15.9775 11.3989C15.0638 11.3989 14.2888 10.576 14.2888 9.56662C14.2888 8.55725 15.0484 7.73425 15.9775 7.73425C16.9099 7.73425 17.6738 8.56505 17.6738 9.56662C17.6738 10.576 16.9099 11.3989 15.9775 11.3989Z"/>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.3671C18.7976 3.5845 17.1152 3.0613 15.3328 2.76242C15.1145 3.1671 14.8968 3.5859 14.7226 4.03297C12.7039 3.71939 10.7189 3.71939 8.75625 4.03297C8.5823 3.5859 8.3626 3.1671 8.1443 2.76242C6.3619 3.0704 4.6795 3.5936 3.1611 4.3761C0.439655 8.9457 -0.267272 13.3903 0.0839798 17.7667C2.2644 19.3047 4.3762 20.1625 6.44531 20.5747C6.94649 19.8684 7.39605 19.1157 7.78563 18.3226C7.07172 18.0669 6.3825 17.7292 5.73438 17.3188C5.87952 17.2189 6.02466 17.1152 6.16492 17.0088C9.90274 18.8349 14.1545 18.8349 17.8738 17.0088C18.0191 17.1169 18.1644 17.2206 18.309 17.3188C17.6609 17.7293 16.9717 18.0669 16.2578 18.3226C16.6473 19.1157 17.0969 19.8684 17.5981 20.5747C19.6672 20.1625 21.7791 19.3047 23.9596 17.7667C24.3953 13.3903 23.4766 8.9457 20.317 4.3671ZM8.02002 14.8457C6.8375 14.8457 5.86313 13.8789 5.86313 12.6471C5.86313 11.4153 6.8186 10.4485 8.02002 10.4485C9.22145 10.4485 10.1779 11.4153 10.1779 12.6471C10.1779 13.8789 9.22145 14.8457 8.02002 14.8457ZM15.9947 14.8457C14.8121 14.8457 13.8377 13.8789 13.8377 12.6471C13.8377 11.4153 14.7932 10.4485 15.9947 10.4485C17.1961 10.4485 18.1526 11.4153 18.1526 12.6471C18.1526 13.8789 17.1961 14.8457 15.9947 14.8457Z"/>
           </svg>
-          {isAuthenticating ? 'Connecting...' : 'Continue with Discord'}
+          {isAuthenticating ? 'Redirecting...' : 'Continue with Discord'}
         </button>
 
         {/* Sign in with Google */}
@@ -255,70 +188,31 @@ export default function LoginModal({ isOpen, onClose }) {
           {isAuthenticating ? 'Redirecting...' : 'Continue with Google'}
         </button>
 
-        {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: '#D4C4B8' }}/>
-          <span style={{ fontSize: 12, color: '#8a7a6f' }}>OR</span>
-          <div style={{ flex: 1, height: '1px', background: '#D4C4B8' }}/>
-        </div>
+        {/* Sign in button */}
+        <button
+          onClick={navigateToLogin}
+          disabled={isAuthenticating}
+          style={{
+            width: '100%',
+            padding: '13px 14px',
+            borderRadius: 8,
+            border: 'none',
+            background: '#3D2B1A',
+            color: 'white',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+            transition: 'background 0.2s',
+            opacity: isAuthenticating ? 0.6 : 1,
+          }}
+          onMouseEnter={e => !isAuthenticating && (e.currentTarget.style.background = '#2a1f15')}
+          onMouseLeave={e => !isAuthenticating && (e.currentTarget.style.background = '#3D2B1A')}
+        >
+          Sign In with Email
+        </button>
 
-        {/* Email form */}
-        <form onSubmit={handleEmailSignIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            disabled={isAuthenticating}
-            style={{
-              padding: '10px 12px',
-              border: '1px solid #D4C4B8',
-              borderRadius: 6,
-              fontSize: 13,
-              fontFamily: "'DM Sans', sans-serif",
-              opacity: isAuthenticating ? 0.6 : 1,
-            }}
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            disabled={isAuthenticating}
-            style={{
-              padding: '10px 12px',
-              border: '1px solid #D4C4B8',
-              borderRadius: 6,
-              fontSize: 13,
-              fontFamily: "'DM Sans', sans-serif",
-              opacity: isAuthenticating ? 0.6 : 1,
-            }}
-          />
-          <button
-            type="submit"
-            disabled={isAuthenticating || !email || !password}
-            style={{
-              width: '100%',
-              padding: '11px 14px',
-              borderRadius: 6,
-              border: 'none',
-              background: '#3D2B1A',
-              color: 'white',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: (isAuthenticating || !email || !password) ? 'not-allowed' : 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
-              transition: 'background 0.2s',
-              opacity: (isAuthenticating || !email || !password) ? 0.6 : 1,
-            }}
-            onMouseEnter={e => !isAuthenticating && !(!email || !password) && (e.currentTarget.style.background = '#2a1f15')}
-            onMouseLeave={e => !isAuthenticating && !(!email || !password) && (e.currentTarget.style.background = '#3D2B1A')}
-          >
-            {isAuthenticating ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <p style={{ textAlign: 'center', fontSize: 11, color: '#b0a090', marginTop: 16 }}>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#b0a090', marginTop: 20 }}>
           By continuing, you agree to Atlas's Terms of Service
         </p>
       </div>
