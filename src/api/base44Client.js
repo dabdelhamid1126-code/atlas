@@ -1,10 +1,10 @@
 import * as Base44 from '@base44/sdk';
 
 const base44 = Base44.createClient({
-  appId: '6982109ef976b5f09c0b7b7e',
-  headers: {
-    api_key: '9f9697d712814c9c869341655c92db5a'
-  }
+  appId: import.meta.env.VITE_BASE44_APP_ID,
+  token: import.meta.env.VITE_BASE44_TOKEN,
+  functionsVersion: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION || '1',
+  appBaseUrl: import.meta.env.VITE_BASE44_APP_BASE_URL,
 });
 
 export default base44;
