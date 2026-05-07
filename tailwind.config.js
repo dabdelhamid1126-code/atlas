@@ -6,8 +6,8 @@ module.exports = {
   	extend: {
       fontFamily: {
         sans:      ['DM Sans', 'system-ui', 'sans-serif'],
-        display:   ['Cormorant Garamond', 'Georgia', 'serif'],
-        serif:     ['Cormorant Garamond', 'Georgia', 'serif'],
+        display:   ['DM Sans', 'system-ui', 'sans-serif'],
+        serif:     ['DM Sans', 'system-ui', 'sans-serif'],
         marcellus: ['Marcellus', 'Georgia', 'serif'],
         mono:      ['ui-monospace', 'SF Mono', 'Consolas', 'monospace'],
       },
