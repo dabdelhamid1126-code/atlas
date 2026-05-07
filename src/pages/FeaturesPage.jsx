@@ -38,10 +38,9 @@ export default function FeaturesPage() {
       <section className="sp" style={{ paddingTop:140, minHeight:'100vh' }}>
         <div style={{ maxWidth:1200, margin:'0 auto' }}>
 
-          {/* Header */}
           <div style={{ textAlign:'center', marginBottom:60 }}>
             <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.22em', color:'#C4922E', textTransform:'uppercase', marginBottom:14 }}>Built for Resellers</p>
-            <h1 className="serif" style={{ fontSize:56, fontWeight:700, lineHeight:1.08, marginBottom:16 }}>
+            <h1 className="serif" style={{ fontSize:56, fontWeight:700, lineHeight:1.08, marginBottom:16, color:'#f0ece4' }}>
               Every Feature <span style={{ color:'#C4922E' }}>Earned.</span>
             </h1>
             <p style={{ fontSize:15, color:'#f0ece4', maxWidth:480, margin:'0 auto', lineHeight:1.7, fontWeight:300 }}>
@@ -49,7 +48,6 @@ export default function FeaturesPage() {
             </p>
           </div>
 
-          {/* Tag filters */}
           <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap', marginBottom:48 }}>
             {TAGS.map(tag => (
               <button key={tag} onClick={() => setActiveTag(tag)}
@@ -63,7 +61,6 @@ export default function FeaturesPage() {
             ))}
           </div>
 
-          {/* Feature grid */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
             {filtered.map((f, i) => {
               const tc = TAG_COLORS[f.tag] || TAG_COLORS['Core'];
@@ -86,13 +83,12 @@ export default function FeaturesPage() {
             })}
           </div>
 
-          {/* CTA */}
           <div style={{ textAlign:'center', marginTop:72, padding:'48px 24px', background:'rgba(10,8,4,0.6)', border:'1px solid rgba(196,146,46,0.18)', borderRadius:20 }}>
-            <h2 className="serif" style={{ fontSize:40, fontWeight:600, marginBottom:14 }}>
+            <h2 className="serif" style={{ fontSize:40, fontWeight:600, marginBottom:14, color:'#f0ece4' }}>
               Ready to get started with <span style={{ color:'#C4922E' }}>Atlas?</span>
             </h2>
             <p style={{ fontSize:14, color:'#f0ece4', marginBottom:28, fontWeight:300 }}>Create your free account and unlock every feature today.</p>
-            <button className="btn-g" style={{ padding:'14px 36px', fontSize:15 }} onClick={() => window.location.href='https://atlasresellhub.base44.app'}>
+            <button className="btn-g" style={{ padding:'14px 36px', fontSize:15, background:'#C4922E', color:'#080706', border:'none', borderRadius:'8px', fontFamily:"'DM Sans', sans-serif", fontWeight:600, cursor:'pointer' }} onClick={() => window.location.href='https://atlasresellhub.base44.app'}>
               Create Free Account →
             </button>
           </div>
