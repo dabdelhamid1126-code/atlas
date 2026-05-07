@@ -43,7 +43,7 @@ export default function AboutPage() {
             </div>
             <div style={{ background:'rgba(14,11,6,0.85)', border:'1px solid rgba(196,146,46,0.18)', borderRadius:20, padding:'32px 28px' }}>
               <p style={{ fontSize:10, fontWeight:700, letterSpacing:'0.16em', color:'#C4922E', textTransform:'uppercase', marginBottom:20 }}>The Mission</p>
-              <p className="serif" style={{ fontSize: 28, fontWeight:600,  lineHeight: 1.3, color:'#f0ece4', marginBottom:16, color:"#f0ece4" }}>
+              <p className="serif" style={{ fontSize: 28, fontWeight:600,  lineHeight: 1.3, color:'#f0ece4', marginBottom:16 }}>
                 "Give every serious reseller the operational clarity of a hedge fund."
               </p>
               <p style={{ fontSize:13, color:'#f0ece4', fontWeight:300, lineHeight:1.6 }}>
@@ -54,7 +54,7 @@ export default function AboutPage() {
 
           {/* Values */}
           <div style={{ marginBottom:80 }}>
-            <h2 className="serif" style={{ fontSize:40, fontWeight:600, textAlign:'center', marginBottom:48 }}>
+            <h2 className="serif" style={{ fontSize:40, fontWeight:600, textAlign:'center', marginBottom:48, color:'#f0ece4' }}>
               What We <span style={{ color:'#C4922E' }}>Stand For</span>
             </h2>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:16 }}>
@@ -70,7 +70,7 @@ export default function AboutPage() {
 
           {/* CTA */}
           <div style={{ textAlign:'center', padding:'48px 24px', background:'rgba(10,8,4,0.6)', border:'1px solid rgba(196,146,46,0.18)', borderRadius:20 }}>
-            <h2 className="serif" style={{ fontSize:40, fontWeight:600, marginBottom:14 }}>
+            <h2 className="serif" style={{ fontSize:40, fontWeight:600, marginBottom:14, color:'#f0ece4' }}>
               Join Us on the <span style={{ color:'#C4922E' }}>Journey</span>
             </h2>
             <p style={{ fontSize:14, color:'#f0ece4', marginBottom:28, fontWeight:300 }}>We're just getting started. Come build with us.</p>
