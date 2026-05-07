@@ -56,40 +56,95 @@ export default function App() {
       <AuthProvider>
         <Router>
           <CommandPalette />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/features" element={<FeaturesPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/roadmap" element={<RoadmapPage />} />
-
-            {/* Protected dashboard routes */}
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
-            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
-            <Route path="/transactions" element={<Layout><Transactions /></Layout>} />
-            <Route path="/gift-cards" element={<Layout><GiftCards /></Layout>} />
-            <Route path="/forecast" element={<Layout><Forecast /></Layout>} />
-            <Route path="/invoices" element={<Layout><Invoices /></Layout>} />
-            <Route path="/settings" element={<Layout><Settings /></Layout>} />
-            <Route path="/import-orders" element={<Layout><ImportOrders /></Layout>} />
-            <Route path="/email-import" element={<Layout><EmailImport /></Layout>} />
-            <Route path="/new-orders" element={<Layout><NewOrders /></Layout>} />
-            <Route path="/goals" element={<Layout><Goals /></Layout>} />
-            <Route path="/expenses" element={<Layout><Expenses /></Layout>} />
-            <Route path="/products" element={<Layout><Products /></Layout>} />
-            <Route path="/purchase-orders" element={<Layout><PurchaseOrders /></Layout>} />
-            <Route path="/payment-methods" element={<Layout><PaymentMethods /></Layout>} />
-            <Route path="/receive-items" element={<Layout><ReceiveItems /></Layout>} />
-            <Route path="/package-receiving" element={<Layout><PackageReceiving /></Layout>} />
-
-            {/* Catch all - redirect to landing */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
-}
+         <Routes>
+  {/* Public routes - no protection */}
+  <Route path="/" element={<LandingPage />} />
+  <Route path="/login" element={<LoginPage />} />
+  
+  {/* Protected routes - ISSUE #2 FIX */}
+  <Route 
+    path="/Dashboard" 
+    element={
+      <ProtectedRoute>
+        <Layout><Dashboard /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/Inventory" 
+    element={
+      <ProtectedRoute>
+        <Layout><Inventory /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/Forecast" 
+    element={
+      <ProtectedRoute>
+        <Layout><Forecast /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/Transactions" 
+    element={
+      <ProtectedRoute>
+        <Layout><Transactions /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/Analytics" 
+    element={
+      <ProtectedRoute>
+        <Layout><Analytics /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/Rewards" 
+    element={
+      <ProtectedRoute>
+        <Layout><Rewards /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/Settings" 
+    element={
+      <ProtectedRoute>
+        <Layout><Settings /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/Invoices" 
+    element={
+      <ProtectedRoute>
+        <Layout><Invoices /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  <Route 
+    path="/ImportOrders" 
+    element={
+      <ProtectedRoute>
+        <Layout><ImportOrders /></Layout>
+      </ProtectedRoute>
+    } 
+  />
+  
+  {/* Add any other protected routes with same pattern */}
+  
+  {/* Catch-all for 404 */}
+  <Route path="*" element={<NotFound />} />
+</Routes>
