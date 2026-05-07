@@ -17,7 +17,7 @@ export default function LoginModal({ isOpen, onClose }) {
 
   const handleDiscord = () => {
     setIsAuthenticating(true);
-    base44.auth.redirectToLogin(window.location.href);
+    base44.auth.loginWithProvider('sso', window.location.origin + '/Dashboard');
   };
 
   const handleEmailLogin = async (e) => {
