@@ -100,7 +100,7 @@ export default function RoadmapPage() {
 
           {/* Suggest a feature */}
           <div style={{ textAlign:'center', marginTop:72, padding:'40px 24px', background:'rgba(10,8,4,0.6)', border:'1px solid rgba(196,146,46,0.18)', borderRadius:20 }}>
-            <h2 className="serif" style={{ fontSize:36, fontWeight:600, marginBottom:12 }}>
+            <h2 className="serif" style={{ fontSize:36, fontWeight:600, marginBottom:12, color:'#f0ece4' }}>
               Have a Feature Idea?
             </h2>
             <p style={{ fontSize:14, color:'#f0ece4', marginBottom:24, fontWeight:300 }}>
