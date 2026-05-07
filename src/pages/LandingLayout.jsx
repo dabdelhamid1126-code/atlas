@@ -100,10 +100,10 @@ export default function LandingLayout({ children, currentPage }) {
         .btn-g:hover { background:#d9a43a; transform:translateY(-1px); }
         .btn-o { background:transparent; color:#f0ece4; border:1px solid #C4922E55; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
         .btn-o:hover { border-color:#C4922E99; background:#C4922E0a; }
-        .nl { color:#7a7060; text-decoration:none; font-size:13px; font-weight:400; transition:color 0.2s; }
+        .nl { color:#f0ece4; text-decoration:none; font-size:13px; font-weight:400; transition:color 0.2s; }
         .nl:hover, .nl.active { color:#C4922E; }
         .nl.active { border-bottom:1px solid #C4922E; padding-bottom:2px; }
-        .fa { text-decoration:none; color:#2e2820; font-size:13px; font-weight:300; transition:color 0.2s; }
+        .fa { text-decoration:none; color:#f0ece4; font-size:13px; font-weight:300; transition:color 0.2s; }
         .fa:hover { color:#9a9080; }
         .sp { padding:100px 48px; }
         @media(max-width:900px) {
@@ -172,7 +172,7 @@ export default function LandingLayout({ children, currentPage }) {
                 <AtlasLogo size={32}/>
                 <span className="marcellus" style={{ fontSize:18, color:'#f5e09a', letterSpacing:'0.05em' }}>ATLAS</span>
               </div>
-              <p style={{ fontSize:13, color:'#2e2820', lineHeight:1.65, maxWidth:220, fontWeight:300, marginBottom:18 }}>The command center for serious resellers.</p>
+              <p style={{ fontSize:13, color:'#f0ece4', lineHeight:1.65, maxWidth:220, fontWeight:300, marginBottom:18 }}>The command center for serious resellers.</p>
               <div style={{ display:'flex', gap:16 }}>
                 {['Twitter','Discord','Instagram'].map(s => <a key={s} href="#" className="fa" style={{ fontSize:12 }}>{s}</a>)}
               </div>
