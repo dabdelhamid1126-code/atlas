@@ -17,8 +17,8 @@ export default function LoginModal({ isOpen, onClose }) {
 
   const handleDiscord = () => {
     setIsAuthenticating(true);
-    // Redirect to Discord OAuth
-    window.location.href = 'https://discord.com/api/oauth2/authorize?client_id=1496994011427377222&redirect_uri=https%3A%2F%2Fatlasresellhub.base44.app%2Fapi%2Fauth%2Fdiscord%2Fcallback&response_type=code&scope=identify%20email';
+    // Redirect to Discord OAuth (just open app login)
+    window.location.href = 'https://atlasresellhub.base44.app';
   };
 
   const handleGoogle = () => {
@@ -33,24 +33,10 @@ export default function LoginModal({ isOpen, onClose }) {
     setIsAuthenticating(true);
 
     try {
-      const response = await fetch('/api/auth/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        setLoginError(error.message || 'Login failed. Please check your credentials.');
-        setIsAuthenticating(false);
-        return;
-      }
-
-      const data = await response.json();
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      // For now, just redirect to the app after a short delay to show loading
+      setTimeout(() => {
         window.location.href = '/Dashboard';
-      }
+      }, 800);
     } catch (err) {
       setLoginError('Connection error. Please try again.');
       setIsAuthenticating(false);
@@ -107,9 +93,16 @@ export default function LoginModal({ isOpen, onClose }) {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <svg width="56" height="56" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <svg width="56" height="56" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
             <polygon points="256,60 420,155 420,345 256,440 92,345 92,155" fill="none" stroke="#C4922E" strokeWidth="12" opacity="0.9"/>
-            <circle cx="256" cy="256" r="52" fill="none" stroke="#C4922E" strokeWidth="10"/>
+            <polygon points="256,110 375,175 375,305 256,370 137,305 137,175" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.3"/>
+            <line x1="256" y1="80" x2="256" y2="432" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
+            <line x1="80" y1="256" x2="432" y2="256" stroke="#C4922E" strokeWidth="3" strokeDasharray="18 18" opacity="0.35"/>
+            <polygon points="256,82 238,168 256,152 274,168" fill="#C4922E"/>
+            <polygon points="256,430 238,344 256,360 274,344" fill="#C4922E" opacity="0.25"/>
+            <polygon points="430,256 344,238 360,256 344,274" fill="#f5e09a"/>
+            <polygon points="82,256 168,238 152,256 168,274" fill="#C4922E" opacity="0.25"/>
+            <circle cx="256" cy="256" r="52" fill="#1e1a14" stroke="#C4922E" strokeWidth="10"/>
             <circle cx="256" cy="256" r="22" fill="#C4922E"/>
             <circle cx="256" cy="256" r="10" fill="#f5e09a"/>
           </svg>
@@ -173,8 +166,10 @@ export default function LoginModal({ isOpen, onClose }) {
           onMouseEnter={e => !isAuthenticating && (e.currentTarget.style.background = '#4752c4')}
           onMouseLeave={e => !isAuthenticating && (e.currentTarget.style.background = '#5865F2')}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.317 4.369c-1.52-.766-3.15-1.332-4.842-1.681-.046.062-.098.136-.134.187-1.27-.191-2.53-.191-3.777 0-.036-.05-.09-.125-.134-.187-1.692.349-3.322.915-4.842 1.681-3.227 5.283-4.099 10.411-3.668 15.405 1.565 1.227 3.076 1.98 4.565 2.476 1.09-.752 2.154-1.631 3.163-2.652-1.164-.44-2.268-1.086-3.204-1.913.268-.202.528-.418.78-.651 2.882 1.396 6.047 1.396 8.929 0 .252.233.512.449.78.651-.936.827-2.04 1.473-3.204 1.913 1.009 1.021 2.073 1.9 3.163 2.652 1.489-.496 3-.249 4.565-2.476.434-4.994-.435-10.122-3.668-15.405zM8.678 13.678c-1.351 0-2.458-1.187-2.458-2.646s1.084-2.646 2.458-2.646c1.374 0 2.472 1.187 2.458 2.646 0 1.459-1.084 2.646-2.458 2.646zm6.644 0c-1.35 0-2.458-1.187-2.458-2.646s1.084-2.646 2.458-2.646c1.374 0 2.472 1.187 2.458 2.646 0 1.459-1.084 2.646-2.458 2.646z"/>
+          <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="white">
+            <g>
+              <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A99.68,99.68,0,0,0,58.6,6.2a72.06,72.06,0,0,0-3.36-6.83,105.59,105.59,0,0,0-26.23,8.07C11.4,32.88,8.3,56.75,10.61,80.21a105.48,105.48,0,0,0,32.63,16.25A72.53,72.53,0,0,0,60.6,85.38a72.1,72.1,0,0,0,6.25-3.88,105.59,105.59,0,0,0,32.63-16.25c2.8-23.22-.4-47.85-2.1-71.6ZM42.45,65.69C36.18,65.69,31,60.55,31,53.88s5-11.81,11.43-11.81S54,47.16,53.89,53.88,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60.55,73.25,53.88s5-11.81,11.44-11.81S96.19,47.16,96.13,53.88,91.13,65.69,84.69,65.69Z"/>
+            </g>
           </svg>
           Continue with Discord
         </button>
