@@ -84,7 +84,7 @@ export default function LoginModal({ isOpen, onClose }) {
         </button>
 
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32, display: 'flex', justifyContent: 'center' }}>
           <svg width="80" height="80" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="512" height="512" rx="100" fill="#1e1a14"/>
             <rect width="512" height="512" rx="100" fill="none" stroke="#C4922E" strokeWidth="4" opacity="0.4"/>
