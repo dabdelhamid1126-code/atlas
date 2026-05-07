@@ -490,17 +490,6 @@ function SecuritySection({ user }) {
         </div>
       ))}
 
-      <section style={{ marginBottom: 30 }}>
-  <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Vendor Cashback Settings</h2>
-  <VendorCashbackConfig 
-    value={vendorConfigs}
-    onChange={(updated) => {
-      setVendorConfigs(updated);
-      localStorage.setItem('vendorConfigs', JSON.stringify(updated));
-    }}
-  />
-</section>
-
       <SectionDivider title="Actions" color={C.crimson} />
       <div style={{ padding: '12px 0' }}>
         <p style={{ fontSize: 13, fontWeight: 500, color: C.ink, margin: '0 0 4px', fontFamily: FONT }}>Sign Out</p>

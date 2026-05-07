@@ -505,7 +505,7 @@ export default function ImportOrders({
                           }}
                         />
                         {!isValid && rowValidation?.errors.includes('Actual price must be > 0') && (
-                          <p style={{ fontSize: 8, color: 'var(--crimson)', margin: '1px 0 0' }}>Must be > 0</p>
+                          <p style={{ fontSize: 8, color: 'var(--crimson)', margin: '1px 0 0' }}>{'Must be > 0'}</p>
                         )}
                       </td>
                       <td style={{ padding: '4px 6px' }}>
