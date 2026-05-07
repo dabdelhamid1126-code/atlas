@@ -187,9 +187,9 @@ export default function LandingLayout({ children, currentPage }) {
             ))}
           </div>
           <div style={{ borderTop:'1px solid #C4922E0a', paddingTop:22, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
-            <p style={{ fontSize:12, color:'#201c16' }}>© 2026 Atlas. All rights reserved.</p>
+            <p style={{ fontSize:12, color:'#f0ece4' }}>© 2026 Atlas. All rights reserved.</p>
             <div style={{ display:'flex', gap:22 }}>
-              {['Privacy Policy','Terms of Service'].map(l => <a key={l} href="#" style={{ fontSize:12, color:'#201c16', textDecoration:'none' }}>{l}</a>)}
+              {['Privacy Policy','Terms of Service'].map(l => <a key={l} href="#" style={{ fontSize:12, color:'#f0ece4', textDecoration:'none' }}>{l}</a>)}
             </div>
           </div>
         </div>
