@@ -27,6 +27,10 @@ import ReceiveItems from './pages/ReceiveItems';
 import PackageReceiving from './pages/PackageReceiving';
 import Rewards from './pages/Rewards';
 import NotFound from './pages/NotFound';
+import FeaturesPage from './pages/FeaturesPage';
+import PricingPage from './pages/PricingPage';
+import RoadmapPage from './pages/RoadmapPage';
+import AboutPage from './pages/AboutPage';
 
 export default function App() {
   return (
@@ -37,6 +41,10 @@ export default function App() {
             {/* PUBLIC ROUTES */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/roadmap" element={<RoadmapPage />} />
+            <Route path="/about" element={<AboutPage />} />
 
             {/* PROTECTED DASHBOARD ROUTES */}
             <Route 
