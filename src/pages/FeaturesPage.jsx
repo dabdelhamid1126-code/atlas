@@ -88,7 +88,7 @@ export default function FeaturesPage() {
 
           {/* CTA */}
           <div style={{ textAlign:'center', marginTop:72, padding:'48px 24px', background:'rgba(10,8,4,0.6)', border:'1px solid rgba(196,146,46,0.18)', borderRadius:20 }}>
-            <h2 className="serif" style={{ fontSize:40, fontWeight:600, marginBottom:14 }}>
+            <h2 className="serif" style={{ fontSize:40, fontWeight:600, marginBottom:14, color:'#f0ece4' }}>
               Ready to get started with <span style={{ color:'#C4922E' }}>Atlas?</span>
             </h2>
             <p style={{ fontSize:14, color:'#f0ece4', marginBottom:28, fontWeight:300 }}>Create your free account and unlock every feature today.</p>
