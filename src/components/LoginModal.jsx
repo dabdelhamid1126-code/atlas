@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 
 export default function LoginModal({ isOpen, onClose }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -16,7 +17,7 @@ export default function LoginModal({ isOpen, onClose }) {
 
   const handleDiscord = () => {
     setIsAuthenticating(true);
-    window.location.href = 'https://atlasresellhub.base44.app';
+    base44.auth.redirectToLogin(window.location.href);
   };
 
   const handleEmailLogin = async (e) => {
