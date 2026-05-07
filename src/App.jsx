@@ -27,6 +27,7 @@ import FeaturesPage from '@/pages/FeaturesPage';
 import PricingPage from '@/pages/PricingPage';
 import RoadmapPage from '@/pages/RoadmapPage';
 import CommandPalette from '@/components/CommandPalette';
+import Layout from '@/Layout';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient({
@@ -64,24 +65,24 @@ export default function App() {
             <Route path="/roadmap" element={<RoadmapPage />} />
 
             {/* Protected dashboard routes */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/gift-cards" element={<GiftCards />} />
-            <Route path="/forecast" element={<Forecast />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/import-orders" element={<ImportOrders />} />
-            <Route path="/email-import" element={<EmailImport />} />
-            <Route path="/new-orders" element={<NewOrders />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/purchase-orders" element={<PurchaseOrders />} />
-            <Route path="/payment-methods" element={<PaymentMethods />} />
-            <Route path="/receive-items" element={<ReceiveItems />} />
-            <Route path="/package-receiving" element={<PackageReceiving />} />
+            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
+            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+            <Route path="/transactions" element={<Layout><Transactions /></Layout>} />
+            <Route path="/gift-cards" element={<Layout><GiftCards /></Layout>} />
+            <Route path="/forecast" element={<Layout><Forecast /></Layout>} />
+            <Route path="/invoices" element={<Layout><Invoices /></Layout>} />
+            <Route path="/settings" element={<Layout><Settings /></Layout>} />
+            <Route path="/import-orders" element={<Layout><ImportOrders /></Layout>} />
+            <Route path="/email-import" element={<Layout><EmailImport /></Layout>} />
+            <Route path="/new-orders" element={<Layout><NewOrders /></Layout>} />
+            <Route path="/goals" element={<Layout><Goals /></Layout>} />
+            <Route path="/expenses" element={<Layout><Expenses /></Layout>} />
+            <Route path="/products" element={<Layout><Products /></Layout>} />
+            <Route path="/purchase-orders" element={<Layout><PurchaseOrders /></Layout>} />
+            <Route path="/payment-methods" element={<Layout><PaymentMethods /></Layout>} />
+            <Route path="/receive-items" element={<Layout><ReceiveItems /></Layout>} />
+            <Route path="/package-receiving" element={<Layout><PackageReceiving /></Layout>} />
 
             {/* Catch all - redirect to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
