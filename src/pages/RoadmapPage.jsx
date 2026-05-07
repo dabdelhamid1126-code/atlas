@@ -57,7 +57,7 @@ export default function RoadmapPage() {
             <h1 className="serif" style={{ fontSize:56, fontWeight:700, lineHeight:1.08, marginBottom:16 }}>
               The Atlas <span style={{ color:'#C4922E' }}>Roadmap.</span>
             </h1>
-            <p style={{ fontSize:15, color:'#7a7060', maxWidth:480, margin:'0 auto', lineHeight:1.7, fontWeight:300 }}>
+            <p style={{ fontSize:15, color:'#f0ece4', maxWidth:480, margin:'0 auto', lineHeight:1.7, fontWeight:300 }}>
               Built in public. Every feature here came from real resellers telling us what they needed.
             </p>
           </div>
@@ -89,7 +89,7 @@ export default function RoadmapPage() {
                         onMouseEnter={e => { e.currentTarget.style.background='rgba(22,18,10,0.9)'; e.currentTarget.style.borderColor=`${s.dot}55`; }}
                         onMouseLeave={e => { e.currentTarget.style.background='rgba(14,11,6,0.85)'; e.currentTarget.style.borderColor=`${s.dot}22`; }}>
                         <div style={{ fontSize:14, fontWeight:600, color:'#f0ece4', marginBottom:6 }}>{item.title}</div>
-                        <div style={{ fontSize:12, color:'#4a4238', lineHeight:1.55, fontWeight:300 }}>{item.desc}</div>
+                        <div style={{ fontSize:12, color:'#f0ece4', lineHeight:1.55, fontWeight:300 }}>{item.desc}</div>
                       </div>
                     ))}
                   </div>
@@ -103,7 +103,7 @@ export default function RoadmapPage() {
             <h2 className="serif" style={{ fontSize:36, fontWeight:600, marginBottom:12 }}>
               Have a Feature Idea?
             </h2>
-            <p style={{ fontSize:14, color:'#5a5248', marginBottom:24, fontWeight:300 }}>
+            <p style={{ fontSize:14, color:'#f0ece4', marginBottom:24, fontWeight:300 }}>
               We build what resellers actually need. Tell us what's missing.
             </p>
             <a href="mailto:hello@atlasresellhub.com"
