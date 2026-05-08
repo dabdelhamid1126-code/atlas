@@ -14,6 +14,16 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
+
+    // Auth check — must be a registered user
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, {
+        status: 401,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+
     const body = await req.json();
 
     const {
