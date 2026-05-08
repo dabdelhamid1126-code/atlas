@@ -265,7 +265,7 @@ export default function Expenses() {
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 900, color: 'var(--ink)', marginRight: 4 }}>{fmt$(exp.amount)}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginRight: 4 }}>{fmt$(exp.amount)}</span>
                 <div className="exp-actions">
                   <button onClick={() => openEdit(exp)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 700, border: '1px solid var(--parch-line)', background: 'transparent', color: 'var(--ink-faded)', cursor: 'pointer', fontFamily: 'var(--font-serif)' }}>
                     <Pencil style={{ width: 11, height: 11 }} /> Edit
@@ -362,7 +362,7 @@ export default function Expenses() {
 
             {/* Panel footer */}
             <div style={{ padding: '14px 24px', borderTop: '1px solid var(--parch-line)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--parch-warm)', position: 'sticky', bottom: 0 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{fmt$(parseFloat(formData.amount) || 0)}</span>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{fmt$(parseFloat(formData.amount) || 0)}</span>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button type="button" onClick={() => setFormOpen(false)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: 'var(--ink-faded)', background: 'var(--parch-warm)', border: '1px solid var(--parch-line)', cursor: 'pointer' }}>Cancel</button>
                 <button type="button" onClick={handleSubmit} style={{ padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, color: 'var(--ne-cream)', background: 'var(--ink)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-serif)' }}>

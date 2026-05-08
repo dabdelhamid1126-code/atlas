@@ -99,7 +99,7 @@ h1, h2, h3, h4, h5, h6 {
   /* Fonts */
   --font-serif: 'DM Sans', system-ui, sans-serif;
   --font-sans:  'DM Sans', system-ui, sans-serif;
-  --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
+  --font-mono:  'DM Sans', system-ui, sans-serif;
 
   /* Chart colors */
   --chart-revenue:  #4a7a35;
