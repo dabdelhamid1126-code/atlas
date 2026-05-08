@@ -174,14 +174,14 @@ function LogoBox({ domain, name, size = 36, className = '' }) {
   }
 
   return (
-    <div style={{ ...base }} className={className}>
+    <div style={{ ...base, background: '#fff' }} className={className}>
       <img
         src={src}
         alt={name}
         style={{
-          width:     '100%',
-          height:    '100%',
-          objectFit: 'cover',
+          width:     '80%',
+          height:    '80%',
+          objectFit: 'contain',
           display:   'block',
         }}
         onError={() => setErr(true)}

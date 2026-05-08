@@ -9,7 +9,7 @@ const GOAL_CONFIGS = {
   profit:       { label: 'Profit',       icon: TrendingUp,  color: 'var(--terrain2)', bg: 'var(--terrain-bg)',  border: 'var(--terrain-bdr)',  prefix: '$', desc: 'Net profit after cost' },
   revenue:      { label: 'Revenue',      icon: DollarSign,  color: 'var(--ocean2)',   bg: 'var(--ocean-bg)',    border: 'var(--ocean-bdr)',    prefix: '$', desc: 'Total sale revenue'   },
   cashback:     { label: 'Cashback',     icon: Percent,     color: 'var(--violet2)',  bg: 'var(--violet-bg)',   border: 'var(--violet-bdr)',   prefix: '$', desc: 'USD rewards earned'   },
-  transactions: { label: 'Transactions', icon: ShoppingBag, color: 'var(--gold)',     bg: 'var(--gold-bg)',     border: 'var(--gold-border)',  prefix: '',  desc: 'Orders placed'        },
+  transactions: { label: 'Transactions', icon: ShoppingBag, color: 'var(--gold)',     bg: 'var(--gold-bg)',     border: 'var(--gold-bdr)',    prefix: '',  desc: 'Orders placed'        },
 };
 
 const fmt = (key, val) => {
@@ -225,47 +225,61 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
       <div>
         {goalTypes.map(({ key, label }, idx) => {
           const gc = GOAL_CONFIGS[key];
+          // Which timeframe is selected (weekly takes priority, else monthly, else default weekly)
+          const activeTimeframe = goals[key].weeklyActive ? 'weekly' : goals[key].monthlyActive ? 'monthly' : 'weekly';
+          const isOn = goals[key].weeklyActive || goals[key].monthlyActive;
+          const currentValue = goals[key][activeTimeframe] || '';
+
           return (
             <div key={key} style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', flexWrap: 'wrap',
               borderBottom: idx !== goalTypes.length - 1 ? '1px solid var(--parch-line)' : 'none',
             }}>
-              <div style={{ width: 96, fontSize: 13, fontWeight: 700, color: gc.color, fontFamily: 'var(--font-serif)' }}>
+              {/* Label */}
+              <div style={{ width: 96, fontSize: 13, fontWeight: 700, color: gc.color, fontFamily: 'var(--font-serif)', flexShrink: 0 }}>
                 {label}
               </div>
-              <div style={{ display: 'flex', gap: 4 }}>
+
+              {/* Weekly / Monthly pill selector */}
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                 {['weekly', 'monthly'].map(tf => {
-                  const active = goals[key][`${tf}Active`];
+                  const isSel = activeTimeframe === tf;
                   return (
                     <button key={tf}
                       onClick={() => {
-                        handleActiveChange(key, tf, !goals[key][`${tf}Active`]);
-                        handleActiveChange(key, tf === 'weekly' ? 'monthly' : 'weekly', false);
+                        // Switch timeframe: turn the selected one on, the other off
+                        setGoals(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...prev[key],
+                            weeklyActive:  tf === 'weekly'  ? isOn : false,
+                            monthlyActive: tf === 'monthly' ? isOn : false,
+                          }
+                        }));
+                        setSaved(false);
                       }}
                       style={{
                         padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 600,
                         cursor: 'pointer', transition: 'all 0.15s',
-                        background: active ? 'var(--ink)' : 'transparent',
-                        color: active ? 'var(--gold)' : 'var(--ink-dim)',
-                        border: active ? 'none' : '1px solid var(--parch-line)',
+                        background: isSel ? 'var(--ink)' : 'transparent',
+                        color: isSel ? 'var(--gold)' : 'var(--ink-dim)',
+                        border: isSel ? 'none' : '1px solid var(--parch-line)',
                       }}>
                       {tf.charAt(0).toUpperCase() + tf.slice(1)}
                     </button>
                   );
                 })}
               </div>
-              <div style={{ position: 'relative', width: 160 }}>
+
+              {/* Value input */}
+              <div style={{ position: 'relative', width: 160, flexShrink: 0 }}>
                 {key !== 'transactions' && (
                   <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-ghost)', fontSize: 13 }}>$</span>
                 )}
                 <input
-                  type="number" placeholder={key === 'transactions' ? '0' : '0.00'}
-                  value={goals[key].weekly || goals[key].monthly || ''}
-                  onChange={e => {
-                    const val = e.target.value;
-                    if (goals[key].weeklyActive) handleValueChange(key, 'weekly', val);
-                    else handleValueChange(key, 'monthly', val);
-                  }}
+                  type="number" placeholder={key === 'transactions' ? '0' : '0'}
+                  value={currentValue}
+                  onChange={e => handleValueChange(key, activeTimeframe, e.target.value)}
                   style={{
                     width: '100%', height: 36, borderRadius: 8, fontSize: 13,
                     background: 'var(--parch-warm)', border: '1px solid var(--parch-line)',
@@ -275,11 +289,20 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
                   }}
                 />
               </div>
+
+              {/* On/off toggle */}
               <GoalToggle
-                checked={goals[key].weeklyActive || goals[key].monthlyActive}
+                checked={isOn}
                 onChange={checked => {
-                  handleActiveChange(key, 'weekly', checked);
-                  handleActiveChange(key, 'monthly', checked);
+                  setGoals(prev => ({
+                    ...prev,
+                    [key]: {
+                      ...prev[key],
+                      weeklyActive:  activeTimeframe === 'weekly'  ? checked : false,
+                      monthlyActive: activeTimeframe === 'monthly' ? checked : false,
+                    }
+                  }));
+                  setSaved(false);
                 }}
               />
             </div>
