@@ -3,7 +3,7 @@ import Goals from '@/pages/Goals';
 import DataSection from '@/components/settings/DataSection';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import RetailerLogo from '@/components/shared/BrandLogo';
+import RetailerLogo, { CardLogo } from '@/components/shared/BrandLogo';
 import {
   User, Target, Palette, Shield, Database,
   Check, Trash2, Loader, Plus, Store, Users, Pencil, AtSign,
@@ -483,7 +483,7 @@ function AccountsSection() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <RetailerLogo retailer={a.vendor} size={32} />
+                  <RetailerLogo retailer={a.vendor} size={36} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.ink, margin: 0, fontFamily: FONT }}>{a.vendor}</p>
                     <p style={{ fontSize: 11, color: C.inkDim, marginTop: 2, fontFamily: FONT }}>{a.email}</p>

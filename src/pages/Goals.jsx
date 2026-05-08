@@ -261,8 +261,8 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
                       style={{
                         padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 600,
                         cursor: 'pointer', transition: 'all 0.15s',
-                        background: isSel ? 'var(--ink)' : 'transparent',
-                        color: isSel ? 'var(--gold)' : 'var(--ink-dim)',
+                        background: isSel ? gc.color : 'transparent',
+                        color: isSel ? '#fff' : 'var(--ink-dim)',
                         border: isSel ? 'none' : '1px solid var(--parch-line)',
                       }}>
                       {tf.charAt(0).toUpperCase() + tf.slice(1)}
@@ -293,6 +293,7 @@ export default function Goals({ isEmbedded = false, onSave = null }) {
               {/* On/off toggle */}
               <GoalToggle
                 checked={isOn}
+                activeColor={gc.color}
                 onChange={checked => {
                   setGoals(prev => ({
                     ...prev,
