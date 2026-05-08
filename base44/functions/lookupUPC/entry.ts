@@ -1,8 +1,12 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
     try {
-        // No auth required — only calls external APIs with server-side keys
+        const base44 = createClientFromRequest(req);
+        const user = await base44.auth.me();
+        if (!user) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         const { upc } = await req.json();
         if (!upc) return Response.json({ error: 'UPC is required' }, { status: 400 });
@@ -19,7 +23,6 @@ Deno.serve(async (req) => {
                     `https://api.bestbuy.com/v1/products(upc=${encodeURIComponent(upc)})?format=json&show=name,image,thumbnailImage,upc&apiKey=${BB_KEY}`
                 );
                 const text = await r.text();
-                console.log('BB response:', text.slice(0, 300));
                 const d = JSON.parse(text);
                 if (d.products?.length > 0) {
                     d.products.slice(0, 1).forEach(p => {
@@ -51,7 +54,6 @@ Deno.serve(async (req) => {
                     `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(upc)}&api_key=${SERP_KEY}`
                 );
                 const d = await r.json();
-                console.log('SerpApi response:', JSON.stringify(d).slice(0, 300));
                 const items = d.shopping_results || [];
                 items.slice(0, 1).forEach(item => {
                     results.push({ title: item.title, image: item.thumbnail || '', source: 'Google' });
