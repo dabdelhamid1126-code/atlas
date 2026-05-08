@@ -438,6 +438,30 @@ function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, on
             <span style={{ fontSize:12, color:'var(--ink-faded)' }}>
               Total: <strong style={{ color:'var(--ink)', fontFamily:'var(--font-mono)' }}>{fmt$(totalCost, '$0.00')}</strong>
             </span>
+            {parseFloat(order.tax) > 0 && (
+              <>
+                <span style={{ color:'var(--parch-line)' }}>|</span>
+                <span style={{ fontSize:11, color:'var(--ink-faded)' }}>
+                  Tax: <strong style={{ color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>{fmt$(order.tax, '$0.00')}</strong>
+                </span>
+              </>
+            )}
+            {parseFloat(order.shipping_cost) > 0 && (
+              <>
+                <span style={{ color:'var(--parch-line)' }}>|</span>
+                <span style={{ fontSize:11, color:'var(--ink-faded)' }}>
+                  Ship: <strong style={{ color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>{fmt$(order.shipping_cost, '$0.00')}</strong>
+                </span>
+              </>
+            )}
+            {parseFloat(order.fees) > 0 && (
+              <>
+                <span style={{ color:'var(--parch-line)' }}>|</span>
+                <span style={{ fontSize:11, color:'var(--ink-faded)' }}>
+                  Fees: <strong style={{ color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>{fmt$(order.fees, '$0.00')}</strong>
+                </span>
+              </>
+            )}
             {hasSale && (
               <>
                 <span style={{ color:'var(--parch-line)' }}>|</span>
