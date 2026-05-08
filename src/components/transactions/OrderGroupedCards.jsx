@@ -328,6 +328,9 @@ function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, on
                   <div style={{ textAlign:'right' }}>
                     <div style={{ fontSize:9, fontWeight:700, color:'var(--ink-ghost)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:2, fontFamily:'var(--font-serif)' }}>Cost/Unit</div>
                     <div style={{ fontSize:12, color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>{fmt$(unitCost)}</div>
+                    {qtyOrd > 1 && (
+                      <div style={{ fontSize:10, color:'var(--ink-ghost)', fontFamily:'var(--font-mono)' }}>= {fmt$(unitCost * qtyOrd)}</div>
+                    )}
                   </div>
 
                   {/* Sold */}
