@@ -97,8 +97,8 @@ h1, h2, h3, h4, h5, h6 {
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
 
   /* Fonts */
-  --font-serif: 'Satoshi', 'Inter', system-ui, sans-serif;
-  --font-sans:  'Satoshi', 'Inter', system-ui, sans-serif;
+  --font-serif: 'DM Sans', system-ui, sans-serif;
+  --font-sans:  'DM Sans', system-ui, sans-serif;
   --font-mono:  ui-monospace, 'SF Mono', 'Consolas', monospace;
 
   /* Chart colors */
@@ -283,7 +283,7 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
@@ -446,7 +446,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .kpi-value {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 24px;
   font-weight: 700;
   line-height: 1;
