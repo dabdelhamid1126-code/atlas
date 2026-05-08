@@ -399,12 +399,17 @@ function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, on
                         <div style={{ textAlign:'right', color:'var(--ink-dim)', fontFamily:'var(--font-mono)' }}>
                           {evQty} unit{evQty !== 1 ? 's' : ''}
                         </div>
-                        <div style={{ textAlign:'right', color:'var(--ink-ghost)' }}>--</div>
+                        <div style={{ textAlign:'right', fontFamily:'var(--font-mono)' }}>
+                          <div style={{ fontSize:11, color:'var(--ink-dim)' }}>{fmt$(fullCostPerUnit)}</div>
+                          {evQty > 1 && (
+                            <div style={{ fontSize:10, color:'var(--ink-ghost)' }}>= {fmt$(evCost)}</div>
+                          )}
+                        </div>
                         <div/>
-                        <div style={{ textAlign:'right', color:'var(--terrain)', fontWeight:700, fontFamily:'var(--font-mono)' }}>
+                        <div style={{ textAlign:'right', fontFamily:'var(--font-mono)' }}>
                           {evSaleUnit > 0 ? (
                             <div>
-                              <div style={{ fontSize:12 }}>{fmt$(evSaleUnit)}</div>
+                              <div style={{ fontSize:12, fontWeight:700, color:'var(--terrain)' }}>{fmt$(evSaleUnit)}</div>
                               {evQty > 1 && (
                                 <div style={{ fontSize:10, color:'var(--terrain)', opacity:0.7 }}>
                                   = {fmt$(evTotal)}
