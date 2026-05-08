@@ -174,7 +174,7 @@ function LogoBox({ domain, name, size = 36, className = '' }) {
   }
 
   return (
-    <div style={{ ...base, background: '#fff' }} className={className}>
+    <div style={{ ...base, background: 'transparent' }} className={className}>
       <img
         src={src}
         alt={name}
