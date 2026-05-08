@@ -69,12 +69,11 @@ Deno.serve(async (req) => {
       account:         account || null,
       notes:           notes   || 'Imported via Atlas extension',
       items: items.map(item => ({
-        name:       item.name  || item.title || '',
-        qty:        item.qty   || item.quantity || 1,
-        unit_price: item.unit_price || item.price || 0,
-        asin:       item.asin  || null,
-        sku:        item.sku   || null,
-        model:      item.model || null,
+        product_name:       item.product_name || item.name  || item.title || '',
+        quantity_ordered:   item.quantity_ordered || item.qty || item.quantity || 1,
+        unit_cost:          item.unit_cost || item.unit_price || item.price || 0,
+        product_image:      item.product_image || item.image || null,
+        upc:                item.upc || item.asin || item.sku || null,
       })),
     });
 
