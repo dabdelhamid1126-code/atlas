@@ -442,8 +442,11 @@ function AccountsSection() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <div>
             <LBL>Vendor *</LBL>
-            <input list="vendor-list" value={newVendor} onChange={e => setNewVendor(e.target.value)} placeholder="e.g. Amazon" style={INP} />
-            <datalist id="vendor-list">{vendors.map(v => <option key={v} value={v} />)}</datalist>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {newVendor.trim() && <RetailerLogo retailer={newVendor.trim()} size={30} />}
+              <input list="vendor-list" value={newVendor} onChange={e => setNewVendor(e.target.value)} placeholder="e.g. Amazon" style={{ ...INP, flex: 1 }} />
+              <datalist id="vendor-list">{vendors.map(v => <option key={v} value={v} />)}</datalist>
+            </div>
           </div>
           <div>
             <LBL>Account Email *</LBL>
@@ -467,8 +470,11 @@ function AccountsSection() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                     <div>
                       <LBL>Vendor</LBL>
-                      <input list="vendor-list-edit" value={editing.vendor} onChange={e => setEditing({ ...editing, vendor: e.target.value })} style={INP} />
-                      <datalist id="vendor-list-edit">{vendors.map(v => <option key={v} value={v} />)}</datalist>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {editing.vendor?.trim() && <RetailerLogo retailer={editing.vendor.trim()} size={30} />}
+                        <input list="vendor-list-edit" value={editing.vendor} onChange={e => setEditing({ ...editing, vendor: e.target.value })} style={{ ...INP, flex: 1 }} />
+                        <datalist id="vendor-list-edit">{vendors.map(v => <option key={v} value={v} />)}</datalist>
+                      </div>
                     </div>
                     <div>
                       <LBL>Account Email</LBL>
