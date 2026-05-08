@@ -228,6 +228,11 @@ function OrderCard({ order, creditCards, rewards, products, onEdit, onDelete, on
           </div>
           <span style={{ fontSize:11, color:'var(--ink-dim)' }}>
             {order.retailer} {fmtDate(order.order_date)}
+            {order.account && (
+              <span style={{ marginLeft:6, fontSize:10, color:'var(--ink-ghost)', background:'var(--parch-warm)', border:'1px solid var(--parch-line)', borderRadius:99, padding:'1px 7px', fontFamily:'var(--font-mono)' }}>
+                {order.account}
+              </span>
+            )}
           </span>
         </div>
 

@@ -8,6 +8,7 @@ import {
   Star, BarChart2
 } from "lucide-react";
 import RetailerLogo, { CardLogo } from "@/components/shared/BrandLogo";
+import GoalTracker from "@/components/dashboard/GoalTracker";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
@@ -258,6 +259,12 @@ export default function Dashboard() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  useEffect(() => {
+    const onFocus = () => { base44.auth.me().then(u => { if (u) setUser(u); }).catch(() => {}); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadData();
@@ -466,6 +473,12 @@ export default function Dashboard() {
           {activeAlerts.map((a,i) => <AlertBanner key={i} {...a} />)}
         </div>
       )}
+
+      {/* ── Goals ── */}
+      <SectionDivider title="Goals" dotColor="var(--terrain)" lineColor="rgba(74,122,53,0.25)" />
+      <div style={{ marginBottom: 16 }}>
+        <GoalTracker metrics={metrics} />
+      </div>
 
       {/* ── KPIs ── */}
       <SectionDivider title="Performance" />
