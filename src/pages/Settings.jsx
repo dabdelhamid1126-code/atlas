@@ -1,11 +1,11 @@
 import VendorCashbackConfig from '@/components/VendorCashbackConfig';
+import Goals from '@/pages/Goals';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import RetailerLogo from '@/components/shared/BrandLogo';
 import {
-  User, Database, Target, Key, Palette, Shield, Lock,
-  ExternalLink, Check, Sparkles, DollarSign, Eye, EyeOff,
-  Download, Upload, Trash2, Loader, X, Inbox, Plus, Store, Users, Pencil, Bell, Globe, Smartphone, AtSign,
+  User, Target, Palette, Shield,
+  Check, Trash2, Loader, Plus, Store, Users, Pencil, AtSign,
 } from 'lucide-react';
 
 const C = {
@@ -616,6 +616,7 @@ function SecuritySection({ user }) {
 /* ── Main Settings Page ───────────────────────────────────────────── */
 const TABS = [
   { id: 'profile',  label: 'Profile',  icon: User   },
+  { id: 'goals',    label: 'Goals',    icon: Target  },
   { id: 'vendors',  label: 'Vendors',  icon: Store  },
   { id: 'accounts', label: 'Accounts', icon: AtSign },
   { id: 'sellers',  label: 'Sellers',  icon: Users  },
@@ -698,6 +699,7 @@ export default function Settings() {
         {/* Content */}
         <div className="settings-content">
           {activeTab === 'profile'  && <ProfileSection />}
+          {activeTab === 'goals'    && <Goals isEmbedded />}
           {activeTab === 'vendors'  && <VendorsSection />}
           {activeTab === 'accounts' && <AccountsSection />}
           {activeTab === 'sellers'  && <SellersSection />}
