@@ -1,17 +1,16 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
-const CONNECTOR_ID = '69fd47fb3d83106df56b748a';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const { messageId, messageIds, afterDate, beforeDate } = body;
+    const { messageId, messageIds } = body;
 
-    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection('gmail');
 
     const getBody = (parts) => {
       if (!parts) return '';
@@ -70,13 +69,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch list of order emails
+    // Fetch list of order emails from target retailers only
+    // Two query types: order confirmations + shipping/tracking emails
+    const { afterDate, beforeDate } = body;
+    const retailers = 'from:(amazon OR bestbuy OR "best buy" OR woot OR walmart OR target)';
+    // Build date range filter: Gmail uses after:YYYY/MM/DD before:YYYY/MM/DD
     let dateFilter = '';
     if (afterDate) dateFilter += ` after:${afterDate.replace(/-/g, '/')}`;
     if (beforeDate) dateFilter += ` before:${beforeDate.replace(/-/g, '/')}`;
     const baseFilter = dateFilter || ' newer_than:90d';
 
-    const retailers = 'from:(amazon OR bestbuy OR "best buy" OR woot OR walmart OR target)';
     const orderQuery = `${retailers} subject:(("order confirmation") OR ("order placed") OR ("order receipt") OR ("thanks for your order") OR ("thank you for your order") OR ("your order") OR ("order #") OR ("order number"))${baseFilter} -category:promotions`;
     const trackingQuery = `${retailers} subject:((shipped OR "tracking number" OR "out for delivery" OR "on the way" OR "package shipped" OR "order shipped"))${baseFilter} -category:promotions`;
 
@@ -90,12 +92,14 @@ Deno.serve(async (req) => {
       trackingListRes.json()
     ]);
 
+    // Merge message IDs, deduplicate
     const allIds = new Map();
     for (const m of (orderListData.messages || [])) allIds.set(m.id, { ...m, type: 'order' });
     for (const m of (trackingListData.messages || [])) {
       if (!allIds.has(m.id)) allIds.set(m.id, { ...m, type: 'tracking' });
     }
 
+    // Fetch metadata for all
     const emails = await Promise.all(
       Array.from(allIds.values()).map(async (m) => {
         const r = await fetch(
@@ -115,6 +119,9 @@ Deno.serve(async (req) => {
       })
     );
 
+    // Group by order number extracted from subject/snippet
+    // Group emails that appear to be about the same order
+    // Heuristic: same sender domain + same order number pattern in subject
     const extractOrderNum = (subject, snippet) => {
       const text = `${subject} ${snippet}`;
       const match = text.match(/(?:order\s*#?\s*|#)([A-Z0-9\-]{6,})/i);
@@ -124,6 +131,7 @@ Deno.serve(async (req) => {
     const groups = [];
     const usedIds = new Set();
 
+    // Sort: order emails first, then tracking
     const sorted = [...emails].sort((a, b) => {
       if (a.type === 'order' && b.type !== 'order') return -1;
       if (b.type === 'order' && a.type !== 'order') return 1;
@@ -133,6 +141,8 @@ Deno.serve(async (req) => {
     for (const email of sorted) {
       if (usedIds.has(email.id)) continue;
       const orderNum = extractOrderNum(email.subject, email.snippet);
+      
+      // Only group emails that share the exact same order number
       const related = orderNum ? emails.filter(other => {
         if (other.id === email.id || usedIds.has(other.id)) return false;
         const otherNum = extractOrderNum(other.subject, other.snippet);
@@ -158,14 +168,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Sort groups by date desc
     groups.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return Response.json({ emails: groups });
   } catch (error) {
-    // If connector not connected, return a specific error
-    if (error.message?.includes('not connected') || error.message?.includes('No connection')) {
-      return Response.json({ error: 'not_connected' }, { status: 403 });
-    }
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -130,7 +130,7 @@ export default function Layout({ children, currentPageName }) {
               <AtlasLogo size={30} />
               <div>
                 <p style={{ fontSize: 16, fontWeight: 400, margin: 0, lineHeight: 1, fontFamily: "'Marcellus', serif", letterSpacing: '0.08em', background: 'linear-gradient(135deg,#c9a84c,#f5e09a,#c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ATLAS</p>
-                <p style={{ fontSize: 9, fontWeight: 400, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0', fontFamily: "'DM Sans', system-ui, sans-serif" }}>Reselling Quantified</p>
+                <p style={{ fontSize: 9, fontWeight: 400, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sidebar-label)', margin: '2px 0 0', fontFamily: "'DM Sans', system-ui, sans-serif" }}>Dalia Distro</p>
               </div>
             </Link>
             <button onClick={() => setCollapsed(true)} title="Collapse" style={{ background: 'none', border: 'none', color: 'var(--sidebar-text)', cursor: 'pointer', padding: 4, display: 'flex' }}>
