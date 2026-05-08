@@ -108,7 +108,7 @@ export default function LoginModal({ isOpen, onClose }) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <h2 style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontFamily: "'DM Sans', system-ui, sans-serif",
             fontSize: isMobile ? 32 : 38,
             fontWeight: 700,
             color: '#3D2B1A',

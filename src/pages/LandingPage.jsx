@@ -154,10 +154,10 @@ export default function LandingPage() {
   return (
     <div style={{ background: "#060503", minHeight: "100vh", color: "#f0ece4", overflowX: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=Marcellus&family=Marcellus&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Marcellus&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .serif { font-family: 'Cormorant Garamond', Georgia, serif; color: #f0ece4; }
+        .serif { font-family: 'DM Sans', system-ui, sans-serif; color: #f0ece4; }
 
         /* Star canvas */
         #atlas-stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
