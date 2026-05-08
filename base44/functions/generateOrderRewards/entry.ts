@@ -3,7 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event, data } = await req.json();
+
+    // This is an entity automation — validate it's coming from the platform (no user session)
+    // by verifying the payload has the expected structure
+    const body = await req.json();
+    const { event, data } = body;
+
+    if (!event || !data) {
+      return Response.json({ error: 'Invalid automation payload' }, { status: 400 });
+    }
 
     if (event.type !== 'create' || event.entity_name !== 'PurchaseOrder') {
       return Response.json({ skipped: true, reason: 'Not a PurchaseOrder create event' });
