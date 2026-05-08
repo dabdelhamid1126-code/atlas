@@ -5,7 +5,7 @@ import RetailerLogo from '@/components/shared/BrandLogo';
 import {
   User, Database, Target, Key, Palette, Shield, Lock,
   ExternalLink, Check, Sparkles, DollarSign, Eye, EyeOff,
-  Download, Upload, Trash2, Loader, X, Inbox, Plus, Store, Users, Pencil, Bell, Globe, Smartphone,
+  Download, Upload, Trash2, Loader, X, Inbox, Plus, Store, Users, Pencil, Bell, Globe, Smartphone, AtSign,
 } from 'lucide-react';
 
 const C = {
@@ -108,8 +108,9 @@ function ProfileSection() {
       await base44.auth.updateMe({ full_name: user.full_name, phone: user.phone, businessName: user.businessName, businessLocation: user.businessLocation });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-      // Trigger sidebar refresh
+      // Notify layout + dashboard to refresh user
       window.dispatchEvent(new Event('focus'));
+      window.dispatchEvent(new CustomEvent('atlas:user-updated', { detail: { full_name: user.full_name } }));
     } catch (e) { console.error(e); }
   };
 
@@ -394,6 +395,116 @@ function SellersSection() {
   );
 }
 
+/* ── Accounts Section ─────────────────────────────────────────────── */
+function AccountsSection() {
+  const DEFAULT_VENDORS = ['Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco', "Sam's Club", 'eBay', 'Woot', 'Apple', 'Staples'];
+  const [accounts, setAccounts] = useState([]);
+  const [newVendor, setNewVendor] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [editing, setEditing] = useState(null);
+
+  useEffect(() => {
+    try { setAccounts(JSON.parse(localStorage.getItem('atlas_accounts') || '[]')); } catch { setAccounts([]); }
+  }, []);
+
+  const persist = (list) => {
+    setAccounts(list);
+    try { localStorage.setItem('atlas_accounts', JSON.stringify(list)); } catch {}
+  };
+
+  const add = () => {
+    const vendor = newVendor.trim();
+    const email  = newEmail.trim();
+    if (!vendor || !email) return;
+    persist([...accounts, { id: crypto.randomUUID(), vendor, email }]);
+    setNewVendor(''); setNewEmail('');
+  };
+
+  const remove = (id) => persist(accounts.filter(a => a.id !== id));
+
+  const saveEdit = () => {
+    persist(accounts.map(a => a.id === editing.id ? { ...a, vendor: editing.vendor, email: editing.email } : a));
+    setEditing(null);
+  };
+
+  const vendors = [...new Set([...DEFAULT_VENDORS, ...accounts.map(a => a.vendor)])].sort();
+
+  return (
+    <div style={{ background: C.parchCard, border: `1px solid ${C.parchLine}`, borderRadius: 14, padding: 24, marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <AtSign style={{ width: 18, height: 18, color: C.ocean2 }} />
+        <h2 style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: C.ink, margin: 0 }}>Accounts</h2>
+      </div>
+      <p style={{ fontSize: 12, color: C.inkDim, marginBottom: 16, fontFamily: FONT }}>Track which account email you use per vendor</p>
+
+      {/* Add new */}
+      <div style={{ background: C.parchWarm, border: `1px solid ${C.parchLine}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div>
+            <LBL>Vendor *</LBL>
+            <input list="vendor-list" value={newVendor} onChange={e => setNewVendor(e.target.value)} placeholder="e.g. Amazon" style={INP} />
+            <datalist id="vendor-list">{vendors.map(v => <option key={v} value={v} />)}</datalist>
+          </div>
+          <div>
+            <LBL>Account Email *</LBL>
+            <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="you@email.com" style={INP} />
+          </div>
+        </div>
+        <button onClick={add} disabled={!newVendor.trim() || !newEmail.trim()}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: (newVendor.trim() && newEmail.trim()) ? C.ink : C.parchWarm, border: 'none', color: (newVendor.trim() && newEmail.trim()) ? C.neCream : C.inkGhost, cursor: (newVendor.trim() && newEmail.trim()) ? 'pointer' : 'not-allowed', fontFamily: FONT }}>
+          <Plus style={{ width: 13, height: 13 }} /> Add Account
+        </button>
+      </div>
+
+      {accounts.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 24, color: C.inkGhost, fontSize: 13 }}>No accounts yet — add one above</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {accounts.map(a => (
+            <div key={a.id} style={{ background: C.parchWarm, border: `1px solid ${C.parchLine}`, borderRadius: 10, padding: '10px 14px' }}>
+              {editing?.id === a.id ? (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                    <div>
+                      <LBL>Vendor</LBL>
+                      <input list="vendor-list-edit" value={editing.vendor} onChange={e => setEditing({ ...editing, vendor: e.target.value })} style={INP} />
+                      <datalist id="vendor-list-edit">{vendors.map(v => <option key={v} value={v} />)}</datalist>
+                    </div>
+                    <div>
+                      <LBL>Account Email</LBL>
+                      <input type="email" value={editing.email} onChange={e => setEditing({ ...editing, email: e.target.value })} style={INP} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={saveEdit} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.ink, color: C.neCream, border: 'none', cursor: 'pointer', fontFamily: FONT }}>Save</button>
+                    <button onClick={() => setEditing(null)} style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, background: 'none', border: `1px solid ${C.parchLine}`, color: C.inkFaded, cursor: 'pointer', fontFamily: FONT }}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <RetailerLogo retailer={a.vendor} size={32} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: C.ink, margin: 0, fontFamily: FONT }}>{a.vendor}</p>
+                    <p style={{ fontSize: 11, color: C.inkDim, marginTop: 2, fontFamily: FONT }}>{a.email}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    <button onClick={() => setEditing({ id: a.id, vendor: a.vendor, email: a.email })} style={{ width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: `1px solid ${C.parchLine}`, color: C.inkDim, cursor: 'pointer' }}>
+                      <Pencil style={{ width: 12, height: 12 }} />
+                    </button>
+                    <button onClick={() => remove(a.id)} style={{ width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.crimsonBg, border: `1px solid ${C.crimsonBdr}`, color: C.crimson, cursor: 'pointer' }}>
+                      <Trash2 style={{ width: 12, height: 12 }} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Appearance Section ───────────────────────────────────────────── */
 function AppearanceSection() {
   const [theme, setTheme] = useState(() => localStorage.getItem('atlas_theme') || 'light');
@@ -506,6 +617,7 @@ function SecuritySection({ user }) {
 const TABS = [
   { id: 'profile',  label: 'Profile',  icon: User   },
   { id: 'vendors',  label: 'Vendors',  icon: Store  },
+  { id: 'accounts', label: 'Accounts', icon: AtSign },
   { id: 'sellers',  label: 'Sellers',  icon: Users  },
   { id: 'security', label: 'Security', icon: Shield },
 ];
@@ -587,6 +699,7 @@ export default function Settings() {
         <div className="settings-content">
           {activeTab === 'profile'  && <ProfileSection />}
           {activeTab === 'vendors'  && <VendorsSection />}
+          {activeTab === 'accounts' && <AccountsSection />}
           {activeTab === 'sellers'  && <SellersSection />}
           {activeTab === 'security' && <SecuritySection user={user} />}
         </div>

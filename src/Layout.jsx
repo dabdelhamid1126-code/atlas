@@ -111,6 +111,14 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('focus', refreshUser);
   }, [refreshUser]);
 
+  useEffect(() => {
+    const onUserUpdated = (e) => {
+      setUser(prev => prev ? { ...prev, ...e.detail } : prev);
+    };
+    window.addEventListener('atlas:user-updated', onUserUpdated);
+    return () => window.removeEventListener('atlas:user-updated', onUserUpdated);
+  }, []);
+
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const isActive = (page) => currentPageName === page;

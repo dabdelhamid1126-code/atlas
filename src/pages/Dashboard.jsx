@@ -261,8 +261,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     const onFocus = () => { base44.auth.me().then(u => { if (u) setUser(u); }).catch(() => {}); };
+    const onUserUpdated = (e) => { setUser(prev => prev ? { ...prev, ...e.detail } : prev); };
     window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    window.addEventListener('atlas:user-updated', onUserUpdated);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('atlas:user-updated', onUserUpdated);
+    };
   }, []);
 
   const handleRefresh = useCallback(async () => {
